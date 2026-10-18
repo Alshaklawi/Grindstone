@@ -44,6 +44,7 @@ public class GoalComponent extends JPanel {
     private final JLabel dateLabel = new JLabel();
     private final JLabel requiredQuantityLabel = new JLabel();
     private final JLabel trackingNoteLabel = new JLabel();
+    private final JLabel achievementNoteLabel = new JLabel();
     private final JLabel progressLabel = new JLabel();
     private final SegmentedProgressBar progressBar = new SegmentedProgressBar();
     private final JLabel statusLabel = new JLabel();
@@ -91,6 +92,10 @@ public class GoalComponent extends JPanel {
         trackingNoteLabel.setForeground(MUTED_COLOR);
         trackingNoteLabel.setAlignmentX(LEFT_ALIGNMENT);
         trackingNoteLabel.setVisible(false);
+        achievementNoteLabel.setFont(UiTypography.META);
+        achievementNoteLabel.setForeground(MUTED_COLOR);
+        achievementNoteLabel.setVisible(false);
+        achievementNoteLabel.setAlignmentX(LEFT_ALIGNMENT);
 
         iconLabel.setHorizontalAlignment(SwingConstants.CENTER);
         iconLabel.setPreferredSize(new Dimension(24, 24));
@@ -110,6 +115,7 @@ public class GoalComponent extends JPanel {
         headerText.add(titleLabel);
         headerText.add(requiredQuantityLabel);
         headerText.add(trackingNoteLabel);
+        headerText.add(achievementNoteLabel);
         headerText.add(Box.createVerticalStrut(2));
         JPanel headerDetails = new JPanel(new BorderLayout(4, 0));
         headerDetails.setOpaque(false);
@@ -165,6 +171,12 @@ public class GoalComponent extends JPanel {
         trackingNoteLabel.setText(text);
         trackingNoteLabel.setToolTipText("A snapshot is the last known client data, not a guarantee that every storage location is loaded or current.");
         trackingNoteLabel.setVisible(text != null && !text.isEmpty());
+        revalidate();
+    }
+    public void setAchievementNote(String text) {
+        achievementNoteLabel.setText(text);
+        achievementNoteLabel.setToolTipText(text + ". See Completion history in goal actions for dates and targets.");
+        achievementNoteLabel.setVisible(text != null && !text.isEmpty());
         revalidate();
     }
 
@@ -229,6 +241,14 @@ public class GoalComponent extends JPanel {
         setEditAction(event -> menu.show(editButton, 0, editButton.getHeight()));
         setComponentPopupMenu(menu);
         titleLabel.setComponentPopupMenu(menu);
+    }
+    public void addGoalAction(String title, String tooltip, ActionListener listener) {
+        JPopupMenu menu = getComponentPopupMenu();
+        if (menu == null) { return; }
+        JMenuItem item = new JMenuItem(title);
+        item.setToolTipText(tooltip);
+        item.addActionListener(listener);
+        menu.add(item);
     }
 
     public void update(String title, BufferedImage icon, LocalDateTime startDate, LocalDateTime endDate,

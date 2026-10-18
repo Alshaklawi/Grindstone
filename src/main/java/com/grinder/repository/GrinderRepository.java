@@ -125,6 +125,7 @@ public final class GrinderRepository {
             JsonObject savedGoal = new JsonObject();
             savedGoal.addProperty("class", SavedGoalTypes.nameOf(goal));
             savedGoal.add("data", GSON.toJsonTree(goal));
+            savedGoal.add("metadata", GSON.toJsonTree(profile.metadata(goal)));
             savedGoals.add(savedGoal);
         }
 
@@ -202,6 +203,10 @@ public final class GrinderRepository {
                         goal.setTarget(goal.getProgressMaximum());
                     }
                     goals.add(goal);
+                    if (savedGoal.has("metadata")) {
+                        try { profile.restoreMetadata(goal, GSON.fromJson(savedGoal.get("metadata"), GoalMetadata.class)); }
+                        catch (RuntimeException exception) { log.debug("Skipping invalid goal metadata", exception); }
+                    }
                 }
             } catch (RuntimeException exception) {
                 log.debug("Skipping an invalid saved Grinder goal", exception);

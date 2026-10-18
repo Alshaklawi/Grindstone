@@ -518,9 +518,14 @@ public class GrinderPanel extends PluginPanel {
                     GoalComponent component = goal.build(client, config);
                     component.setGoalStatus(goal.getStatus());
                     String title = safeTitle(goal);
+                    com.grinder.repository.GoalMetadata metadata = currentProfile.metadata(goal);
+                    metadata.observe(goal, title, System.currentTimeMillis());
                     component.setGoalActions(goal.supportsTarget()
                             ? event -> editGoal(currentProfile, goal, title) : null,
                             event -> deleteGoal(currentProfile, goal, title));
+                    String history = metadata.historyText();
+                    component.addGoalAction("Completion history...", "View first-observed completion times for this goal's targets.", event -> showHistory(history));
+                    if (!metadata.getCompletions().isEmpty() && goal.getStatus() != GoalStatus.COMPLETE) { component.setAchievementNote("Previously reached a target · currently incomplete"); }
 
                     allGoals.add(new GoalView(
                             goal,
@@ -887,6 +892,14 @@ public class GrinderPanel extends PluginPanel {
         emptyPanel.add(Box.createVerticalStrut(6));
         emptyPanel.add(messageLabel);
         main.add(emptyPanel);
+    }
+    private void showHistory(String history) {
+        javax.swing.JTextArea text = new javax.swing.JTextArea(history, 14, 42);
+        text.setEditable(false);
+        text.setLineWrap(true);
+        text.setWrapStyleWord(true);
+        text.setCaretPosition(0);
+        JOptionPane.showMessageDialog(this, new JScrollPane(text), "Completion history", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void showAddGoalDialog() {

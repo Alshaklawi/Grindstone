@@ -40,6 +40,9 @@ import net.runelite.client.game.ItemManager;
 public class GrinderProfile {
     private final long hash;
     private final List<Goal> goals = new ArrayList<>();
+    private final transient java.util.Map<Goal, GoalMetadata> metadata = new java.util.IdentityHashMap<>();
+    public GoalMetadata metadata(Goal goal) { return metadata.computeIfAbsent(goal, ignored -> new GoalMetadata()); }
+    public void restoreMetadata(Goal goal, GoalMetadata saved) { metadata.put(goal, GoalMetadata.validated(saved)); }
     private final List<Item> items = new ArrayList<>();
     private final CollectionLogHistory collectionLogHistory = new CollectionLogHistory();
     private transient ItemManager itemManager;
