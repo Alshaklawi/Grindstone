@@ -33,14 +33,30 @@ public class GrinderProfile {
     }
 
     private void initializeGoals(ItemManager itemManager) {
+        ensureDefaultGoals(itemManager);
+    }
+
+    /**
+     * Adds newly supported built-in goals without discarding a player's saved
+     * custom goals. This makes profile upgrades forward-compatible.
+     */
+    public void ensureDefaultGoals(ItemManager itemManager) {
         for (CollectionLogEntry entry : CollectionLogEntry.values()) {
-            goals.add(new CollectionLogEntryGoal(itemManager, entry));
+            if (!hasCollectionEntry(entry)) {
+                goals.add(new CollectionLogEntryGoal(itemManager, entry));
+            }
         }
 
         for (TrackerEntry entry : TrackerEntry.values()) {
-            goals.add(new TrackerGoal(entry, 5000));
+            if (!hasTracker(entry)) {
+                goals.add(new TrackerGoal(entry, 5000));
+            }
         }
-        goals.add(new CollectionLogItemGoal(1041, 20));
+
+        if (goals.stream().noneMatch(goal -> goal instanceof CollectionLogItemGoal
+                && ((CollectionLogItemGoal) goal).getItem() == 1041)) {
+            goals.add(new CollectionLogItemGoal(1041, 20));
+        }
     }
 
     public void setItemManager(ItemManager itemManager) {
@@ -66,6 +82,16 @@ public class GrinderProfile {
     public void replace(List<Goal> goals) {
         this.goals.clear();
         this.goals.addAll(goals);
+    }
+
+    private boolean hasCollectionEntry(CollectionLogEntry entry) {
+        return goals.stream().anyMatch(goal -> goal instanceof CollectionLogEntryGoal
+                && ((CollectionLogEntryGoal) goal).getEntry() == entry);
+    }
+
+    private boolean hasTracker(TrackerEntry entry) {
+        return goals.stream().anyMatch(goal -> goal instanceof TrackerGoal
+                && ((TrackerGoal) goal).getTracker() == entry);
     }
 
     public void onContainerOpen(ItemContainer container) {

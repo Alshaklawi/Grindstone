@@ -3,17 +3,18 @@ package com.grinder.content.goal.impl.colletion_log;
 
 import com.grinder.config.GrinderConfig;
 import com.grinder.content.goal.Goal;
+import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.GoalStatus;
 import com.grinder.ui.GoalComponent;
+import com.grinder.ui.Icon;
 import java.awt.image.BufferedImage;
 import net.runelite.api.Client;
-import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
-import net.runelite.api.ItemComposition;
+import net.runelite.api.gameval.InventoryID;
 
 public class CollectionLogItemGoal implements Goal
 {
-    private static final int COLLECTION_LOG_CONTAINER_ID = 620;
+    private static final int COLLECTION_LOG_CONTAINER_ID = InventoryID.COLLECTION_TRANSMIT;
 
     private final int item;
     private final int amount;
@@ -21,18 +22,18 @@ public class CollectionLogItemGoal implements Goal
 
     public CollectionLogItemGoal(int item, int amount)
     {
-        if (item <= 0 || amount <= 0)
+        if (item <= 0)
         {
-            throw new IllegalArgumentException("Item ID and amount must be positive.");
+            throw new IllegalArgumentException("Item ID must be positive");
+        }
+
+        if (amount <= 0)
+        {
+            throw new IllegalArgumentException("Amount must be positive");
         }
 
         this.item = item;
         this.amount = amount;
-    }
-
-    public CollectionLogItemGoal(int item)
-    {
-        this(item, 1);
     }
 
     public int getItem()
@@ -45,51 +46,45 @@ public class CollectionLogItemGoal implements Goal
         return amount;
     }
 
-    private boolean isObtained(Client client)
+    public boolean isObtained(Client client)
     {
         ItemContainer container = client.getItemContainer(COLLECTION_LOG_CONTAINER_ID);
+        return isObtained(container);
+    }
 
-        if (container == null)
-        {
-            return false;
-        }
-
-        for (Item loggedItem : container.getItems())
-        {
-            if (loggedItem != null && loggedItem.getId() == item)
-            {
-                return true;
-            }
-        }
-
-        return false;
+    private boolean isObtained(ItemContainer container)
+    {
+        return container != null && container.contains(item);
     }
 
     @Override
     public String getTitle(Client client)
     {
-        ItemComposition composition = client.getItemDefinition(item);
-        return composition == null ? "Item " + item : composition.getName();
+        if (client == null)
+        {
+            return "Item " + item;
+        }
+
+        net.runelite.api.ItemComposition definition = client.getItemDefinition(item);
+        return definition == null ? "Item " + item : definition.getName();
     }
 
     @Override
     public BufferedImage getIcon(Client client)
     {
-        return null;
+        return Icon.COLLECTION_LOG.getImage();
     }
 
     @Override
-    public GoalComponent build(Client client)
+    public GoalCategory getCategory()
     {
-        obtained = isObtained(client);
-        return Goal.super.build(client);
+        return GoalCategory.COLLECTION_LOG;
     }
 
     @Override
-    public GoalComponent build(Client client, GrinderConfig config)
+    public GoalStatus getStatus()
     {
-        obtained = isObtained(client);
-        return Goal.super.build(client, config);
+        return obtained ? GoalStatus.COMPLETE : GoalStatus.IN_PROGRESS;
     }
 
     @Override
@@ -117,17 +112,31 @@ public class CollectionLogItemGoal implements Goal
     }
 
     @Override
-    public GoalStatus getStatus()
+    public GoalComponent build(Client client)
     {
-        return obtained ? GoalStatus.COMPLETE : GoalStatus.IN_PROGRESS;
+        obtained = isObtained(client);
+        return Goal.super.build(client);
+    }
+
+    @Override
+    public GoalComponent build(Client client, GrinderConfig config)
+    {
+        obtained = isObtained(client);
+        return Goal.super.build(client, config);
+    }
+
+    @Override
+    public boolean isAffectedBy(ItemContainer container)
+    {
+        return container != null && container.getId() == COLLECTION_LOG_CONTAINER_ID;
     }
 
     @Override
     public void onItemContainerUpdated(Client client, ItemContainer container)
     {
-        if (container != null && container.getId() == COLLECTION_LOG_CONTAINER_ID)
+        if (isAffectedBy(container))
         {
-            obtained = isObtained(client);
+            obtained = isObtained(container);
         }
     }
 }

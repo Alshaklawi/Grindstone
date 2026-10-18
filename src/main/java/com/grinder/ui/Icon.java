@@ -4,7 +4,7 @@ import com.grinder.GrinderPlugin;
 import lombok.NonNull;
 import net.runelite.client.util.ImageUtil;
 
-import javax.swing.*;
+import javax.swing.ImageIcon;
 import java.awt.image.BufferedImage;
 import java.util.function.UnaryOperator;
 
@@ -18,17 +18,20 @@ public enum Icon {
     QUEST("/quests.png"),
     COLLECTION_LOG("/collection_log.png"),
     ACHIEVEMENT_DIARY("/achievement_diary.png"),
-    COMBAT_ACHIEVEMENT("/combat_achievement.png");
+    COMBAT_ACHIEVEMENT("/combat_achievement.png"),
+    SKILLING("/achievement_diary.png");
 
 
     private final String file;
+    private final BufferedImage image;
 
     Icon(String file) {
         this.file = file;
+        this.image = ImageUtil.loadImageResource(GrinderPlugin.class, file);
     }
 
     public BufferedImage getImage() {
-        return ImageUtil.loadImageResource(GrinderPlugin.class, file);
+        return image;
     }
 
     public ImageIcon getIcon() {

@@ -1,6 +1,7 @@
 package com.grinder.content;
 
 import lombok.Getter;
+import com.grinder.ui.Icon;
 import net.runelite.api.Client;
 import net.runelite.api.gameval.VarPlayerID;
 
@@ -10,18 +11,26 @@ import net.runelite.api.gameval.VarPlayerID;
  * @since 10/18/2026
  */
 public enum TrackerEntry {
-    VETION(VarPlayerID.TOTAL_VETION_KILLS),
-    VENENATIS(VarPlayerID.TOTAL_VENENATIS_KILLS),
-    CHAMBERS_OF_XERIC(VarPlayerID.TOTAL_COMPLETED_XERICCHAMBERS),
-    WINTERTODT(VarPlayerID.TOTAL_WINTERTODT_KILLS),
-    CORPOREAL_BEAST(VarPlayerID.TOTAL_CORP_KILLS);
+    VETION("Vet'ion kills", VarPlayerID.TOTAL_VETION_KILLS, Icon.COLLECTION_LOG),
+    VENENATIS("Venenatis kills", VarPlayerID.TOTAL_VENENATIS_KILLS, Icon.COLLECTION_LOG),
+    CHAMBERS_OF_XERIC("Chambers of Xeric completions", VarPlayerID.TOTAL_COMPLETED_XERICCHAMBERS, Icon.COLLECTION_LOG),
+    WINTERTODT("Wintertodt kills", VarPlayerID.TOTAL_WINTERTODT_KILLS, Icon.SKILLING),
+    CORPOREAL_BEAST("Corporeal Beast kills", VarPlayerID.TOTAL_CORP_KILLS, Icon.COLLECTION_LOG);
 
-    TrackerEntry(final int id) {
+    TrackerEntry(final String displayName, final int id, final Icon icon) {
+        this.displayName = displayName;
         this.id = id;
+        this.icon = icon;
     }
 
     @Getter
     private final int id;
+
+    @Getter
+    private final String displayName;
+
+    @Getter
+    private final Icon icon;
 
     public int getCount(Client client) {
         return client.getVarpValue(id);

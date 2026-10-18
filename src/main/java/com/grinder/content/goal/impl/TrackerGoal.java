@@ -3,14 +3,19 @@ package com.grinder.content.goal.impl;
 
 import com.grinder.content.TrackerEntry;
 import com.grinder.content.goal.Goal;
+import com.grinder.content.goal.GoalCategory;
+import com.grinder.content.goal.GoalStatus;
+import java.awt.image.BufferedImage;
 import lombok.Getter;
+import net.runelite.api.Client;
 
 /**
  * @author Ayman Yassen
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
  * @since 10/18/2026
  */
-public class TrackerGoal implements Goal {
+public class TrackerGoal implements Goal
+{
 
     @Getter
     private final TrackerEntry tracker;
@@ -18,8 +23,99 @@ public class TrackerGoal implements Goal {
     @Getter
     private final int count;
 
+    private transient long current;
+
     public TrackerGoal(final TrackerEntry entry, final int count) {
+        if (entry == null)
+        {
+            throw new IllegalArgumentException("Tracker entry is required");
+        }
+
+        if (count <= 0)
+        {
+            throw new IllegalArgumentException("Target count must be positive");
+        }
+
         this.tracker = entry;
         this.count = count;
+    }
+
+    @Override
+    public String getTitle(Client client)
+    {
+        return tracker.getDisplayName();
+    }
+
+    @Override
+    public BufferedImage getIcon(Client client)
+    {
+        return tracker.getIcon().getImage();
+    }
+
+    @Override
+    public GoalCategory getCategory()
+    {
+        return tracker == TrackerEntry.WINTERTODT ? GoalCategory.SKILLING : GoalCategory.BOSSING;
+    }
+
+    @Override
+    public GoalStatus getStatus()
+    {
+        long current = getProgressCurrent();
+        return current >= count ? GoalStatus.COMPLETE : current > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED;
+    }
+
+    @Override
+    public boolean hasProgress()
+    {
+        return true;
+    }
+
+    @Override
+    public long getProgressCurrent()
+    {
+        return current;
+    }
+
+    @Override
+    public long getProgressMaximum()
+    {
+        return count;
+    }
+
+    @Override
+    public String getProgressText()
+    {
+        return current + " / " + count;
+    }
+
+    @Override
+    public com.grinder.ui.GoalComponent build(Client client)
+    {
+        return build(client, null);
+    }
+
+    @Override
+    public com.grinder.ui.GoalComponent build(Client client, com.grinder.config.GrinderConfig config)
+    {
+        refresh(client);
+        com.grinder.ui.GoalComponent component = Goal.super.build(client, config);
+        component.setProgress(current, count, current + " / " + count);
+        return component;
+    }
+
+    /**
+     * Updates the cached kill/completion count and returns whether it changed.
+     */
+    public boolean refresh(Client client)
+    {
+        long next = Math.max(0, tracker.getCount(client));
+        if (next == current)
+        {
+            return false;
+        }
+
+        current = next;
+        return true;
     }
 }

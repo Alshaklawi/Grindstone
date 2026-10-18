@@ -9,7 +9,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.grinder.content.CollectionLogEntry;
 import com.grinder.content.goal.Goal;
+import com.grinder.content.goal.impl.TrackerGoal;
 import com.grinder.content.goal.impl.colletion_log.CollectionLogEntryGoal;
+import com.grinder.content.goal.impl.colletion_log.CollectionLogItemGoal;
 import net.runelite.api.Client;
 import net.runelite.client.game.ItemManager;
 
@@ -137,15 +139,9 @@ public final class GrinderRepository {
                 JsonObject savedGoal = element.getAsJsonObject();
                 String className = savedGoal.get("class").getAsString();
                 JsonElement data = savedGoal.get("data");
-                Class<?> type = Class.forName(className);
-
-                if (!Goal.class.isAssignableFrom(type)) {
-                    continue;
-                }
-
                 Goal goal;
 
-                if (CollectionLogEntryGoal.class.isAssignableFrom(type)) {
+                if (CollectionLogEntryGoal.class.getName().equals(className)) {
                     if (data == null || !data.isJsonObject()) {
                         continue;
                     }
@@ -158,19 +154,26 @@ public final class GrinderRepository {
 
                     CollectionLogEntry entry = GSON.fromJson(entryElement, CollectionLogEntry.class);
                     goal = new CollectionLogEntryGoal(null, entry);
+                } else if (CollectionLogItemGoal.class.getName().equals(className)) {
+                    goal = GSON.fromJson(data, CollectionLogItemGoal.class);
+                } else if (TrackerGoal.class.getName().equals(className)) {
+                    goal = GSON.fromJson(data, TrackerGoal.class);
                 } else {
-                    goal = (Goal) GSON.fromJson(data, type);
+                    // Profiles are intentionally limited to the built-in goal
+                    // types. Never load a class selected by profile data.
+                    continue;
                 }
 
                 if (goal != null) {
                     goals.add(goal);
                 }
-            } catch (ReflectiveOperationException | RuntimeException exception) {
+            } catch (RuntimeException exception) {
                 System.err.println("Failed to restore a goal in " + path + ": " + exception.getMessage());
             }
         }
 
         profile.replace(goals);
+        profile.ensureDefaultGoals(null);
         return profile;
     }
 

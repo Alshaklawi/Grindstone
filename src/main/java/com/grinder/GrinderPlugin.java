@@ -3,35 +3,39 @@ package com.grinder;
 
 import com.google.inject.Provides;
 import com.grinder.config.GrinderConfig;
-import com.grinder.repository.GrinderProfile;
 import com.grinder.content.goal.Goal;
+import com.grinder.content.goal.impl.TrackerGoal;
 import com.grinder.content.goal.impl.colletion_log.CollectionLogEntryGoal;
+import com.grinder.content.goal.impl.colletion_log.CollectionLogItemGoal;
+import com.grinder.repository.GrinderProfile;
 import com.grinder.repository.GrinderRepository;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
-import net.runelite.client.callback.ClientThread;
-import net.runelite.client.config.ConfigManager;
-import net.runelite.client.events.ConfigChanged;
+import net.runelite.api.ItemContainer;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.ItemContainerChanged;
+import net.runelite.api.events.VarbitChanged;
+import net.runelite.client.callback.ClientThread;
+import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
-import net.runelite.client.util.ImageUtil;
 
 @Slf4j
-@PluginDescriptor(name = "Grinder")
+@PluginDescriptor(
+        name = "Grinder",
+        description = "Track collection log progress and personal goals",
+        tags = {"collection", "goals", "tracker"}
+)
 public class GrinderPlugin extends Plugin
 {
-    @Inject
-    private GrinderPanel panel;
-
     @Inject
     private Client client;
 
@@ -47,35 +51,39 @@ public class GrinderPlugin extends Plugin
     @Inject
     private ClientThread clientThread;
 
-    private NavigationButton navigation;
+    @Inject
+    private GrinderPanel panel;
+
+    private NavigationButton navigationButton;
     private GrinderProfile profile;
 
     @Override
     protected void startUp()
     {
-        log.info("Grinder started.");
-
         try
         {
             GrinderRepository.load();
         }
-        catch (IOException ex)
+        catch (IOException e)
         {
-            log.error("Unable to load Grinder profiles.", ex);
+            log.error("Unable to load Grinder profiles", e);
         }
 
-        navigation = NavigationButton.builder()
+        navigationButton = NavigationButton.builder()
                 .tooltip("Grinder")
-                .icon(ImageUtil.loadImageResource(getClass(), "/grinder.png"))
+                .icon(loadIcon())
                 .priority(5)
                 .panel(panel)
                 .build();
 
-        setNavigationVisible(config.enabled());
+        if (config.enabled())
+        {
+            clientToolbar.addNavigation(navigationButton);
+        }
 
         if (client.getGameState() == GameState.LOGGED_IN && config.enabled())
         {
-            load();
+            loadProfile();
         }
     }
 
@@ -86,34 +94,29 @@ public class GrinderPlugin extends Plugin
         {
             saveProfile();
         }
-
-        setNavigationVisible(false);
         panel.unload();
-        navigation = null;
+        setNavigationVisible(false);
+        navigationButton = null;
         profile = null;
-        log.info("Grinder stopped.");
     }
 
     @Subscribe
     public void onGameStateChanged(GameStateChanged event)
     {
-        if (!config.enabled())
-        {
-            return;
-        }
+        GameState state = event.getGameState();
 
-        if (event.getGameState() == GameState.LOGGED_IN)
+        if (state == GameState.LOGGED_IN && config.enabled())
         {
-            load();
+            loadProfile();
         }
-        else if (event.getGameState() == GameState.LOGIN_SCREEN || event.getGameState() == GameState.CONNECTION_LOST)
+        else if (state == GameState.LOGIN_SCREEN || state == GameState.CONNECTION_LOST)
         {
             onLogout();
         }
     }
 
     @Subscribe
-    public void onConfigChanged(ConfigChanged event)
+    public void onConfigChanged(net.runelite.client.events.ConfigChanged event)
     {
         if (!"grinder".equals(event.getGroup()))
         {
@@ -132,7 +135,7 @@ public class GrinderPlugin extends Plugin
 
         if (client.getGameState() == GameState.LOGGED_IN && profile == null)
         {
-            load();
+            loadProfile();
         }
         else
         {
@@ -143,22 +146,50 @@ public class GrinderPlugin extends Plugin
     @Subscribe
     public void onItemContainerChanged(ItemContainerChanged event)
     {
-        if (!config.enabled() || profile == null)
+        if (profile == null || !config.enabled())
+        {
+            return;
+        }
+
+        ItemContainer container = event.getItemContainer();
+
+        if (container == null)
         {
             return;
         }
 
         for (Goal goal : profile.getGoals())
         {
-            goal.onItemContainerUpdated(client, event.getItemContainer());
-        }
+            if (goal == null || !goal.isAffectedBy(container))
+            {
+                continue;
+            }
 
-        panel.render();
+            goal.onItemContainerUpdated(client, container);
+            panel.refreshGoal(goal);
+        }
     }
 
-    private void load()
+    @Subscribe
+    public void onVarbitChanged(VarbitChanged event)
     {
-        if (!config.enabled())
+        if (profile == null || !config.enabled())
+        {
+            return;
+        }
+
+        for (Goal goal : profile.getGoals())
+        {
+            if (goal instanceof TrackerGoal && ((TrackerGoal) goal).refresh(client))
+            {
+                panel.refreshGoal(goal);
+            }
+        }
+    }
+
+    private void loadProfile()
+    {
+        if (!config.enabled() || client.getGameState() != GameState.LOGGED_IN)
         {
             return;
         }
@@ -166,31 +197,25 @@ public class GrinderPlugin extends Plugin
         try
         {
             profile = GrinderRepository.load(client, itemManager);
-            onLogin();
-        }
-        catch (IOException ex)
-        {
-            log.error("Unable to load Grinder profile.", ex);
-        }
-    }
+            panel.load(profile);
+            setNavigationVisible(true);
 
-    private void onLogin()
-    {
-        if (profile == null || !config.enabled())
-        {
-            return;
-        }
+            log.debug("Loaded Grinder profile with {} goals", profile.getGoals().size());
 
-        panel.load(profile);
-        setNavigationVisible(true);
-
-        for (Goal goal : profile.getGoals())
-        {
-            if (goal instanceof CollectionLogEntryGoal)
+            for (Goal goal : profile.getGoals())
             {
-                CollectionLogEntryGoal collectionLogGoal = (CollectionLogEntryGoal) goal;
-                log.debug("Loaded collection log goal: {}", collectionLogGoal.getEntry());
+                if (goal instanceof CollectionLogEntryGoal)
+                {
+                    CollectionLogEntryGoal collectionGoal = (CollectionLogEntryGoal) goal;
+                    log.debug("Loaded collection log goal: {}", collectionGoal.getTitle(client));
+                }
             }
+        }
+        catch (IOException e)
+        {
+            log.error("Unable to load Grinder profile", e);
+            profile = null;
+            panel.unload();
         }
     }
 
@@ -200,9 +225,8 @@ public class GrinderPlugin extends Plugin
         {
             saveProfile();
         }
-
-        panel.unload();
         profile = null;
+        panel.unload();
     }
 
     private void saveProfile()
@@ -216,27 +240,32 @@ public class GrinderPlugin extends Plugin
         {
             GrinderRepository.save(profile);
         }
-        catch (IOException ex)
+        catch (IOException e)
         {
-            log.error("Unable to save Grinder profile.", ex);
+            log.error("Unable to save Grinder profile", e);
         }
     }
 
     private void setNavigationVisible(boolean visible)
     {
-        if (navigation == null)
+        if (navigationButton == null)
         {
             return;
         }
 
-        if (visible && config.enabled())
+        if (visible)
         {
-            clientToolbar.addNavigation(navigation);
+            clientToolbar.addNavigation(navigationButton);
         }
         else
         {
-            clientToolbar.removeNavigation(navigation);
+            clientToolbar.removeNavigation(navigationButton);
         }
+    }
+
+    private BufferedImage loadIcon()
+    {
+        return net.runelite.client.util.ImageUtil.loadImageResource(getClass(), "/grinder.png");
     }
 
     @Provides

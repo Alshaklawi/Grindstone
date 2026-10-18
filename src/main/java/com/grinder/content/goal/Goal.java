@@ -2,11 +2,9 @@
 package com.grinder.content.goal;
 
 import com.grinder.config.GrinderConfig;
-
+import com.grinder.ui.GoalComponent;
 import java.awt.image.BufferedImage;
 import java.time.LocalDateTime;
-
-import com.grinder.ui.GoalComponent;
 import net.runelite.api.Client;
 import net.runelite.api.ItemContainer;
 
@@ -24,17 +22,22 @@ public interface Goal
 
     default LocalDateTime getStart()
     {
-        return LocalDateTime.now();
+        return null;
     }
 
     default LocalDateTime getEnd()
     {
-        return LocalDateTime.now();
+        return null;
     }
 
     default GoalStatus getStatus()
     {
         return GoalStatus.NOT_STARTED;
+    }
+
+    default GoalCategory getCategory()
+    {
+        return GoalCategory.fromName(getClass().getSimpleName());
     }
 
     default boolean hasProgress()
@@ -80,12 +83,25 @@ public interface Goal
     default GoalComponent build(Client client, GrinderConfig config)
     {
         GoalComponent component = build(client);
-        component.setIconVisible(config.showGoalIcons());
-        component.setProgressBarVisible(config.showProgressBar());
+        component.setIconVisible(config == null || config.showGoalIcons());
+        component.setProgressBarVisible(config == null || config.showProgressBar());
         return component;
     }
 
+    /**
+     * Called when an item container changes. Implementations should update their
+     * internal state only; Swing updates must be scheduled on the EDT.
+     */
     default void onItemContainerUpdated(Client client, ItemContainer container)
     {
+    }
+
+    /**
+     * Returns whether this goal may be affected by a change to the given container.
+     * Goals that depend on other containers should override this method.
+     */
+    default boolean isAffectedBy(ItemContainer container)
+    {
+        return container != null;
     }
 }

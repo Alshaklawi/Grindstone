@@ -1,6 +1,7 @@
 
 package com.grinder.ui;
 
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.util.ArrayList;
@@ -14,55 +15,75 @@ public class ItemContainerComponent extends JPanel
 {
     private static final int ITEM_GAP = 4;
     private static final int ITEM_SIZE = 40;
+    private static final int SCROLLBAR_WIDTH = 10;
 
     private final JPanel grid = new JPanel();
-    private final JScrollPane scroll;
+    private final JScrollPane scroll = new JScrollPane(grid);
     private final List<ItemComponent> items = new ArrayList<>();
 
     private int itemsPerRow = 4;
     private int maxRows = 5;
+    private List<ItemComponent> renderedItems = Collections.emptyList();
+    private Dimension renderedGridSize;
+    private Dimension renderedPreferredSize;
 
     public ItemContainerComponent()
     {
-        setLayout(new java.awt.BorderLayout());
+        super(new BorderLayout());
         setOpaque(false);
+        setAlignmentX(LEFT_ALIGNMENT);
 
         grid.setOpaque(false);
         grid.setLayout(new GridLayout(0, itemsPerRow, ITEM_GAP, ITEM_GAP));
 
-        scroll = new JScrollPane(grid, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         scroll.setBorder(null);
         scroll.setOpaque(false);
         scroll.getViewport().setOpaque(false);
+        scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         scroll.getVerticalScrollBar().setUnitIncrement(ITEM_SIZE + ITEM_GAP);
 
-        add(scroll, java.awt.BorderLayout.CENTER);
+        add(scroll, BorderLayout.CENTER);
         refresh();
     }
 
     public void configure(int itemsPerRow, int maxRows)
     {
-        this.itemsPerRow = Math.max(1, Math.min(8, itemsPerRow));
-        this.maxRows = Math.max(1, Math.min(10, maxRows));
-        grid.setLayout(new GridLayout(0, this.itemsPerRow, ITEM_GAP, ITEM_GAP));
+        int nextItemsPerRow = Math.max(1, Math.min(8, itemsPerRow));
+        int nextMaxRows = Math.max(1, Math.min(10, maxRows));
+
+        if (this.itemsPerRow == nextItemsPerRow && this.maxRows == nextMaxRows)
+        {
+            return;
+        }
+
+        this.itemsPerRow = nextItemsPerRow;
+        this.maxRows = nextMaxRows;
+        grid.setLayout(new GridLayout(0, nextItemsPerRow, ITEM_GAP, ITEM_GAP));
+        renderedGridSize = null;
+        renderedPreferredSize = null;
         refresh();
     }
 
     public void set(List<ItemComponent> components)
     {
-        items.clear();
+        List<ItemComponent> nextItems = components == null
+                ? Collections.emptyList()
+                : new ArrayList<>(components);
 
-        if (components != null)
+        if (items.equals(nextItems))
         {
-            items.addAll(components);
+            return;
         }
 
+        items.clear();
+        items.addAll(nextItems);
         refresh();
     }
 
     public void add(ItemComponent component)
     {
-        if (component == null)
+        if (component == null || items.contains(component))
         {
             return;
         }
@@ -73,6 +94,11 @@ public class ItemContainerComponent extends JPanel
 
     public void clear()
     {
+        if (items.isEmpty())
+        {
+            return;
+        }
+
         items.clear();
         refresh();
     }
@@ -82,24 +108,70 @@ public class ItemContainerComponent extends JPanel
         return Collections.unmodifiableList(items);
     }
 
-    public void refresh()
+    private void refresh()
     {
-        grid.removeAll();
+        int scrollPosition = scroll.getVerticalScrollBar().getValue();
+        boolean childrenChanged = !renderedItems.equals(items);
+        boolean sizeChanged;
 
-        for (ItemComponent item : items)
+        int rows = items.isEmpty() ? 0 : (items.size() + itemsPerRow - 1) / itemsPerRow;
+        int visibleRows = Math.max(1, Math.min(rows, maxRows));
+        int gridWidth = itemsPerRow * ITEM_SIZE + (itemsPerRow - 1) * ITEM_GAP;
+        int gridHeight = Math.max(1, rows) * ITEM_SIZE + Math.max(0, rows - 1) * ITEM_GAP;
+        int visibleHeight = visibleRows * ITEM_SIZE + (visibleRows - 1) * ITEM_GAP;
+
+        Dimension nextGridSize = new Dimension(gridWidth, gridHeight);
+        Dimension nextPreferredSize = new Dimension(
+                gridWidth + SCROLLBAR_WIDTH,
+                visibleHeight + 4);
+
+        sizeChanged = !nextGridSize.equals(renderedGridSize)
+                || !nextPreferredSize.equals(renderedPreferredSize);
+
+        if (childrenChanged)
         {
-            grid.add(item);
+            grid.removeAll();
+
+            for (ItemComponent item : items)
+            {
+                grid.add(item);
+            }
+
+            renderedItems = new ArrayList<>(items);
         }
 
-        int rows = Math.max(1, (int) Math.ceil((double) items.size() / itemsPerRow));
-        int visibleRows = Math.min(rows, maxRows);
-        int width = itemsPerRow * ITEM_SIZE + Math.max(0, itemsPerRow - 1) * ITEM_GAP;
-        int height = visibleRows * ITEM_SIZE + Math.max(0, visibleRows - 1) * ITEM_GAP;
+        if (!nextGridSize.equals(renderedGridSize))
+        {
+            grid.setPreferredSize(nextGridSize);
+            renderedGridSize = nextGridSize;
+        }
 
-        grid.setPreferredSize(new Dimension(width, Math.max(ITEM_SIZE, rows * ITEM_SIZE + Math.max(0, rows - 1) * ITEM_GAP)));
-        scroll.setPreferredSize(new Dimension(width, height + 2));
-        scroll.setVerticalScrollBarPolicy(rows > maxRows ? ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED : ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
-        revalidate();
-        repaint();
+        if (!nextPreferredSize.equals(renderedPreferredSize))
+        {
+            setPreferredSize(nextPreferredSize);
+            setMinimumSize(new Dimension(gridWidth, 1));
+            setMaximumSize(new Dimension(gridWidth + SCROLLBAR_WIDTH, Integer.MAX_VALUE));
+            renderedPreferredSize = nextPreferredSize;
+        }
+
+        scroll.setVerticalScrollBarPolicy(rows > maxRows
+                ? ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
+                : ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+
+        if (childrenChanged || sizeChanged)
+        {
+            grid.revalidate();
+            revalidate();
+        }
+
+        if (childrenChanged)
+        {
+            grid.repaint();
+            repaint();
+        }
+
+        scroll.getVerticalScrollBar().setValue(Math.min(
+                scrollPosition,
+                scroll.getVerticalScrollBar().getMaximum()));
     }
 }
