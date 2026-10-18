@@ -1,7 +1,5 @@
 plugins {
 	id 'java'
-    id 'org.jetbrains.kotlin.jvm'
-    id "org.jetbrains.kotlin.plugin.lombok" version '2.4.10'
 }
 
 repositories {
