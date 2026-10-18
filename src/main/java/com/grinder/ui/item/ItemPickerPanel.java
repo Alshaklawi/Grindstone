@@ -160,6 +160,10 @@ public final class ItemPickerPanel extends JPanel {
     }
 
     public boolean hasSelection() { return selected != null; }
+    public void loadItem(int id) {
+        search.setText(Integer.toString(id));
+        search();
+    }
 
     public void stopSearch() {
         queryVersion++;

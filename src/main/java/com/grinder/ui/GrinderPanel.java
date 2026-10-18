@@ -528,8 +528,7 @@ public class GrinderPanel extends PluginPanel {
                     String title = safeTitle(goal);
                     com.grinder.repository.GoalMetadata metadata = currentProfile.metadata(goal);
                     metadata.observe(goal, title, System.currentTimeMillis());
-                    component.setGoalActions(goal.supportsTarget()
-                            ? event -> editGoal(currentProfile, goal, title) : null,
+                    component.setGoalActions(event -> editGoal(currentProfile, goal, title),
                             event -> deleteGoal(currentProfile, goal, title));
                     String history = metadata.historyText();
                     boolean pinned = metadata.isPinned();
@@ -1007,33 +1006,27 @@ public class GrinderPanel extends PluginPanel {
 
     private void editGoal(GrinderProfile active, Goal goal, String title) {
         if (profile != active) { return; }
-        if (goal instanceof CustomGoal) {
-            editCustomGoal(active, (CustomGoal) goal, title);
-            return;
-        }
-        JSpinner target = new JSpinner(GoalTargetModels.create(goal));
-        target.setEditor(new JSpinner.NumberEditor(target, "#,##0"));
-        GoalTargetModels.describe(target);
-        JPanel form = new JPanel(new BorderLayout(0, 8));
-        form.add(new JLabel("Target"), BorderLayout.NORTH);
-        form.add(target, BorderLayout.CENTER);
-        while (JOptionPane.showConfirmDialog(this, form, "Edit " + title,
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
-            try {
-                target.commitEdit();
-                long value = ((Number) target.getValue()).longValue();
+        if (goal instanceof CustomGoal) { editCustomGoal(active, (CustomGoal) goal, title); return; }
+        clientThread.invokeLater(() -> {
+            if (profile != active || !active.getGoals().contains(goal)) { return; }
+            java.util.Map<Integer, java.util.Map<String, java.util.function.Supplier<Goal>>> choices = com.grinder.ui.editor.CompletionGoalChoices.create(client);
+            SwingUtilities.invokeLater(() -> {
+                if (profile != active) { return; }
+                GoalEditorPanel form = new GoalEditorPanel(itemManager, itemSearchService, choices);
+                try { form.loadGoal(goal); }
+                catch (IllegalArgumentException exception) { form.stopSearch(); JOptionPane.showMessageDialog(this, exception.getMessage()); return; }
+                Goal replacement = GoalCreationDialog.showDialog(this, form, "Edit " + title, "Save changes");
+                if (replacement == null) { return; }
                 clientThread.invokeLater(() -> {
-                    if (profile == active && active.getGoals().contains(goal)) {
-                        goal.setTarget(value);
-                        render();
+                    if (profile != active) { return; }
+                    try {
+                        if (active.replaceGoal(goal, replacement)) { replacement.refresh(client); render(); }
+                    } catch (IllegalArgumentException exception) {
+                        SwingUtilities.invokeLater(() -> { if (profile == active) { JOptionPane.showMessageDialog(this, exception.getMessage()); } });
                     }
                 });
-                return;
-            }
-            catch (java.text.ParseException exception) {
-                JOptionPane.showMessageDialog(this, "Enter a valid target within the allowed range.");
-            }
-        }
+            });
+        });
     }
 
     private void editCustomGoal(GrinderProfile active, CustomGoal goal, String title) {

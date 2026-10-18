@@ -127,7 +127,13 @@ public final class GoalCreationDialog extends JDialog {
     }
 
     public static Goal showDialog(Component owner, GoalEditorPanel form) {
+        return showDialog(owner, form, "Add goal", "Add goal");
+    }
+    public static Goal showDialog(Component owner, GoalEditorPanel form, String title, String action) {
         GoalCreationDialog dialog = new GoalCreationDialog(owner, form);
+        dialog.setTitle(title);
+        dialog.add.setText(action);
+        dialog.add.setToolTipText("Save the selected goal to the current player profile.");
         dialog.setVisible(true);
         return dialog.result;
     }

@@ -185,6 +185,20 @@ public class GrinderProfile {
         }
         return true;
     }
+    public static boolean sameSelection(Goal left, Goal right) { return sameGoal(left, right); }
+    public boolean replaceGoal(Goal original, Goal replacement) {
+        int index = goals.indexOf(original);
+        if (index < 0) { return false; }
+        for (Goal goal : goals) { if (goal != original && sameGoal(goal, replacement)) { throw new IllegalArgumentException("That goal is already tracked. Edit the existing goal instead."); } }
+        GoalMetadata old = metadata(original);
+        GoalMetadata next = sameGoal(original, replacement) ? old : new GoalMetadata();
+        next.setPinned(old.isPinned());
+        attachCollectionData(replacement);
+        goals.set(index, replacement);
+        metadata.put(replacement, next);
+        metadata.remove(original);
+        return true;
+    }
 
     public boolean remove(Goal goal) {
         return goals.remove(goal);

@@ -274,6 +274,36 @@ public final class GoalEditorPanel extends JPanel {
     }
 
     public void stopSearch() { itemPicker.stopSearch(); }
+    public void loadGoal(Goal goal) {
+        if (goal instanceof com.grinder.content.goal.impl.item.PossessedItemGoal) {
+            type.setSelectedIndex(16);
+            target.setValue(goal.getProgressMaximum());
+            itemPicker.loadItem(((com.grinder.content.goal.impl.item.PossessedItemGoal) goal).getItem());
+            return;
+        }
+        if (goal instanceof CollectionLogItemGoal) {
+            type.setSelectedIndex(7);
+            itemPicker.loadItem(((CollectionLogItemGoal) goal).getItem());
+            return;
+        }
+        if (goal instanceof com.grinder.content.goal.impl.CustomGoal) {
+            type.setSelectedIndex(8);
+            customForm.load((com.grinder.content.goal.impl.CustomGoal) goal);
+            return;
+        }
+        for (int kind = 0; kind < type.getItemCount(); kind++) {
+            if (kind == 7 || kind == 8 || kind == 16) { continue; }
+            type.setSelectedIndex(kind);
+            for (Map.Entry<String, Supplier<Goal>> choice : choices.entrySet()) {
+                if (com.grinder.repository.GrinderProfile.sameSelection(goal, choice.getValue().get())) {
+                    subject.setSelectedItem(choice.getKey());
+                    if (goal.supportsTarget()) { target.setValue(goal.getProgressMaximum()); }
+                    return;
+                }
+            }
+        }
+        throw new IllegalArgumentException("This goal's subject is not available in the current client data.");
+    }
 
     @Override
     public Dimension getPreferredSize() {
