@@ -1,5 +1,18 @@
 # RuneLite Plugin Development — Agent Guidelines
 
+## Java Style
+
+- Use same-line opening braces for classes, methods, constructors, and control flow.
+- Put each enum constant on its own line.
+- Never wrap lines solely because of their length.
+- Keep the requested author, Discord, and since header on every class; do not add other source comments.
+
+## Commits
+
+- Keep every commit atomic: one focused change per commit.
+- Keep formatting-only changes separate from behavior changes.
+- Do not include unrelated existing work in a commit.
+
 ## Logging
 
 - Use `log.debug()` for developer/diagnostic logging.
