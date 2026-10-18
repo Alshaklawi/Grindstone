@@ -6,6 +6,11 @@ import com.grinder.content.tracker.TrackerEntry;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.impl.TrackerGoal;
 import com.grinder.content.goal.impl.CustomGoal;
+import com.grinder.content.goal.GoalCategory;
+import com.grinder.content.goal.impl.item.PossessedItemGoal;
+import com.grinder.content.goal.impl.combatachievement.CombatAchievementBossGoal;
+import com.grinder.content.goal.impl.combatachievement.CombatAchievementDifficultyGoal;
+import com.grinder.content.combatachievement.CombatAchievementTier;
 import com.grinder.content.goal.impl.level.CombatLevelGoal;
 import com.grinder.content.goal.impl.level.SkillLevelGoal;
 import com.grinder.content.goal.impl.level.TotalLevelGoal;
@@ -93,6 +98,12 @@ public class GrinderProfile {
         addDefaultCollectionItem(ItemID.DRAGON_PICKAXE);
         addDefaultCollectionItem(ItemID.TWISTED_BOW);
         addDefaultCollectionItem(ItemID.JAR_OF_SPIRITS);
+        add(new PossessedItemGoal(ItemID.COINS, 1_500_000_000L));
+        add(new PossessedItemGoal(ItemID.DRAGON_PICKAXE, 1));
+        add(new CombatAchievementBossGoal("Barrows"));
+        add(new CombatAchievementDifficultyGoal(CombatAchievementTier.EASY));
+        String customExampleId = java.util.UUID.nameUUIDFromBytes("grinder-default-custom-goal".getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString();
+        add(new CustomGoal(customExampleId, "Example: complete 10 personal challenges", "A manual tracker example. Edit its title, description, target and progress to suit your own goal.", GoalCategory.OTHER, 0, 10));
         add(new com.grinder.content.goal.impl.quest.QuestGoal(net.runelite.api.Quest.DRAGON_SLAYER_I));
         add(new com.grinder.content.goal.impl.quest.QuestSeriesGoal(com.grinder.content.quest.QuestSeries.ELF));
         add(new com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierAreaGoal(
@@ -140,6 +151,9 @@ public class GrinderProfile {
 
     private static boolean sameGoal(Goal left, Goal right) {
         if (left.getClass() != right.getClass()) { return false; }
+        if (left instanceof CombatAchievementBossGoal) {
+            return ((CombatAchievementBossGoal) left).matches((CombatAchievementBossGoal) right);
+        }
         if (left instanceof com.grinder.content.goal.impl.item.PossessedItemGoal) {
             return ((com.grinder.content.goal.impl.item.PossessedItemGoal) left).getItem()
                     == ((com.grinder.content.goal.impl.item.PossessedItemGoal) right).getItem();

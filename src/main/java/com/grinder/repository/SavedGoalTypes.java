@@ -54,6 +54,7 @@ final class SavedGoalTypes {
         types.put(type.getName(), type);
     }
     static Class<? extends Goal> resolve(String name) { return TYPES.get(name); }
+    static java.util.Set<Class<? extends Goal>> registeredTypes() { return Collections.unmodifiableSet(new java.util.HashSet<>(TYPES.values())); }
     static String nameOf(Goal goal) {
         for (Map.Entry<String, Class<? extends Goal>> entry : TYPES.entrySet()) {
             if (entry.getValue() == goal.getClass()) { return entry.getKey(); }
