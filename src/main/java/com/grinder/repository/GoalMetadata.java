@@ -12,6 +12,9 @@ import java.util.UUID;
  */
 public final class GoalMetadata {
     private final String id;
+    private boolean pinned;
+    public boolean isPinned() { return pinned; }
+    public void setPinned(boolean pinned) { this.pinned = pinned; }
     private final List<Completion> completions = new ArrayList<>();
     public GoalMetadata() { id = UUID.randomUUID().toString(); }
     public String getId() { return id; }

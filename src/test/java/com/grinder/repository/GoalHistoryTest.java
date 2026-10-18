@@ -28,10 +28,12 @@ public class GoalHistoryTest {
         CustomGoal goal = new CustomGoal("Routine", "", GoalCategory.OTHER, 10, 10);
         profile.replace(Collections.singletonList(goal));
         profile.metadata(goal).observe(goal, "Routine", 1000);
+        profile.metadata(goal).setPinned(true);
         String id = profile.metadata(goal).getId();
         GrinderProfile restored = GrinderRepository.fromJson(GrinderRepository.toJson(profile));
         GoalMetadata metadata = restored.metadata(restored.getGoals().get(0));
         assertEquals(id, metadata.getId());
+        assertTrue(metadata.isPinned());
         assertEquals(1000, metadata.getCompletions().get(0).getObservedAt());
         assertTrue(metadata.historyText().contains("not the historical"));
     }

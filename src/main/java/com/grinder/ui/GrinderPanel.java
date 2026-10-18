@@ -524,6 +524,11 @@ public class GrinderPanel extends PluginPanel {
                             ? event -> editGoal(currentProfile, goal, title) : null,
                             event -> deleteGoal(currentProfile, goal, title));
                     String history = metadata.historyText();
+                    boolean pinned = metadata.isPinned();
+                    component.putClientProperty("grinder.pinned", pinned);
+                    component.addGoalAction(pinned ? "Unpin goal" : "Pin goal", "Pinned goals appear first, while still respecting your search and filters.", event -> clientThread.invokeLater(() -> {
+                        if (profile == currentProfile && currentProfile.getGoals().contains(goal)) { currentProfile.metadata(goal).setPinned(!pinned); render(); }
+                    }));
                     component.addGoalAction("Completion history...", "View first-observed completion times for this goal's targets.", event -> showHistory(history));
                     if (!metadata.getCompletions().isEmpty() && goal.getStatus() != GoalStatus.COMPLETE) { component.setAchievementNote("Previously reached a target · currently incomplete"); }
 
@@ -582,7 +587,21 @@ public class GrinderPanel extends PluginPanel {
             return;
         }
 
-        Map<GoalCategory, List<GoalView>> groupedGoals = groupGoals(filteredGoals);
+        List<GoalView> pinnedGoals = new ArrayList<>();
+        List<GoalView> remainingGoals = new ArrayList<>();
+        for (GoalView view : filteredGoals) {
+            if (Boolean.TRUE.equals(view.component.getClientProperty("grinder.pinned"))) { pinnedGoals.add(view); }
+            else { remainingGoals.add(view); }
+        }
+        if (!pinnedGoals.isEmpty()) {
+            JLabel pinnedHeading = new JLabel("Pinned goals");
+            pinnedHeading.setFont(UiTypography.SECTION);
+            pinnedHeading.setAlignmentX(LEFT_ALIGNMENT);
+            main.add(pinnedHeading);
+            main.add(Box.createVerticalStrut(8));
+            for (GoalView view : pinnedGoals) { view.component.setAlignmentX(LEFT_ALIGNMENT); main.add(view.component); main.add(Box.createVerticalStrut(12)); }
+        }
+        Map<GoalCategory, List<GoalView>> groupedGoals = groupGoals(remainingGoals);
 
         for (Map.Entry<GoalCategory, List<GoalView>> entry : groupedGoals.entrySet()) {
             addCategorySection(entry.getKey(), entry.getValue());
