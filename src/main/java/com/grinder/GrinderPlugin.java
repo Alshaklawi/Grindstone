@@ -2,40 +2,33 @@
 package com.grinder;
 
 import com.google.inject.Provides;
-import com.grinder.content.goal.impl.colletion_log.CollectionLogEntryGoal;
-import com.grinder.content.utils.Icon;
+import com.grinder.config.GrinderConfig;
 import com.grinder.repository.GrinderProfile;
+import com.grinder.content.goal.Goal;
+import com.grinder.content.goal.impl.colletion_log.CollectionLogEntryGoal;
 import com.grinder.repository.GrinderRepository;
-import lombok.Getter;
+import java.io.IOException;
+import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
-import net.runelite.api.events.*;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.events.ConfigChanged;
+import net.runelite.api.events.GameStateChanged;
+import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.client.eventbus.Subscribe;
-import net.runelite.client.events.ClientShutdown;
-import net.runelite.client.events.RuneScapeProfileChanged;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
+import net.runelite.client.util.ImageUtil;
 
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.function.Consumer;
-
-/**
- * Grinder plugin entry point.
- *
- * @author Ayman Yassen
- * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
- * @since 10/18/2026
- */
 @Slf4j
 @PluginDescriptor(name = "Grinder")
-public class GrinderPlugin extends Plugin {
+public class GrinderPlugin extends Plugin
+{
     @Inject
     private GrinderPanel panel;
 
@@ -45,186 +38,210 @@ public class GrinderPlugin extends Plugin {
     @Inject
     private ItemManager itemManager;
 
-    @Getter
     @Inject
     private GrinderConfig config;
 
-    @Getter
-    @Inject
-    private ClientThread clientThread;
-
     @Inject
     private ClientToolbar clientToolbar;
+
+    @Inject
+    private ClientThread clientThread;
 
     private NavigationButton navigation;
     private GrinderProfile profile;
 
     @Override
-    protected void startUp() {
-        log.debug("Grinder started!");
+    protected void startUp()
+    {
+        log.info("Grinder started.");
 
-        try {
+        try
+        {
             GrinderRepository.load();
-        } catch (IOException exception) {
-            log.error("Unable to load Grinder profiles.", exception);
+        }
+        catch (IOException ex)
+        {
+            log.error("Unable to load Grinder profiles.", ex);
         }
 
         navigation = NavigationButton.builder()
                 .tooltip("Grinder")
-                .icon(Icon.MAIN.getImage())
-                .priority(8)
+                .icon(ImageUtil.loadImageResource(getClass(), "/grinder.png"))
+                .priority(5)
                 .panel(panel)
                 .build();
 
-        setNavigationVisible(true);
+        setNavigationVisible(config.enabled());
 
-        if (client.getGameState() == GameState.LOGGED_IN) {
-            clientThread.invokeLater(() -> {
-                if (client.getGameState() == GameState.LOGGED_IN) {
-                    load();
-                }
-            });
+        if (client.getGameState() == GameState.LOGGED_IN && config.enabled())
+        {
+            load();
         }
     }
 
     @Override
-    protected void shutDown() {
-        saveProfile();
+    protected void shutDown()
+    {
+        if (config.saveOnShutdown())
+        {
+            saveProfile();
+        }
 
-        log.debug("Grinder stopped!");
         setNavigationVisible(false);
         panel.unload();
         navigation = null;
         profile = null;
+        log.info("Grinder stopped.");
     }
 
     @Subscribe
-    public void onGameStateChanged(GameStateChanged event) {
-        GameState state = event.getGameState();
+    public void onGameStateChanged(GameStateChanged event)
+    {
+        if (!config.enabled())
+        {
+            return;
+        }
 
-        if (state == GameState.LOGGED_IN) {
-            clientThread.invokeLater(() -> {
-                if (client.getGameState() == GameState.LOGGED_IN) {
-                    load();
-                }
-            });
-        } else if (state == GameState.LOGIN_SCREEN || state == GameState.CONNECTION_LOST) {
+        if (event.getGameState() == GameState.LOGGED_IN)
+        {
+            load();
+        }
+        else if (event.getGameState() == GameState.LOGIN_SCREEN || event.getGameState() == GameState.CONNECTION_LOST)
+        {
             onLogout();
         }
     }
 
-    private void load() {
-        try {
+    @Subscribe
+    public void onConfigChanged(ConfigChanged event)
+    {
+        if (!"grinder".equals(event.getGroup()))
+        {
+            return;
+        }
+
+        if (!config.enabled())
+        {
+            saveProfile();
+            panel.unload();
+            setNavigationVisible(false);
+            return;
+        }
+
+        setNavigationVisible(true);
+
+        if (client.getGameState() == GameState.LOGGED_IN && profile == null)
+        {
+            load();
+        }
+        else
+        {
+            panel.render();
+        }
+    }
+
+    @Subscribe
+    public void onItemContainerChanged(ItemContainerChanged event)
+    {
+        if (!config.enabled() || profile == null)
+        {
+            return;
+        }
+
+        for (Goal goal : profile.getGoals())
+        {
+            goal.onItemContainerUpdated(client, event.getItemContainer());
+        }
+
+        panel.render();
+    }
+
+    private void load()
+    {
+        if (!config.enabled())
+        {
+            return;
+        }
+
+        try
+        {
             profile = GrinderRepository.load(client, itemManager);
             onLogin();
-        } catch (Exception exception) {
-            log.error("Unable to load Grinder profile.", exception);
+        }
+        catch (IOException ex)
+        {
+            log.error("Unable to load Grinder profile.", ex);
         }
     }
 
-    @Provides
-    GrinderConfig provideConfig(ConfigManager configManager) {
-        return configManager.getConfig(GrinderConfig.class);
-    }
-
-    @Subscribe
-    public void onCommandExecuted(CommandExecuted commandExecuted) {
-    }
-
-    @Subscribe(priority = 100)
-    private void onClientShutdown(ClientShutdown event) {
-        saveProfile();
-    }
-
-    @Subscribe
-    public void onChatMessage(ChatMessage chatMessage) {
-    }
-
-    @Subscribe
-    public void onVarbitChanged(VarbitChanged event) {
-    }
-
-    @Subscribe
-    private void onRuneScapeProfileChanged(RuneScapeProfileChanged event) {
-        onLogout();
-
-        if (client.getGameState() == GameState.LOGGED_IN) {
-            clientThread.invokeLater(() -> {
-                if (client.getGameState() == GameState.LOGGED_IN) {
-                    load();
-                }
-            });
+    private void onLogin()
+    {
+        if (profile == null || !config.enabled())
+        {
+            return;
         }
-    }
 
-    private void onLogin() {
-        log.debug("Logged in");
+        panel.load(profile);
+        setNavigationVisible(true);
 
-        require(profile -> {
-            panel.load(profile);
-            setNavigationVisible(true);
-
-            for (final var goal : profile.getGoals()) {
-                if (goal instanceof CollectionLogEntryGoal) {
-                    CollectionLogEntryGoal collectionGoal = (CollectionLogEntryGoal) goal;
-
-                    for (final var item : collectionGoal.getEntry().getItems(client)) {
-                        if (item != null) {
-                            log.debug("Collection log item: {}", item.getName());
-                        }
-                    }
-                }
+        for (Goal goal : profile.getGoals())
+        {
+            if (goal instanceof CollectionLogEntryGoal)
+            {
+                CollectionLogEntryGoal collectionLogGoal = (CollectionLogEntryGoal) goal;
+                log.debug("Loaded collection log goal: {}", collectionLogGoal.getEntry());
             }
-        });
+        }
     }
 
-    private void onLogout() {
-        saveProfile();
+    private void onLogout()
+    {
+        if (config.saveOnLogout())
+        {
+            saveProfile();
+        }
 
-        log.debug("Logged out");
-        setNavigationVisible(false);
         panel.unload();
         profile = null;
     }
 
-    private void saveProfile() {
-        if (profile == null) {
+    private void saveProfile()
+    {
+        if (profile == null)
+        {
             return;
         }
 
-        try {
+        try
+        {
             GrinderRepository.save(profile);
-        } catch (IOException exception) {
-            log.error("Unable to save Grinder profile {}.", profile.getHash(), exception);
+        }
+        catch (IOException ex)
+        {
+            log.error("Unable to save Grinder profile.", ex);
         }
     }
 
-    private void setNavigationVisible(boolean visible) {
-        if (navigation == null) {
-            log.debug("Navigation button has not been initialized.");
+    private void setNavigationVisible(boolean visible)
+    {
+        if (navigation == null)
+        {
             return;
         }
 
-        if (visible) {
+        if (visible && config.enabled())
+        {
             clientToolbar.addNavigation(navigation);
-        } else {
+        }
+        else
+        {
             clientToolbar.removeNavigation(navigation);
         }
-
-        log.debug("Grinder navigation: {}", visible);
     }
 
-    public void require(Consumer<GrinderProfile> consumer) {
-        if (profile == null) {
-            log.error("Unable to find goal profile.");
-            return;
-        }
-
-        consumer.accept(profile);
-    }
-
-    @Subscribe
-    public void onItemContainerChanged(ItemContainerChanged event) {
-        require(profile -> profile.getGoals().forEach(goal -> goal.onItemContainerUpdated(client, event.getItemContainer())));
+    @Provides
+    GrinderConfig provideConfig(ConfigManager configManager)
+    {
+        return configManager.getConfig(GrinderConfig.class);
     }
 }

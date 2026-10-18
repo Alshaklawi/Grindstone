@@ -1,4 +1,3 @@
-
 package com.grinder.repository;
 
 import com.grinder.content.CollectionLogEntry;
@@ -6,21 +5,18 @@ import com.grinder.content.TrackerEntry;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.impl.TrackerGoal;
 import com.grinder.content.goal.impl.colletion_log.CollectionLogEntryGoal;
-import lombok.Getter;
-import net.runelite.api.Item;
-import net.runelite.api.ItemContainer;
-import net.runelite.client.game.ItemManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * @author Ayman Yassen
- * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
- * @since 10/18/2026
- */
+import com.grinder.content.goal.impl.colletion_log.CollectionLogItemGoal;
+import lombok.Getter;
+import net.runelite.api.Item;
+import net.runelite.api.ItemContainer;
+import net.runelite.client.game.ItemManager;
+
 @Getter
 public class GrinderProfile {
     private final long hash;
@@ -37,13 +33,14 @@ public class GrinderProfile {
     }
 
     private void initializeGoals(ItemManager itemManager) {
-        for (final CollectionLogEntry entry : CollectionLogEntry.values()) {
+        for (CollectionLogEntry entry : CollectionLogEntry.values()) {
             goals.add(new CollectionLogEntryGoal(itemManager, entry));
         }
 
-        for (final TrackerEntry entry : TrackerEntry.values()) {
+        for (TrackerEntry entry : TrackerEntry.values()) {
             goals.add(new TrackerGoal(entry, 5000));
         }
+        goals.add(new CollectionLogItemGoal(1041, 20));
     }
 
     public void setItemManager(ItemManager itemManager) {

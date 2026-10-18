@@ -1,4 +1,4 @@
-package com.grinder.content.utils;
+package com.grinder.ui;
 
 import com.grinder.GrinderPlugin;
 import lombok.NonNull;

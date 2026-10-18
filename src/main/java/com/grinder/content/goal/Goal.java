@@ -1,30 +1,25 @@
 
 package com.grinder.content.goal;
 
-import com.grinder.content.utils.Icon;
+import com.grinder.config.GrinderConfig;
+
+import java.awt.image.BufferedImage;
+import java.time.LocalDateTime;
+
 import com.grinder.ui.GoalComponent;
 import net.runelite.api.Client;
 import net.runelite.api.ItemContainer;
 
-import javax.swing.JLabel;
-import java.awt.image.BufferedImage;
-import java.time.LocalDateTime;
-
-/**
- * @author Ayman Yassen
- * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
- * @since 10/18/2026
- */
 public interface Goal
 {
     default String getTitle(Client client)
     {
-        return "Unknown goal name.";
+        return getClass().getSimpleName();
     }
 
     default BufferedImage getIcon(Client client)
     {
-        return Icon.MAIN.getImage();
+        return com.grinder.ui.Icon.MAIN.getImage();
     }
 
     default LocalDateTime getStart()
@@ -42,37 +37,24 @@ public interface Goal
         return GoalStatus.NOT_STARTED;
     }
 
-    /**
-     * Whether this goal has measurable progress and should display a progress bar.
-     */
-    default boolean hasProgress(Client client)
+    default boolean hasProgress()
     {
         return false;
     }
 
-    /**
-     * The current amount of progress for this goal.
-     */
-    default long getProgressCurrent(Client client)
+    default long getProgressCurrent()
     {
-        return 0L;
+        return 0;
     }
 
-    /**
-     * The target amount of progress for this goal.
-     */
-    default long getProgressMaximum(Client client)
+    default long getProgressMaximum()
     {
-        return 0L;
+        return 0;
     }
 
-    /**
-     * Optional text displayed in the goal's always-visible progress summary.
-     */
-    default String getProgressText(Client client)
+    default String getProgressText()
     {
-        GoalStatus status = getStatus();
-        return status == null ? "" : status.toString().replace('_', ' ');
+        return hasProgress() ? getProgressCurrent() + " / " + getProgressMaximum() : "";
     }
 
     default GoalComponent build(Client client)
@@ -83,16 +65,23 @@ public interface Goal
         component.setStartDate(getStart());
         component.setEndDate(getEnd());
 
-        if (hasProgress(client))
+        if (hasProgress())
         {
-            component.setProgress(getProgressCurrent(client), getProgressMaximum(client), getProgressText(client));
+            component.setProgress(getProgressCurrent(), getProgressMaximum(), getProgressText());
         }
         else
         {
-            component.setProgressStatus(getProgressText(client));
+            component.setProgressStatus(getStatus().name());
         }
 
-        component.getContent().add(new JLabel(getTitle(client) + " | " + getClass().getSimpleName()));
+        return component;
+    }
+
+    default GoalComponent build(Client client, GrinderConfig config)
+    {
+        GoalComponent component = build(client);
+        component.setIconVisible(config.showGoalIcons());
+        component.setProgressBarVisible(config.showProgressBar());
         return component;
     }
 
