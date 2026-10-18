@@ -21,13 +21,17 @@ import net.runelite.api.gameval.VarPlayerID;
  * @since 10/18/2026
  */
 public final class PlayerItemStorage {
+    private final java.time.Clock clock;
+    private final Map<PlayerStorageSource, java.time.Instant> lastSeen = new EnumMap<>(PlayerStorageSource.class);
+    public PlayerItemStorage() { this(java.time.Clock.systemUTC()); }
+    public PlayerItemStorage(java.time.Clock clock) { this.clock = java.util.Objects.requireNonNull(clock); }
     private final Map<PlayerStorageSource, Map<Integer, Long>> containers = new EnumMap<>(PlayerStorageSource.class);
     private final Map<String, Map<Integer, Long>> variables = new LinkedHashMap<>();
     private final Map<Integer, Integer> normalized = new HashMap<>();
     private static final int[] RUNE_TYPES = {VarbitID.RUNE_POUCH_TYPE_1, VarbitID.RUNE_POUCH_TYPE_2, VarbitID.RUNE_POUCH_TYPE_3, VarbitID.RUNE_POUCH_TYPE_4, VarbitID.RUNE_POUCH_TYPE_5, VarbitID.RUNE_POUCH_TYPE_6};
     private static final int[] RUNE_QUANTITIES = {VarbitID.RUNE_POUCH_QUANTITY_1, VarbitID.RUNE_POUCH_QUANTITY_2, VarbitID.RUNE_POUCH_QUANTITY_3, VarbitID.RUNE_POUCH_QUANTITY_4, VarbitID.RUNE_POUCH_QUANTITY_5, VarbitID.RUNE_POUCH_QUANTITY_6};
     public void reset()
-    { containers.clear(); variables.clear(); normalized.clear(); }
+    { containers.clear(); variables.clear(); normalized.clear(); lastSeen.clear(); }
     public void captureLoaded(Client client) {
         for (PlayerStorageSource source : PlayerStorageSource.values())
         { observe(client, client.getItemContainer(source.getContainerId())); }
@@ -48,6 +52,12 @@ public final class PlayerItemStorage {
             if (id > 0) { counts.merge(id, (long) item.getQuantity(), Long::sum); }
         }
         containers.put(source, counts);
+        lastSeen.put(source, clock.instant());
+    }
+    public Map<PlayerStorageSource, java.time.Instant> lastSeen() { return java.util.Collections.unmodifiableMap(new EnumMap<>(lastSeen)); }
+    public String freshness() {
+        java.time.Instant seen = lastSeen.get(PlayerStorageSource.BANK);
+        return seen == null ? "Bank not loaded this login" : "Bank snapshot: " + java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss z", Locale.ROOT).withZone(java.time.ZoneId.systemDefault()).format(seen);
     }
     public int normalize(Client client, int id) {
         return normalized.computeIfAbsent(id, key -> {
@@ -111,7 +121,7 @@ public final class PlayerItemStorage {
                 .map(entry -> entry.getKey() + ": " + String.format(Locale.ROOT, "%,d", entry.getValue()))
                 .collect(Collectors.joining("; "));
         return (amounts.isEmpty() ? "No items found in known storage." : amounts + ".")
-                + (containers.containsKey(PlayerStorageSource.BANK) ? "" : " Open your bank to include it.")
+                + (containers.containsKey(PlayerStorageSource.BANK) ? " " + freshness() + "." : " Open your bank to include it.")
                 + " Known contents this login only; open other storage to refresh it. Shared storage, GE offers, POH, deathpiles and unexposed storage are excluded.";
     }
 }

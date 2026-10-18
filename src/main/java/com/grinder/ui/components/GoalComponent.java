@@ -43,6 +43,7 @@ public class GoalComponent extends JPanel {
     private final JLabel titleLabel = new JLabel();
     private final JLabel dateLabel = new JLabel();
     private final JLabel requiredQuantityLabel = new JLabel();
+    private final JLabel trackingNoteLabel = new JLabel();
     private final JLabel progressLabel = new JLabel();
     private final SegmentedProgressBar progressBar = new SegmentedProgressBar();
     private final JLabel statusLabel = new JLabel();
@@ -86,6 +87,10 @@ public class GoalComponent extends JPanel {
         requiredQuantityLabel.setForeground(TEXT_COLOR);
         requiredQuantityLabel.setAlignmentX(LEFT_ALIGNMENT);
         requiredQuantityLabel.setVisible(false);
+        trackingNoteLabel.setFont(UiTypography.META);
+        trackingNoteLabel.setForeground(MUTED_COLOR);
+        trackingNoteLabel.setAlignmentX(LEFT_ALIGNMENT);
+        trackingNoteLabel.setVisible(false);
 
         iconLabel.setHorizontalAlignment(SwingConstants.CENTER);
         iconLabel.setPreferredSize(new Dimension(24, 24));
@@ -104,6 +109,7 @@ public class GoalComponent extends JPanel {
 
         headerText.add(titleLabel);
         headerText.add(requiredQuantityLabel);
+        headerText.add(trackingNoteLabel);
         headerText.add(Box.createVerticalStrut(2));
         JPanel headerDetails = new JPanel(new BorderLayout(4, 0));
         headerDetails.setOpaque(false);
@@ -154,6 +160,12 @@ public class GoalComponent extends JPanel {
         requiredQuantityLabel.setVisible(quantity > 0);
         revalidate();
         repaint();
+    }
+    public void setTrackingNote(String text) {
+        trackingNoteLabel.setText(text);
+        trackingNoteLabel.setToolTipText("A snapshot is the last known client data, not a guarantee that every storage location is loaded or current.");
+        trackingNoteLabel.setVisible(text != null && !text.isEmpty());
+        revalidate();
     }
 
     public void setGoalStatus(GoalStatus status) {
