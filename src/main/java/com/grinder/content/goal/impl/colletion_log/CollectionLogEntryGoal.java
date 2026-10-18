@@ -1,3 +1,4 @@
+
 package com.grinder.content.goal.impl.colletion_log;
 
 import com.grinder.content.CollectionLogEntry;
@@ -11,135 +12,189 @@ import net.runelite.api.Client;
 import net.runelite.api.ItemComposition;
 import net.runelite.api.ItemContainer;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.BoxLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Ayman Yassen
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
  * @since 10/18/2026
  */
-public class CollectionLogEntryGoal implements Goal {
-
+public final class CollectionLogEntryGoal implements Goal
+{
     private static final Color OBTAINED_COLOR = new Color(65, 170, 85);
+
     @Getter
     private final CollectionLogEntry entry;
+
+    private final Map<Integer, ItemComponent> itemComponents = new HashMap<>();
+
     private GoalComponent current;
-    private Client client;
-
-
     private ItemContainerComponent main;
-    private JLabel progressLabel;
 
-    public CollectionLogEntryGoal(final CollectionLogEntry entry) {
+    public CollectionLogEntryGoal(final CollectionLogEntry entry)
+    {
         this.entry = entry;
     }
 
     @Override
-    public GoalComponent build(final Client client) {
-        this.client = client;
-
-        if (current == null) {
+    public GoalComponent build(final Client client)
+    {
+        if (current == null)
+        {
             current = new GoalComponent();
 
-            // Create the goal-specific content once.
             main = new ItemContainerComponent();
             main.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-            progressLabel = new JLabel();
-            progressLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-            final JPanel content = current.getContent();
-            content.add(main);
-            content.add(Box.createVerticalStrut(6));
-            content.add(progressLabel);
+            current.getContent().setLayout(new BoxLayout(current.getContent(), BoxLayout.Y_AXIS));
+            current.getContent().add(main);
         }
 
         refresh(client);
         return current;
     }
 
-    private void refresh(final Client client) {
-        if (current == null || main == null || progressLabel == null) {
+    private void refresh(final Client client)
+    {
+        if (current == null || main == null)
+        {
             return;
         }
 
-        this.client = client;
-
-        final ItemComposition[] items = entry.getItems(client);
-
-        // Header.
         current.setTitle(getTitle(client));
         current.setIcon(getIcon(client));
         current.setStartDate(getStart());
         current.setEndDate(getEnd());
 
-        final int obtained = (int) Arrays.stream(items).filter(item -> entry.isObtained(client, item)).count();
-        // Update existing item components and create any new ones.
+        final ItemComposition[] items = entry.getItems(client);
         final List<ItemComponent> components = new ArrayList<>();
+        final Set<Integer> activeItemIds = new HashSet<>();
+
+        int obtained = 0;
 
         for (final ItemComposition item : items) {
             if (item == null) {
                 continue;
             }
 
+            final int itemId = item.getId();
+            final boolean isObtained = entry.isObtained(client, item);
 
-            final ItemComponent component = find(components, item.getId());
+            if (isObtained) {
+                obtained++;
+            }
+
+            activeItemIds.add(itemId);
+
+            ItemComponent component = itemComponents.get(itemId);
 
             if (component == null) {
-                final ItemComponent created = new ItemComponent(item, Icon.MAIN.getImage());
-                created.setTooltip(item.getName());
-                components.add(created);
-            } else {
-                if (entry.isObtained(client, item)) {
-                    component.setBorderColor(OBTAINED_COLOR);
-                } else {
-                    component.setBorderColor(null);
-                }
-
+                component = new ItemComponent(item, Icon.MAIN.getImage());
+                itemComponents.put(itemId, component);
             }
+
+            component.setItem(item);
+            component.setTooltip(item.getName());
+            component.setBorderColor(isObtained ? OBTAINED_COLOR : null);
+            components.add(component);
         }
 
-
+        itemComponents.keySet().retainAll(activeItemIds);
         main.set(components);
 
         final int total = components.size();
+        final int percentage = total == 0 ? 0 : Math.round(obtained * 100.0f / total);
 
-        final int percentage = total == 0 ? 0 : (int) Math.round(obtained * 100.0 / total);
-        progressLabel.setText(obtained + " / " + total + " (" + percentage + "%)");
+        current.setProgress(obtained, total, String.format("%d / %d obtained (%d%%)", obtained, total, percentage));
 
         current.revalidate();
         current.repaint();
     }
 
-    private ItemComponent find(final List<ItemComponent> components, final int item) {
-        for (final ItemComponent component : components) {
-            if (component.getItemId() == item) {
-                return component;
-            }
-        }
-
-        return null;
+    @Override
+    public boolean hasProgress(final Client client)
+    {
+        return getProgressMaximum(client) > 0;
     }
 
     @Override
-    public void onItemContainerUpdated(final Client client, final ItemContainer container) {
-        if (container != null && container.getId() == 620 && current != null) {
+    public long getProgressCurrent(final Client client)
+    {
+        final ItemComposition[] items = entry.getItems(client);
+
+        long obtained = 0L;
+
+        for (final ItemComposition item : items)
+        {
+            if (item != null && entry.isObtained(client, item))
+            {
+                obtained++;
+            }
+        }
+
+        return obtained;
+    }
+
+    @Override
+    public long getProgressMaximum(final Client client)
+    {
+        final ItemComposition[] items = entry.getItems(client);
+
+        if (items == null)
+        {
+            return 0L;
+        }
+
+        long total = 0L;
+
+        for (final ItemComposition item : items)
+        {
+            if (item != null)
+            {
+                total++;
+            }
+        }
+
+        return total;
+    }
+
+    @Override
+    public String getProgressText(final Client client)
+    {
+        final long current = getProgressCurrent(client);
+        final long maximum = getProgressMaximum(client);
+        final int percentage = maximum == 0 ? 0 : (int) Math.round(current * 100.0 / maximum);
+
+        return String.format("%,d / %,d obtained (%d%%)", current, maximum, percentage);
+    }
+
+    @Override
+    public void onItemContainerUpdated(final Client client, final ItemContainer container)
+    {
+        if (container != null && container.getId() == 620 && current != null)
+        {
             refresh(client);
         }
     }
 
     @Override
-    public String getTitle(final Client client) {
+    public String getTitle(final Client client)
+    {
         return entry.getTitle(client);
     }
 
     @Override
-    public BufferedImage getIcon(Client client) {
+    public BufferedImage getIcon(final Client client)
+    {
         return Icon.COLLECTION_LOG.getImage();
     }
 }

@@ -52,7 +52,6 @@ public class GrinderPlugin extends Plugin {
 
     private NavigationButton navigation;
     private GrinderProfile profile;
-    private boolean navigationVisible;
 
     @Override
     protected void startUp() throws Exception {
