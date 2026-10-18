@@ -2,6 +2,7 @@
 package com.grinder.content.goal.impl.colletion_log;
 
 import com.grinder.config.GrinderConfig;
+import com.grinder.content.CollectionLogHistory;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.GoalStatus;
@@ -11,7 +12,13 @@ import java.awt.image.BufferedImage;
 import net.runelite.api.Client;
 import net.runelite.api.ItemContainer;
 import net.runelite.api.gameval.InventoryID;
+import net.runelite.client.game.ItemManager;
 
+/**
+ * @author Ayman Yassen
+ * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
+ * @since 10/18/2026
+ */
 public class CollectionLogItemGoal implements Goal
 {
     private static final int COLLECTION_LOG_CONTAINER_ID = InventoryID.COLLECTION_TRANSMIT;
@@ -19,6 +26,16 @@ public class CollectionLogItemGoal implements Goal
     private final int item;
     private final int amount;
     private transient boolean obtained;
+    private transient ItemManager itemManager;
+    private transient CollectionLogHistory history;
+
+    public void setItemManager(ItemManager itemManager) { this.itemManager = itemManager; }
+
+    public void setHistory(CollectionLogHistory history)
+    {
+        this.history = history;
+        obtained = history != null && history.contains(item);
+    }
 
     public CollectionLogItemGoal(int item, int amount)
     {
@@ -54,7 +71,7 @@ public class CollectionLogItemGoal implements Goal
 
     private boolean isObtained(ItemContainer container)
     {
-        return container != null && container.contains(item);
+        return history != null && history.contains(item) || container != null && container.contains(item);
     }
 
     @Override
@@ -72,7 +89,13 @@ public class CollectionLogItemGoal implements Goal
     @Override
     public BufferedImage getIcon(Client client)
     {
-        return Icon.COLLECTION_LOG.getImage();
+        return itemManager == null ? Icon.COLLECTION_LOG.getImage() : itemManager.getImage(item);
+    }
+
+    @Override
+    public String getDescription()
+    {
+        return history == null ? "" : history.firstSeenText(item);
     }
 
     @Override
@@ -84,7 +107,7 @@ public class CollectionLogItemGoal implements Goal
     @Override
     public GoalStatus getStatus()
     {
-        return obtained ? GoalStatus.COMPLETE : GoalStatus.IN_PROGRESS;
+        return obtained ? GoalStatus.COMPLETE : GoalStatus.NOT_STARTED;
     }
 
     @Override

@@ -6,79 +6,112 @@ import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
 import net.runelite.client.config.Range;
 
+/**
+ * @author Ayman Yassen
+ * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
+ * @since 10/18/2026
+ */
 @ConfigGroup("grinder")
 public interface GrinderConfig extends Config
 {
 	String GENERAL_SECTION = "general";
+	String GOALS_SECTION = "goals";
 	String COLLECTION_LOG_SECTION = "collectionLog";
 	String DISPLAY_SECTION = "display";
 
-	@ConfigSection(name = "General", description = "General Grinder settings.", position = 0)
+	@ConfigSection(name = "General", description = "Enable Grinder and control when your profile is saved.", position = 0)
 	String generalSection = GENERAL_SECTION;
 
-	@ConfigSection(name = "Collection Log", description = "Collection log settings.", position = 1)
+	@ConfigSection(name = "Goals", description = "Choose the kinds of goals shown in the side panel.", position = 1)
+	String goalsSection = GOALS_SECTION;
+
+	@ConfigSection(name = "Collection Log", description = "Control collection-log cards and item details.", position = 2)
 	String collectionLogSection = COLLECTION_LOG_SECTION;
 
-	@ConfigSection(name = "Display", description = "Display settings.", position = 2)
+	@ConfigSection(name = "Display", description = "Adjust the side panel layout without affecting your saved goals.", position = 3)
 	String displaySection = DISPLAY_SECTION;
 
-	@ConfigItem(keyName = "enabled", name = "Enable Grinder", description = "Enables Grinder.", section = GENERAL_SECTION, position = 0)
+	@ConfigItem(keyName = "enabled", name = "Enable Grinder", description = "Show the Grinder button and begin tracking while logged in.", section = GENERAL_SECTION, position = 0)
 	default boolean enabled()
 	{
 		return true;
 	}
 
-	@ConfigItem(keyName = "saveOnLogout", name = "Save on Logout", description = "Saves the active profile when logging out.", section = GENERAL_SECTION, position = 1)
+	@ConfigItem(keyName = "saveOnLogout", name = "Save on logout", description = "Keep changes made to your goals when you log out.", section = GENERAL_SECTION, position = 1)
 	default boolean saveOnLogout()
 	{
 		return true;
 	}
 
-	@ConfigItem(keyName = "saveOnShutdown", name = "Save on Shutdown", description = "Saves the active profile when Grinder shuts down.", section = GENERAL_SECTION, position = 2)
+	@ConfigItem(keyName = "saveOnShutdown", name = "Save on shutdown", description = "Keep changes made to your goals when the plugin is disabled or RuneLite closes.", section = GENERAL_SECTION, position = 2)
 	default boolean saveOnShutdown()
 	{
 		return true;
 	}
 
-	@ConfigItem(keyName = "collectionLogEnabled", name = "Collection Log Goals", description = "Displays collection log goals.", section = COLLECTION_LOG_SECTION, position = 0)
+	@ConfigItem(keyName = "levelGoalsEnabled", name = "Level goals", description = "Show skill levels, combat level, and total level.", section = GOALS_SECTION, position = 0)
+	default boolean levelGoalsEnabled()
+	{
+		return true;
+	}
+
+	@ConfigItem(keyName = "experienceGoalsEnabled", name = "Experience goals", description = "Show per-skill experience and total experience.", section = GOALS_SECTION, position = 1)
+	default boolean experienceGoalsEnabled()
+	{
+		return true;
+	}
+
+	@ConfigItem(keyName = "trackerGoalsEnabled", name = "Tracker goals", description = "Show kill-count and completion trackers.", section = GOALS_SECTION, position = 2)
+	default boolean trackerGoalsEnabled()
+	{
+		return true;
+	}
+
+	@ConfigItem(keyName = "hideCompletedGoals", name = "Hide completed goals", description = "Keep completed goals out of the main list. You can turn this off at any time.", section = GOALS_SECTION, position = 3)
+	default boolean hideCompletedGoals()
+	{
+		return false;
+	}
+
+	@ConfigItem(keyName = "collectionLogEnabled", name = "Collection log goals", description = "Show collection-log entry and item goals.", section = COLLECTION_LOG_SECTION, position = 0)
 	default boolean collectionLogEnabled()
 	{
 		return true;
 	}
 
-	@ConfigItem(keyName = "showObtainedItems", name = "Show Obtained Items", description = "Displays items already obtained in the collection log.", section = COLLECTION_LOG_SECTION, position = 1)
+	@ConfigItem(keyName = "showObtainedItems", name = "Show obtained items", description = "Include items you already have in collection-log grids.", section = COLLECTION_LOG_SECTION, position = 1)
 	default boolean showObtainedItems()
 	{
 		return true;
 	}
 
-	@ConfigItem(keyName = "showItemTooltips", name = "Show Item Tooltips", description = "Displays item tooltips.", section = COLLECTION_LOG_SECTION, position = 2)
+	@ConfigItem(keyName = "showItemTooltips", name = "Show item tooltips", description = "Show an item name when you hover its icon.", section = COLLECTION_LOG_SECTION, position = 2)
 	default boolean showItemTooltips()
 	{
 		return true;
 	}
 
-	@ConfigItem(keyName = "showGoalIcons", name = "Show Goal Icons", description = "Displays goal icons.", section = DISPLAY_SECTION, position = 0)
+	@ConfigItem(keyName = "showGoalIcons", name = "Show goal icons", description = "Show category icons on goal cards.", section = DISPLAY_SECTION, position = 0)
 	default boolean showGoalIcons()
 	{
 		return true;
 	}
 
-	@ConfigItem(keyName = "showProgressBar", name = "Show Progress Bar", description = "Displays goal progress bars.", section = DISPLAY_SECTION, position = 1)
+	@ConfigItem(keyName = "showProgressBar", name = "Show progress bars", description = "Show visual progress bars below goal cards.", section = DISPLAY_SECTION, position = 1)
 	default boolean showProgressBar()
 	{
 		return true;
 	}
 
-	@Range(min = 1, max = 8)
-	@ConfigItem(keyName = "itemsPerRow", name = "Items Per Row", description = "Number of items displayed per row.", section = DISPLAY_SECTION, position = 2)
+	@Range(min = 1, max = 4)
+	@ConfigItem(keyName = "itemsPerRow", name = "Items per row", description = "Maximum collection-log columns. Narrow sidebars automatically use fewer columns to keep icons clear.", section = DISPLAY_SECTION, position = 2)
 	default int itemsPerRow()
 	{
 		return 4;
 	}
 
 	@Range(min = 1, max = 10)
-	@ConfigItem(keyName = "maxItemRows", name = "Maximum Item Rows", description = "Maximum visible item rows before scrolling.", section = DISPLAY_SECTION, position = 3)
+	@ConfigItem(keyName = "maxItemRows", name = "Preview item rows", description = "Rows shown before Show all appears. Expanded grids use the main sidebar scrollbar.", section = DISPLAY_SECTION, position = 3)
 	default int maxItemRows()
 	{
 		return 5;

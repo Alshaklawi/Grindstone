@@ -8,11 +8,31 @@ import java.time.LocalDateTime;
 import net.runelite.api.Client;
 import net.runelite.api.ItemContainer;
 
+/**
+ * @author Ayman Yassen
+ * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
+ * @since 10/18/2026
+ */
 public interface Goal
 {
+    default boolean supportsTarget()
+    {
+        return false;
+    }
+
+    default void setTarget(long target)
+    {
+        throw new UnsupportedOperationException("This goal tracks completion rather than a target");
+    }
+
     default String getTitle(Client client)
     {
         return getClass().getSimpleName();
+    }
+
+    default String getDescription()
+    {
+        return "";
     }
 
     default BufferedImage getIcon(Client client)
@@ -64,6 +84,7 @@ public interface Goal
     {
         GoalComponent component = new GoalComponent();
         component.setTitle(getTitle(client));
+        component.setDescription(getDescription());
         component.setIcon(getIcon(client));
         component.setStartDate(getStart());
         component.setEndDate(getEnd());
@@ -88,18 +109,15 @@ public interface Goal
         return component;
     }
 
-    /**
-     * Called when an item container changes. Implementations should update their
-     * internal state only; Swing updates must be scheduled on the EDT.
-     */
     default void onItemContainerUpdated(Client client, ItemContainer container)
     {
     }
 
-    /**
-     * Returns whether this goal may be affected by a change to the given container.
-     * Goals that depend on other containers should override this method.
-     */
+    default boolean refresh(Client client)
+    {
+        return false;
+    }
+
     default boolean isAffectedBy(ItemContainer container)
     {
         return container != null;

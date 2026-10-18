@@ -21,7 +21,7 @@ public class TrackerGoal implements Goal
     private final TrackerEntry tracker;
 
     @Getter
-    private final int count;
+    private int count;
 
     private transient long current;
 
@@ -38,6 +38,26 @@ public class TrackerGoal implements Goal
 
         this.tracker = entry;
         this.count = count;
+    }
+
+    public void setCount(int count)
+    {
+        if (count <= 0)
+        {
+            throw new IllegalArgumentException("Target count must be positive");
+        }
+
+        this.count = count;
+    }
+
+    @Override
+    public boolean supportsTarget() { return true; }
+
+    @Override
+    public void setTarget(long target)
+    {
+        if (target < 1 || target > Integer.MAX_VALUE) { throw new IllegalArgumentException("Choose a positive target count"); }
+        setCount((int) target);
     }
 
     @Override
@@ -92,21 +112,22 @@ public class TrackerGoal implements Goal
     @Override
     public com.grinder.ui.GoalComponent build(Client client)
     {
-        return build(client, null);
+        refresh(client);
+        return Goal.super.build(client);
     }
 
     @Override
     public com.grinder.ui.GoalComponent build(Client client, com.grinder.config.GrinderConfig config)
     {
         refresh(client);
-        com.grinder.ui.GoalComponent component = Goal.super.build(client, config);
+        com.grinder.ui.GoalComponent component = Goal.super.build(client);
+        component.setIconVisible(config == null || config.showGoalIcons());
+        component.setProgressBarVisible(config == null || config.showProgressBar());
         component.setProgress(current, count, current + " / " + count);
         return component;
     }
 
-    /**
-     * Updates the cached kill/completion count and returns whether it changed.
-     */
+    @Override
     public boolean refresh(Client client)
     {
         long next = Math.max(0, tracker.getCount(client));

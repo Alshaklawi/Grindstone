@@ -10,6 +10,12 @@ import com.google.gson.JsonParser;
 import com.grinder.content.CollectionLogEntry;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.impl.TrackerGoal;
+import com.grinder.content.goal.impl.CustomGoal;
+import com.grinder.content.goal.impl.level.CombatLevelGoal;
+import com.grinder.content.goal.impl.level.SkillLevelGoal;
+import com.grinder.content.goal.impl.level.TotalLevelGoal;
+import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
+import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
 import com.grinder.content.goal.impl.colletion_log.CollectionLogEntryGoal;
 import com.grinder.content.goal.impl.colletion_log.CollectionLogItemGoal;
 import net.runelite.api.Client;
@@ -33,13 +39,13 @@ import java.util.stream.Stream;
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
  * @since 10/18/2026
  */
+@lombok.extern.slf4j.Slf4j
 public final class GrinderRepository {
     private static final Path DIRECTORY = Paths.get("grinder", "profiles");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Map<Long, GrinderProfile> profiles = new HashMap<>();
 
     private GrinderRepository() {
-        // NO-OP
     }
 
     public static synchronized void load() throws IOException {
@@ -66,6 +72,9 @@ public final class GrinderRepository {
 
     public static synchronized GrinderProfile load(Client client, ItemManager itemManager) throws IOException {
         long hash = client.getAccountHash();
+        if (client.getLocalPlayer() == null || hash == 0) {
+            throw new IllegalStateException("A logged-in player is required to load Grinder goals");
+        }
         GrinderProfile profile = profiles.get(hash);
 
         if (profile == null) {
@@ -86,19 +95,7 @@ public final class GrinderRepository {
     public static synchronized void save(GrinderProfile profile) throws IOException {
         Files.createDirectories(DIRECTORY);
 
-        JsonObject json = new JsonObject();
-        json.addProperty("hash", profile.getHash());
-
-        JsonArray savedGoals = new JsonArray();
-
-        for (Goal goal : profile.getGoals()) {
-            JsonObject savedGoal = new JsonObject();
-            savedGoal.addProperty("class", goal.getClass().getName());
-            savedGoal.add("data", GSON.toJsonTree(goal));
-            savedGoals.add(savedGoal);
-        }
-
-        json.add("goals", savedGoals);
+        JsonObject json = toJson(profile);
 
         Path destination = getPath(profile.getHash());
         Path temporary = Files.createTempFile(DIRECTORY, "profile-", ".tmp");
@@ -118,14 +115,48 @@ public final class GrinderRepository {
         }
     }
 
+    static JsonObject toJson(GrinderProfile profile) {
+        JsonObject json = new JsonObject();
+        json.addProperty("hash", profile.getHash());
+
+        JsonArray savedGoals = new JsonArray();
+
+        for (Goal goal : profile.getGoals()) {
+            JsonObject savedGoal = new JsonObject();
+            savedGoal.addProperty("class", goal.getClass().getName());
+            savedGoal.add("data", GSON.toJsonTree(goal));
+            savedGoals.add(savedGoal);
+        }
+
+        json.add("goals", savedGoals);
+        JsonObject observed = new JsonObject();
+        profile.getCollectionLogHistory().snapshot().forEach((id, time) -> observed.addProperty(id.toString(), time));
+        json.add("collectionLogFirstSeen", observed);
+
+        return json;
+    }
+
     public static synchronized Map<Long, GrinderProfile> getProfiles() {
         return Collections.unmodifiableMap(new HashMap<>(profiles));
     }
 
     private static GrinderProfile load(Path path) throws IOException {
         JsonObject json = new JsonParser().parse(Files.readString(path)).getAsJsonObject();
+        return fromJson(json);
+    }
+
+    static GrinderProfile fromJson(JsonObject json) {
         long hash = json.get("hash").getAsLong();
         GrinderProfile profile = new GrinderProfile(hash);
+        if (json.has("collectionLogFirstSeen") && json.get("collectionLogFirstSeen").isJsonObject()) {
+            for (Map.Entry<String, JsonElement> observation : json.getAsJsonObject("collectionLogFirstSeen").entrySet()) {
+                try {
+                    profile.getCollectionLogHistory().record(Integer.parseInt(observation.getKey()), observation.getValue().getAsLong());
+                } catch (RuntimeException exception) {
+                    log.debug("Skipping an invalid collection-log observation", exception);
+                }
+            }
+        }
 
         if (!json.has("goals") || !json.get("goals").isJsonArray()) {
             return profile;
@@ -156,24 +187,69 @@ public final class GrinderRepository {
                     goal = new CollectionLogEntryGoal(null, entry);
                 } else if (CollectionLogItemGoal.class.getName().equals(className)) {
                     goal = GSON.fromJson(data, CollectionLogItemGoal.class);
+                } else if (CustomGoal.class.getName().equals(className)) {
+                    CustomGoal saved = GSON.fromJson(data, CustomGoal.class);
+                    goal = new CustomGoal(saved.getId(), saved.getTitle(null), saved.getDescription(),
+                            saved.getCategory(), saved.getProgressCurrent(), saved.getProgressMaximum());
+                } else if (com.grinder.content.goal.impl.item.PossesedItemGoal.class.getName().equals(className)) {
+                    com.grinder.content.goal.impl.item.PossesedItemGoal saved =
+                            GSON.fromJson(data, com.grinder.content.goal.impl.item.PossesedItemGoal.class);
+                    goal = new com.grinder.content.goal.impl.item.PossesedItemGoal(saved.getItem(), saved.getAmount());
                 } else if (TrackerGoal.class.getName().equals(className)) {
                     goal = GSON.fromJson(data, TrackerGoal.class);
+                } else if (SkillLevelGoal.class.getName().equals(className)
+                        || "com.grinder.content.goal.impl.SkillLevelGoal".equals(className)) {
+                    goal = GSON.fromJson(data, SkillLevelGoal.class);
+                } else if (CombatLevelGoal.class.getName().equals(className)
+                        || "com.grinder.content.goal.impl.CombatLevelGoal".equals(className)) {
+                    goal = GSON.fromJson(data, CombatLevelGoal.class);
+                } else if (TotalLevelGoal.class.getName().equals(className)
+                        || "com.grinder.content.goal.impl.TotalLevelGoal".equals(className)) {
+                    goal = GSON.fromJson(data, TotalLevelGoal.class);
+                } else if (SkillExperienceGoal.class.getName().equals(className)
+                        || "com.grinder.content.goal.impl.SkillExperienceGoal".equals(className)) {
+                    goal = GSON.fromJson(data, SkillExperienceGoal.class);
+                } else if (TotalExperienceGoal.class.getName().equals(className)
+                        || "com.grinder.content.goal.impl.TotalExperienceGoal".equals(className)) {
+                    goal = GSON.fromJson(data, TotalExperienceGoal.class);
+                } else if (com.grinder.content.goal.impl.quest.QuestGoal.class.getName().equals(className)) {
+                    goal = GSON.fromJson(data, com.grinder.content.goal.impl.quest.QuestGoal.class);
+                } else if (com.grinder.content.goal.impl.quest.QuestSeriesGoal.class.getName().equals(className)) {
+                    goal = GSON.fromJson(data, com.grinder.content.goal.impl.quest.QuestSeriesGoal.class);
+                } else if (com.grinder.content.goal.impl.achievement_diary.AchievementDiaryTierGoal.class.getName().equals(className)) {
+                    goal = GSON.fromJson(data, com.grinder.content.goal.impl.achievement_diary.AchievementDiaryTierGoal.class);
+                } else if (com.grinder.content.goal.impl.achievement_diary.AchievementDiaryTierAreaGoal.class.getName().equals(className)) {
+                    goal = GSON.fromJson(data, com.grinder.content.goal.impl.achievement_diary.AchievementDiaryTierAreaGoal.class);
+                } else if (com.grinder.content.goal.impl.combat_achievement.CombatAchievementTierGoal.class.getName().equals(className)) {
+                    goal = GSON.fromJson(data, com.grinder.content.goal.impl.combat_achievement.CombatAchievementTierGoal.class);
+                } else if (com.grinder.content.goal.impl.combat_achievement.CombatAchievementBossGoal.class.getName().equals(className)) {
+                    goal = GSON.fromJson(data, com.grinder.content.goal.impl.combat_achievement.CombatAchievementBossGoal.class);
+                } else if (com.grinder.content.goal.impl.combat_achievement.CombatAchievementDifficultyGoal.class.getName().equals(className)) {
+                    goal = GSON.fromJson(data, com.grinder.content.goal.impl.combat_achievement.CombatAchievementDifficultyGoal.class);
                 } else {
-                    // Profiles are intentionally limited to the built-in goal
-                    // types. Never load a class selected by profile data.
                     continue;
                 }
 
                 if (goal != null) {
+                    if (goal instanceof com.grinder.content.goal.ClientCompletionGoal) {
+                        ((com.grinder.content.goal.ClientCompletionGoal) goal).selectionKey();
+                    }
+                    if (goal instanceof SkillLevelGoal && ((SkillLevelGoal) goal).getSkill() == null
+                            || goal instanceof SkillExperienceGoal && ((SkillExperienceGoal) goal).getSkill() == null
+                            || goal instanceof TrackerGoal && ((TrackerGoal) goal).getTracker() == null) {
+                        continue;
+                    }
+                    if (goal.supportsTarget()) {
+                        goal.setTarget(goal.getProgressMaximum());
+                    }
                     goals.add(goal);
                 }
             } catch (RuntimeException exception) {
-                System.err.println("Failed to restore a goal in " + path + ": " + exception.getMessage());
+                log.debug("Skipping an invalid saved Grinder goal", exception);
             }
         }
 
         profile.replace(goals);
-        profile.ensureDefaultGoals(null);
         return profile;
     }
 

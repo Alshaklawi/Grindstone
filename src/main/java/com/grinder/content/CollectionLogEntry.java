@@ -34,12 +34,28 @@ public enum CollectionLogEntry
 
     public String getTitle(Client client)
     {
-        return client.getStructComposition(struct).getStringValue(TITLE_PARAM_ID);
+        if (client == null || client.getStructComposition(struct) == null)
+        {
+            return name();
+        }
+
+        String title = client.getStructComposition(struct).getStringValue(TITLE_PARAM_ID);
+        return title == null || title.trim().isEmpty() ? name() : title;
     }
 
     public ItemComposition[] getItems(Client client)
     {
+        if (client == null || client.getStructComposition(struct) == null)
+        {
+            return new ItemComposition[0];
+        }
+
         int enumId = client.getStructComposition(struct).getIntValue(ENUM_PARAM_ID);
+        if (enumId <= 0 || client.getEnum(enumId) == null || client.getEnum(enumId).getIntVals() == null)
+        {
+            return new ItemComposition[0];
+        }
+
         int[] itemIds = client.getEnum(enumId).getIntVals();
 
         return Arrays.stream(itemIds)
@@ -90,7 +106,13 @@ public enum CollectionLogEntry
 
     public boolean contains(Client client, int itemId)
     {
+        if (client == null || client.getStructComposition(struct) == null)
+        {
+            return false;
+        }
+
         int enumId = client.getStructComposition(struct).getIntValue(ENUM_PARAM_ID);
-        return Arrays.stream(client.getEnum(enumId).getIntVals()).anyMatch(id -> id == itemId);
+        return enumId > 0 && client.getEnum(enumId) != null && client.getEnum(enumId).getIntVals() != null
+                && Arrays.stream(client.getEnum(enumId).getIntVals()).anyMatch(id -> id == itemId);
     }
 }

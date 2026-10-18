@@ -2,9 +2,14 @@ package com.grinder.content.goal;
 
 import com.grinder.ui.Icon;
 
+/**
+ * @author Ayman Yassen
+ * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
+ * @since 10/18/2026
+ */
 public enum GoalCategory
 {
-    BOSSING("Bossing", Icon.ACHIEVEMENT_DIARY),
+    BOSSING("Bossing", Icon.BOSSING),
     COLLECTION_LOG("Collection Log", Icon.COLLECTION_LOG),
     SKILLING("Skilling", Icon.SKILLING),
     QUEST("Quests", Icon.QUEST),

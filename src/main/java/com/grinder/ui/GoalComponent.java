@@ -5,11 +5,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.awt.event.ActionListener;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
@@ -20,18 +17,23 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.SwingConstants;
-import javax.swing.UIManager;
 import net.runelite.client.ui.ColorScheme;
+import net.runelite.client.ui.FontManager;
+import com.grinder.content.goal.GoalStatus;
 
+/**
+ * @author Ayman Yassen
+ * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
+ * @since 10/18/2026
+ */
 public class GoalComponent extends JPanel
 {
-    private static final Color CARD_COLOR = new Color(45, 45, 45);
-    private static final Color BORDER_COLOR = new Color(65, 65, 65);
-    private static final Color TEXT_COLOR = new Color(235, 235, 235);
-    private static final Color MUTED_COLOR = new Color(175, 175, 175);
-    private static final Color PROGRESS_COLOR = new Color(65, 160, 100);
+    private static final Color CARD_COLOR = ColorScheme.DARKER_GRAY_COLOR;
+    private static final Color TEXT_COLOR = ColorScheme.TEXT_COLOR;
+    private static final Color MUTED_COLOR = ColorScheme.LIGHT_GRAY_COLOR;
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private final JPanel header = new JPanel(new BorderLayout(8, 0));
@@ -42,8 +44,11 @@ public class GoalComponent extends JPanel
     private final JLabel titleLabel = new JLabel();
     private final JLabel dateLabel = new JLabel();
     private final JLabel progressLabel = new JLabel();
-    private final JProgressBar progressBar = new JProgressBar(0, 100);
+    private final SegmentedProgressBar progressBar = new SegmentedProgressBar();
+    private final JLabel statusLabel = new JLabel();
     private final JButton expandButton = new JButton("−");
+    private final JButton editButton = new JButton("...");
+    private final JPanel headerActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
 
     private String title = "";
     private BufferedImage icon;
@@ -63,54 +68,70 @@ public class GoalComponent extends JPanel
         setOpaque(true);
         setBackground(CARD_COLOR);
         setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                BorderFactory.createEmptyBorder(8, 9, 8, 9)));
+                BorderFactory.createLineBorder(ColorScheme.BORDER_COLOR),
+                BorderFactory.createEmptyBorder(9, 8, 9, 8)));
 
         header.setOpaque(false);
         headerText.setOpaque(false);
         headerText.setLayout(new BoxLayout(headerText, BoxLayout.Y_AXIS));
 
         titleLabel.setForeground(TEXT_COLOR);
-        titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 12f));
+        titleLabel.putClientProperty("html.disable", Boolean.TRUE);
+        titleLabel.setFont(FontManager.getRunescapeBoldFont());
         titleLabel.setVerticalAlignment(SwingConstants.CENTER);
+        titleLabel.setAlignmentX(LEFT_ALIGNMENT);
 
         dateLabel.setForeground(MUTED_COLOR);
-        dateLabel.setFont(dateLabel.getFont().deriveFont(10f));
+        dateLabel.setFont(FontManager.getRunescapeSmallFont());
 
         iconLabel.setHorizontalAlignment(SwingConstants.CENTER);
         iconLabel.setPreferredSize(new Dimension(24, 24));
 
-        expandButton.setFocusable(false);
-        expandButton.setBorderPainted(false);
-        expandButton.setContentAreaFilled(false);
-        expandButton.setForeground(MUTED_COLOR);
-        expandButton.setPreferredSize(new Dimension(22, 22));
+        expandButton.putClientProperty("JButton.buttonType", "toolBarButton");
+        expandButton.setToolTipText("Collapse goal details");
+        expandButton.setRolloverEnabled(true);
+        expandButton.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
         expandButton.addActionListener(event -> setExpanded(!expanded));
+
+        editButton.putClientProperty("JButton.buttonType", "toolBarButton");
+        editButton.setToolTipText("Goal actions");
+        editButton.setRolloverEnabled(true);
+        editButton.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
+        editButton.setVisible(false);
 
         headerText.add(titleLabel);
         headerText.add(Box.createVerticalStrut(2));
-        headerText.add(dateLabel);
+        JPanel headerDetails = new JPanel(new BorderLayout(4, 0));
+        headerDetails.setOpaque(false);
+        headerDetails.setAlignmentX(LEFT_ALIGNMENT);
+        headerDetails.add(dateLabel, BorderLayout.CENTER);
+        headerDetails.add(headerActions, BorderLayout.EAST);
+        headerText.add(headerDetails);
 
         header.add(iconLabel, BorderLayout.WEST);
         header.add(headerText, BorderLayout.CENTER);
-        header.add(expandButton, BorderLayout.EAST);
+        headerActions.setOpaque(false);
+        headerActions.add(editButton);
+        headerActions.add(expandButton);
 
         content.setOpaque(false);
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 
         progressBar.setStringPainted(false);
         progressBar.setBorderPainted(false);
-        progressBar.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        progressBar.setForeground(PROGRESS_COLOR);
-        progressBar.setPreferredSize(new Dimension(100, 7));
-        progressBar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 7));
+        progressBar.setBackground(ColorScheme.MEDIUM_GRAY_COLOR);
+        progressBar.setPreferredSize(new Dimension(100, 9));
+        progressBar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 9));
 
         progressLabel.setForeground(MUTED_COLOR);
-        progressLabel.setFont(progressLabel.getFont().deriveFont(10f));
+        progressLabel.setFont(FontManager.getRunescapeSmallFont());
 
         footer.setOpaque(false);
+        footer.setLayout(new BorderLayout(0, 4));
         footer.add(progressBar, BorderLayout.CENTER);
         footer.add(progressLabel, BorderLayout.SOUTH);
+        statusLabel.setFont(FontManager.getRunescapeSmallFont());
+        footer.add(statusLabel, BorderLayout.NORTH);
 
         add(header, BorderLayout.NORTH);
         add(content, BorderLayout.CENTER);
@@ -122,6 +143,77 @@ public class GoalComponent extends JPanel
     public JPanel getContent()
     {
         return content;
+    }
+
+    public void setGoalStatus(GoalStatus status)
+    {
+        GoalStatus state = status == null ? GoalStatus.NOT_STARTED : status;
+        statusLabel.setText(state == GoalStatus.COMPLETE ? "Complete"
+                : state == GoalStatus.IN_PROGRESS ? "In progress" : "Not started");
+        statusLabel.setForeground(SegmentedProgressBar.colorFor(state));
+        statusLabel.setToolTipText(state == GoalStatus.COMPLETE ? "This goal has reached its target."
+                : state == GoalStatus.IN_PROGRESS ? "Progress has started and the target has not been reached."
+                : "No progress has been recorded toward this goal yet.");
+        progressBar.setStatus(state);
+    }
+
+    public void setDescription(String description)
+    {
+        if (description == null || description.trim().isEmpty()) { return; }
+        javax.swing.JTextArea text = new javax.swing.JTextArea(description, 0, 20);
+        text.setLineWrap(true);
+        text.setWrapStyleWord(true);
+        text.setEditable(false);
+        text.setToolTipText(description.startsWith("First seen:")
+                ? "When Grinder first observed this unlock on this character, not the historical drop date."
+                : "Additional goal details. Custom descriptions can be edited from the goal actions menu.");
+        text.setOpaque(false);
+        text.setForeground(MUTED_COLOR);
+        text.setFont(FontManager.getRunescapeSmallFont());
+        text.setBorder(BorderFactory.createEmptyBorder(2, 0, 4, 0));
+        text.setAlignmentX(LEFT_ALIGNMENT);
+        content.add(text);
+        expandButton.setVisible(true);
+    }
+
+    public void setEditAction(ActionListener action)
+    {
+        for (ActionListener listener : editButton.getActionListeners())
+        {
+            editButton.removeActionListener(listener);
+        }
+
+        if (action != null)
+        {
+            editButton.addActionListener(action);
+            editButton.setVisible(true);
+        }
+        else
+        {
+            editButton.setVisible(false);
+        }
+
+        revalidate();
+        repaint();
+    }
+
+    public void setGoalActions(ActionListener edit, ActionListener delete)
+    {
+        JPopupMenu menu = new JPopupMenu();
+        if (edit != null)
+        {
+            JMenuItem editTarget = new JMenuItem("Edit goal...");
+            editTarget.setToolTipText("Edit the goal target, or a custom goal's details and manual progress.");
+            editTarget.addActionListener(edit);
+            menu.add(editTarget);
+        }
+        JMenuItem remove = new JMenuItem("Delete goal...");
+        remove.setToolTipText("Remove this goal after confirmation. Game progress is unaffected; Undo restores the last deletion.");
+        remove.addActionListener(delete);
+        menu.add(remove);
+        setEditAction(event -> menu.show(editButton, 0, editButton.getHeight()));
+        setComponentPopupMenu(menu);
+        titleLabel.setComponentPopupMenu(menu);
     }
 
     public void update(String title, BufferedImage icon, LocalDateTime startDate, LocalDateTime endDate,
@@ -151,6 +243,8 @@ public class GoalComponent extends JPanel
 
         this.title = next;
         titleLabel.setText(next);
+        titleLabel.setToolTipText(next);
+        iconLabel.setToolTipText(next);
         revalidate();
         repaint();
     }
@@ -164,6 +258,12 @@ public class GoalComponent extends JPanel
 
         this.icon = icon;
         iconLabel.setIcon(icon == null ? null : new ImageIcon(icon));
+        iconLabel.setPreferredSize(new Dimension(icon == null ? 24 : Math.max(24, icon.getWidth()),
+                icon == null ? 24 : Math.max(24, icon.getHeight())));
+        if (icon instanceof net.runelite.client.util.AsyncBufferedImage)
+        {
+            ((net.runelite.client.util.AsyncBufferedImage) icon).addTo(iconLabel);
+        }
         iconLabel.setVisible(iconVisible && icon != null);
         revalidate();
         repaint();
@@ -260,6 +360,7 @@ public class GoalComponent extends JPanel
         content.setVisible(expanded);
         footer.setVisible(expanded);
         expandButton.setText(expanded ? "−" : "+");
+        expandButton.setToolTipText(expanded ? "Collapse goal details" : "Expand goal details");
         revalidate();
         repaint();
     }
@@ -267,6 +368,8 @@ public class GoalComponent extends JPanel
     private void applyValues()
     {
         titleLabel.setText(title);
+        titleLabel.setToolTipText(title);
+        iconLabel.setToolTipText(title);
         iconLabel.setIcon(icon == null ? null : new ImageIcon(icon));
         iconLabel.setVisible(iconVisible && icon != null);
         updateDates();
@@ -279,18 +382,36 @@ public class GoalComponent extends JPanel
 
     private void updateDates()
     {
-        String start = startDate == null ? "—" : DATE_FORMAT.format(startDate);
-        String end = endDate == null ? "—" : DATE_FORMAT.format(endDate);
-        dateLabel.setText(start + "  →  " + end);
+        if (startDate == null && endDate == null)
+        {
+            dateLabel.setText("");
+            dateLabel.setVisible(false);
+        }
+        else
+        {
+            String start = startDate == null ? "—" : DATE_FORMAT.format(startDate);
+            String end = endDate == null ? "—" : DATE_FORMAT.format(endDate);
+            dateLabel.setText(start + "  →  " + end);
+            dateLabel.setToolTipText("Start date → completion date. A dash means the date is unknown.");
+            dateLabel.setVisible(true);
+        }
         revalidate();
         repaint();
     }
 
     private void updateProgress()
     {
-        int value = progressMaximum <= 0 ? 0 : (int) Math.min(100, progressCurrent * 100.0 / progressMaximum);
+        expandButton.setVisible(content.getComponentCount() > 0);
+        int value = progressMaximum <= 0 ? 0 : (int) Math.min(10_000, progressCurrent * 10_000.0 / progressMaximum);
         progressBar.setValue(value);
+        setGoalStatus(progressMaximum > 0 && progressCurrent >= progressMaximum ? GoalStatus.COMPLETE
+                : progressCurrent > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED);
         progressLabel.setText(progressText);
+        progressLabel.setToolTipText(progressText);
+        progressBar.setToolTipText(progressMaximum > 0
+                ? String.format(java.util.Locale.ROOT, "%,d of %,d (%.1f%%). Yellow: in progress; green: complete.",
+                        progressCurrent, progressMaximum, Math.min(100, progressCurrent * 100.0 / progressMaximum))
+                : "No numeric target is available for this goal.");
         progressBar.setVisible(progressBarVisible);
         revalidate();
         repaint();
@@ -304,19 +425,9 @@ public class GoalComponent extends JPanel
     }
 
     @Override
-    protected void paintComponent(Graphics graphics)
+    public Dimension getMaximumSize()
     {
-        Graphics2D g = (Graphics2D) graphics.create();
-
-        try
-        {
-            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g.setColor(getBackground());
-            g.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
-        }
-        finally
-        {
-            g.dispose();
-        }
+        return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
     }
+
 }

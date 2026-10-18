@@ -5,7 +5,6 @@ import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.BorderFactory;
@@ -15,10 +14,14 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import net.runelite.client.ui.ColorScheme;
 
+/**
+ * @author Ayman Yassen
+ * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
+ * @since 10/18/2026
+ */
 public final class GoalCategorySectionComponent extends JPanel
 {
     private static final int HEADER_HEIGHT = 38;
-    private static final int CORNER_RADIUS = 6;
 
     private final JPanel header = new JPanel(new BorderLayout(8, 0));
     private final JPanel content = new JPanel();
@@ -43,7 +46,7 @@ public final class GoalCategorySectionComponent extends JPanel
 
         titleLabel.setText(title);
         titleLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-        titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 12f));
+        titleLabel.setFont(net.runelite.client.ui.FontManager.getRunescapeBoldFont());
 
         countLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
         countLabel.setHorizontalAlignment(SwingConstants.RIGHT);

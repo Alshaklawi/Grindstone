@@ -6,19 +6,30 @@ import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.GoalStatus;
 import com.grinder.content.goal.impl.colletion_log.CollectionLogEntryGoal;
 import com.grinder.content.goal.impl.colletion_log.CollectionLogItemGoal;
+import com.grinder.content.goal.impl.TrackerGoal;
+import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
+import com.grinder.content.goal.impl.level.SkillLevelGoal;
+import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
+import com.grinder.content.goal.impl.level.TotalLevelGoal;
+import com.grinder.content.goal.impl.level.CombatLevelGoal;
 import com.grinder.repository.GrinderProfile;
 import com.grinder.ui.GoalComponent;
+import com.grinder.ui.ContentHeightPanel;
+import com.grinder.ui.GoalListPanel;
+import com.grinder.ui.GoalEditorPanel;
+import com.grinder.ui.GoalCreationDialog;
+import com.grinder.ui.ItemSearchService;
+import com.grinder.ui.CustomGoalForm;
+import com.grinder.ui.UiTooltips;
+import com.grinder.content.goal.impl.CustomGoal;
+import com.grinder.ui.SegmentedProgressBar;
+import net.runelite.client.ui.components.IconTextField;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -34,31 +45,34 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.DefaultListCellRenderer;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.JScrollBar;
+import javax.swing.JOptionPane;
+import javax.swing.JSpinner;
+import javax.swing.JToggleButton;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
-import javax.swing.border.Border;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.plaf.basic.BasicScrollBarUI;
 import net.runelite.api.Client;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.ui.ColorScheme;
+import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
 
+/**
+ * @author Ayman Yassen
+ * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
+ * @since 10/18/2026
+ */
 public class GrinderPanel extends PluginPanel
 {
     private static final String ALL_CATEGORIES = "All categories";
@@ -66,44 +80,52 @@ public class GrinderPanel extends PluginPanel
     private static final String NOT_STARTED = "Not started";
     private static final String IN_PROGRESS = "In progress";
     private static final String COMPLETE = "Complete";
+    private static final String UNFINISHED = "Unfinished";
+    private static final String ALL_TYPES = "All goal types";
+    private static final String AUTOMATIC = "Automatic";
+    private static final String CUSTOM = "Custom";
     private static final String SORT_NAME = "Name (A-Z)";
     private static final String SORT_PROGRESS_DESC = "Progress (highest)";
     private static final String SORT_PROGRESS_ASC = "Progress (lowest)";
     private static final String SORT_STATUS = "Status";
+    private static final String SORT_NAME_DESC = "Name (Z-A)";
+    private static final String SORT_CLOSEST = "Closest unfinished";
 
     private static final Color PANEL_COLOR = ColorScheme.DARK_GRAY_COLOR;
-    private static final Color HEADER_COLOR = new Color(38, 38, 38);
-    private static final Color CARD_COLOR = new Color(45, 45, 45);
-    private static final Color INPUT_COLOR = new Color(34, 34, 34);
-    private static final Color INPUT_HOVER_COLOR = new Color(48, 48, 48);
-    private static final Color BORDER_COLOR = new Color(68, 68, 68);
-    private static final Color BORDER_FOCUS_COLOR = new Color(92, 150, 115);
-    private static final Color TEXT_COLOR = new Color(235, 235, 235);
-    private static final Color MUTED_COLOR = new Color(190, 190, 190);
-    private static final Color SCROLL_TRACK_COLOR = new Color(32, 32, 32);
-    private static final Color SCROLL_THUMB_COLOR = new Color(85, 85, 85);
-    private static final Color SCROLL_THUMB_HOVER_COLOR = new Color(115, 115, 115);
-    private static final Color PROGRESS_COLOR = new Color(65, 160, 100);
-
-    private static final Border INPUT_BORDER = BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(BORDER_COLOR),
-            BorderFactory.createEmptyBorder(4, 8, 4, 8));
+    private static final Color HEADER_COLOR = ColorScheme.DARKER_GRAY_COLOR;
+    private static final Color INPUT_COLOR = ColorScheme.CONTROL_COLOR;
+    private static final Color TEXT_COLOR = ColorScheme.TEXT_COLOR;
+    private static final Color MUTED_COLOR = ColorScheme.LIGHT_GRAY_COLOR;
 
     private final Client client;
     private final ClientThread clientThread;
     private final GrinderConfig config;
 
-    private final JPanel main = new JPanel();
+    @Inject
+    private net.runelite.client.game.ItemManager itemManager;
+
+    @Inject
+    private ItemSearchService itemSearchService;
+
+    private final JPanel main = new GoalListPanel();
     private final JPanel header = new JPanel();
     private final JPanel controlsPanel = new JPanel();
     private final JLabel summaryLabel = new JLabel("No profile loaded");
     private final JLabel resultsLabel = new JLabel();
-    private final JProgressBar overallProgress = new JProgressBar(0, 100);
-    private final JTextField searchField = new JTextField();
+    private final SegmentedProgressBar overallProgress = new SegmentedProgressBar();
+    private final IconTextField searchField = new IconTextField();
     private final JComboBox<String> categoryFilter = new JComboBox<>();
     private final JComboBox<String> statusFilter = new JComboBox<>();
     private final JComboBox<String> sortFilter = new JComboBox<>();
+    private final JComboBox<String> typeFilter = new JComboBox<>();
+    private final JToggleButton newGoalsButton = new JToggleButton("New 0");
+    private final JToggleButton activeGoalsButton = new JToggleButton("Active 0");
+    private final JToggleButton completeGoalsButton = new JToggleButton("Done 0");
+    private final JButton filtersToggle = new JButton("Filters");
     private final JButton clearFiltersButton = new JButton("Clear");
+    private final JButton undoDeleteButton = new JButton("Undo delete");
+    private Goal deletedGoal;
+    private GrinderProfile deletedFromProfile;
     private final JScrollPane scrollPane;
 
     private final Map<GoalCategory, Boolean> collapsedCategories = new LinkedHashMap<>();
@@ -151,7 +173,6 @@ public class GrinderPanel extends PluginPanel
         scrollPane.getViewport().setOpaque(true);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        styleScrollBar(scrollPane.getVerticalScrollBar());
         add(scrollPane, BorderLayout.CENTER);
 
         installListeners();
@@ -163,32 +184,120 @@ public class GrinderPanel extends PluginPanel
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.setBackground(HEADER_COLOR);
         header.setOpaque(true);
-        header.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
+        header.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JLabel titleLabel = new JLabel("Grinder Goals");
         titleLabel.setForeground(TEXT_COLOR);
-        titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 16f));
+        titleLabel.setFont(FontManager.getRunescapeBoldFont());
         titleLabel.setAlignmentX(LEFT_ALIGNMENT);
 
         summaryLabel.setForeground(MUTED_COLOR);
-        summaryLabel.setFont(summaryLabel.getFont().deriveFont(Font.PLAIN, 11f));
+        summaryLabel.setFont(FontManager.getRunescapeSmallFont());
         summaryLabel.setAlignmentX(LEFT_ALIGNMENT);
 
         overallProgress.setStringPainted(false);
         overallProgress.setBorderPainted(false);
         overallProgress.setOpaque(true);
         overallProgress.setBackground(INPUT_COLOR);
-        overallProgress.setForeground(PROGRESS_COLOR);
         overallProgress.setPreferredSize(new Dimension(100, 8));
         overallProgress.setMinimumSize(new Dimension(0, 8));
         overallProgress.setMaximumSize(new Dimension(Integer.MAX_VALUE, 8));
         overallProgress.setAlignmentX(LEFT_ALIGNMENT);
 
-        header.add(titleLabel);
+        JPanel titleRow = new JPanel(new BorderLayout(6, 0));
+        titleRow.setOpaque(false);
+        titleRow.setAlignmentX(LEFT_ALIGNMENT);
+        titleLabel.setIcon(new ImageIcon(com.grinder.ui.Icon.MAIN.getImage()
+                .getScaledInstance(18, 18, java.awt.Image.SCALE_SMOOTH)));
+        titleRow.add(titleLabel, BorderLayout.CENTER);
+        JButton more = new JButton("...");
+        styleButton(more);
+        more.setToolTipText("More goal options");
+        more.putClientProperty("JButton.buttonType", "toolBarButton");
+        JPopupMenu moreMenu = new JPopupMenu();
+        more.addActionListener(event -> moreMenu.show(more, 0, more.getHeight()));
+        titleRow.add(more, BorderLayout.EAST);
+        header.add(titleRow);
         header.add(Box.createVerticalStrut(6));
         header.add(summaryLabel);
         header.add(Box.createVerticalStrut(8));
         header.add(overallProgress);
+
+        JPanel counters = new JPanel(new GridLayout(1, 3, 4, 0));
+        counters.setOpaque(false);
+        counters.setAlignmentX(LEFT_ALIGNMENT);
+        newGoalsButton.setForeground(SegmentedProgressBar.colorFor(GoalStatus.NOT_STARTED));
+        activeGoalsButton.setForeground(SegmentedProgressBar.colorFor(GoalStatus.IN_PROGRESS));
+        completeGoalsButton.setForeground(SegmentedProgressBar.colorFor(GoalStatus.COMPLETE));
+        newGoalsButton.setToolTipText("Show not-started goals. Click again to show all statuses.");
+        activeGoalsButton.setToolTipText("Show in-progress goals (yellow). Click again to show all statuses.");
+        completeGoalsButton.setToolTipText("Show complete goals (green), including hidden completions. Click again to show all statuses.");
+        for (JToggleButton counter : new JToggleButton[]{newGoalsButton, activeGoalsButton, completeGoalsButton})
+        {
+            counter.setFont(FontManager.getRunescapeSmallFont());
+            counter.setMargin(new java.awt.Insets(3, 3, 3, 3));
+            counter.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
+        }
+        newGoalsButton.addActionListener(event -> toggleQuickStatus(NOT_STARTED));
+        activeGoalsButton.addActionListener(event -> toggleQuickStatus(IN_PROGRESS));
+        completeGoalsButton.addActionListener(event -> toggleQuickStatus(COMPLETE));
+        counters.add(newGoalsButton);
+        counters.add(activeGoalsButton);
+        counters.add(completeGoalsButton);
+        header.add(Box.createVerticalStrut(8));
+        header.add(counters);
+
+        JPanel goalActions = new JPanel(new GridLayout(1, 1));
+        goalActions.setOpaque(false);
+        goalActions.setAlignmentX(LEFT_ALIGNMENT);
+        goalActions.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
+        JButton addGoal = new JButton("+ Add goal");
+        styleButton(addGoal);
+        addGoal.setToolTipText("Create an automatic tracker or a custom goal with manual progress.");
+        addGoal.addActionListener(event -> showAddGoalDialog());
+        JButton defaults = new JButton("Add defaults");
+        styleButton(defaults);
+        defaults.setToolTipText("Add missing starter goals without replacing your goals");
+        defaults.addActionListener(event -> {
+            GrinderProfile active = profile;
+            if (active != null)
+            {
+                clientThread.invokeLater(() -> {
+                    if (profile == active)
+                    {
+                        active.ensureDefaultGoals(itemManager);
+                        render();
+                    }
+                });
+            }
+        });
+        goalActions.add(addGoal);
+        JMenuItem restoreDefaults = new JMenuItem("Add missing default goals");
+        restoreDefaults.setToolTipText("Restore missing starter goals without replacing existing goals or edited targets.");
+        restoreDefaults.addActionListener(event -> defaults.doClick());
+        moreMenu.add(restoreDefaults);
+        JMenuItem expandAll = new JMenuItem("Expand all categories");
+        expandAll.setToolTipText("Show the goal cards in every category.");
+        expandAll.addActionListener(event -> setAllCategoriesCollapsed(false));
+        moreMenu.add(expandAll);
+        JMenuItem collapseAll = new JMenuItem("Collapse all categories");
+        collapseAll.setToolTipText("Show category headers only. Your goals and progress are kept.");
+        collapseAll.addActionListener(event -> setAllCategoriesCollapsed(true));
+        moreMenu.add(collapseAll);
+        JMenuItem reset = new JMenuItem("Reset search and filters");
+        reset.setToolTipText("Clear the search, category, status and type filters, and restore name sorting.");
+        reset.addActionListener(event -> clearFiltersButton.doClick());
+        moreMenu.addSeparator();
+        moreMenu.add(reset);
+        header.add(Box.createVerticalStrut(8));
+        header.add(goalActions);
+        undoDeleteButton.setVisible(false);
+        undoDeleteButton.setToolTipText("Restore the most recently deleted goal in this player profile.");
+        undoDeleteButton.setAlignmentX(LEFT_ALIGNMENT);
+        styleButton(undoDeleteButton);
+        undoDeleteButton.addActionListener(event -> undoDelete());
+        header.add(Box.createVerticalStrut(4));
+        header.add(undoDeleteButton);
     }
 
     private void buildControls()
@@ -196,21 +305,31 @@ public class GrinderPanel extends PluginPanel
         controlsPanel.setLayout(new BoxLayout(controlsPanel, BoxLayout.Y_AXIS));
         controlsPanel.setBackground(PANEL_COLOR);
         controlsPanel.setOpaque(true);
-        controlsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 8, 10));
+        controlsPanel.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
 
-        styleTextField(searchField);
-        searchField.setToolTipText("Search goals by name");
+        searchField.setIcon(IconTextField.Icon.SEARCH);
+        UiTooltips.set(searchField, "Search goal titles and descriptions. Use the clear icon to clear the search.");
+        searchField.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        searchField.setHoverBackgroundColor(ColorScheme.DARKER_GRAY_HOVER_COLOR);
         searchField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
         searchField.setPreferredSize(new Dimension(200, 32));
         searchField.setAlignmentX(LEFT_ALIGNMENT);
 
         categoryFilter.setModel(new DefaultComboBoxModel<>(new String[]{ALL_CATEGORIES}));
-        statusFilter.setModel(new DefaultComboBoxModel<>(new String[]{ALL_STATUSES, NOT_STARTED, IN_PROGRESS, COMPLETE}));
-        sortFilter.setModel(new DefaultComboBoxModel<>(new String[]{SORT_NAME, SORT_PROGRESS_DESC, SORT_PROGRESS_ASC, SORT_STATUS}));
+        statusFilter.setModel(new DefaultComboBoxModel<>(new String[]{ALL_STATUSES, UNFINISHED, NOT_STARTED, IN_PROGRESS, COMPLETE}));
+        sortFilter.setModel(new DefaultComboBoxModel<>(new String[]{SORT_NAME, SORT_NAME_DESC, SORT_CLOSEST, SORT_PROGRESS_DESC, SORT_PROGRESS_ASC, SORT_STATUS}));
+        typeFilter.setModel(new DefaultComboBoxModel<>(new String[]{ALL_TYPES, AUTOMATIC, CUSTOM}));
+        styleComboBox(typeFilter);
+        typeFilter.setAlignmentX(LEFT_ALIGNMENT);
+        typeFilter.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
 
         styleComboBox(categoryFilter);
         styleComboBox(statusFilter);
         styleComboBox(sortFilter);
+        UiTooltips.set(categoryFilter, "Show goals from one category, or choose All categories.");
+        UiTooltips.set(statusFilter, "Filter by progress state. Complete also shows goals hidden by the completed-goals setting.");
+        UiTooltips.set(sortFilter, "Sort within each category. Closest unfinished puts incomplete goals nearest their target first.");
+        UiTooltips.set(typeFilter, "Automatic goals read game data; custom goals use progress you enter yourself.");
 
         categoryFilter.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
         statusFilter.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
@@ -220,13 +339,43 @@ public class GrinderPanel extends PluginPanel
         statusFilter.setAlignmentX(LEFT_ALIGNMENT);
         sortFilter.setAlignmentX(LEFT_ALIGNMENT);
 
+        controlsPanel.add(createControlLabel("Search"));
+        controlsPanel.add(Box.createVerticalStrut(3));
         controlsPanel.add(searchField);
-        controlsPanel.add(Box.createVerticalStrut(7));
-        controlsPanel.add(categoryFilter);
-        controlsPanel.add(Box.createVerticalStrut(7));
-        controlsPanel.add(statusFilter);
-        controlsPanel.add(Box.createVerticalStrut(7));
-        controlsPanel.add(sortFilter);
+        controlsPanel.add(Box.createVerticalStrut(8));
+        JPanel filterOptions = new JPanel();
+        filterOptions.setLayout(new BoxLayout(filterOptions, BoxLayout.Y_AXIS));
+        filterOptions.setOpaque(false);
+        filterOptions.setAlignmentX(LEFT_ALIGNMENT);
+        filterOptions.add(createControlLabel("Category"));
+        filterOptions.add(Box.createVerticalStrut(3));
+        filterOptions.add(categoryFilter);
+        filterOptions.add(Box.createVerticalStrut(7));
+        filterOptions.add(createControlLabel("Status"));
+        filterOptions.add(Box.createVerticalStrut(3));
+        filterOptions.add(statusFilter);
+        filterOptions.add(Box.createVerticalStrut(7));
+        filterOptions.add(createControlLabel("Sort"));
+        filterOptions.add(Box.createVerticalStrut(3));
+        filterOptions.add(sortFilter);
+        filterOptions.add(Box.createVerticalStrut(7));
+        filterOptions.add(createControlLabel("Goal type"));
+        filterOptions.add(Box.createVerticalStrut(3));
+        filterOptions.add(typeFilter);
+        filterOptions.setVisible(false);
+        styleButton(filtersToggle);
+        filtersToggle.setToolTipText("Show category, status, sort and goal-type options. The number indicates active options.");
+        filtersToggle.setAlignmentX(LEFT_ALIGNMENT);
+        filtersToggle.addActionListener(event -> {
+            boolean show = !filterOptions.isVisible();
+            filterOptions.setVisible(show);
+            filtersToggle.setToolTipText(show ? "Hide filter options" : "Show filter options");
+            revalidate();
+            repaint();
+        });
+        controlsPanel.add(filtersToggle);
+        controlsPanel.add(Box.createVerticalStrut(6));
+        controlsPanel.add(filterOptions);
 
         JPanel actionRow = new JPanel(new BorderLayout(8, 0));
         actionRow.setBackground(PANEL_COLOR);
@@ -236,177 +385,35 @@ public class GrinderPanel extends PluginPanel
         actionRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
 
         resultsLabel.setForeground(MUTED_COLOR);
-        resultsLabel.setFont(resultsLabel.getFont().deriveFont(Font.PLAIN, 11f));
+        resultsLabel.setFont(FontManager.getRunescapeSmallFont());
 
         styleButton(clearFiltersButton);
-        clearFiltersButton.setToolTipText("Clear search and filters");
+        clearFiltersButton.setToolTipText("Reset search, all filters and sorting. Saved goals are unaffected.");
 
         actionRow.add(resultsLabel, BorderLayout.CENTER);
         actionRow.add(clearFiltersButton, BorderLayout.EAST);
         controlsPanel.add(actionRow);
     }
 
-    private void styleTextField(JTextField field)
+    private JLabel createControlLabel(String text)
     {
-        field.setBackground(INPUT_COLOR);
-        field.setForeground(TEXT_COLOR);
-        field.setCaretColor(TEXT_COLOR);
-        field.setSelectionColor(new Color(65, 100, 80));
-        field.setSelectedTextColor(Color.WHITE);
-        field.setDisabledTextColor(MUTED_COLOR);
-        field.setFont(field.getFont().deriveFont(Font.PLAIN, 12f));
-        field.setBorder(INPUT_BORDER);
-        field.setOpaque(true);
+        JLabel label = new JLabel(text);
+        label.setForeground(MUTED_COLOR);
+        label.setFont(FontManager.getRunescapeSmallFont());
+        label.setAlignmentX(LEFT_ALIGNMENT);
+        return label;
     }
 
     private void styleComboBox(JComboBox<String> comboBox)
     {
-        comboBox.setBackground(INPUT_COLOR);
-        comboBox.setForeground(TEXT_COLOR);
-        comboBox.setFont(comboBox.getFont().deriveFont(Font.PLAIN, 12f));
-        comboBox.setBorder(BorderFactory.createLineBorder(BORDER_COLOR));
-        comboBox.setOpaque(true);
         comboBox.setFocusable(true);
         comboBox.setMaximumRowCount(12);
-        comboBox.setLightWeightPopupEnabled(true);
-
-        comboBox.setRenderer(new DefaultListCellRenderer()
-        {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
-            {
-                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                label.setOpaque(true);
-                label.setFont(comboBox.getFont());
-                label.setBorder(BorderFactory.createEmptyBorder(5, 8, 5, 8));
-
-                if (isSelected)
-                {
-                    label.setBackground(new Color(65, 85, 72));
-                    label.setForeground(Color.WHITE);
-                }
-                else
-                {
-                    label.setBackground(INPUT_COLOR);
-                    label.setForeground(TEXT_COLOR);
-                }
-
-                return label;
-            }
-        });
-
-        comboBox.setUI(new javax.swing.plaf.basic.BasicComboBoxUI()
-        {
-            @Override
-            protected JButton createArrowButton()
-            {
-                JButton button = new JButton("\u25BE");
-                button.setFont(button.getFont().deriveFont(Font.PLAIN, 12f));
-                button.setForeground(MUTED_COLOR);
-                button.setBackground(INPUT_COLOR);
-                button.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
-                button.setFocusable(false);
-                button.setOpaque(true);
-                button.setContentAreaFilled(true);
-                button.setBorderPainted(false);
-                return button;
-            }
-        });
-
-        comboBox.setBackground(INPUT_COLOR);
-        comboBox.setForeground(TEXT_COLOR);
-        comboBox.setBorder(BorderFactory.createLineBorder(BORDER_COLOR));
     }
 
     private void styleButton(JButton button)
     {
-        button.setForeground(TEXT_COLOR);
-        button.setBackground(INPUT_HOVER_COLOR);
-        button.setFont(button.getFont().deriveFont(Font.PLAIN, 11f));
-        button.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                BorderFactory.createEmptyBorder(4, 9, 4, 9)));
-        button.setFocusable(false);
-        button.setOpaque(true);
-        button.setContentAreaFilled(true);
-        button.setBorderPainted(true);
-    }
-
-    private void styleScrollBar(JScrollBar scrollBar)
-    {
-        scrollBar.setBorder(BorderFactory.createEmptyBorder());
-        scrollBar.setOpaque(true);
-        scrollBar.setBackground(SCROLL_TRACK_COLOR);
-        scrollBar.setPreferredSize(new Dimension(10, 0));
-
-        scrollBar.setUI(new BasicScrollBarUI()
-        {
-            @Override
-            protected void configureScrollBarColors()
-            {
-                thumbColor = SCROLL_THUMB_COLOR;
-                thumbHighlightColor = SCROLL_THUMB_HOVER_COLOR;
-                thumbDarkShadowColor = SCROLL_THUMB_COLOR;
-                thumbLightShadowColor = SCROLL_THUMB_COLOR;
-                trackColor = SCROLL_TRACK_COLOR;
-            }
-
-            @Override
-            protected void paintTrack(Graphics graphics, JComponent component, Rectangle bounds)
-            {
-                graphics.setColor(SCROLL_TRACK_COLOR);
-                graphics.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
-            }
-
-            @Override
-            protected void paintThumb(Graphics graphics, JComponent component, Rectangle bounds)
-            {
-                if (bounds.isEmpty() || !scrollbar.isEnabled())
-                {
-                    return;
-                }
-
-                Graphics2D g = (Graphics2D) graphics.create();
-                try
-                {
-                    g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    g.setColor(isDragging || isThumbRollover() ? SCROLL_THUMB_HOVER_COLOR : SCROLL_THUMB_COLOR);
-                    g.fillRoundRect(bounds.x + 2, bounds.y + 2, Math.max(1, bounds.width - 4), Math.max(1, bounds.height - 4), 8, 8);
-                }
-                finally
-                {
-                    g.dispose();
-                }
-            }
-
-            @Override
-            public Dimension getPreferredSize(JComponent component)
-            {
-                return new Dimension(10, 10);
-            }
-
-            @Override
-            protected JButton createDecreaseButton(int orientation)
-            {
-                return createZeroButton();
-            }
-
-            @Override
-            protected JButton createIncreaseButton(int orientation)
-            {
-                return createZeroButton();
-            }
-
-            private JButton createZeroButton()
-            {
-                JButton button = new JButton();
-                button.setPreferredSize(new Dimension(0, 0));
-                button.setMinimumSize(new Dimension(0, 0));
-                button.setMaximumSize(new Dimension(0, 0));
-                button.setVisible(false);
-                return button;
-            }
-        });
+        button.setRolloverEnabled(true);
+        button.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
     }
 
     private void installListeners()
@@ -435,6 +442,7 @@ public class GrinderPanel extends PluginPanel
         categoryFilter.addActionListener(this::onFilterChanged);
         statusFilter.addActionListener(this::onFilterChanged);
         sortFilter.addActionListener(this::onFilterChanged);
+        typeFilter.addActionListener(this::onFilterChanged);
 
         clearFiltersButton.addActionListener(event ->
         {
@@ -442,6 +450,7 @@ public class GrinderPanel extends PluginPanel
             categoryFilter.setSelectedItem(ALL_CATEGORIES);
             statusFilter.setSelectedItem(ALL_STATUSES);
             sortFilter.setSelectedItem(SORT_NAME);
+            typeFilter.setSelectedItem(ALL_TYPES);
             render();
         });
     }
@@ -450,8 +459,31 @@ public class GrinderPanel extends PluginPanel
     {
         if (!updatingFilters)
         {
+            syncQuickStatus();
             requestFilteredRender();
         }
+    }
+
+    private void toggleQuickStatus(String status)
+    {
+        statusFilter.setSelectedItem(status.equals(statusFilter.getSelectedItem()) ? ALL_STATUSES : status);
+    }
+
+    private void syncQuickStatus()
+    {
+        Object status = statusFilter.getSelectedItem();
+        newGoalsButton.setSelected(NOT_STARTED.equals(status));
+        activeGoalsButton.setSelected(IN_PROGRESS.equals(status));
+        completeGoalsButton.setSelected(COMPLETE.equals(status));
+    }
+
+    private void setAllCategoriesCollapsed(boolean collapsed)
+    {
+        for (GoalCategory category : GoalCategory.values())
+        {
+            collapsedCategories.put(category, collapsed);
+        }
+        render();
     }
 
     private void requestFilteredRender()
@@ -462,21 +494,28 @@ public class GrinderPanel extends PluginPanel
     public void load(GrinderProfile profile)
     {
         this.profile = profile;
+        SwingUtilities.invokeLater(() -> {
+            deletedGoal = null;
+            deletedFromProfile = null;
+            undoDeleteButton.setVisible(false);
+        });
         renderVersion.incrementAndGet();
+        SwingUtilities.invokeLater(() -> SwingUtilities.updateComponentTreeUI(this));
         render();
     }
 
     public void unload()
     {
         profile = null;
+        SwingUtilities.invokeLater(() -> {
+            deletedGoal = null;
+            deletedFromProfile = null;
+            undoDeleteButton.setVisible(false);
+        });
         renderVersion.incrementAndGet();
         render();
     }
 
-    /**
-     * Requests goal preparation on RuneLite's client thread.
-     * Swing component updates are then scheduled on the EDT.
-     */
     public void render()
     {
         if (!renderQueued.compareAndSet(false, true))
@@ -495,12 +534,20 @@ public class GrinderPanel extends PluginPanel
             {
                 for (Goal goal : currentProfile.getGoals())
                 {
-                    if (goal == null || (!config.collectionLogEnabled() && isCollectionLogGoal(goal)))
+                    if (goal == null || (!config.collectionLogEnabled() && isCollectionLogGoal(goal))
+                            || (!config.levelGoalsEnabled() && isLevelGoal(goal))
+                            || (!config.experienceGoalsEnabled() && isExperienceGoal(goal))
+                            || (!config.trackerGoalsEnabled() && goal instanceof TrackerGoal))
                     {
                         continue;
                     }
 
                     GoalComponent component = goal.build(client, config);
+                    component.setGoalStatus(goal.getStatus());
+                    String title = safeTitle(goal);
+                    component.setGoalActions(goal.supportsTarget()
+                            ? event -> editGoal(currentProfile, goal, title) : null,
+                            event -> deleteGoal(currentProfile, goal, title));
 
                     allGoals.add(new GoalView(
                             goal,
@@ -554,6 +601,7 @@ public class GrinderPanel extends PluginPanel
         List<GoalView> filteredGoals = filterGoals(allGoals);
         sortGoals(filteredGoals);
         resultsLabel.setText(filteredGoals.size() + " of " + allGoals.size() + " goals");
+        resultsLabel.setToolTipText("Goals matching your search, filters and visibility settings.");
 
         if (filteredGoals.isEmpty())
         {
@@ -576,9 +624,9 @@ public class GrinderPanel extends PluginPanel
     private void updateSummary(List<GoalView> goals)
     {
         int completed = 0;
-        int tracked = 0;
-        double currentTotal = 0;
-        double maximumTotal = 0;
+        int active = 0;
+        int notStarted = 0;
+        double ratios = 0;
 
         for (GoalView view : goals)
         {
@@ -586,25 +634,25 @@ public class GrinderPanel extends PluginPanel
             {
                 completed++;
             }
-
-            if (view.hasProgress)
+            else if (view.status == GoalStatus.IN_PROGRESS)
             {
-                long maximum = Math.max(0, view.progressMaximum);
-
-                if (maximum > 0)
-                {
-                    long current = Math.max(0, Math.min(view.progressCurrent, maximum));
-                    currentTotal += current;
-                    maximumTotal += maximum;
-                    tracked++;
-                }
+                active++;
             }
+            else { notStarted++; }
+            ratios += getProgressRatio(view);
         }
 
-        int percentage = maximumTotal <= 0 ? 0 : (int) Math.round(currentTotal * 100.0 / maximumTotal);
-        overallProgress.setValue(Math.max(0, Math.min(100, percentage)));
-        summaryLabel.setText(completed + " completed  •  " + goals.size() + " goals  •  " +
-                (tracked == 0 ? "No tracked progress" : percentage + "% across " + tracked + " tracked goals"));
+        int percentage = goals.isEmpty() ? 0 : (int) Math.round(ratios * 100 / goals.size());
+        overallProgress.setValue(percentage * 100);
+        overallProgress.setStatus(!goals.isEmpty() && completed == goals.size() ? GoalStatus.COMPLETE
+                : active > 0 || completed > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED);
+        summaryLabel.setText(completed + " / " + goals.size() + " complete  •  " + percentage + "%");
+        summaryLabel.setToolTipText("Average progress across your goals; each goal has equal weight");
+        overallProgress.setToolTipText(percentage + "% average progress. Each goal has equal weight; yellow is active and green is complete.");
+        newGoalsButton.setText("New " + notStarted);
+        activeGoalsButton.setText("Active " + active);
+        completeGoalsButton.setText("Done " + completed);
+        syncQuickStatus();
     }
 
     private List<GoalView> filterGoals(List<GoalView> goals)
@@ -613,10 +661,17 @@ public class GrinderPanel extends PluginPanel
         String query = searchField.getText().trim().toLowerCase(Locale.ROOT);
         String selectedCategory = (String) categoryFilter.getSelectedItem();
         String selectedStatus = (String) statusFilter.getSelectedItem();
+        String selectedType = (String) typeFilter.getSelectedItem();
+        int filterCount = (ALL_CATEGORIES.equals(selectedCategory) ? 0 : 1)
+                + (ALL_STATUSES.equals(selectedStatus) ? 0 : 1)
+                + (ALL_TYPES.equals(selectedType) ? 0 : 1)
+                + (SORT_NAME.equals(sortFilter.getSelectedItem()) ? 0 : 1);
+        filtersToggle.setText(filterCount == 0 ? "Filters" : "Filters (" + filterCount + ")");
 
         for (GoalView view : goals)
         {
-            if (!query.isEmpty() && !view.title.toLowerCase(Locale.ROOT).contains(query))
+            if (!query.isEmpty() && !view.title.toLowerCase(Locale.ROOT).contains(query)
+                    && !view.goal.getDescription().toLowerCase(Locale.ROOT).contains(query))
             {
                 continue;
             }
@@ -627,7 +682,12 @@ public class GrinderPanel extends PluginPanel
                 continue;
             }
 
-            if (!matchesStatus(view.status, selectedStatus))
+            if (!matchesStatus(view.status, selectedStatus, config.hideCompletedGoals()))
+            {
+                continue;
+            }
+            if (CUSTOM.equals(selectedType) && !(view.goal instanceof CustomGoal)
+                    || AUTOMATIC.equals(selectedType) && view.goal instanceof CustomGoal)
             {
                 continue;
             }
@@ -638,12 +698,14 @@ public class GrinderPanel extends PluginPanel
         return filtered;
     }
 
-    private boolean matchesStatus(GoalStatus status, String selectedStatus)
+    static boolean matchesStatus(GoalStatus status, String selectedStatus, boolean hideCompleted)
     {
         if (selectedStatus == null || ALL_STATUSES.equals(selectedStatus))
         {
-            return true;
+            return !hideCompleted || status != GoalStatus.COMPLETE;
         }
+
+        if (UNFINISHED.equals(selectedStatus)) { return status != GoalStatus.COMPLETE; }
 
         String value = status == null ? "" : status.name();
 
@@ -669,7 +731,17 @@ public class GrinderPanel extends PluginPanel
     {
         String sort = (String) sortFilter.getSelectedItem();
 
-        if (SORT_PROGRESS_DESC.equals(sort))
+        if (SORT_NAME_DESC.equals(sort))
+        {
+            goals.sort(Comparator.comparing((GoalView view) -> view.title, String.CASE_INSENSITIVE_ORDER).reversed());
+        }
+        else if (SORT_CLOSEST.equals(sort))
+        {
+            goals.sort(Comparator.comparing((GoalView view) -> isComplete(view.status))
+                    .thenComparing(Comparator.comparingDouble(GrinderPanel::getProgressRatio).reversed())
+                    .thenComparing(view -> view.title, String.CASE_INSENSITIVE_ORDER));
+        }
+        else if (SORT_PROGRESS_DESC.equals(sort))
         {
             goals.sort(Comparator.comparingDouble(GrinderPanel::getProgressRatio).reversed()
                     .thenComparing(view -> view.title, String.CASE_INSENSITIVE_ORDER));
@@ -703,12 +775,12 @@ public class GrinderPanel extends PluginPanel
 
     private static int getStatusOrder(GoalStatus status)
     {
-        if (isComplete(status))
+        if (status == GoalStatus.IN_PROGRESS)
         {
             return 0;
         }
 
-        if (status == GoalStatus.IN_PROGRESS)
+        if (status == GoalStatus.NOT_STARTED)
         {
             return 1;
         }
@@ -755,33 +827,22 @@ public class GrinderPanel extends PluginPanel
     {
         boolean collapsed = Boolean.TRUE.equals(collapsedCategories.get(category));
 
-        JPanel categorySection = new JPanel();
+        JPanel categorySection = new ContentHeightPanel();
         categorySection.setLayout(new BoxLayout(categorySection, BoxLayout.Y_AXIS));
-        categorySection.setBackground(CARD_COLOR);
+        categorySection.setBackground(PANEL_COLOR);
         categorySection.setOpaque(true);
-        categorySection.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                BorderFactory.createEmptyBorder(0, 0, 4, 0)));
+        categorySection.setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
         categorySection.setAlignmentX(LEFT_ALIGNMENT);
-        categorySection.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
         JPanel categoryHeader = new JPanel(new BorderLayout(8, 0));
         categoryHeader.setBackground(HEADER_COLOR);
         categoryHeader.setOpaque(true);
-        categoryHeader.setBorder(BorderFactory.createEmptyBorder(9, 9, 9, 9));
+        categoryHeader.setBorder(BorderFactory.createEmptyBorder(8, 9, 8, 9));
         categoryHeader.setAlignmentX(LEFT_ALIGNMENT);
-        categoryHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
-
         JButton toggleButton = new JButton(collapsed ? "\u25B6" : "\u25BC");
         toggleButton.setToolTipText(collapsed ? "Expand category" : "Collapse category");
-        toggleButton.setForeground(MUTED_COLOR);
-        toggleButton.setBackground(HEADER_COLOR);
-        toggleButton.setFont(toggleButton.getFont().deriveFont(Font.PLAIN, 11f));
-        toggleButton.setBorder(BorderFactory.createEmptyBorder(0, 2, 0, 2));
-        toggleButton.setFocusable(false);
-        toggleButton.setOpaque(false);
-        toggleButton.setContentAreaFilled(false);
-        toggleButton.setBorderPainted(false);
+        styleButton(toggleButton);
+        toggleButton.putClientProperty("JButton.buttonType", "toolBarButton");
         toggleButton.addActionListener(event ->
         {
             collapsedCategories.put(category, !Boolean.TRUE.equals(collapsedCategories.get(category)));
@@ -795,8 +856,9 @@ public class GrinderPanel extends PluginPanel
         }
 
         JLabel titleLabel = new JLabel(category.getDisplayName());
+        titleLabel.setToolTipText("Click to " + (collapsed ? "expand " : "collapse ") + category.getDisplayName() + ".");
         titleLabel.setForeground(TEXT_COLOR);
-        titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 12f));
+        titleLabel.setFont(FontManager.getRunescapeBoldFont());
 
         JPanel titlePanel = new JPanel();
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.X_AXIS));
@@ -807,8 +869,9 @@ public class GrinderPanel extends PluginPanel
         titlePanel.add(titleLabel);
 
         JLabel countLabel = new JLabel(String.valueOf(goals.size()), SwingConstants.RIGHT);
+        countLabel.setToolTipText("Goals in this category matching your current filters.");
         countLabel.setForeground(MUTED_COLOR);
-        countLabel.setFont(countLabel.getFont().deriveFont(Font.PLAIN, 11f));
+        countLabel.setFont(FontManager.getRunescapeSmallFont());
         countLabel.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 0));
 
         JPanel headerLeft = new JPanel();
@@ -819,30 +882,67 @@ public class GrinderPanel extends PluginPanel
         headerLeft.add(Box.createHorizontalStrut(5));
         headerLeft.add(titlePanel);
 
+        JPanel trailing = new JPanel(new BorderLayout(6, 0));
+        trailing.setOpaque(false);
+        trailing.add(countLabel, BorderLayout.WEST);
+
+        java.awt.event.MouseAdapter categoryInteraction = new java.awt.event.MouseAdapter()
+        {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent event)
+            {
+                if (SwingUtilities.isLeftMouseButton(event))
+                {
+                    toggleButton.doClick();
+                }
+            }
+
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent event)
+            {
+                categoryHeader.setBackground(ColorScheme.DARKER_GRAY_HOVER_COLOR);
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent event)
+            {
+                categoryHeader.setBackground(HEADER_COLOR);
+            }
+        };
+        for (Component part : new Component[]{categoryHeader, headerLeft, titlePanel,
+                titleLabel, iconLabel, trailing, countLabel})
+        {
+            part.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
+            part.addMouseListener(categoryInteraction);
+        }
+
         categoryHeader.add(headerLeft, BorderLayout.CENTER);
-        categoryHeader.add(countLabel, BorderLayout.EAST);
+        categoryHeader.add(trailing, BorderLayout.EAST);
         categorySection.add(categoryHeader);
 
         if (!collapsed)
         {
-            JPanel goalsPanel = new JPanel();
+            JPanel goalsPanel = new ContentHeightPanel();
             goalsPanel.setLayout(new BoxLayout(goalsPanel, BoxLayout.Y_AXIS));
-            goalsPanel.setBackground(CARD_COLOR);
+            goalsPanel.setBackground(PANEL_COLOR);
             goalsPanel.setOpaque(true);
-            goalsPanel.setBorder(BorderFactory.createEmptyBorder(8, 7, 4, 7));
+            goalsPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 6, 0));
             goalsPanel.setAlignmentX(LEFT_ALIGNMENT);
 
             for (GoalView view : goals)
             {
+                if (goalsPanel.getComponentCount() > 0)
+                {
+                    goalsPanel.add(Box.createVerticalStrut(12));
+                }
                 view.component.setAlignmentX(LEFT_ALIGNMENT);
-                view.component.setMaximumSize(new Dimension(Integer.MAX_VALUE, view.component.getPreferredSize().height));
                 goalsPanel.add(view.component);
-                goalsPanel.add(Box.createVerticalStrut(8));
             }
 
             categorySection.add(goalsPanel);
         }
 
+        categoryHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, categoryHeader.getPreferredSize().height));
         main.add(categorySection);
     }
 
@@ -857,16 +957,194 @@ public class GrinderPanel extends PluginPanel
 
         JLabel titleLabel = new JLabel(title);
         titleLabel.setForeground(TEXT_COLOR);
-        titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 13f));
+        titleLabel.setFont(FontManager.getRunescapeBoldFont());
 
         JLabel messageLabel = new JLabel("<html><div style='width: 220px'>" + escapeHtml(message) + "</div></html>");
         messageLabel.setForeground(MUTED_COLOR);
-        messageLabel.setFont(messageLabel.getFont().deriveFont(Font.PLAIN, 11f));
+        messageLabel.setFont(FontManager.getRunescapeSmallFont());
 
         emptyPanel.add(titleLabel);
         emptyPanel.add(Box.createVerticalStrut(6));
         emptyPanel.add(messageLabel);
         main.add(emptyPanel);
+    }
+
+    private void showAddGoalDialog()
+    {
+        GrinderProfile active = profile;
+        if (active == null)
+        {
+            JOptionPane.showMessageDialog(this, "Log in to add goals to your player profile.");
+            return;
+        }
+        clientThread.invokeLater(() -> {
+            if (profile != active || client.getGameState() != net.runelite.api.GameState.LOGGED_IN) { return; }
+            java.util.Map<Integer, java.util.Map<String, java.util.function.Supplier<Goal>>> choices =
+                    com.grinder.content.CompletionGoalChoices.create(client);
+            SwingUtilities.invokeLater(() -> {
+                if (profile == active) { showAddGoalDialog(active, choices); }
+            });
+        });
+    }
+
+    private void showAddGoalDialog(GrinderProfile active,
+            java.util.Map<Integer, java.util.Map<String, java.util.function.Supplier<Goal>>> choices)
+    {
+        GoalEditorPanel form = new GoalEditorPanel(itemManager, itemSearchService, choices);
+        Goal candidate = GoalCreationDialog.showDialog(this, form);
+        if (candidate == null) { return; }
+        clientThread.invokeLater(() -> {
+            if (profile != active) { return; }
+            Goal existing = active.findMatchingGoal(candidate);
+            if (existing != null)
+            {
+                String title = safeTitle(existing);
+                long oldTarget = existing.getProgressMaximum();
+                long newTarget = candidate.getProgressMaximum();
+                SwingUtilities.invokeLater(() -> {
+                    if (profile != active) { return; }
+                    if (existing.supportsTarget())
+                    {
+                        if (JOptionPane.showConfirmDialog(this,
+                                title + " is already tracked.\nUpdate its target from "
+                                        + String.format(Locale.ROOT, "%,d to %,d?", oldTarget, newTarget),
+                                "Update existing goal", JOptionPane.OK_CANCEL_OPTION,
+                                JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION)
+                        {
+                            clientThread.invokeLater(() -> {
+                                if (profile == active && active.getGoals().contains(existing))
+                                {
+                                    existing.setTarget(newTarget);
+                                    render();
+                                }
+                            });
+                        }
+                    }
+                    else
+                    {
+                        JOptionPane.showMessageDialog(this, "This goal is already in your profile.");
+                    }
+                });
+            }
+            else
+            {
+                candidate.refresh(client);
+                active.add(candidate);
+                SwingUtilities.invokeLater(() -> {
+                    if (profile != active) { return; }
+                    collapsedCategories.put(candidate.getCategory(), false);
+                    clearFiltersButton.doClick();
+                });
+                render();
+            }
+        });
+    }
+
+    private void editGoal(GrinderProfile active, Goal goal, String title)
+    {
+        if (profile != active) { return; }
+        if (goal instanceof CustomGoal)
+        {
+            editCustomGoal(active, (CustomGoal) goal, title);
+            return;
+        }
+        JSpinner target = new JSpinner(GoalEditorPanel.targetModel(goal));
+        target.setEditor(new JSpinner.NumberEditor(target, "#,##0"));
+        GoalEditorPanel.describeTarget(target);
+        JPanel form = new JPanel(new BorderLayout(0, 8));
+        form.add(new JLabel("Target"), BorderLayout.NORTH);
+        form.add(target, BorderLayout.CENTER);
+        while (JOptionPane.showConfirmDialog(this, form, "Edit " + title,
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION)
+        {
+            try
+            {
+                target.commitEdit();
+                long value = ((Number) target.getValue()).longValue();
+                clientThread.invokeLater(() -> {
+                    if (profile == active && active.getGoals().contains(goal))
+                    {
+                        goal.setTarget(value);
+                        render();
+                    }
+                });
+                return;
+            }
+            catch (java.text.ParseException exception)
+            {
+                JOptionPane.showMessageDialog(this, "Enter a valid target within the allowed range.");
+            }
+        }
+    }
+
+    private void editCustomGoal(GrinderProfile active, CustomGoal goal, String title)
+    {
+        CustomGoalForm form = new CustomGoalForm();
+        form.load(goal);
+        while (JOptionPane.showConfirmDialog(this, form, "Edit " + title,
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION)
+        {
+            try
+            {
+                CustomGoal draft = form.read();
+                clientThread.invokeLater(() -> {
+                    if (profile == active && active.getGoals().contains(goal))
+                    {
+                        goal.update(draft.getTitle(null), draft.getDescription(), draft.getCategory(),
+                                draft.getProgressCurrent(), draft.getProgressMaximum());
+                        render();
+                    }
+                });
+                return;
+            }
+            catch (java.text.ParseException | IllegalArgumentException exception)
+            {
+                JOptionPane.showMessageDialog(this, exception instanceof IllegalArgumentException
+                        ? exception.getMessage() : "Enter valid progress and target numbers.",
+                        "Check goal details", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void deleteGoal(GrinderProfile active, Goal goal, String title)
+    {
+        if (profile != active || JOptionPane.showConfirmDialog(this,
+                "Remove " + title + " from your goals?\nYour game progress is unaffected.",
+                "Delete goal", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION)
+        {
+            return;
+        }
+        clientThread.invokeLater(() -> {
+            if (profile == active && active.remove(goal))
+            {
+                SwingUtilities.invokeLater(() -> {
+                    if (profile == active)
+                    {
+                        deletedGoal = goal;
+                        deletedFromProfile = active;
+                        undoDeleteButton.setVisible(true);
+                    }
+                });
+                render();
+            }
+        });
+    }
+
+    private void undoDelete()
+    {
+        GrinderProfile active = deletedFromProfile;
+        Goal goal = deletedGoal;
+        deletedGoal = null;
+        deletedFromProfile = null;
+        undoDeleteButton.setVisible(false);
+        if (goal == null || active == null) { return; }
+        clientThread.invokeLater(() -> {
+            if (profile == active)
+            {
+                active.add(goal);
+                render();
+            }
+        });
     }
 
     private String safeTitle(Goal goal)
@@ -892,6 +1170,16 @@ public class GrinderPanel extends PluginPanel
         return goal instanceof CollectionLogEntryGoal || goal instanceof CollectionLogItemGoal;
     }
 
+    private boolean isLevelGoal(Goal goal)
+    {
+        return goal instanceof SkillLevelGoal || goal instanceof CombatLevelGoal || goal instanceof TotalLevelGoal;
+    }
+
+    private boolean isExperienceGoal(Goal goal)
+    {
+        return goal instanceof SkillExperienceGoal || goal instanceof TotalExperienceGoal;
+    }
+
     private String escapeHtml(String value)
     {
         return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
@@ -914,8 +1202,6 @@ public class GrinderPanel extends PluginPanel
             return;
         }
 
-        // Collection-log updates can change many goals at once. Rebuilding one
-        // consistent snapshot is both cheaper and avoids dropping sibling goals.
         render();
     }
 
@@ -939,6 +1225,11 @@ public class GrinderPanel extends PluginPanel
         render();
     }
 
+    /**
+     * @author Ayman Yassen
+     * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
+     * @since 10/18/2026
+     */
     private static final class GoalView
     {
         private final Goal goal;

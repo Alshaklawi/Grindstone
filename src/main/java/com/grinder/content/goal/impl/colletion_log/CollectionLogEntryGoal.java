@@ -3,6 +3,7 @@ package com.grinder.content.goal.impl.colletion_log;
 
 import com.grinder.config.GrinderConfig;
 import com.grinder.content.CollectionLogEntry;
+import com.grinder.content.CollectionLogHistory;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.GoalStatus;
@@ -10,7 +11,6 @@ import com.grinder.ui.GoalComponent;
 import com.grinder.ui.Icon;
 import com.grinder.ui.ItemComponent;
 import com.grinder.ui.ItemContainerComponent;
-import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,19 +23,30 @@ import net.runelite.api.ItemContainer;
 import net.runelite.api.gameval.InventoryID;
 import net.runelite.client.game.ItemManager;
 
+/**
+ * @author Ayman Yassen
+ * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
+ * @since 10/18/2026
+ */
 public class CollectionLogEntryGoal implements Goal
 {
     private static final int COLLECTION_LOG_CONTAINER_ID = InventoryID.COLLECTION_TRANSMIT;
-    private static final Color OBTAINED_BORDER_COLOR = new Color(70, 180, 100);
 
     @Getter
     private final CollectionLogEntry entry;
 
     private transient ItemManager itemManager;
+    private transient CollectionLogHistory history;
+
+    public void setHistory(CollectionLogHistory history) { this.history = history; }
+
+    private boolean isKnownObtained(ItemContainer container, ItemComposition item)
+    {
+        return history != null && history.contains(item.getId()) || entry.isObtained(container, item);
+    }
     private transient Map<Integer, ItemComponent> itemComponents = new HashMap<>();
     private transient GoalComponent current;
     private transient ItemContainerComponent main;
-    private transient GrinderConfig activeConfig;
     private transient long obtained;
     private transient long total;
     private transient String progressText = "0 / 0 obtained (0%)";
@@ -72,7 +83,6 @@ public class CollectionLogEntryGoal implements Goal
     public GoalComponent build(Client client, GrinderConfig config)
     {
         initializeTransientState();
-        activeConfig = config;
 
         if (current == null)
         {
@@ -112,7 +122,7 @@ public class CollectionLogEntryGoal implements Goal
             }
 
             nextTotal++;
-            boolean isObtained = entry.isObtained(container, item);
+            boolean isObtained = isKnownObtained(container, item);
 
             if (isObtained)
             {
@@ -136,13 +146,18 @@ public class CollectionLogEntryGoal implements Goal
                 component.setItem(item);
             }
 
-            component.setTooltip(config == null || config.showItemTooltips() ? item.getName() : null);
-            component.setBorderColor(isObtained ? OBTAINED_BORDER_COLOR : null);
+            String observed = history == null ? "Date not recorded" : history.firstSeenText(item.getId());
+            String tooltip = "<html>" + escapeTooltip(item.getName()) + "<br>"
+                    + (isObtained ? "Obtained" : "Not obtained") + "<br>" + escapeTooltip(observed) + "</html>";
+            component.setTooltip(config == null || config.showItemTooltips() ? tooltip : null);
+            component.setObtained(isObtained);
             components.add(component);
         }
 
         obtained = nextObtained;
         total = nextTotal;
+        main.setEmptyMessage(total == 0 ? "Open the collection log to load items"
+                : obtained >= total ? "All items obtained" : "No items to display");
         main.set(components);
 
         long percentage = total == 0 ? 0 : obtained * 100 / total;
@@ -217,8 +232,6 @@ public class CollectionLogEntryGoal implements Goal
             return;
         }
 
-        // The panel should schedule the visual refresh on the Swing EDT.
-        // This event updates the cached goal values only.
         ItemComposition[] items = entry.getItems(client);
         long nextObtained = 0;
         long nextTotal = 0;
@@ -232,7 +245,7 @@ public class CollectionLogEntryGoal implements Goal
 
             nextTotal++;
 
-            if (entry.isObtained(container, item))
+            if (isKnownObtained(container, item))
             {
                 nextObtained++;
             }
@@ -243,5 +256,10 @@ public class CollectionLogEntryGoal implements Goal
 
         long percentage = total == 0 ? 0 : obtained * 100 / total;
         progressText = obtained + " / " + total + " obtained (" + percentage + "%)";
+    }
+
+    private static String escapeTooltip(String text)
+    {
+        return text == null ? "" : text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }
 }

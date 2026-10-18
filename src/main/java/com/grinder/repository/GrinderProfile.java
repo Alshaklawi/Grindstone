@@ -1,9 +1,16 @@
 package com.grinder.repository;
 
 import com.grinder.content.CollectionLogEntry;
+import com.grinder.content.CollectionLogHistory;
 import com.grinder.content.TrackerEntry;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.impl.TrackerGoal;
+import com.grinder.content.goal.impl.CustomGoal;
+import com.grinder.content.goal.impl.level.CombatLevelGoal;
+import com.grinder.content.goal.impl.level.SkillLevelGoal;
+import com.grinder.content.goal.impl.level.TotalLevelGoal;
+import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
+import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
 import com.grinder.content.goal.impl.colletion_log.CollectionLogEntryGoal;
 
 import java.util.ArrayList;
@@ -15,13 +22,25 @@ import com.grinder.content.goal.impl.colletion_log.CollectionLogItemGoal;
 import lombok.Getter;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
+import net.runelite.api.Skill;
+import net.runelite.api.gameval.ItemID;
 import net.runelite.client.game.ItemManager;
 
+/**
+ * @author Ayman Yassen
+ * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
+ * @since 10/18/2026
+ */
 @Getter
 public class GrinderProfile {
     private final long hash;
     private final List<Goal> goals = new ArrayList<>();
     private final List<Item> items = new ArrayList<>();
+    private final CollectionLogHistory collectionLogHistory = new CollectionLogHistory();
+    private transient ItemManager itemManager;
+    private final transient com.grinder.content.PlayerItemStorage playerStorage = new com.grinder.content.PlayerItemStorage();
+
+    public com.grinder.content.PlayerItemStorage getPlayerStorage() { return playerStorage; }
 
     public GrinderProfile(long hash) {
         this(hash, null);
@@ -36,10 +55,6 @@ public class GrinderProfile {
         ensureDefaultGoals(itemManager);
     }
 
-    /**
-     * Adds newly supported built-in goals without discarding a player's saved
-     * custom goals. This makes profile upgrades forward-compatible.
-     */
     public void ensureDefaultGoals(ItemManager itemManager) {
         for (CollectionLogEntry entry : CollectionLogEntry.values()) {
             if (!hasCollectionEntry(entry)) {
@@ -53,22 +68,105 @@ public class GrinderProfile {
             }
         }
 
-        if (goals.stream().noneMatch(goal -> goal instanceof CollectionLogItemGoal
-                && ((CollectionLogItemGoal) goal).getItem() == 1041)) {
-            goals.add(new CollectionLogItemGoal(1041, 20));
+        for (Skill skill : Skill.values()) {
+            if (!hasSkillGoal(skill)) {
+                goals.add(new SkillLevelGoal(skill));
+            }
+
+            if (!hasExperienceGoal(skill)) {
+                goals.add(new SkillExperienceGoal(skill));
+            }
         }
+
+        if (goals.stream().noneMatch(goal -> goal instanceof CombatLevelGoal)) {
+            goals.add(new CombatLevelGoal());
+        }
+
+        if (goals.stream().noneMatch(goal -> goal instanceof TotalLevelGoal)) {
+            goals.add(new TotalLevelGoal());
+        }
+
+        if (goals.stream().noneMatch(goal -> goal instanceof TotalExperienceGoal)) {
+            goals.add(new TotalExperienceGoal());
+        }
+
+        addDefaultCollectionItem(ItemID.DRAGON_PICKAXE);
+        addDefaultCollectionItem(ItemID.TWISTED_BOW);
+        addDefaultCollectionItem(ItemID.JAR_OF_SPIRITS);
+        add(new com.grinder.content.goal.impl.quest.QuestGoal(net.runelite.api.Quest.DRAGON_SLAYER_I));
+        add(new com.grinder.content.goal.impl.quest.QuestSeriesGoal(com.grinder.content.QuestSeries.ELF));
+        add(new com.grinder.content.goal.impl.achievement_diary.AchievementDiaryTierAreaGoal(
+                com.grinder.content.AchievementDiaryArea.LUMBRIDGE, com.grinder.content.DiaryTier.EASY));
+        add(new com.grinder.content.goal.impl.achievement_diary.AchievementDiaryTierGoal(com.grinder.content.DiaryTier.EASY));
+        add(new com.grinder.content.goal.impl.combat_achievement.CombatAchievementTierGoal(
+                com.grinder.content.CombatAchievementTier.EASY));
+        setItemManager(itemManager);
     }
 
     public void setItemManager(ItemManager itemManager) {
+        this.itemManager = itemManager;
         for (Goal goal : goals) {
-            if (goal instanceof CollectionLogEntryGoal) {
-                ((CollectionLogEntryGoal) goal).setItemManager(itemManager);
-            }
+            attachCollectionData(goal);
+        }
+    }
+
+    private void attachCollectionData(Goal goal) {
+        if (goal instanceof com.grinder.content.goal.impl.item.PossesedItemGoal) {
+            ((com.grinder.content.goal.impl.item.PossesedItemGoal) goal).attach(playerStorage, itemManager);
+        }
+        if (goal instanceof CollectionLogEntryGoal) {
+            CollectionLogEntryGoal entry = (CollectionLogEntryGoal) goal;
+            entry.setItemManager(itemManager);
+            entry.setHistory(collectionLogHistory);
+        } else if (goal instanceof CollectionLogItemGoal) {
+            CollectionLogItemGoal item = (CollectionLogItemGoal) goal;
+            item.setItemManager(itemManager);
+            item.setHistory(collectionLogHistory);
         }
     }
 
     public boolean add(Goal goal) {
-        return goals.add(Objects.requireNonNull(goal, "goal"));
+        Objects.requireNonNull(goal, "goal");
+        if (findMatchingGoal(goal) != null) {
+            return false;
+        }
+        attachCollectionData(goal);
+        return goals.add(goal);
+    }
+
+    public Goal findMatchingGoal(Goal candidate) {
+        return goals.stream().filter(goal -> sameGoal(goal, candidate)).findFirst().orElse(null);
+    }
+
+    private static boolean sameGoal(Goal left, Goal right) {
+        if (left.getClass() != right.getClass()) { return false; }
+        if (left instanceof com.grinder.content.goal.impl.item.PossesedItemGoal) {
+            return ((com.grinder.content.goal.impl.item.PossesedItemGoal) left).getItem()
+                    == ((com.grinder.content.goal.impl.item.PossesedItemGoal) right).getItem();
+        }
+        if (left instanceof com.grinder.content.goal.ClientCompletionGoal) {
+            return ((com.grinder.content.goal.ClientCompletionGoal) left).selectionKey()
+                    .equals(((com.grinder.content.goal.ClientCompletionGoal) right).selectionKey());
+        }
+        if (left instanceof CustomGoal) {
+            return ((CustomGoal) left).getId().equals(((CustomGoal) right).getId());
+        }
+        if (left instanceof SkillLevelGoal) {
+            return ((SkillLevelGoal) left).getSkill() == ((SkillLevelGoal) right).getSkill();
+        }
+        if (left instanceof SkillExperienceGoal) {
+            return ((SkillExperienceGoal) left).getSkill() == ((SkillExperienceGoal) right).getSkill();
+        }
+        if (left instanceof TrackerGoal) {
+            return ((TrackerGoal) left).getTracker() == ((TrackerGoal) right).getTracker();
+        }
+        if (left instanceof CollectionLogEntryGoal) {
+            return ((CollectionLogEntryGoal) left).getEntry() == ((CollectionLogEntryGoal) right).getEntry();
+        }
+        if (left instanceof CollectionLogItemGoal) {
+            return ((CollectionLogItemGoal) left).getItem() == ((CollectionLogItemGoal) right).getItem();
+        }
+        return true;
     }
 
     public boolean remove(Goal goal) {
@@ -82,6 +180,7 @@ public class GrinderProfile {
     public void replace(List<Goal> goals) {
         this.goals.clear();
         this.goals.addAll(goals);
+        this.goals.forEach(this::attachCollectionData);
     }
 
     private boolean hasCollectionEntry(CollectionLogEntry entry) {
@@ -92,6 +191,24 @@ public class GrinderProfile {
     private boolean hasTracker(TrackerEntry entry) {
         return goals.stream().anyMatch(goal -> goal instanceof TrackerGoal
                 && ((TrackerGoal) goal).getTracker() == entry);
+    }
+
+    private boolean hasSkillGoal(Skill skill) {
+        return goals.stream().anyMatch(goal -> goal instanceof SkillLevelGoal
+                && ((SkillLevelGoal) goal).getSkill() == skill);
+    }
+
+    private boolean hasExperienceGoal(Skill skill) {
+        return goals.stream().anyMatch(goal -> goal instanceof SkillExperienceGoal
+                && ((SkillExperienceGoal) goal).getSkill() == skill);
+    }
+
+    private void addDefaultCollectionItem(int itemId) {
+        boolean exists = goals.stream().anyMatch(goal -> goal instanceof CollectionLogItemGoal
+                && ((CollectionLogItemGoal) goal).getItem() == itemId);
+        if (!exists) {
+            goals.add(new CollectionLogItemGoal(itemId, 1));
+        }
     }
 
     public void onContainerOpen(ItemContainer container) {
