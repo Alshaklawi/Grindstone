@@ -187,6 +187,7 @@ public class GrinderProfile {
     }
     public static boolean sameSelection(Goal left, Goal right) { return sameGoal(left, right); }
     public boolean replaceGoal(Goal original, Goal replacement) {
+        if (original == replacement) { return goals.contains(original); }
         int index = goals.indexOf(original);
         if (index < 0) { return false; }
         for (Goal goal : goals) { if (goal != original && sameGoal(goal, replacement)) { throw new IllegalArgumentException("That goal is already tracked. Edit the existing goal instead."); } }

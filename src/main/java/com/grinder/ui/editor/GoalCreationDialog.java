@@ -36,6 +36,7 @@ public final class GoalCreationDialog extends JDialog {
     private final JScrollPane scroll;
     private final JButton add = new JButton("Add goal");
     private final JTextArea error = new JTextArea(2, 28);
+    private final JLabel heading = new JLabel("Track your next milestone");
     private Goal result;
 
     private GoalCreationDialog(Component owner, GoalEditorPanel form) {
@@ -45,7 +46,6 @@ public final class GoalCreationDialog extends JDialog {
         setMinimumSize(new Dimension(420, 220));
         JPanel content = new JPanel(new BorderLayout(0, 12));
         content.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14));
-        JLabel heading = new JLabel("Track your next milestone");
         heading.setFont(FontManager.getRunescapeBoldFont());
         heading.setIcon(new ImageIcon(Icon.MAIN.getImage()));
         heading.setIconTextGap(10);
@@ -65,7 +65,7 @@ public final class GoalCreationDialog extends JDialog {
         bottom.add(error, BorderLayout.CENTER);
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         JButton cancel = new JButton("Cancel");
-        cancel.setToolTipText("Close without adding a goal.");
+        cancel.setToolTipText("Close without saving changes.");
         cancel.addActionListener(event -> dispose());
         add.addActionListener(event -> submit());
         buttons.add(cancel);
@@ -91,7 +91,7 @@ public final class GoalCreationDialog extends JDialog {
 
     private void updateReady() {
         add.setEnabled(form.isReady());
-        add.setToolTipText(form.isReady() ? "Add this goal to the current player profile."
+        add.setToolTipText(form.isReady() ? "Save this goal to the current player profile."
                 : "Search for an item and select a result first.");
     }
 
@@ -133,6 +133,7 @@ public final class GoalCreationDialog extends JDialog {
         GoalCreationDialog dialog = new GoalCreationDialog(owner, form);
         dialog.setTitle(title);
         dialog.add.setText(action);
+        if (!"Add goal".equals(action)) { dialog.heading.setText("Update your tracker"); }
         dialog.add.setToolTipText("Save the selected goal to the current player profile.");
         dialog.setVisible(true);
         return dialog.result;
