@@ -42,6 +42,7 @@ public class GoalComponent extends JPanel {
     private final JLabel iconLabel = new JLabel();
     private final JLabel titleLabel = new JLabel();
     private final JLabel dateLabel = new JLabel();
+    private final JLabel requiredQuantityLabel = new JLabel();
     private final JLabel progressLabel = new JLabel();
     private final SegmentedProgressBar progressBar = new SegmentedProgressBar();
     private final JLabel statusLabel = new JLabel();
@@ -81,6 +82,10 @@ public class GoalComponent extends JPanel {
 
         dateLabel.setForeground(MUTED_COLOR);
         dateLabel.setFont(UiTypography.META);
+        requiredQuantityLabel.setFont(UiTypography.BODY);
+        requiredQuantityLabel.setForeground(TEXT_COLOR);
+        requiredQuantityLabel.setAlignmentX(LEFT_ALIGNMENT);
+        requiredQuantityLabel.setVisible(false);
 
         iconLabel.setHorizontalAlignment(SwingConstants.CENTER);
         iconLabel.setPreferredSize(new Dimension(24, 24));
@@ -98,6 +103,7 @@ public class GoalComponent extends JPanel {
         editButton.setVisible(false);
 
         headerText.add(titleLabel);
+        headerText.add(requiredQuantityLabel);
         headerText.add(Box.createVerticalStrut(2));
         JPanel headerDetails = new JPanel(new BorderLayout(4, 0));
         headerDetails.setOpaque(false);
@@ -140,6 +146,14 @@ public class GoalComponent extends JPanel {
 
     public JPanel getContent() {
         return content;
+    }
+
+    public void setRequiredQuantity(long quantity) {
+        requiredQuantityLabel.setText(String.format(java.util.Locale.ROOT, "Required: %,d", Math.max(0, quantity)));
+        requiredQuantityLabel.setToolTipText("Target item quantity, not the amount currently owned. " + requiredQuantityLabel.getText());
+        requiredQuantityLabel.setVisible(quantity > 0);
+        revalidate();
+        repaint();
     }
 
     public void setGoalStatus(GoalStatus status) {

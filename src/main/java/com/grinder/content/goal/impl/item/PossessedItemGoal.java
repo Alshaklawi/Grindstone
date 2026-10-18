@@ -65,6 +65,10 @@ public final class PossessedItemGoal implements Goal {
         current = next;
         return changed;
     }
-    @Override public com.grinder.ui.components.GoalComponent build(Client client)
-    { refresh(client); return Goal.super.build(client); }
+    @Override public com.grinder.ui.components.GoalComponent build(Client client) {
+        refresh(client);
+        com.grinder.ui.components.GoalComponent component = Goal.super.build(client);
+        component.setRequiredQuantity(amount);
+        return component;
+    }
 }
