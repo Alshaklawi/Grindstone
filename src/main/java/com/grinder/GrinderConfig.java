@@ -1,11 +1,16 @@
-package com.example;
+package com.grinder;
 
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 
-@ConfigGroup("example")
-public interface ExampleConfig extends Config
+/**
+ * @author Ayman Yassen
+ * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
+ * @since 10/18/2026
+ */
+@ConfigGroup("grinder")
+public interface GrinderConfig extends Config
 {
 	@ConfigItem(
 		keyName = "greeting",
