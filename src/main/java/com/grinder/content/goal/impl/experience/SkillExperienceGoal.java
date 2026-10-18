@@ -1,5 +1,7 @@
 package com.grinder.content.goal.impl.experience;
 
+import com.grinder.util.NumberFormats;
+
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.GoalStatus;
@@ -14,8 +16,7 @@ import net.runelite.api.Skill;
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
  * @since 10/18/2026
  */
-public class SkillExperienceGoal implements Goal
-{
+public class SkillExperienceGoal implements Goal {
     public static final long LEVEL_99_EXPERIENCE = 13_034_431L;
     private long target;
 
@@ -23,8 +24,7 @@ public class SkillExperienceGoal implements Goal
     public boolean supportsTarget() { return true; }
 
     @Override
-    public void setTarget(long target)
-    {
+    public void setTarget(long target) {
         if (target < 1 || target > 200_000_000L) { throw new IllegalArgumentException("Choose XP from 1 to 200,000,000"); }
         this.target = target;
     }
@@ -34,10 +34,8 @@ public class SkillExperienceGoal implements Goal
 
     private transient long current;
 
-    public SkillExperienceGoal(Skill skill)
-    {
-        if (skill == null)
-        {
+    public SkillExperienceGoal(Skill skill) {
+        if (skill == null) {
             throw new IllegalArgumentException("Skill is required");
         }
 
@@ -45,60 +43,50 @@ public class SkillExperienceGoal implements Goal
     }
 
     @Override
-    public String getTitle(Client client)
-    {
+    public String getTitle(Client client) {
         return skill.getName() + " experience";
     }
 
     @Override
-    public BufferedImage getIcon(Client client)
-    {
+    public BufferedImage getIcon(Client client) {
         return Icon.SKILLING.getImage();
     }
 
     @Override
-    public GoalCategory getCategory()
-    {
+    public GoalCategory getCategory() {
         return GoalCategory.SKILLING;
     }
 
     @Override
-    public GoalStatus getStatus()
-    {
+    public GoalStatus getStatus() {
         return current >= getProgressMaximum() ? GoalStatus.COMPLETE
                 : current > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED;
     }
 
     @Override
-    public boolean hasProgress()
-    {
+    public boolean hasProgress() {
         return true;
     }
 
     @Override
-    public long getProgressCurrent()
-    {
+    public long getProgressCurrent() {
         return current;
     }
 
     @Override
-    public long getProgressMaximum()
-    {
+    public long getProgressMaximum() {
         return target > 0 ? target : LEVEL_99_EXPERIENCE;
     }
 
     @Override
-    public String getProgressText()
-    {
-        return formatExperience(current) + " / " + formatExperience(getProgressMaximum());
+    public String getProgressText() {
+        return NumberFormats.experience(current) + " / " + NumberFormats.experience(getProgressMaximum());
     }
 
     @Override
-    public boolean refresh(Client client)
-    {
+    public boolean refresh(Client client) {
         long next = Math.max(0, client.getSkillExperience(skill));
-        if (next == current)
-        {
+        if (next == current) {
             return false;
         }
 
@@ -107,24 +95,9 @@ public class SkillExperienceGoal implements Goal
     }
 
     @Override
-    public com.grinder.ui.GoalComponent build(Client client, com.grinder.config.GrinderConfig config)
-    {
+    public com.grinder.ui.components.GoalComponent build(Client client, com.grinder.config.GrinderConfig config) {
         refresh(client);
         return Goal.super.build(client, config);
     }
 
-    static String formatExperience(long experience)
-    {
-        if (experience >= 1_000_000)
-        {
-            return String.format(java.util.Locale.ROOT, "%.1fM", experience / 1_000_000.0);
-        }
-
-        if (experience >= 1_000)
-        {
-            return String.format(java.util.Locale.ROOT, "%.1fK", experience / 1_000.0);
-        }
-
-        return Long.toString(experience);
-    }
 }

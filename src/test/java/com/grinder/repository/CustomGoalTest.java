@@ -12,11 +12,9 @@ import static org.junit.Assert.*;
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
  * @since 10/18/2026
  */
-public class CustomGoalTest
-{
+public class CustomGoalTest {
     @Test
-    public void customDetailsAndIdentitySurviveReload()
-    {
+    public void customDetailsAndIdentitySurviveReload() {
         GrinderProfile profile = new GrinderProfile(42);
         profile.replace(Collections.emptyList());
         CustomGoal goal = new CustomGoal("  Bank supplies  ", "First line\n<plain text> & notes",
@@ -34,8 +32,7 @@ public class CustomGoalTest
     }
 
     @Test
-    public void separateCustomGoalsCanShareATitle()
-    {
+    public void separateCustomGoalsCanShareATitle() {
         GrinderProfile profile = new GrinderProfile(42);
         profile.replace(Collections.emptyList());
         CustomGoal first = new CustomGoal("Prepare", "Food", GoalCategory.OTHER, 0, 1);
@@ -47,8 +44,7 @@ public class CustomGoalTest
     }
 
     @Test
-    public void editingAndCompletingPreservesIdentity()
-    {
+    public void editingAndCompletingPreservesIdentity() {
         CustomGoal goal = new CustomGoal("Prepare", "", GoalCategory.OTHER, 0, 1);
         String id = goal.getId();
         assertEquals(GoalStatus.NOT_STARTED, goal.getStatus());
@@ -59,16 +55,13 @@ public class CustomGoalTest
     }
 
     @Test
-    public void invalidEditDoesNotPartiallyChangeGoal()
-    {
+    public void invalidEditDoesNotPartiallyChangeGoal() {
         CustomGoal goal = new CustomGoal("Original", "Notes", GoalCategory.OTHER, 2, 10);
-        try
-        {
+        try {
             goal.update("Changed", "Other notes", GoalCategory.BOSSING, 11, 10);
             fail("Progress above the target must be rejected");
         }
-        catch (IllegalArgumentException expected)
-        {
+        catch (IllegalArgumentException expected) {
             assertEquals("Original", goal.getTitle(null));
             assertEquals("Notes", goal.getDescription());
             assertEquals(2, goal.getProgressCurrent());
@@ -76,8 +69,7 @@ public class CustomGoalTest
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void blankTitleIsRejected()
-    {
+    public void blankTitleIsRejected() {
         new CustomGoal("   ", "", GoalCategory.OTHER, 0, 1);
     }
 }

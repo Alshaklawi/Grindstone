@@ -1,5 +1,10 @@
 package com.grinder;
 
+import com.grinder.content.goal.ClientCompletionGoal;
+import com.grinder.content.goal.impl.item.PossessedItemGoal;
+
+import com.grinder.ui.GrinderPanel;
+
 import com.google.inject.Provides;
 import com.grinder.config.GrinderConfig;
 import com.grinder.content.goal.Goal;
@@ -9,7 +14,7 @@ import com.grinder.content.goal.impl.level.SkillLevelGoal;
 import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
 import com.grinder.content.goal.impl.level.TotalLevelGoal;
 import com.grinder.content.goal.impl.TrackerGoal;
-import com.grinder.content.goal.impl.colletion_log.CollectionLogEntryGoal;
+import com.grinder.content.goal.impl.collectionlog.CollectionLogEntryGoal;
 import com.grinder.repository.GrinderProfile;
 import com.grinder.repository.GrinderRepository;
 
@@ -40,11 +45,7 @@ import net.runelite.client.ui.NavigationButton;
  * @since 10/18/2026
  */
 @Slf4j
-@PluginDescriptor(
-        name = "Grinder",
-        description = "Track collection log progress and personal goals",
-        tags = {"collection", "goals", "tracker"}
-)
+@PluginDescriptor( name = "Grinder", description = "Track collection log progress and personal goals", tags = {"collection", "goals", "tracker"} )
 public class GrinderPlugin extends Plugin {
     @Inject
     private Client client;
@@ -132,8 +133,7 @@ public class GrinderPlugin extends Plugin {
 
         setNavigationVisible(true);
 
-        if (client.getGameState() == GameState.LOGGED_IN
-                && (profile == null || "enabled".equals(event.getKey()))) {
+        if (client.getGameState() == GameState.LOGGED_IN && (profile == null || "enabled".equals(event.getKey()))) {
             loadProfile();
         } else {
             panel.render();
@@ -156,8 +156,7 @@ public class GrinderPlugin extends Plugin {
         storageProgressDirty |= profile.getPlayerStorage().observe(client, container);
 
         for (Goal goal : profile.getGoals()) {
-            if (goal == null || goal instanceof com.grinder.content.goal.impl.item.PossesedItemGoal
-                    || !goal.isAffectedBy(container)) {
+            if (goal == null || goal instanceof PossessedItemGoal || !goal.isAffectedBy(container)) {
                 continue;
             }
 
@@ -190,8 +189,7 @@ public class GrinderPlugin extends Plugin {
         if (variablesChanged || storageChanged) { profile.getPlayerStorage().refreshVariables(client); }
         boolean changed = storageChanged;
         for (Goal goal : profile.getGoals()) {
-            if ((variablesChanged && goal instanceof com.grinder.content.goal.ClientCompletionGoal)
-                    || goal instanceof com.grinder.content.goal.impl.item.PossesedItemGoal) {
+            if ((variablesChanged && goal instanceof ClientCompletionGoal) || goal instanceof PossessedItemGoal) {
                 changed |= goal.refresh(client);
             }
         }
@@ -207,11 +205,7 @@ public class GrinderPlugin extends Plugin {
         boolean changed = false;
 
         for (Goal goal : profile.getGoals()) {
-            if ((goal instanceof SkillLevelGoal && ((SkillLevelGoal) goal).getSkill() == event.getSkill())
-                    || (goal instanceof SkillExperienceGoal && ((SkillExperienceGoal) goal).getSkill() == event.getSkill())
-                    || goal instanceof TotalLevelGoal
-                    || goal instanceof TotalExperienceGoal
-                    || goal instanceof CombatLevelGoal) {
+            if ((goal instanceof SkillLevelGoal && ((SkillLevelGoal) goal).getSkill() == event.getSkill()) || (goal instanceof SkillExperienceGoal && ((SkillExperienceGoal) goal).getSkill() == event.getSkill()) || goal instanceof TotalLevelGoal || goal instanceof TotalExperienceGoal || goal instanceof CombatLevelGoal) {
                 changed |= goal.refresh(client);
             }
         }
@@ -222,15 +216,11 @@ public class GrinderPlugin extends Plugin {
     }
 
     private boolean hasActivePlayerProfile() {
-        return config.enabled() && profile != null
-                && client.getGameState() == GameState.LOGGED_IN
-                && client.getLocalPlayer() != null
-                && profile.getHash() == client.getAccountHash();
+        return config.enabled() && profile != null && client.getGameState() == GameState.LOGGED_IN && client.getLocalPlayer() != null && profile.getHash() == client.getAccountHash();
     }
 
     private void loadProfile() {
-        clientThread.invokeLater(() ->
-        {
+        clientThread.invokeLater(() -> {
             if (!config.enabled() || client.getGameState() != GameState.LOGGED_IN) {
                 return true;
             }

@@ -13,8 +13,7 @@ import net.runelite.api.Player;
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
  * @since 10/18/2026
  */
-public class CombatLevelGoal implements Goal
-{
+public class CombatLevelGoal implements Goal {
     private static final int MAX_COMBAT_LEVEL = 126;
     private int target;
 
@@ -22,73 +21,61 @@ public class CombatLevelGoal implements Goal
     public boolean supportsTarget() { return true; }
 
     @Override
-    public void setTarget(long target)
-    {
+    public void setTarget(long target) {
         if (target < 3 || target > MAX_COMBAT_LEVEL) { throw new IllegalArgumentException("Choose combat level from 3 to 126"); }
         this.target = (int) target;
     }
     private transient int current;
 
     @Override
-    public String getTitle(Client client)
-    {
+    public String getTitle(Client client) {
         return "Combat level";
     }
 
     @Override
-    public BufferedImage getIcon(Client client)
-    {
+    public BufferedImage getIcon(Client client) {
         return Icon.BOSSING.getImage();
     }
 
     @Override
-    public GoalCategory getCategory()
-    {
+    public GoalCategory getCategory() {
         return GoalCategory.BOSSING;
     }
 
     @Override
-    public GoalStatus getStatus()
-    {
+    public GoalStatus getStatus() {
         return current >= getProgressMaximum() ? GoalStatus.COMPLETE
                 : current > 3 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED;
     }
 
     @Override
-    public boolean hasProgress()
-    {
+    public boolean hasProgress() {
         return true;
     }
 
     @Override
-    public long getProgressCurrent()
-    {
+    public long getProgressCurrent() {
         return current;
     }
 
     @Override
-    public long getProgressMaximum()
-    {
+    public long getProgressMaximum() {
         return target > 0 ? target : MAX_COMBAT_LEVEL;
     }
 
     @Override
-    public String getProgressText()
-    {
+    public String getProgressText() {
         return current + " / " + getProgressMaximum();
     }
 
     @Override
-    public boolean refresh(Client client)
-    {
+    public boolean refresh(Client client) {
         Player player = client.getLocalPlayer();
-        if (player == null)
-        {
+        if (player == null) {
             return false;
         }
         int next = Math.max(3, player.getCombatLevel());
-        if (next == current)
-        {
+        if (next == current) {
             return false;
         }
 
@@ -97,8 +84,7 @@ public class CombatLevelGoal implements Goal
     }
 
     @Override
-    public com.grinder.ui.GoalComponent build(Client client, com.grinder.config.GrinderConfig config)
-    {
+    public com.grinder.ui.components.GoalComponent build(Client client, com.grinder.config.GrinderConfig config) {
         refresh(client);
         return Goal.super.build(client, config);
     }

@@ -1,8 +1,8 @@
 package com.grinder.repository;
 
-import com.grinder.content.CollectionLogEntry;
-import com.grinder.content.CollectionLogHistory;
-import com.grinder.content.TrackerEntry;
+import com.grinder.content.collectionlog.CollectionLogEntry;
+import com.grinder.content.collectionlog.CollectionLogHistory;
+import com.grinder.content.tracker.TrackerEntry;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.impl.TrackerGoal;
 import com.grinder.content.goal.impl.CustomGoal;
@@ -11,14 +11,14 @@ import com.grinder.content.goal.impl.level.SkillLevelGoal;
 import com.grinder.content.goal.impl.level.TotalLevelGoal;
 import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
 import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
-import com.grinder.content.goal.impl.colletion_log.CollectionLogEntryGoal;
+import com.grinder.content.goal.impl.collectionlog.CollectionLogEntryGoal;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import com.grinder.content.goal.impl.colletion_log.CollectionLogItemGoal;
+import com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal;
 import lombok.Getter;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
@@ -38,9 +38,9 @@ public class GrinderProfile {
     private final List<Item> items = new ArrayList<>();
     private final CollectionLogHistory collectionLogHistory = new CollectionLogHistory();
     private transient ItemManager itemManager;
-    private final transient com.grinder.content.PlayerItemStorage playerStorage = new com.grinder.content.PlayerItemStorage();
+    private final transient com.grinder.content.storage.PlayerItemStorage playerStorage = new com.grinder.content.storage.PlayerItemStorage();
 
-    public com.grinder.content.PlayerItemStorage getPlayerStorage() { return playerStorage; }
+    public com.grinder.content.storage.PlayerItemStorage getPlayerStorage() { return playerStorage; }
 
     public GrinderProfile(long hash) {
         this(hash, null);
@@ -94,12 +94,12 @@ public class GrinderProfile {
         addDefaultCollectionItem(ItemID.TWISTED_BOW);
         addDefaultCollectionItem(ItemID.JAR_OF_SPIRITS);
         add(new com.grinder.content.goal.impl.quest.QuestGoal(net.runelite.api.Quest.DRAGON_SLAYER_I));
-        add(new com.grinder.content.goal.impl.quest.QuestSeriesGoal(com.grinder.content.QuestSeries.ELF));
-        add(new com.grinder.content.goal.impl.achievement_diary.AchievementDiaryTierAreaGoal(
-                com.grinder.content.AchievementDiaryArea.LUMBRIDGE, com.grinder.content.DiaryTier.EASY));
-        add(new com.grinder.content.goal.impl.achievement_diary.AchievementDiaryTierGoal(com.grinder.content.DiaryTier.EASY));
-        add(new com.grinder.content.goal.impl.combat_achievement.CombatAchievementTierGoal(
-                com.grinder.content.CombatAchievementTier.EASY));
+        add(new com.grinder.content.goal.impl.quest.QuestSeriesGoal(com.grinder.content.quest.QuestSeries.ELF));
+        add(new com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierAreaGoal(
+                com.grinder.content.diary.AchievementDiaryArea.LUMBRIDGE, com.grinder.content.diary.DiaryTier.EASY));
+        add(new com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierGoal(com.grinder.content.diary.DiaryTier.EASY));
+        add(new com.grinder.content.goal.impl.combatachievement.CombatAchievementTierGoal(
+                com.grinder.content.combatachievement.CombatAchievementTier.EASY));
         setItemManager(itemManager);
     }
 
@@ -111,8 +111,8 @@ public class GrinderProfile {
     }
 
     private void attachCollectionData(Goal goal) {
-        if (goal instanceof com.grinder.content.goal.impl.item.PossesedItemGoal) {
-            ((com.grinder.content.goal.impl.item.PossesedItemGoal) goal).attach(playerStorage, itemManager);
+        if (goal instanceof com.grinder.content.goal.impl.item.PossessedItemGoal) {
+            ((com.grinder.content.goal.impl.item.PossessedItemGoal) goal).attach(playerStorage, itemManager);
         }
         if (goal instanceof CollectionLogEntryGoal) {
             CollectionLogEntryGoal entry = (CollectionLogEntryGoal) goal;
@@ -140,9 +140,9 @@ public class GrinderProfile {
 
     private static boolean sameGoal(Goal left, Goal right) {
         if (left.getClass() != right.getClass()) { return false; }
-        if (left instanceof com.grinder.content.goal.impl.item.PossesedItemGoal) {
-            return ((com.grinder.content.goal.impl.item.PossesedItemGoal) left).getItem()
-                    == ((com.grinder.content.goal.impl.item.PossesedItemGoal) right).getItem();
+        if (left instanceof com.grinder.content.goal.impl.item.PossessedItemGoal) {
+            return ((com.grinder.content.goal.impl.item.PossessedItemGoal) left).getItem()
+                    == ((com.grinder.content.goal.impl.item.PossessedItemGoal) right).getItem();
         }
         if (left instanceof com.grinder.content.goal.ClientCompletionGoal) {
             return ((com.grinder.content.goal.ClientCompletionGoal) left).selectionKey()

@@ -7,7 +7,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.grinder.content.CollectionLogEntry;
+import com.grinder.content.collectionlog.CollectionLogEntry;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.impl.TrackerGoal;
 import com.grinder.content.goal.impl.CustomGoal;
@@ -16,8 +16,8 @@ import com.grinder.content.goal.impl.level.SkillLevelGoal;
 import com.grinder.content.goal.impl.level.TotalLevelGoal;
 import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
 import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
-import com.grinder.content.goal.impl.colletion_log.CollectionLogEntryGoal;
-import com.grinder.content.goal.impl.colletion_log.CollectionLogItemGoal;
+import com.grinder.content.goal.impl.collectionlog.CollectionLogEntryGoal;
+import com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal;
 import net.runelite.api.Client;
 import net.runelite.client.game.ItemManager;
 
@@ -123,7 +123,7 @@ public final class GrinderRepository {
 
         for (Goal goal : profile.getGoals()) {
             JsonObject savedGoal = new JsonObject();
-            savedGoal.addProperty("class", goal.getClass().getName());
+            savedGoal.addProperty("class", SavedGoalTypes.nameOf(goal));
             savedGoal.add("data", GSON.toJsonTree(goal));
             savedGoals.add(savedGoal);
         }
@@ -170,64 +170,23 @@ public final class GrinderRepository {
                 JsonObject savedGoal = element.getAsJsonObject();
                 String className = savedGoal.get("class").getAsString();
                 JsonElement data = savedGoal.get("data");
+                Class<? extends Goal> type = SavedGoalTypes.resolve(className);
+                if (type == null || data == null || !data.isJsonObject()) { continue; }
                 Goal goal;
-
-                if (CollectionLogEntryGoal.class.getName().equals(className)) {
-                    if (data == null || !data.isJsonObject()) {
-                        continue;
-                    }
-
+                if (type == CollectionLogEntryGoal.class) {
                     JsonElement entryElement = data.getAsJsonObject().get("entry");
-
-                    if (entryElement == null || entryElement.isJsonNull()) {
-                        continue;
-                    }
-
+                    if (entryElement == null || entryElement.isJsonNull()) { continue; }
                     CollectionLogEntry entry = GSON.fromJson(entryElement, CollectionLogEntry.class);
+                    if (entry == null) { continue; }
                     goal = new CollectionLogEntryGoal(null, entry);
-                } else if (CollectionLogItemGoal.class.getName().equals(className)) {
-                    goal = GSON.fromJson(data, CollectionLogItemGoal.class);
-                } else if (CustomGoal.class.getName().equals(className)) {
+                } else if (type == CustomGoal.class) {
                     CustomGoal saved = GSON.fromJson(data, CustomGoal.class);
-                    goal = new CustomGoal(saved.getId(), saved.getTitle(null), saved.getDescription(),
-                            saved.getCategory(), saved.getProgressCurrent(), saved.getProgressMaximum());
-                } else if (com.grinder.content.goal.impl.item.PossesedItemGoal.class.getName().equals(className)) {
-                    com.grinder.content.goal.impl.item.PossesedItemGoal saved =
-                            GSON.fromJson(data, com.grinder.content.goal.impl.item.PossesedItemGoal.class);
-                    goal = new com.grinder.content.goal.impl.item.PossesedItemGoal(saved.getItem(), saved.getAmount());
-                } else if (TrackerGoal.class.getName().equals(className)) {
-                    goal = GSON.fromJson(data, TrackerGoal.class);
-                } else if (SkillLevelGoal.class.getName().equals(className)
-                        || "com.grinder.content.goal.impl.SkillLevelGoal".equals(className)) {
-                    goal = GSON.fromJson(data, SkillLevelGoal.class);
-                } else if (CombatLevelGoal.class.getName().equals(className)
-                        || "com.grinder.content.goal.impl.CombatLevelGoal".equals(className)) {
-                    goal = GSON.fromJson(data, CombatLevelGoal.class);
-                } else if (TotalLevelGoal.class.getName().equals(className)
-                        || "com.grinder.content.goal.impl.TotalLevelGoal".equals(className)) {
-                    goal = GSON.fromJson(data, TotalLevelGoal.class);
-                } else if (SkillExperienceGoal.class.getName().equals(className)
-                        || "com.grinder.content.goal.impl.SkillExperienceGoal".equals(className)) {
-                    goal = GSON.fromJson(data, SkillExperienceGoal.class);
-                } else if (TotalExperienceGoal.class.getName().equals(className)
-                        || "com.grinder.content.goal.impl.TotalExperienceGoal".equals(className)) {
-                    goal = GSON.fromJson(data, TotalExperienceGoal.class);
-                } else if (com.grinder.content.goal.impl.quest.QuestGoal.class.getName().equals(className)) {
-                    goal = GSON.fromJson(data, com.grinder.content.goal.impl.quest.QuestGoal.class);
-                } else if (com.grinder.content.goal.impl.quest.QuestSeriesGoal.class.getName().equals(className)) {
-                    goal = GSON.fromJson(data, com.grinder.content.goal.impl.quest.QuestSeriesGoal.class);
-                } else if (com.grinder.content.goal.impl.achievement_diary.AchievementDiaryTierGoal.class.getName().equals(className)) {
-                    goal = GSON.fromJson(data, com.grinder.content.goal.impl.achievement_diary.AchievementDiaryTierGoal.class);
-                } else if (com.grinder.content.goal.impl.achievement_diary.AchievementDiaryTierAreaGoal.class.getName().equals(className)) {
-                    goal = GSON.fromJson(data, com.grinder.content.goal.impl.achievement_diary.AchievementDiaryTierAreaGoal.class);
-                } else if (com.grinder.content.goal.impl.combat_achievement.CombatAchievementTierGoal.class.getName().equals(className)) {
-                    goal = GSON.fromJson(data, com.grinder.content.goal.impl.combat_achievement.CombatAchievementTierGoal.class);
-                } else if (com.grinder.content.goal.impl.combat_achievement.CombatAchievementBossGoal.class.getName().equals(className)) {
-                    goal = GSON.fromJson(data, com.grinder.content.goal.impl.combat_achievement.CombatAchievementBossGoal.class);
-                } else if (com.grinder.content.goal.impl.combat_achievement.CombatAchievementDifficultyGoal.class.getName().equals(className)) {
-                    goal = GSON.fromJson(data, com.grinder.content.goal.impl.combat_achievement.CombatAchievementDifficultyGoal.class);
+                    goal = new CustomGoal(saved.getId(), saved.getTitle(null), saved.getDescription(), saved.getCategory(), saved.getProgressCurrent(), saved.getProgressMaximum());
+                } else if (type == com.grinder.content.goal.impl.item.PossessedItemGoal.class) {
+                    com.grinder.content.goal.impl.item.PossessedItemGoal saved = GSON.fromJson(data, com.grinder.content.goal.impl.item.PossessedItemGoal.class);
+                    goal = new com.grinder.content.goal.impl.item.PossessedItemGoal(saved.getItem(), saved.getAmount());
                 } else {
-                    continue;
+                    goal = GSON.fromJson(data, type);
                 }
 
                 if (goal != null) {

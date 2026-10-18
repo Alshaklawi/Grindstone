@@ -8,7 +8,7 @@ import com.grinder.content.goal.impl.level.SkillLevelGoal;
 import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
 import com.grinder.content.goal.impl.level.TotalLevelGoal;
 import com.grinder.content.goal.impl.TrackerGoal;
-import com.grinder.content.TrackerEntry;
+import com.grinder.content.tracker.TrackerEntry;
 import java.util.Collections;
 import net.runelite.api.Skill;
 import org.junit.Test;
@@ -19,11 +19,9 @@ import static org.junit.Assert.*;
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
  * @since 10/18/2026
  */
-public class GoalManagementTest
-{
+public class GoalManagementTest {
     @Test
-    public void deletingAllGoalsSurvivesProfileReload()
-    {
+    public void deletingAllGoalsSurvivesProfileReload() {
         GrinderProfile profile = new GrinderProfile(42);
         assertFalse(profile.getGoals().isEmpty());
         profile.replace(Collections.emptyList());
@@ -33,31 +31,27 @@ public class GoalManagementTest
     }
 
     @Test
-    public void editedTargetsSurviveSerializationForEveryEditableType()
-    {
+    public void editedTargetsSurviveSerializationForEveryEditableType() {
         GrinderProfile profile = new GrinderProfile(42);
         profile.replace(Collections.emptyList());
         Goal[] goals = {new SkillLevelGoal(Skill.ATTACK), new SkillExperienceGoal(Skill.FISHING),
                 new CombatLevelGoal(), new TotalLevelGoal(), new TotalExperienceGoal(),
                 new TrackerGoal(TrackerEntry.values()[0], 5000)};
         long[] targets = {75, 2_000_000, 100, 1500, 4_000_000_000L, 250};
-        for (int i = 0; i < goals.length; i++)
-        {
+        for (int i = 0; i < goals.length; i++) {
             goals[i].setTarget(targets[i]);
             assertTrue(profile.add(goals[i]));
         }
         GrinderProfile restored = GrinderRepository.fromJson(GrinderRepository.toJson(profile));
         assertEquals(goals.length, restored.getGoals().size());
-        for (int i = 0; i < goals.length; i++)
-        {
+        for (int i = 0; i < goals.length; i++) {
             assertEquals(goals[i].getClass(), restored.getGoals().get(i).getClass());
             assertEquals(targets[i], restored.getGoals().get(i).getProgressMaximum());
         }
     }
 
     @Test
-    public void oldGoalWithoutTargetUsesOriginalDefault()
-    {
+    public void oldGoalWithoutTargetUsesOriginalDefault() {
         GrinderProfile profile = new GrinderProfile(42);
         profile.replace(Collections.singletonList(new SkillLevelGoal(Skill.ATTACK)));
         JsonObject json = GrinderRepository.toJson(profile);
@@ -67,15 +61,13 @@ public class GoalManagementTest
     }
 
     @Test
-    public void goalsSavedBeforePackageReorganizationStillLoad()
-    {
+    public void goalsSavedBeforePackageReorganizationStillLoad() {
         GrinderProfile profile = new GrinderProfile(42);
         profile.replace(java.util.Arrays.asList(new SkillLevelGoal(Skill.ATTACK),
                 new SkillExperienceGoal(Skill.FISHING), new TotalLevelGoal(),
                 new TotalExperienceGoal(), new CombatLevelGoal()));
         JsonObject json = GrinderRepository.toJson(profile);
-        for (com.google.gson.JsonElement element : json.getAsJsonArray("goals"))
-        {
+        for (com.google.gson.JsonElement element : json.getAsJsonArray("goals")) {
             JsonObject entry = element.getAsJsonObject();
             String oldClass = entry.get("class").getAsString()
                     .replace(".impl.level.", ".impl.").replace(".impl.experience.", ".impl.");
@@ -85,8 +77,7 @@ public class GoalManagementTest
     }
 
     @Test
-    public void addingExistingSkillFindsItInsteadOfDuplicatingIt()
-    {
+    public void addingExistingSkillFindsItInsteadOfDuplicatingIt() {
         GrinderProfile profile = new GrinderProfile(42);
         profile.replace(Collections.emptyList());
         SkillLevelGoal attack = new SkillLevelGoal(Skill.ATTACK);
@@ -99,8 +90,7 @@ public class GoalManagementTest
     }
 
     @Test
-    public void restoringDefaultsIsExplicitAndDoesNotResetEditedTargets()
-    {
+    public void restoringDefaultsIsExplicitAndDoesNotResetEditedTargets() {
         GrinderProfile profile = new GrinderProfile(42);
         Goal goal = profile.getGoals().stream().filter(g -> g instanceof SkillLevelGoal).findFirst().get();
         goal.setTarget(75);
@@ -115,8 +105,7 @@ public class GoalManagementTest
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void levelTargetRejectsLevelsAboveCap()
-    {
+    public void levelTargetRejectsLevelsAboveCap() {
         new SkillLevelGoal(Skill.ATTACK).setTarget(100);
     }
 }

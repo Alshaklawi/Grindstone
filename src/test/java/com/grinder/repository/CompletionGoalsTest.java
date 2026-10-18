@@ -1,10 +1,20 @@
 package com.grinder.repository;
+
+import com.grinder.content.combatachievement.CombatAchievementData;
+import com.grinder.content.combatachievement.CombatAchievementTier;
+import com.grinder.content.diary.AchievementDiaryArea;
+import com.grinder.content.diary.DiaryTier;
+import com.grinder.content.goal.ClientCompletionGoal;
+import com.grinder.content.goal.Goal;
+import com.grinder.content.goal.GoalStatus;
+import com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierAreaGoal;
+import com.grinder.content.goal.impl.combatachievement.CombatAchievementBossGoal;
+import com.grinder.content.goal.impl.combatachievement.CombatAchievementTierGoal;
+import com.grinder.content.goal.impl.quest.QuestGoal;
+import com.grinder.content.goal.impl.quest.QuestSeriesGoal;
+import com.grinder.content.quest.QuestSeries;
+import com.grinder.ui.editor.CompletionGoalChoices;
 import com.google.gson.JsonObject;
-import com.grinder.content.*;
-import com.grinder.content.goal.*;
-import com.grinder.content.goal.impl.quest.*;
-import com.grinder.content.goal.impl.achievement_diary.*;
-import com.grinder.content.goal.impl.combat_achievement.*;
 import java.util.Collections;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -14,7 +24,7 @@ import net.runelite.api.Quest;
 import net.runelite.api.QuestState;
 import net.runelite.api.gameval.VarbitID;
 import net.runelite.api.gameval.VarPlayerID;
-import com.grinder.ui.GoalEditorPanel;
+import com.grinder.ui.editor.GoalEditorPanel;
 import org.junit.Test;
 import static org.junit.Assert.*;
 /**
@@ -22,20 +32,16 @@ import static org.junit.Assert.*;
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
  * @since 10/18/2026
  */
-public class CompletionGoalsTest
-{
-    @Test public void everyNewGoalSurvivesProfileReload()
-    {
+public class CompletionGoalsTest {
+    @Test public void everyNewGoalSurvivesProfileReload() {
         GrinderProfile profile = emptyProfile();
-        for (Map<String, Supplier<Goal>> choices : CompletionGoalChoices.create(null).values())
-        {
+        for (Map<String, Supplier<Goal>> choices : CompletionGoalChoices.create(null).values()) {
             for (Supplier<Goal> choice : choices.values()) { assertTrue(profile.add(choice.get())); }
         }
         assertTrue(profile.add(new CombatAchievementBossGoal(1, "Test boss")));
         GrinderProfile restored = GrinderRepository.fromJson(GrinderRepository.toJson(profile));
         assertEquals(profile.getGoals().size(), restored.getGoals().size());
-        for (int i = 0; i < profile.getGoals().size(); i++)
-        {
+        for (int i = 0; i < profile.getGoals().size(); i++) {
             ClientCompletionGoal before = (ClientCompletionGoal) profile.getGoals().get(i);
             ClientCompletionGoal after = (ClientCompletionGoal) restored.getGoals().get(i);
             assertEquals(before.getClass(), after.getClass());
@@ -43,8 +49,7 @@ public class CompletionGoalsTest
             assertEquals(before.getTitle(null), after.getTitle(null));
         }
     }
-    @Test public void completionSelectionsDeduplicateWithoutMergingDifferentGoals()
-    {
+    @Test public void completionSelectionsDeduplicateWithoutMergingDifferentGoals() {
         GrinderProfile profile = emptyProfile();
         assertTrue(profile.add(new QuestGoal(Quest.COOKS_ASSISTANT)));
         assertFalse(profile.add(new QuestGoal(Quest.COOKS_ASSISTANT)));
@@ -56,8 +61,7 @@ public class CompletionGoalsTest
         assertFalse(profile.add(new CombatAchievementBossGoal(1, "Renamed one")));
         assertTrue(profile.add(new CombatAchievementBossGoal(2, "Two")));
     }
-    @Test public void questStatusesIncludeStartedWithoutPretendingItIsComplete()
-    {
+    @Test public void questStatusesIncludeStartedWithoutPretendingItIsComplete() {
         QuestGoal goal = new QuestGoal(Quest.COOKS_ASSISTANT);
         goal.refreshState(QuestState.NOT_STARTED);
         assertEquals(GoalStatus.NOT_STARTED, goal.getStatus());
@@ -70,8 +74,7 @@ public class CompletionGoalsTest
         goal.refreshState(QuestState.NOT_STARTED);
         assertEquals(GoalStatus.NOT_STARTED, goal.getStatus());
     }
-    @Test public void questSeriesCountsFinishedQuestsAndHandlesStartedFirstQuest()
-    {
+    @Test public void questSeriesCountsFinishedQuestsAndHandlesStartedFirstQuest() {
         QuestSeriesGoal goal = new QuestSeriesGoal(QuestSeries.ELF);
         goal.refreshStates(q -> q == Quest.PLAGUE_CITY ? QuestState.IN_PROGRESS : QuestState.NOT_STARTED);
         assertEquals(GoalStatus.IN_PROGRESS, goal.getStatus());
@@ -82,8 +85,7 @@ public class CompletionGoalsTest
         assertEquals(QuestSeries.ELF.getQuests().size(), goal.getProgressMaximum());
         assertEquals(GoalStatus.COMPLETE, goal.getStatus());
     }
-    @Test public void combatTierUsesPointsAndLiveThresholdNotTierTaskCount()
-    {
+    @Test public void combatTierUsesPointsAndLiveThresholdNotTierTaskCount() {
         CombatAchievementTierGoal goal = new CombatAchievementTierGoal(CombatAchievementTier.EASY);
         goal.refreshValues(id -> id == VarbitID.CA_POINTS ? 32 : 35);
         assertEquals(32, goal.getProgressCurrent());
@@ -95,8 +97,7 @@ public class CompletionGoalsTest
         assertFalse(goal.hasProgress());
         assertEquals(GoalStatus.NOT_STARTED, goal.getStatus());
     }
-    @Test public void combatTaskBitsHandleSignBitBoundariesAndNewestVarp()
-    {
+    @Test public void combatTaskBitsHandleSignBitBoundariesAndNewestVarp() {
         assertTrue(CombatAchievementData.isComplete(id -> id == VarPlayerID.CA_TASK_COMPLETED_0 ? Integer.MIN_VALUE : 0, 31));
         assertFalse(CombatAchievementData.isComplete(id -> id == VarPlayerID.CA_TASK_COMPLETED_0 ? Integer.MIN_VALUE : 0, 32));
         assertTrue(CombatAchievementData.isComplete(id -> id == VarPlayerID.CA_TASK_COMPLETED_1 ? 1 : 0, 32));
@@ -104,33 +105,28 @@ public class CompletionGoalsTest
         assertFalse(CombatAchievementData.isComplete(id -> -1, -1));
         assertFalse(CombatAchievementData.isComplete(id -> -1, 672));
     }
-    @Test public void diaryFlagsAndLegacyKaramjaTaskCountsAreDistinct()
-    {
+    @Test public void diaryFlagsAndLegacyKaramjaTaskCountsAreDistinct() {
         assertTrue(AchievementDiaryArea.VARROCK.isComplete(id -> id == VarbitID.VARROCK_DIARY_EASY_COMPLETE ? 1 : 0, DiaryTier.EASY));
         assertFalse(AchievementDiaryArea.VARROCK.isComplete(id -> id == VarbitID.VARROCK_EASY_COUNT ? 10 : 0, DiaryTier.EASY));
         assertFalse(AchievementDiaryArea.KARAMJA.isComplete(id -> id == VarbitID.KARAMJA_MED_COUNT ? 18 : 0, DiaryTier.MEDIUM));
         assertTrue(AchievementDiaryArea.KARAMJA.isComplete(id -> id == VarbitID.KARAMJA_MED_COUNT ? 19 : 0, DiaryTier.MEDIUM));
         assertEquals(12, AchievementDiaryArea.values().length);
     }
-    @Test public void invalidCompletionSelectionIsSkippedRatherThanBreakingProfile()
-    {
+    @Test public void invalidCompletionSelectionIsSkippedRatherThanBreakingProfile() {
         GrinderProfile profile = emptyProfile();
         profile.add(new QuestGoal(Quest.COOKS_ASSISTANT));
         JsonObject json = GrinderRepository.toJson(profile);
         json.getAsJsonArray("goals").get(0).getAsJsonObject().getAsJsonObject("data").remove("quest");
         assertTrue(GrinderRepository.fromJson(json).getGoals().isEmpty());
     }
-    @Test public void pickerCreatesEveryNewGoalTypeWithoutTargetSpinnerErrors() throws Exception
-    {
+    @Test public void pickerCreatesEveryNewGoalTypeWithoutTargetSpinnerErrors() throws Exception {
         SwingUtilities.invokeAndWait(() -> {
             Map<Integer, Map<String, Supplier<Goal>>> choices = CompletionGoalChoices.create(null);
             choices.get(13).put("Test boss", () -> new CombatAchievementBossGoal(1, "Test boss"));
             GoalEditorPanel form = new GoalEditorPanel(null, (query, callback) -> () -> {}, choices);
             JComboBox<?> types = (JComboBox<?>) ((javax.swing.JPanel) form.getComponent(0)).getComponent(1);
-            try
-            {
-                for (int kind = 9; kind <= 15; kind++)
-                {
+            try {
+                for (int kind = 9; kind <= 15; kind++) {
                     types.setSelectedIndex(kind);
                     assertTrue(form.isReady());
                     Goal goal = form.createGoal();
@@ -143,8 +139,7 @@ public class CompletionGoalsTest
             finally { form.stopSearch(); }
         });
     }
-    private GrinderProfile emptyProfile()
-    {
+    private GrinderProfile emptyProfile() {
         GrinderProfile profile = new GrinderProfile(42);
         profile.replace(Collections.emptyList());
         return profile;

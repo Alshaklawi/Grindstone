@@ -1,10 +1,10 @@
 package com.grinder.repository;
 
-import com.grinder.content.CollectionLogEntry;
-import com.grinder.content.CollectionLogHistory;
+import com.grinder.content.collectionlog.CollectionLogEntry;
+import com.grinder.content.collectionlog.CollectionLogHistory;
 import com.grinder.content.goal.GoalStatus;
-import com.grinder.content.goal.impl.colletion_log.CollectionLogEntryGoal;
-import com.grinder.content.goal.impl.colletion_log.CollectionLogItemGoal;
+import com.grinder.content.goal.impl.collectionlog.CollectionLogEntryGoal;
+import com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal;
 import java.util.Arrays;
 import java.util.Collections;
 import net.runelite.api.gameval.ItemID;
@@ -16,11 +16,9 @@ import static org.junit.Assert.*;
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
  * @since 10/18/2026
  */
-public class CollectionLogHistoryTest
-{
+public class CollectionLogHistoryTest {
     @Test
-    public void repeatedObservationsKeepEarliestTime()
-    {
+    public void repeatedObservationsKeepEarliestTime() {
         CollectionLogHistory history = new CollectionLogHistory();
         history.record(ItemID.DRAGON_PICKAXE, 1000);
         history.record(ItemID.DRAGON_PICKAXE, 2000);
@@ -29,8 +27,7 @@ public class CollectionLogHistoryTest
     }
 
     @Test
-    public void observationsSurviveProfileReloadAndAttachToSingleItemGoals()
-    {
+    public void observationsSurviveProfileReloadAndAttachToSingleItemGoals() {
         GrinderProfile profile = new GrinderProfile(42);
         profile.getCollectionLogHistory().record(ItemID.DRAGON_PICKAXE, 1000);
         profile.replace(Arrays.asList(new CollectionLogItemGoal(ItemID.DRAGON_PICKAXE, 1),
@@ -45,8 +42,7 @@ public class CollectionLogHistoryTest
     }
 
     @Test
-    public void deletingGoalDoesNotEraseObservedHistory()
-    {
+    public void deletingGoalDoesNotEraseObservedHistory() {
         GrinderProfile profile = new GrinderProfile(42);
         profile.getCollectionLogHistory().record(ItemID.DRAGON_PICKAXE, 1000);
         profile.replace(Collections.emptyList());
@@ -59,8 +55,7 @@ public class CollectionLogHistoryTest
     }
 
     @Test
-    public void historyIsSeparateForEachPlayer()
-    {
+    public void historyIsSeparateForEachPlayer() {
         GrinderProfile first = new GrinderProfile(42);
         GrinderProfile second = new GrinderProfile(43);
         first.getCollectionLogHistory().record(ItemID.DRAGON_PICKAXE, 1000);
@@ -68,8 +63,7 @@ public class CollectionLogHistoryTest
     }
 
     @Test
-    public void legacyProfilesDoNotInventUnlockDates()
-    {
+    public void legacyProfilesDoNotInventUnlockDates() {
         GrinderProfile profile = new GrinderProfile(42);
         com.google.gson.JsonObject json = GrinderRepository.toJson(profile);
         json.remove("collectionLogFirstSeen");

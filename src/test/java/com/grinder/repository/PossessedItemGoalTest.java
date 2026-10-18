@@ -1,7 +1,7 @@
 package com.grinder.repository;
-import com.grinder.content.PlayerItemStorage;
+import com.grinder.content.storage.PlayerItemStorage;
 import com.grinder.content.goal.GoalStatus;
-import com.grinder.content.goal.impl.item.PossesedItemGoal;
+import com.grinder.content.goal.impl.item.PossessedItemGoal;
 import java.util.Collections;
 import net.runelite.api.Item;
 import net.runelite.api.gameval.InventoryID;
@@ -15,10 +15,8 @@ import static org.junit.Assert.*;
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
  * @since 10/18/2026
  */
-public class PossessedItemGoalTest
-{
-    @Test public void combinesPersonalContainersWithLongArithmetic()
-    {
+public class PossessedItemGoalTest {
+    @Test public void combinesPersonalContainersWithLongArithmetic() {
         PlayerItemStorage storage = new PlayerItemStorage();
         put(storage, InventoryID.BANK, ItemID.COINS, 2_000_000_000);
         put(storage, InventoryID.INV, ItemID.COINS, 1_000_000_000);
@@ -26,8 +24,7 @@ public class PossessedItemGoalTest
         assertEquals(3_500_000_000L, storage.quantity(ItemID.COINS));
         assertEquals(3, storage.breakdown(ItemID.COINS).size());
     }
-    @Test public void equipmentAndSpecializedStorageAreIncluded()
-    {
+    @Test public void equipmentAndSpecializedStorageAreIncluded() {
         PlayerItemStorage storage = new PlayerItemStorage();
         put(storage, InventoryID.WORN, ItemID.DRAGON_PICKAXE, 1);
         put(storage, InventoryID.TACKLE_BOX, ItemID.DRAGON_PICKAXE, 2);
@@ -40,8 +37,7 @@ public class PossessedItemGoalTest
         put(storage, InventoryID.SAILING_BOAT_1_CARGOHOLD, ItemID.DRAGON_PICKAXE, 9);
         assertEquals(45, storage.quantity(ItemID.DRAGON_PICKAXE));
     }
-    @Test public void snapshotsReplaceRatherThanAccumulateAndTransfersKeepTheTotal()
-    {
+    @Test public void snapshotsReplaceRatherThanAccumulateAndTransfersKeepTheTotal() {
         PlayerItemStorage storage = new PlayerItemStorage();
         put(storage, InventoryID.BANK, ItemID.COINS, 100);
         put(storage, InventoryID.INV, ItemID.COINS, 10);
@@ -51,8 +47,7 @@ public class PossessedItemGoalTest
         storage.replace(InventoryID.BANK, new Item[0], id -> id);
         assertEquals(20, storage.quantity(ItemID.COINS));
     }
-    @Test public void notesAreCombinedAndPlaceholdersOrInvalidSlotsAreNotCounted()
-    {
+    @Test public void notesAreCombinedAndPlaceholdersOrInvalidSlotsAreNotCounted() {
         PlayerItemStorage storage = new PlayerItemStorage();
         int note = 100_001;
         int placeholder = 100_002;
@@ -64,8 +59,7 @@ public class PossessedItemGoalTest
         assertEquals(0, storage.quantity(note));
         assertEquals(0, storage.quantity(placeholder));
     }
-    @Test public void collectionLogAndSharedStorageDoNotInventOwnedItems()
-    {
+    @Test public void collectionLogAndSharedStorageDoNotInventOwnedItems() {
         PlayerItemStorage storage = new PlayerItemStorage();
         put(storage, InventoryID.COLLECTION_TRANSMIT, ItemID.COINS, 1000);
         put(storage, InventoryID.INV_GROUP_TEMP, ItemID.COINS, 1000);
@@ -73,8 +67,7 @@ public class PossessedItemGoalTest
         put(storage, InventoryID.INV_PLAYER_SNAPSHOT, ItemID.COINS, 1000);
         assertEquals(0, storage.quantity(ItemID.COINS));
     }
-    @Test public void coinCoffersUseCorrectUnitsAndAreNotAccumulatedTwice()
-    {
+    @Test public void coinCoffersUseCorrectUnitsAndAreNotAccumulatedTwice() {
         PlayerItemStorage storage = new PlayerItemStorage();
         java.util.function.IntUnaryOperator varbits = id -> id == VarbitID.NZONE_CASH ? 12
                 : id == VarbitID.BR_COFFER ? 3
@@ -87,10 +80,9 @@ public class PossessedItemGoalTest
         storage.refreshCoinValues(id -> -1, id -> -1);
         assertEquals(0, storage.quantity(ItemID.COINS));
     }
-    @Test public void goalCanCompleteThenRegressWhenThePlayerSpendsItems()
-    {
+    @Test public void goalCanCompleteThenRegressWhenThePlayerSpendsItems() {
         PlayerItemStorage storage = new PlayerItemStorage();
-        PossesedItemGoal goal = new PossesedItemGoal(ItemID.COINS, 1_500_000_000L);
+        PossessedItemGoal goal = new PossessedItemGoal(ItemID.COINS, 1_500_000_000L);
         goal.attach(storage, null);
         goal.refresh(null);
         assertEquals(GoalStatus.NOT_STARTED, goal.getStatus());
@@ -105,8 +97,7 @@ public class PossessedItemGoalTest
         assertEquals(GoalStatus.IN_PROGRESS, goal.getStatus());
         assertFalse(goal.refresh(null));
     }
-    @Test public void pouchContentsRequireAnOwnedPouchAndUseLiveQuantities()
-    {
+    @Test public void pouchContentsRequireAnOwnedPouchAndUseLiveQuantities() {
         PlayerItemStorage storage = new PlayerItemStorage();
         java.util.function.IntUnaryOperator values = id -> id == VarbitID.RUNE_POUCH_TYPE_1 ? 1
                 : id == VarbitID.RUNE_POUCH_QUANTITY_1 ? 150 : 0;
@@ -121,25 +112,23 @@ public class PossessedItemGoalTest
         storage.refreshRuneValues(values, type -> ItemID.DRAGON_PICKAXE);
         assertEquals(0, storage.quantity(ItemID.DRAGON_PICKAXE));
     }
-    @Test public void profileSavesOnlyTheTargetAndKeepsDifferentItemsSeparate()
-    {
+    @Test public void profileSavesOnlyTheTargetAndKeepsDifferentItemsSeparate() {
         GrinderProfile profile = new GrinderProfile(42);
         profile.replace(Collections.emptyList());
-        PossesedItemGoal coins = new PossesedItemGoal(ItemID.COINS, 3_000_000_000L);
+        PossessedItemGoal coins = new PossessedItemGoal(ItemID.COINS, 3_000_000_000L);
         assertTrue(profile.add(coins));
-        assertFalse(profile.add(new PossesedItemGoal(ItemID.COINS)));
-        assertTrue(profile.add(new PossesedItemGoal(ItemID.DRAGON_PICKAXE)));
+        assertFalse(profile.add(new PossessedItemGoal(ItemID.COINS)));
+        assertTrue(profile.add(new PossessedItemGoal(ItemID.DRAGON_PICKAXE)));
         put(profile.getPlayerStorage(), InventoryID.BANK, ItemID.COINS, 1_500_000_000);
         coins.refresh(null);
         assertEquals(1_500_000_000L, coins.getProgressCurrent());
         GrinderProfile restored = GrinderRepository.fromJson(GrinderRepository.toJson(profile));
-        PossesedItemGoal saved = (PossesedItemGoal) restored.getGoals().get(0);
+        PossessedItemGoal saved = (PossessedItemGoal) restored.getGoals().get(0);
         assertEquals(3_000_000_000L, saved.getAmount());
         assertEquals(0, saved.getProgressCurrent());
         assertEquals(0, restored.getPlayerStorage().quantity(ItemID.COINS));
     }
-    @Test public void unknownBankIsExplicitAndSnapshotsResetBetweenLogins()
-    {
+    @Test public void unknownBankIsExplicitAndSnapshotsResetBetweenLogins() {
         PlayerItemStorage storage = new PlayerItemStorage();
         assertTrue(storage.describe(ItemID.COINS).contains("Open your bank"));
         put(storage, InventoryID.BANK, ItemID.COINS, 100);
@@ -149,7 +138,7 @@ public class PossessedItemGoalTest
         assertTrue(storage.describe(ItemID.COINS).contains("Open your bank"));
     }
     @Test(expected = IllegalArgumentException.class)
-    public void invalidTargetCannotBeSaved() { new PossesedItemGoal(ItemID.COINS, 0); }
+    public void invalidTargetCannotBeSaved() { new PossessedItemGoal(ItemID.COINS, 0); }
     private void put(PlayerItemStorage storage, int container, int item, int amount)
     { storage.replace(container, new Item[]{new Item(item, amount)}, id -> id); }
 }

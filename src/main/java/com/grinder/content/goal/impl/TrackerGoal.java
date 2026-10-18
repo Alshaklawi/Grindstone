@@ -1,7 +1,7 @@
 package com.grinder.content.goal.impl;
 
 
-import com.grinder.content.TrackerEntry;
+import com.grinder.content.tracker.TrackerEntry;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.GoalStatus;
@@ -14,8 +14,7 @@ import net.runelite.api.Client;
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
  * @since 10/18/2026
  */
-public class TrackerGoal implements Goal
-{
+public class TrackerGoal implements Goal {
 
     @Getter
     private final TrackerEntry tracker;
@@ -26,13 +25,11 @@ public class TrackerGoal implements Goal
     private transient long current;
 
     public TrackerGoal(final TrackerEntry entry, final int count) {
-        if (entry == null)
-        {
+        if (entry == null) {
             throw new IllegalArgumentException("Tracker entry is required");
         }
 
-        if (count <= 0)
-        {
+        if (count <= 0) {
             throw new IllegalArgumentException("Target count must be positive");
         }
 
@@ -40,10 +37,8 @@ public class TrackerGoal implements Goal
         this.count = count;
     }
 
-    public void setCount(int count)
-    {
-        if (count <= 0)
-        {
+    public void setCount(int count) {
+        if (count <= 0) {
             throw new IllegalArgumentException("Target count must be positive");
         }
 
@@ -54,73 +49,62 @@ public class TrackerGoal implements Goal
     public boolean supportsTarget() { return true; }
 
     @Override
-    public void setTarget(long target)
-    {
+    public void setTarget(long target) {
         if (target < 1 || target > Integer.MAX_VALUE) { throw new IllegalArgumentException("Choose a positive target count"); }
         setCount((int) target);
     }
 
     @Override
-    public String getTitle(Client client)
-    {
+    public String getTitle(Client client) {
         return tracker.getDisplayName();
     }
 
     @Override
-    public BufferedImage getIcon(Client client)
-    {
+    public BufferedImage getIcon(Client client) {
         return tracker.getIcon().getImage();
     }
 
     @Override
-    public GoalCategory getCategory()
-    {
+    public GoalCategory getCategory() {
         return tracker == TrackerEntry.WINTERTODT ? GoalCategory.SKILLING : GoalCategory.BOSSING;
     }
 
     @Override
-    public GoalStatus getStatus()
-    {
+    public GoalStatus getStatus() {
         long current = getProgressCurrent();
         return current >= count ? GoalStatus.COMPLETE : current > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED;
     }
 
     @Override
-    public boolean hasProgress()
-    {
+    public boolean hasProgress() {
         return true;
     }
 
     @Override
-    public long getProgressCurrent()
-    {
+    public long getProgressCurrent() {
         return current;
     }
 
     @Override
-    public long getProgressMaximum()
-    {
+    public long getProgressMaximum() {
         return count;
     }
 
     @Override
-    public String getProgressText()
-    {
+    public String getProgressText() {
         return current + " / " + count;
     }
 
     @Override
-    public com.grinder.ui.GoalComponent build(Client client)
-    {
+    public com.grinder.ui.components.GoalComponent build(Client client) {
         refresh(client);
         return Goal.super.build(client);
     }
 
     @Override
-    public com.grinder.ui.GoalComponent build(Client client, com.grinder.config.GrinderConfig config)
-    {
+    public com.grinder.ui.components.GoalComponent build(Client client, com.grinder.config.GrinderConfig config) {
         refresh(client);
-        com.grinder.ui.GoalComponent component = Goal.super.build(client);
+        com.grinder.ui.components.GoalComponent component = Goal.super.build(client);
         component.setIconVisible(config == null || config.showGoalIcons());
         component.setProgressBarVisible(config == null || config.showProgressBar());
         component.setProgress(current, count, current + " / " + count);
@@ -128,11 +112,9 @@ public class TrackerGoal implements Goal
     }
 
     @Override
-    public boolean refresh(Client client)
-    {
+    public boolean refresh(Client client) {
         long next = Math.max(0, tracker.getCount(client));
-        if (next == current)
-        {
+        if (next == current) {
             return false;
         }
 

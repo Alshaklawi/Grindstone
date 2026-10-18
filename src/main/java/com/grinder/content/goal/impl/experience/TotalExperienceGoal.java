@@ -1,5 +1,7 @@
 package com.grinder.content.goal.impl.experience;
 
+import com.grinder.util.NumberFormats;
+
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.GoalStatus;
@@ -13,8 +15,7 @@ import net.runelite.api.Skill;
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
  * @since 10/18/2026
  */
-public class TotalExperienceGoal implements Goal
-{
+public class TotalExperienceGoal implements Goal {
     private transient long current;
     private long target;
 
@@ -22,73 +23,61 @@ public class TotalExperienceGoal implements Goal
     public boolean supportsTarget() { return true; }
 
     @Override
-    public void setTarget(long target)
-    {
+    public void setTarget(long target) {
         if (target < 1 || target > Skill.values().length * 200_000_000L) { throw new IllegalArgumentException("Target exceeds the total XP cap"); }
         this.target = target;
     }
 
     @Override
-    public String getTitle(Client client)
-    {
+    public String getTitle(Client client) {
         return "Total experience";
     }
 
     @Override
-    public BufferedImage getIcon(Client client)
-    {
+    public BufferedImage getIcon(Client client) {
         return Icon.SKILLING.getImage();
     }
 
     @Override
-    public GoalCategory getCategory()
-    {
+    public GoalCategory getCategory() {
         return GoalCategory.SKILLING;
     }
 
     @Override
-    public GoalStatus getStatus()
-    {
+    public GoalStatus getStatus() {
         return current >= getMaximumExperience() ? GoalStatus.COMPLETE
                 : current > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED;
     }
 
     @Override
-    public boolean hasProgress()
-    {
+    public boolean hasProgress() {
         return true;
     }
 
     @Override
-    public long getProgressCurrent()
-    {
+    public long getProgressCurrent() {
         return current;
     }
 
     @Override
-    public long getProgressMaximum()
-    {
+    public long getProgressMaximum() {
         return getMaximumExperience();
     }
 
     @Override
-    public String getProgressText()
-    {
-        return SkillExperienceGoal.formatExperience(current) + " / "
-                + SkillExperienceGoal.formatExperience(getMaximumExperience());
+    public String getProgressText() {
+        return NumberFormats.experience(current) + " / "
+                + NumberFormats.experience(getMaximumExperience());
     }
 
     @Override
-    public boolean refresh(Client client)
-    {
+    public boolean refresh(Client client) {
         long next = 0;
-        for (Skill skill : Skill.values())
-        {
+        for (Skill skill : Skill.values()) {
             next += Math.max(0, client.getSkillExperience(skill));
         }
 
-        if (next == current)
-        {
+        if (next == current) {
             return false;
         }
 
@@ -97,14 +86,12 @@ public class TotalExperienceGoal implements Goal
     }
 
     @Override
-    public com.grinder.ui.GoalComponent build(Client client, com.grinder.config.GrinderConfig config)
-    {
+    public com.grinder.ui.components.GoalComponent build(Client client, com.grinder.config.GrinderConfig config) {
         refresh(client);
         return Goal.super.build(client, config);
     }
 
-    private long getMaximumExperience()
-    {
+    private long getMaximumExperience() {
         return target > 0 ? target : Skill.values().length * SkillExperienceGoal.LEVEL_99_EXPERIENCE;
     }
 }
