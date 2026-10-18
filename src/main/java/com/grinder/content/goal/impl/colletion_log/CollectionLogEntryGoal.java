@@ -11,6 +11,7 @@ import lombok.Getter;
 import net.runelite.api.Client;
 import net.runelite.api.ItemComposition;
 import net.runelite.api.ItemContainer;
+import net.runelite.client.game.ItemManager;
 
 import javax.swing.BoxLayout;
 import java.awt.Color;
@@ -28,33 +29,33 @@ import java.util.Set;
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
  * @since 10/18/2026
  */
-public final class CollectionLogEntryGoal implements Goal
-{
+public final class CollectionLogEntryGoal implements Goal {
     private static final Color OBTAINED_COLOR = new Color(65, 170, 85);
 
     @Getter
     private final CollectionLogEntry entry;
 
-    private final Map<Integer, ItemComponent> itemComponents = new HashMap<>();
+    private transient ItemManager itemManager;
+    private transient Map<Integer, ItemComponent> itemComponents = new HashMap<>();
+    private transient GoalComponent current;
+    private transient ItemContainerComponent main;
 
-    private GoalComponent current;
-    private ItemContainerComponent main;
-
-    public CollectionLogEntryGoal(final CollectionLogEntry entry)
-    {
+    public CollectionLogEntryGoal(final ItemManager itemManager, final CollectionLogEntry entry) {
+        this.itemManager = itemManager;
         this.entry = entry;
     }
 
-    @Override
-    public GoalComponent build(final Client client)
-    {
-        if (current == null)
-        {
-            current = new GoalComponent();
+    public void setItemManager(ItemManager itemManager) {
+        this.itemManager = itemManager;
+        itemComponents.clear();
+    }
 
+    @Override
+    public GoalComponent build(final Client client) {
+        if (current == null) {
+            current = new GoalComponent();
             main = new ItemContainerComponent();
             main.setAlignmentX(Component.LEFT_ALIGNMENT);
-
             current.getContent().setLayout(new BoxLayout(current.getContent(), BoxLayout.Y_AXIS));
             current.getContent().add(main);
         }
@@ -63,10 +64,8 @@ public final class CollectionLogEntryGoal implements Goal
         return current;
     }
 
-    private void refresh(final Client client)
-    {
-        if (current == null || main == null)
-        {
+    private void refresh(final Client client) {
+        if (current == null || main == null) {
             return;
         }
 
@@ -76,9 +75,8 @@ public final class CollectionLogEntryGoal implements Goal
         current.setEndDate(getEnd());
 
         final ItemComposition[] items = entry.getItems(client);
-        final List<ItemComponent> components = new ArrayList<>();
+        final List<ItemComponent> components = new ArrayList<>(items.length);
         final Set<Integer> activeItemIds = new HashSet<>();
-
         int obtained = 0;
 
         for (final ItemComposition item : items) {
@@ -98,11 +96,14 @@ public final class CollectionLogEntryGoal implements Goal
             ItemComponent component = itemComponents.get(itemId);
 
             if (component == null) {
-                component = new ItemComponent(item, Icon.MAIN.getImage());
+                component = itemManager == null
+                        ? new ItemComponent(item, null)
+                        : new ItemComponent(itemManager, item);
                 itemComponents.put(itemId, component);
+            } else {
+                component.setItem(item);
             }
 
-            component.setItem(item);
             component.setTooltip(item.getName());
             component.setBorderColor(isObtained ? OBTAINED_COLOR : null);
             components.add(component);
@@ -115,28 +116,21 @@ public final class CollectionLogEntryGoal implements Goal
         final int percentage = total == 0 ? 0 : Math.round(obtained * 100.0f / total);
 
         current.setProgress(obtained, total, String.format("%d / %d obtained (%d%%)", obtained, total, percentage));
-
         current.revalidate();
         current.repaint();
     }
 
     @Override
-    public boolean hasProgress(final Client client)
-    {
+    public boolean hasProgress(final Client client) {
         return getProgressMaximum(client) > 0;
     }
 
     @Override
-    public long getProgressCurrent(final Client client)
-    {
-        final ItemComposition[] items = entry.getItems(client);
+    public long getProgressCurrent(final Client client) {
+        int obtained = 0;
 
-        long obtained = 0L;
-
-        for (final ItemComposition item : items)
-        {
-            if (item != null && entry.isObtained(client, item))
-            {
+        for (final ItemComposition item : entry.getItems(client)) {
+            if (item != null && entry.isObtained(client, item)) {
                 obtained++;
             }
         }
@@ -145,21 +139,11 @@ public final class CollectionLogEntryGoal implements Goal
     }
 
     @Override
-    public long getProgressMaximum(final Client client)
-    {
-        final ItemComposition[] items = entry.getItems(client);
+    public long getProgressMaximum(final Client client) {
+        int total = 0;
 
-        if (items == null)
-        {
-            return 0L;
-        }
-
-        long total = 0L;
-
-        for (final ItemComposition item : items)
-        {
-            if (item != null)
-            {
+        for (final ItemComposition item : entry.getItems(client)) {
+            if (item != null) {
                 total++;
             }
         }
@@ -168,33 +152,27 @@ public final class CollectionLogEntryGoal implements Goal
     }
 
     @Override
-    public String getProgressText(final Client client)
-    {
-        final long current = getProgressCurrent(client);
-        final long maximum = getProgressMaximum(client);
-        final int percentage = maximum == 0 ? 0 : (int) Math.round(current * 100.0 / maximum);
-
-        return String.format("%,d / %,d obtained (%d%%)", current, maximum, percentage);
+    public String getProgressText(final Client client) {
+        final long obtained = getProgressCurrent(client);
+        final long total = getProgressMaximum(client);
+        final int percentage = total == 0 ? 0 : (int) Math.round(obtained * 100.0 / total);
+        return String.format("%,d / %,d obtained (%d%%)", obtained, total, percentage);
     }
 
     @Override
-    public void onItemContainerUpdated(final Client client, final ItemContainer container)
-    {
-        if (container != null && container.getId() == 620 && current != null)
-        {
+    public void onItemContainerUpdated(final Client client, final ItemContainer container) {
+        if (container != null && container.getId() == 620 && current != null) {
             refresh(client);
         }
     }
 
     @Override
-    public String getTitle(final Client client)
-    {
+    public String getTitle(final Client client) {
         return entry.getTitle(client);
     }
 
     @Override
-    public BufferedImage getIcon(final Client client)
-    {
+    public BufferedImage getIcon(final Client client) {
         return Icon.COLLECTION_LOG.getImage();
     }
 }

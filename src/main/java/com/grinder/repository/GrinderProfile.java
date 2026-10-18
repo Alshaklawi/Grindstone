@@ -1,3 +1,4 @@
+
 package com.grinder.repository;
 
 import com.grinder.content.CollectionLogEntry;
@@ -8,6 +9,7 @@ import com.grinder.content.goal.impl.colletion_log.CollectionLogEntryGoal;
 import lombok.Getter;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
+import net.runelite.client.game.ItemManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,23 +23,34 @@ import java.util.Objects;
  */
 @Getter
 public class GrinderProfile {
-
     private final long hash;
     private final List<Goal> goals = new ArrayList<>();
-
     private final List<Item> items = new ArrayList<>();
 
     public GrinderProfile(long hash) {
-        this.hash = hash;
-        initializeGoals();
+        this(hash, null);
     }
 
-    private void initializeGoals() {
+    public GrinderProfile(long hash, ItemManager itemManager) {
+        this.hash = hash;
+        initializeGoals(itemManager);
+    }
+
+    private void initializeGoals(ItemManager itemManager) {
         for (final CollectionLogEntry entry : CollectionLogEntry.values()) {
-            goals.add(new CollectionLogEntryGoal(entry));
+            goals.add(new CollectionLogEntryGoal(itemManager, entry));
         }
+
         for (final TrackerEntry entry : TrackerEntry.values()) {
             goals.add(new TrackerGoal(entry, 5000));
+        }
+    }
+
+    public void setItemManager(ItemManager itemManager) {
+        for (Goal goal : goals) {
+            if (goal instanceof CollectionLogEntryGoal) {
+                ((CollectionLogEntryGoal) goal).setItemManager(itemManager);
+            }
         }
     }
 
@@ -59,10 +72,16 @@ public class GrinderProfile {
     }
 
     public void onContainerOpen(ItemContainer container) {
-        for (var item : container.getItems()) {
-            item.getId();
-            item.getQuantity();
+        items.clear();
+
+        if (container == null) {
+            return;
         }
 
+        for (Item item : container.getItems()) {
+            if (item != null && item.getId() > 0 && item.getQuantity() > 0) {
+                items.add(item);
+            }
+        }
     }
 }

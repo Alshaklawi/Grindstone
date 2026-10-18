@@ -1,3 +1,4 @@
+
 package com.grinder;
 
 import com.grinder.content.goal.Goal;
@@ -15,23 +16,20 @@ import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
 import java.util.List;
 
-public final class GrinderPanel extends PluginPanel
-{
+public final class GrinderPanel extends PluginPanel {
     private final Client client;
     private final JPanel main = new JPanel();
     private final JScrollPane scroll;
     private GrinderProfile profile;
 
     @Inject
-    GrinderPanel(Client client)
-    {
+    GrinderPanel(Client client) {
         this.client = client;
         this.scroll = new JScrollPane(main, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         init();
     }
 
-    private void init()
-    {
+    private void init() {
         setLayout(new BorderLayout(0, 8));
         setBackground(ColorScheme.DARK_GRAY_COLOR);
         setOpaque(true);
@@ -86,29 +84,24 @@ public final class GrinderPanel extends PluginPanel
         vertical.setPreferredSize(new Dimension(8, 0));
         vertical.setBorder(BorderFactory.createEmptyBorder());
         vertical.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        vertical.setUI(new BasicScrollBarUI()
-        {
+        vertical.setUI(new BasicScrollBarUI() {
             @Override
-            protected void configureScrollBarColors()
-            {
+            protected void configureScrollBarColors() {
                 thumbColor = ColorScheme.MEDIUM_GRAY_COLOR;
                 trackColor = ColorScheme.DARK_GRAY_COLOR;
             }
 
             @Override
-            protected JButton createDecreaseButton(int orientation)
-            {
+            protected JButton createDecreaseButton(int orientation) {
                 return createZeroButton();
             }
 
             @Override
-            protected JButton createIncreaseButton(int orientation)
-            {
+            protected JButton createIncreaseButton(int orientation) {
                 return createZeroButton();
             }
 
-            private JButton createZeroButton()
-            {
+            private JButton createZeroButton() {
                 JButton button = new JButton();
                 button.setPreferredSize(new Dimension(0, 0));
                 button.setMinimumSize(new Dimension(0, 0));
@@ -124,8 +117,7 @@ public final class GrinderPanel extends PluginPanel
         setPreferredSize(new Dimension(300, 500));
     }
 
-    void render(List<Goal> goals)
-    {
+    void render(List<Goal> goals) {
         main.removeAll();
 
         JLabel summary = new JLabel("Goals: " + goals.size());
@@ -135,8 +127,7 @@ public final class GrinderPanel extends PluginPanel
         summary.setAlignmentX(Component.LEFT_ALIGNMENT);
         main.add(summary);
 
-        for (Goal goal : goals)
-        {
+        for (Goal goal : goals) {
             GoalComponent card = goal.build(client);
             card.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -153,12 +144,10 @@ public final class GrinderPanel extends PluginPanel
         scroll.repaint();
     }
 
-    public void load(GrinderProfile profile)
-    {
+    public void load(GrinderProfile profile) {
         this.profile = profile;
 
-        if (client.getLocalPlayer() != null)
-        {
+        if (client.getLocalPlayer() != null) {
             String message = client.getLocalPlayer().getName() + " has logged in";
             client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", message, "");
         }
@@ -166,8 +155,7 @@ public final class GrinderPanel extends PluginPanel
         render(profile.getGoals());
     }
 
-    public void unload()
-    {
+    public void unload() {
         profile = null;
         main.removeAll();
         main.revalidate();

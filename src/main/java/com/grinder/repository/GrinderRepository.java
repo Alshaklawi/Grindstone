@@ -1,8 +1,17 @@
+
 package com.grinder.repository;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.grinder.content.CollectionLogEntry;
 import com.grinder.content.goal.Goal;
+import com.grinder.content.goal.impl.colletion_log.CollectionLogEntryGoal;
 import net.runelite.api.Client;
+import net.runelite.client.game.ItemManager;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -10,10 +19,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author Ayman Yassen
@@ -21,52 +32,53 @@ import java.util.stream.Collectors;
  * @since 10/18/2026
  */
 public final class GrinderRepository {
-
     private static final Path DIRECTORY = Paths.get("grinder", "profiles");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Map<Long, GrinderProfile> profiles = new HashMap<>();
 
     private GrinderRepository() {
-        //NO-OP
+        // NO-OP
     }
 
     public static synchronized void load() throws IOException {
         Files.createDirectories(DIRECTORY);
+        profiles.clear();
 
-        try (java.util.stream.Stream<Path> files = Files.list(DIRECTORY)) {
-            List<Path> paths = files
-                    .filter(Files::isRegularFile)
+        List<Path> paths;
+
+        try (Stream<Path> files = Files.list(DIRECTORY)) {
+            paths = files.filter(Files::isRegularFile)
                     .filter(path -> path.getFileName().toString().endsWith(".json"))
                     .collect(Collectors.toList());
+        }
 
-            for (Path path : paths) {
-                try {
-                    GrinderProfile profile = load(path);
-                    profiles.put(profile.getHash(), profile);
-                } catch (RuntimeException | IOException exception) {
-                    System.err.println(
-                            "Failed to load goal profile " + path + ": "
-                                    + exception.getMessage()
-                    );
-                }
+        for (Path path : paths) {
+            try {
+                GrinderProfile profile = load(path);
+                profiles.put(profile.getHash(), profile);
+            } catch (RuntimeException | IOException exception) {
+                System.err.println("Failed to load goal profile " + path + ": " + exception.getMessage());
             }
         }
     }
 
-    public static synchronized GrinderProfile load(Client client) throws IOException {
-        GrinderProfile profile = profiles.get(client.getAccountHash());
+    public static synchronized GrinderProfile load(Client client, ItemManager itemManager) throws IOException {
+        long hash = client.getAccountHash();
+        GrinderProfile profile = profiles.get(hash);
 
-        if (profile != null) {
-            return profile;
+        if (profile == null) {
+            Files.createDirectories(DIRECTORY);
+            Path path = getPath(hash);
+            profile = Files.exists(path) ? load(path) : new GrinderProfile(hash);
+            profiles.put(hash, profile);
         }
 
-        Files.createDirectories(DIRECTORY);
-
-        Path path = getPath(client.getAccountHash());
-        profile = Files.exists(path) ? load(path) : new GrinderProfile(client.getAccountHash());
-        profiles.put(client.getAccountHash(), profile);
-
+        profile.setItemManager(itemManager);
         return profile;
+    }
+
+    public static synchronized GrinderProfile load(Client client) throws IOException {
+        return load(client, null);
     }
 
     public static synchronized void save(GrinderProfile profile) throws IOException {
@@ -93,18 +105,9 @@ public final class GrinderRepository {
             Files.writeString(temporary, GSON.toJson(json));
 
             try {
-                Files.move(
-                        temporary,
-                        destination,
-                        StandardCopyOption.REPLACE_EXISTING,
-                        StandardCopyOption.ATOMIC_MOVE
-                );
+                Files.move(temporary, destination, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
             } catch (IOException exception) {
-                Files.move(
-                        temporary,
-                        destination,
-                        StandardCopyOption.REPLACE_EXISTING
-                );
+                Files.move(temporary, destination, StandardCopyOption.REPLACE_EXISTING);
             }
 
             profiles.put(profile.getHash(), profile);
@@ -114,12 +117,11 @@ public final class GrinderRepository {
     }
 
     public static synchronized Map<Long, GrinderProfile> getProfiles() {
-        return Map.copyOf(profiles);
+        return Collections.unmodifiableMap(new HashMap<>(profiles));
     }
 
     private static GrinderProfile load(Path path) throws IOException {
         JsonObject json = new JsonParser().parse(Files.readString(path)).getAsJsonObject();
-
         long hash = json.get("hash").getAsLong();
         GrinderProfile profile = new GrinderProfile(hash);
 
@@ -130,18 +132,35 @@ public final class GrinderRepository {
         List<Goal> goals = new ArrayList<>();
         JsonArray savedGoals = json.getAsJsonArray("goals");
 
-        for (int i = 0; i < savedGoals.size(); i++) {
+        for (JsonElement element : savedGoals) {
             try {
-                JsonObject savedGoal = savedGoals.get(i).getAsJsonObject();
+                JsonObject savedGoal = element.getAsJsonObject();
                 String className = savedGoal.get("class").getAsString();
-
+                JsonElement data = savedGoal.get("data");
                 Class<?> type = Class.forName(className);
 
                 if (!Goal.class.isAssignableFrom(type)) {
                     continue;
                 }
 
-                Goal goal = (Goal) GSON.fromJson(savedGoal.get("data"), type);
+                Goal goal;
+
+                if (CollectionLogEntryGoal.class.isAssignableFrom(type)) {
+                    if (data == null || !data.isJsonObject()) {
+                        continue;
+                    }
+
+                    JsonElement entryElement = data.getAsJsonObject().get("entry");
+
+                    if (entryElement == null || entryElement.isJsonNull()) {
+                        continue;
+                    }
+
+                    CollectionLogEntry entry = GSON.fromJson(entryElement, CollectionLogEntry.class);
+                    goal = new CollectionLogEntryGoal(null, entry);
+                } else {
+                    goal = (Goal) GSON.fromJson(data, type);
+                }
 
                 if (goal != null) {
                     goals.add(goal);

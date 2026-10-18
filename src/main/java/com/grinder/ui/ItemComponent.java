@@ -1,7 +1,9 @@
+
 package com.grinder.ui;
 
 import lombok.Getter;
 import net.runelite.api.ItemComposition;
+import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.ColorScheme;
 
 import javax.swing.*;
@@ -26,30 +28,37 @@ public class ItemComponent extends JPanel {
     private static final Color AMOUNT_COLOR = Color.WHITE;
     private static final Color AMOUNT_SHADOW_COLOR = Color.BLACK;
 
+    private final ItemManager itemManager;
+    private final ImageComponent imageComponent = new ImageComponent(ICON_WIDTH, ICON_HEIGHT);
+
     private ItemComposition item;
     private int amount = 1;
-    private final ImageComponent imageComponent = new ImageComponent(ICON_WIDTH, ICON_HEIGHT);
     private String tooltip;
 
     @Getter
     private Color borderColor = DEFAULT_BORDER_COLOR;
+
+    public ItemComponent(ItemManager itemManager, ItemComposition item) {
+        this(itemManager, item, 1);
+    }
+
+    public ItemComponent(ItemManager itemManager, ItemComposition item, int amount) {
+        this.itemManager = itemManager;
+        this.amount = Math.max(0, amount);
+        initialize();
+        setItem(item);
+    }
 
     public ItemComponent(ItemComposition item, BufferedImage image) {
         this(item, image, 1);
     }
 
     public ItemComponent(ItemComposition item, BufferedImage image, int amount) {
+        this.itemManager = null;
         this.item = item;
         this.amount = Math.max(0, amount);
-
-        setLayout(null);
-        setPreferredSize(new Dimension(SIZE, SIZE));
-        setMinimumSize(new Dimension(SIZE, SIZE));
-        setMaximumSize(new Dimension(SIZE, SIZE));
-        setOpaque(false);
-
-        imageComponent.setImage(image);
-        add(imageComponent);
+        initialize();
+        setImage(image);
         updateTooltip();
     }
 
@@ -59,12 +68,26 @@ public class ItemComponent extends JPanel {
         setBorderColor(borderColor);
     }
 
+    private void initialize() {
+        setLayout(null);
+        setPreferredSize(new Dimension(SIZE, SIZE));
+        setMinimumSize(new Dimension(SIZE, SIZE));
+        setMaximumSize(new Dimension(SIZE, SIZE));
+        setOpaque(false);
+        add(imageComponent);
+    }
+
     public ItemComposition getItem() {
         return item;
     }
 
     public void setItem(ItemComposition item) {
         this.item = item;
+
+        if (itemManager != null) {
+            setImage(item == null ? null : itemManager.getImage(item.getId()));
+        }
+
         updateTooltip();
         repaint();
     }

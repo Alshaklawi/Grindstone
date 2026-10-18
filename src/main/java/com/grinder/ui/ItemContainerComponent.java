@@ -1,3 +1,4 @@
+
 package com.grinder.ui;
 
 import net.runelite.client.ui.ColorScheme;
@@ -17,20 +18,68 @@ public class ItemContainerComponent extends JPanel {
     private static final int ITEMS_PER_ROW = 4;
     private static final int ITEM_GAP = 4;
     private static final int ITEM_SIZE = 40;
+    private static final int MAX_ROWS = 5;
 
-    private final JPanel grid;
+    private static final int ROW_HEIGHT = ITEM_SIZE + ITEM_GAP;
+    private static final int MAX_VISIBLE_HEIGHT = MAX_ROWS * ROW_HEIGHT;
+
+    private final JPanel grid = new JPanel(new GridBagLayout());
+    private final JScrollPane scroll;
     private final List<ItemComponent> items = new ArrayList<>();
 
     public ItemContainerComponent() {
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setLayout(new BorderLayout());
         setOpaque(false);
 
-        grid = new JPanel(new GridBagLayout());
         grid.setOpaque(false);
-        grid.setAlignmentX(Component.LEFT_ALIGNMENT);
         grid.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 
-        add(grid);
+        scroll = new JScrollPane(grid, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        scroll.setBorder(BorderFactory.createEmptyBorder());
+        scroll.setViewportBorder(BorderFactory.createEmptyBorder());
+        scroll.setOpaque(false);
+        scroll.getViewport().setOpaque(false);
+        scroll.getViewport().setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        scroll.getViewport().setScrollMode(JViewport.BLIT_SCROLL_MODE);
+        scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+
+        JScrollBar vertical = scroll.getVerticalScrollBar();
+        vertical.setUnitIncrement(ITEM_SIZE + ITEM_GAP);
+        vertical.setPreferredSize(new Dimension(8, 0));
+        vertical.setBorder(BorderFactory.createEmptyBorder());
+        vertical.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        vertical.setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
+            @Override
+            protected void configureScrollBarColors() {
+                thumbColor = ColorScheme.MEDIUM_GRAY_COLOR;
+                trackColor = ColorScheme.DARK_GRAY_COLOR;
+            }
+
+            @Override
+            protected JButton createDecreaseButton(int orientation) {
+                return createZeroButton();
+            }
+
+            @Override
+            protected JButton createIncreaseButton(int orientation) {
+                return createZeroButton();
+            }
+
+            private JButton createZeroButton() {
+                JButton button = new JButton();
+                button.setPreferredSize(new Dimension(0, 0));
+                button.setMinimumSize(new Dimension(0, 0));
+                button.setMaximumSize(new Dimension(0, 0));
+                button.setFocusable(false);
+                button.setBorder(BorderFactory.createEmptyBorder());
+                button.setOpaque(false);
+                return button;
+            }
+        });
+
+        add(scroll, BorderLayout.CENTER);
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, MAX_VISIBLE_HEIGHT));
     }
 
     public void set(List<ItemComponent> newItems) {
@@ -43,9 +92,7 @@ public class ItemContainerComponent extends JPanel {
         refresh();
     }
 
-    /**
-     * Adds an item to the displayed collection.
-     */
+    /** Adds an item to the displayed collection. */
     public void add(ItemComponent item) {
         if (item == null) {
             return;
@@ -64,18 +111,17 @@ public class ItemContainerComponent extends JPanel {
         return Collections.unmodifiableList(items);
     }
 
-    /**
-     * Rebuilds the four-column grid and recalculates its required height.
-     */
+    /** Rebuilds the four-column grid and caps the visible area at five rows. */
     public void refresh() {
         grid.removeAll();
 
         for (int i = 0; i < items.size(); i++) {
             ItemComponent item = items.get(i);
-            item.setPreferredSize(new Dimension(ITEM_SIZE, ITEM_SIZE));
-            item.setMinimumSize(new Dimension(ITEM_SIZE, ITEM_SIZE));
-            item.setMaximumSize(new Dimension(ITEM_SIZE, ITEM_SIZE));
-            item.setAlignmentX(Component.LEFT_ALIGNMENT);
+            Dimension itemSize = new Dimension(ITEM_SIZE, ITEM_SIZE);
+
+            item.setPreferredSize(itemSize);
+            item.setMinimumSize(itemSize);
+            item.setMaximumSize(itemSize);
 
             GridBagConstraints constraints = new GridBagConstraints();
             constraints.gridx = i % ITEMS_PER_ROW;
@@ -90,34 +136,34 @@ public class ItemContainerComponent extends JPanel {
         }
 
         int rows = (items.size() + ITEMS_PER_ROW - 1) / ITEMS_PER_ROW;
-        int height = rows == 0 ? 0 : rows * ITEM_SIZE + rows * ITEM_GAP;
+        int gridHeight = rows == 0 ? 0 : rows * ROW_HEIGHT;
+        int gridWidth = ITEMS_PER_ROW * ROW_HEIGHT;
 
-        grid.setPreferredSize(new Dimension(ITEMS_PER_ROW * (ITEM_SIZE + ITEM_GAP), height));
-        grid.setMinimumSize(new Dimension(0, height));
-        grid.setMaximumSize(new Dimension(Integer.MAX_VALUE, height));
+        grid.setPreferredSize(new Dimension(gridWidth, gridHeight));
+        grid.setMinimumSize(new Dimension(gridWidth, gridHeight));
+        grid.setMaximumSize(new Dimension(gridWidth, gridHeight));
 
-        grid.revalidate();
-        grid.repaint();
+        scroll.setPreferredSize(new Dimension(gridWidth + 8, Math.min(gridHeight, MAX_VISIBLE_HEIGHT)));
+        scroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, MAX_VISIBLE_HEIGHT));
+        scroll.setVerticalScrollBarPolicy(rows > MAX_ROWS
+                ? ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS
+                : ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+
         revalidate();
         repaint();
-
-        if (getParent() != null) {
-            getParent().revalidate();
-            getParent().repaint();
-        }
     }
 
     @Override
     public Dimension getPreferredSize() {
-        Dimension preferred = super.getPreferredSize();
         int rows = (items.size() + ITEMS_PER_ROW - 1) / ITEMS_PER_ROW;
-        int height = rows == 0 ? 0 : rows * ITEM_SIZE + rows * ITEM_GAP;
-        return new Dimension(preferred.width, height);
+        int height = Math.min(rows * ROW_HEIGHT, MAX_VISIBLE_HEIGHT);
+        int width = ITEMS_PER_ROW * ROW_HEIGHT + 8;
+
+        return new Dimension(width, height);
     }
 
     @Override
     public Dimension getMaximumSize() {
-        Dimension preferred = getPreferredSize();
-        return new Dimension(Integer.MAX_VALUE, preferred.height);
+        return new Dimension(Integer.MAX_VALUE, MAX_VISIBLE_HEIGHT);
     }
 }
