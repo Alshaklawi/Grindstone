@@ -220,4 +220,28 @@ public final class GrinderRepository {
     private static Path getPath(long hash) {
         return DIRECTORY.resolve(hash + ".json");
     }
+    public static String exportBackup(GrinderProfile profile) {
+        JsonObject snapshot = toJson(profile);
+        snapshot.addProperty("backupVersion", 1);
+        return GSON.toJson(snapshot);
+    }
+    public static GrinderProfile importBackup(String text, long targetHash) {
+        if (text == null || text.length() > 5_000_000) { throw new IllegalArgumentException("Backup must be smaller than 5 MB."); }
+        JsonObject json = new JsonParser().parse(text).getAsJsonObject();
+        if (!json.has("hash") || !json.has("goals") || !json.get("goals").isJsonArray() || json.getAsJsonArray("goals").size() > 5000) { throw new IllegalArgumentException("Not a valid Grinder profile backup."); }
+        if (json.has("backupVersion") && json.get("backupVersion").getAsInt() != 1) { throw new IllegalArgumentException("Unsupported backup version."); }
+        boolean sameAccount = json.get("hash").getAsLong() == targetHash;
+        json.addProperty("hash", targetHash);
+        if (!sameAccount) {
+            json.remove("collectionLogFirstSeen");
+            for (JsonElement element : json.getAsJsonArray("goals")) {
+                JsonObject saved = element.getAsJsonObject();
+                if (saved.has("metadata") && saved.get("metadata").isJsonObject()) { saved.getAsJsonObject("metadata").add("completions", new JsonArray()); }
+                if (saved.has("class") && SavedGoalTypes.resolve(saved.get("class").getAsString()) == CustomGoal.class) { saved.getAsJsonObject("data").addProperty("current", 0); }
+            }
+        }
+        GrinderProfile restored = fromJson(json);
+        if (restored.getGoals().size() != json.getAsJsonArray("goals").size()) { throw new IllegalArgumentException("Backup contains invalid or unsupported goals. No goals were imported."); }
+        return restored;
+    }
 }

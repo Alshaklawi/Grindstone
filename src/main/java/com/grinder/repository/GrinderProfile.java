@@ -203,6 +203,14 @@ public class GrinderProfile {
     public boolean remove(Goal goal) {
         return goals.remove(goal);
     }
+    public int mergeBackup(GrinderProfile backup) {
+        if (backup.hash != hash) { throw new IllegalArgumentException("Backup must be mapped to this account before merging."); }
+        int added = 0;
+        for (Goal goal : backup.getGoals()) { if (add(goal)) { restoreMetadata(goal, backup.metadata(goal)); added++; } }
+        backup.collectionLogHistory.snapshot().forEach(collectionLogHistory::record);
+        setItemManager(itemManager);
+        return added;
+    }
 
     public List<Goal> getGoals() {
         return Collections.unmodifiableList(goals);

@@ -78,6 +78,7 @@ import net.runelite.client.ui.PluginPanel;
  * @since 10/18/2026
  */
 public class GrinderPanel extends PluginPanel {
+    @Inject private ProfileBackupActions backupActions;
     private static final String ALL_CATEGORIES = "All categories";
     private static final String ALL_STATUSES = "All statuses";
     private static final String NOT_STARTED = "Not started";
@@ -282,6 +283,14 @@ public class GrinderPanel extends PluginPanel {
             presets.add(option);
         }
         moreMenu.add(presets);
+        JMenuItem export = new JMenuItem("Export profile backup...");
+        export.setToolTipText("Save a private local JSON backup. No network is used.");
+        export.addActionListener(event -> transferBackup(false));
+        moreMenu.add(export);
+        JMenuItem restore = new JMenuItem("Restore / import backup...");
+        restore.setToolTipText("Merge missing goals without replacing existing targets.");
+        restore.addActionListener(event -> transferBackup(true));
+        moreMenu.add(restore);
         JMenuItem expandAll = new JMenuItem("Expand all categories");
         expandAll.setToolTipText("Show the goal cards in every category.");
         expandAll.addActionListener(event -> setAllCategoriesCollapsed(false));
@@ -481,6 +490,7 @@ public class GrinderPanel extends PluginPanel {
     }
 
     public void load(GrinderProfile profile) {
+        backupActions.cancel();
         this.profile = profile;
         SwingUtilities.invokeLater(() -> {
             deletedGoal = null;
@@ -493,6 +503,7 @@ public class GrinderPanel extends PluginPanel {
     }
 
     public void unload() {
+        backupActions.cancel();
         profile = null;
         SwingUtilities.invokeLater(() -> {
             deletedGoal = null;
@@ -926,6 +937,15 @@ public class GrinderPanel extends PluginPanel {
         text.setWrapStyleWord(true);
         text.setCaretPosition(0);
         JOptionPane.showMessageDialog(this, new JScrollPane(text), "Completion history", JOptionPane.INFORMATION_MESSAGE);
+    }
+    private void transferBackup(boolean importing) {
+        GrinderProfile active = profile;
+        backupActions.show(this, active, () -> profile == active, () -> {
+            if (profile == active) {
+                for (Goal goal : active.getGoals()) { goal.refresh(client); }
+                render();
+            }
+        }, importing);
     }
     private void addPreset(com.grinder.content.goal.GoalPreset preset) {
         GrinderProfile active = profile;

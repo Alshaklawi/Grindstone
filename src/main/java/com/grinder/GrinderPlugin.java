@@ -45,7 +45,7 @@ import net.runelite.client.ui.NavigationButton;
  * @since 10/18/2026
  */
 @Slf4j
-@PluginDescriptor( name = "Grinder", description = "Track collection log progress and personal goals", tags = {"collection", "goals", "tracker"} )
+@PluginDescriptor( internalName = "grinder", name = "Grinder", description = "Track collection log progress and personal goals", tags = {"collection", "goals", "tracker"} )
 public class GrinderPlugin extends Plugin {
     @Inject
     private Client client;
