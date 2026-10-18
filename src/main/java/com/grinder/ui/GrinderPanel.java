@@ -274,6 +274,14 @@ public class GrinderPanel extends PluginPanel {
         restoreDefaults.setToolTipText("Restore missing starter goals without replacing existing goals or edited targets.");
         restoreDefaults.addActionListener(event -> defaults.doClick());
         moreMenu.add(restoreDefaults);
+        javax.swing.JMenu presets = new javax.swing.JMenu("Add goal preset");
+        presets.setToolTipText("Add a focused goal pack without replacing existing goals or edited targets.");
+        for (com.grinder.content.goal.GoalPreset preset : com.grinder.content.goal.GoalPreset.values()) {
+            JMenuItem option = new JMenuItem(preset.toString());
+            option.addActionListener(event -> addPreset(preset));
+            presets.add(option);
+        }
+        moreMenu.add(presets);
         JMenuItem expandAll = new JMenuItem("Expand all categories");
         expandAll.setToolTipText("Show the goal cards in every category.");
         expandAll.addActionListener(event -> setAllCategoriesCollapsed(false));
@@ -919,6 +927,20 @@ public class GrinderPanel extends PluginPanel {
         text.setWrapStyleWord(true);
         text.setCaretPosition(0);
         JOptionPane.showMessageDialog(this, new JScrollPane(text), "Completion history", JOptionPane.INFORMATION_MESSAGE);
+    }
+    private void addPreset(com.grinder.content.goal.GoalPreset preset) {
+        GrinderProfile active = profile;
+        if (active == null) { return; }
+        List<Goal> goals = preset.createGoals();
+        if (JOptionPane.showConfirmDialog(this, "Add " + goals.size() + " goals from " + preset + "? Existing goals and targets are kept.", "Add goal preset", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) { return; }
+        clientThread.invokeLater(() -> {
+            if (profile != active) { return; }
+            int added = 0;
+            for (Goal goal : goals) { if (active.add(goal)) { goal.refresh(client); added++; } }
+            int count = added;
+            render();
+            SwingUtilities.invokeLater(() -> { if (profile == active) { JOptionPane.showMessageDialog(this, count + " goals added. Existing matches were skipped."); } });
+        });
     }
 
     private void showAddGoalDialog() {
