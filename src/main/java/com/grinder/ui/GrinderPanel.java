@@ -69,6 +69,7 @@ import net.runelite.api.Client;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
+import com.grinder.ui.util.UiTypography;
 import net.runelite.client.ui.PluginPanel;
 
 /**
@@ -787,7 +788,7 @@ public class GrinderPanel extends PluginPanel {
         JLabel titleLabel = new JLabel(category.getDisplayName());
         titleLabel.setToolTipText("Click to " + (collapsed ? "expand " : "collapse ") + category.getDisplayName() + ".");
         titleLabel.setForeground(TEXT_COLOR);
-        titleLabel.setFont(FontManager.getRunescapeBoldFont());
+        titleLabel.setFont(UiTypography.SECTION);
 
         JPanel titlePanel = new JPanel();
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.X_AXIS));

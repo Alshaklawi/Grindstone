@@ -11,7 +11,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import net.runelite.client.ui.ColorScheme;
-import net.runelite.client.ui.FontManager;
+import com.grinder.ui.util.UiTypography;
 
 /**
  * @author Ayman Yassen
@@ -37,9 +37,9 @@ public class ItemContainerComponent extends JPanel {
         grid.setOpaque(false);
         grid.setLayout(new GridLayout(0, columns, GAP, GAP));
         emptyLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-        emptyLabel.setFont(FontManager.getRunescapeSmallFont());
+        emptyLabel.setFont(UiTypography.BODY);
         emptyLabel.setBorder(BorderFactory.createEmptyBorder(6, 0, 6, 0));
-        showMore.setFont(FontManager.getRunescapeSmallFont());
+        showMore.setFont(UiTypography.BODY);
         showMore.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
         showMore.addActionListener(event -> {
             expanded = !expanded;

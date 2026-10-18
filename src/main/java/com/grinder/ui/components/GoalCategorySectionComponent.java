@@ -14,6 +14,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import net.runelite.client.ui.ColorScheme;
+import com.grinder.ui.util.UiTypography;
 
 /**
  * @author Ayman Yassen
@@ -45,9 +46,10 @@ public final class GoalCategorySectionComponent extends JPanel {
 
         titleLabel.setText(title);
         titleLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-        titleLabel.setFont(net.runelite.client.ui.FontManager.getRunescapeBoldFont());
+        titleLabel.setFont(UiTypography.SECTION);
 
         countLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+        countLabel.setFont(UiTypography.META);
         countLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
         toggleLabel.setText("\u25BE");

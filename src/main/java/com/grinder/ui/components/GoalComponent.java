@@ -21,7 +21,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingConstants;
 import net.runelite.client.ui.ColorScheme;
-import net.runelite.client.ui.FontManager;
+import com.grinder.ui.util.UiTypography;
 import com.grinder.content.goal.GoalStatus;
 
 /**
@@ -75,12 +75,12 @@ public class GoalComponent extends JPanel {
 
         titleLabel.setForeground(TEXT_COLOR);
         titleLabel.putClientProperty("html.disable", Boolean.TRUE);
-        titleLabel.setFont(FontManager.getRunescapeBoldFont());
+        titleLabel.setFont(UiTypography.TITLE);
         titleLabel.setVerticalAlignment(SwingConstants.CENTER);
         titleLabel.setAlignmentX(LEFT_ALIGNMENT);
 
         dateLabel.setForeground(MUTED_COLOR);
-        dateLabel.setFont(FontManager.getRunescapeSmallFont());
+        dateLabel.setFont(UiTypography.META);
 
         iconLabel.setHorizontalAlignment(SwingConstants.CENTER);
         iconLabel.setPreferredSize(new Dimension(24, 24));
@@ -122,13 +122,13 @@ public class GoalComponent extends JPanel {
         progressBar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 9));
 
         progressLabel.setForeground(MUTED_COLOR);
-        progressLabel.setFont(FontManager.getRunescapeSmallFont());
+        progressLabel.setFont(UiTypography.BODY);
 
         footer.setOpaque(false);
         footer.setLayout(new BorderLayout(0, 4));
         footer.add(progressBar, BorderLayout.CENTER);
         footer.add(progressLabel, BorderLayout.SOUTH);
-        statusLabel.setFont(FontManager.getRunescapeSmallFont());
+        statusLabel.setFont(UiTypography.BODY);
         footer.add(statusLabel, BorderLayout.NORTH);
 
         add(header, BorderLayout.NORTH);
@@ -164,7 +164,7 @@ public class GoalComponent extends JPanel {
                 : "Additional goal details. Custom descriptions can be edited from the goal actions menu.");
         text.setOpaque(false);
         text.setForeground(MUTED_COLOR);
-        text.setFont(FontManager.getRunescapeSmallFont());
+        text.setFont(UiTypography.BODY);
         text.setBorder(BorderFactory.createEmptyBorder(2, 0, 4, 0));
         text.setAlignmentX(LEFT_ALIGNMENT);
         content.add(text);
