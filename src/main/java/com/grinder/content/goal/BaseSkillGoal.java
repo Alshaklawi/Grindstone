@@ -1,6 +1,8 @@
 package com.grinder.content.goal;
 
+import com.grinder.config.GrinderConfig;
 import com.grinder.ui.Icon;
+import com.grinder.ui.components.GoalComponent;
 import com.grinder.util.NumberFormats;
 import java.awt.image.BufferedImage;
 import java.util.function.ToIntFunction;
@@ -85,7 +87,7 @@ public abstract class BaseSkillGoal implements Goal {
     }
 
     @Override
-    public final com.grinder.ui.components.GoalComponent build(Client client, com.grinder.config.GrinderConfig config) {
+    public final GoalComponent build(Client client, GrinderConfig config) {
         refresh(client);
         return Goal.super.build(client, config);
     }

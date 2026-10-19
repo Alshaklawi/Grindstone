@@ -2,21 +2,29 @@ package com.grinder.ui;
 
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalCategory;
+import com.grinder.content.goal.GoalStatus;
+import com.grinder.content.goal.impl.ChecklistGoal;
 import com.grinder.content.goal.impl.CustomGoal;
+import com.grinder.content.goal.impl.level.BaseLevelGoal;
 import com.grinder.content.goal.impl.level.SkillLevelGoal;
 import com.grinder.repository.RepeatSchedule;
 import com.grinder.ui.editor.BulkGoalForm;
 import com.grinder.ui.editor.GoalEditorPanel;
+import com.grinder.ui.editor.LinkedGoalForm;
 import java.awt.Component;
 import java.awt.Container;
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.UUID;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import net.runelite.api.Skill;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
@@ -28,33 +36,33 @@ public class BulkAndPreviewUiTest {
     @Test
     public void linkedEditorDoesNotInventTargetsForUnloadedSources() throws Exception {
         SwingUtilities.invokeAndWait(() -> {
-            String id = java.util.UUID.randomUUID().toString();
-            com.grinder.ui.editor.LinkedGoalForm.Choice source = new com.grinder.ui.editor.LinkedGoalForm.Choice(id, "Native tracker", 0, false, false);
-            com.grinder.ui.editor.LinkedGoalForm form = new com.grinder.ui.editor.LinkedGoalForm(Collections.singletonList(source), null);
+            String id = UUID.randomUUID().toString();
+            LinkedGoalForm.Choice source = new LinkedGoalForm.Choice(id, "Native tracker", 0, false, false);
+            LinkedGoalForm form = new LinkedGoalForm(Collections.singletonList(source), null);
             JTable table = findTable(form);
             table.getModel().setValueAt(true, 0, 0);
-            assertEquals(Boolean.TRUE, ((javax.swing.JLabel) table.getDefaultRenderer(String.class)).getClientProperty("html.disable"));
+            assertEquals(Boolean.TRUE, ((JLabel) table.getDefaultRenderer(String.class)).getClientProperty("html.disable"));
             try {
                 form.read();
                 fail("Unloaded native target should not default silently to one");
             } catch (IllegalArgumentException expected) {
                 assertTrue(expected.getMessage().contains("not loaded"));
-            } catch (java.text.ParseException failure) {
+            } catch (ParseException failure) {
                 throw new AssertionError(failure);
             }
         });
     }
     @Test
     public void newTypeFiltersDistinguishManualLinkedAndDeadlineGoals() {
-        Goal checklist = new com.grinder.content.goal.impl.ChecklistGoal("Routine", "", Arrays.asList("One", "Two"));
-        assertTrue(GrinderPanel.matchesType(checklist, com.grinder.content.goal.GoalStatus.NOT_STARTED, "Custom", 0, 100));
-        assertFalse(GrinderPanel.matchesType(checklist, com.grinder.content.goal.GoalStatus.NOT_STARTED, "Automatic", 0, 100));
-        Goal base = new com.grinder.content.goal.impl.level.BaseLevelGoal();
-        assertTrue(GrinderPanel.matchesType(base, com.grinder.content.goal.GoalStatus.NOT_STARTED, "Base stats", 0, 100));
-        assertTrue(GrinderPanel.matchesType(base, com.grinder.content.goal.GoalStatus.NOT_STARTED, "With deadline", 100, 100));
-        assertTrue(GrinderPanel.matchesType(base, com.grinder.content.goal.GoalStatus.NOT_STARTED, "Past due", 100, 100));
-        assertFalse(GrinderPanel.matchesType(base, com.grinder.content.goal.GoalStatus.COMPLETE, "Past due", 100, 100));
-        assertFalse(GrinderPanel.matchesType(base, com.grinder.content.goal.GoalStatus.NOT_STARTED, "Past due", 101, 100));
+        Goal checklist = new ChecklistGoal("Routine", "", Arrays.asList("One", "Two"));
+        assertTrue(GrinderPanel.matchesType(checklist, GoalStatus.NOT_STARTED, "Custom", 0, 100));
+        assertFalse(GrinderPanel.matchesType(checklist, GoalStatus.NOT_STARTED, "Automatic", 0, 100));
+        Goal base = new BaseLevelGoal();
+        assertTrue(GrinderPanel.matchesType(base, GoalStatus.NOT_STARTED, "Base stats", 0, 100));
+        assertTrue(GrinderPanel.matchesType(base, GoalStatus.NOT_STARTED, "With deadline", 100, 100));
+        assertTrue(GrinderPanel.matchesType(base, GoalStatus.NOT_STARTED, "Past due", 100, 100));
+        assertFalse(GrinderPanel.matchesType(base, GoalStatus.COMPLETE, "Past due", 100, 100));
+        assertFalse(GrinderPanel.matchesType(base, GoalStatus.NOT_STARTED, "Past due", 101, 100));
     }
     @Test
     public void bulkSearchKeepsHiddenSelectionsAndClearReallyClearsAll() throws Exception {

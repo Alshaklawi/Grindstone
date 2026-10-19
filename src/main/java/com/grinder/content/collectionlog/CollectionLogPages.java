@@ -1,7 +1,9 @@
 package com.grinder.content.collectionlog;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import net.runelite.api.Client;
 import net.runelite.api.EnumComposition;
 import net.runelite.api.ItemComposition;
@@ -74,12 +76,12 @@ public final class CollectionLogPages {
         }
         int enumId = struct.getIntValue(PAGE_ITEMS_PARAM);
         EnumComposition items = enumId <= 0 ? null : client.getEnum(enumId);
-        return items == null || items.getIntVals() == null ? new int[0] : java.util.Arrays.stream(items.getIntVals()).filter(id -> id > 0).map(CollectionLogPages::canonicalItemId).distinct().toArray();
+        return items == null || items.getIntVals() == null ? new int[0] : Arrays.stream(items.getIntVals()).filter(id -> id > 0).map(CollectionLogPages::canonicalItemId).distinct().toArray();
     }
     public static ItemComposition[] items(Client client, int page) {
         if (client == null) {
             return new ItemComposition[0];
         }
-        return java.util.Arrays.stream(itemIds(client, page)).mapToObj(client::getItemDefinition).filter(java.util.Objects::nonNull).toArray(ItemComposition[]::new);
+        return Arrays.stream(itemIds(client, page)).mapToObj(client::getItemDefinition).filter(Objects::nonNull).toArray(ItemComposition[]::new);
     }
 }

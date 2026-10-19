@@ -1,27 +1,37 @@
 
 package com.grinder.ui.components;
 
-import lombok.Getter;
+import com.grinder.content.goal.GoalStatus;
+import com.grinder.ui.util.UiTypography;
+import com.grinder.util.HtmlUtils;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.image.BufferedImage;
+import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.function.Consumer;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
+import lombok.Getter;
 import net.runelite.client.ui.ColorScheme;
-import com.grinder.ui.util.UiTypography;
-import com.grinder.content.goal.GoalStatus;
+import net.runelite.client.util.AsyncBufferedImage;
 
 /**
  * @author Ayman Yassen
@@ -54,19 +64,19 @@ public class GoalComponent extends JPanel {
         reliabilityLabel.setText(label);
         reliabilityLabel.setToolTipText(detail);
         reliabilityLabel.setVisible(label != null && !label.isEmpty());
-        String tooltip = detail == null || detail.isEmpty() ? title : "<html><div style='width: 260px'>" + com.grinder.util.HtmlUtils.escape(title) + "<br>" + com.grinder.util.HtmlUtils.escape(detail) + "</div></html>";
+        String tooltip = detail == null || detail.isEmpty() ? title : "<html><div style='width: 260px'>" + HtmlUtils.escape(title) + "<br>" + HtmlUtils.escape(detail) + "</div></html>";
         titleLabel.setToolTipText(tooltip);
         iconLabel.setToolTipText(tooltip);
     }
     private final JLabel progressLabel = new JLabel();
     private final SegmentedProgressBar progressBar = new SegmentedProgressBar();
     private final JLabel statusLabel = new JLabel();
-    private final JPanel manualControls = new JPanel(new java.awt.GridLayout(1, 2, 6, 0));
+    private final JPanel manualControls = new JPanel(new GridLayout(1, 2, 6, 0));
     public void setManualActions(long current, long target, Runnable increment, Runnable toggle, Runnable setProgress) {
         manualControls.removeAll();
         manualControls.setOpaque(false);
         if (target == 1) {
-            javax.swing.JCheckBox complete = new javax.swing.JCheckBox("Completed", current >= target);
+            JCheckBox complete = new JCheckBox("Completed", current >= target);
             complete.setOpaque(false);
             complete.setFont(UiTypography.BODY);
             complete.setToolTipText("Check or uncheck this personal goal. This does not perform any game action.");
@@ -75,7 +85,7 @@ public class GoalComponent extends JPanel {
         } else {
             JButton plus = new JButton("+1");
             plus.setFont(UiTypography.BODY);
-            plus.setMargin(new java.awt.Insets(4, 5, 4, 5));
+            plus.setMargin(new Insets(4, 5, 4, 5));
             plus.setEnabled(current < target);
             plus.setToolTipText("Add one to this personal goal's progress. Undo is available in the header.");
             plus.addActionListener(event -> increment.run());
@@ -83,7 +93,7 @@ public class GoalComponent extends JPanel {
         }
         JButton set = new JButton("Set progress");
         set.setFont(UiTypography.BODY);
-        set.setMargin(new java.awt.Insets(4, 5, 4, 5));
+        set.setMargin(new Insets(4, 5, 4, 5));
         set.setToolTipText("Enter manual progress without opening the full goal editor.");
         set.addActionListener(event -> setProgress.run());
         manualControls.add(set);
@@ -100,8 +110,8 @@ public class GoalComponent extends JPanel {
     private String progressText = "";
     private String progressStatus = "";
     private boolean expanded = true;
-    private java.util.function.Consumer<Boolean> expansionListener;
-    public void setExpansionListener(java.util.function.Consumer<Boolean> listener) {
+    private Consumer<Boolean> expansionListener;
+    public void setExpansionListener(Consumer<Boolean> listener) {
         expansionListener = listener;
     }
     public void setMaximumProgressChunks(int count) {
@@ -146,13 +156,13 @@ public class GoalComponent extends JPanel {
         expandButton.putClientProperty("JButton.buttonType", "toolBarButton");
         expandButton.setToolTipText("Collapse goal details");
         expandButton.setRolloverEnabled(true);
-        expandButton.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
+        expandButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         expandButton.addActionListener(event -> setExpanded(!expanded));
 
         editButton.putClientProperty("JButton.buttonType", "toolBarButton");
         editButton.setToolTipText("Goal actions");
         editButton.setRolloverEnabled(true);
-        editButton.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
+        editButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         editButton.setVisible(false);
 
         headerText.add(titleLabel);
@@ -214,13 +224,13 @@ public class GoalComponent extends JPanel {
     }
 
 
-    public void addDetail(javax.swing.JComponent detail) {
+    public void addDetail(JComponent detail) {
         content.add(detail);
         updateProgress();
     }
 
     public void setRequiredQuantity(long quantity) {
-        requiredQuantityLabel.setText(String.format(java.util.Locale.ROOT, "Required: %,d", Math.max(0, quantity)));
+        requiredQuantityLabel.setText(String.format(Locale.ROOT, "Required: %,d", Math.max(0, quantity)));
         requiredQuantityLabel.setToolTipText("Target item quantity, not the amount currently owned. " + requiredQuantityLabel.getText());
         requiredQuantityLabel.setVisible(quantity > 0);
         revalidate();
@@ -251,7 +261,7 @@ public class GoalComponent extends JPanel {
         if (description == null || description.trim().isEmpty()) {
             return;
         }
-        javax.swing.JTextArea text = new javax.swing.JTextArea(description, 0, 20);
+        JTextArea text = new JTextArea(description, 0, 20);
         text.setLineWrap(true);
         text.setWrapStyleWord(true);
         text.setEditable(false);
@@ -330,8 +340,8 @@ public class GoalComponent extends JPanel {
         this.icon = icon;
         iconLabel.setIcon(icon == null ? null : new ImageIcon(icon));
         iconLabel.setPreferredSize(new Dimension(icon == null ? 24 : Math.max(24, icon.getWidth()), icon == null ? 24 : Math.max(24, icon.getHeight())));
-        if (icon instanceof net.runelite.client.util.AsyncBufferedImage) {
-            ((net.runelite.client.util.AsyncBufferedImage) icon).addTo(iconLabel);
+        if (icon instanceof AsyncBufferedImage) {
+            ((AsyncBufferedImage) icon).addTo(iconLabel);
         }
         iconLabel.setVisible(iconVisible && icon != null);
         revalidate();

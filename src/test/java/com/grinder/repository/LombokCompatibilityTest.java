@@ -5,7 +5,9 @@ import com.grinder.content.goal.impl.ChecklistGoal;
 import com.grinder.content.goal.impl.CustomGoal;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.List;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
@@ -79,7 +81,7 @@ public class LombokCompatibilityTest {
         assertEquals(0, goal.getProgressCurrent());
     }
 
-    private static void assertReadOnly(java.util.List<?> list) {
+    private static void assertReadOnly(List<?> list) {
         try {
             list.clear();
             fail("History and checklist views must stay read-only");

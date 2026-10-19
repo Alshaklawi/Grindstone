@@ -1,24 +1,25 @@
 
 package com.grinder.content.goal.impl.collectionlog;
 
-import com.grinder.util.HtmlUtils;
-
 import com.grinder.config.GrinderConfig;
 import com.grinder.content.collectionlog.CollectionLogEntry;
-import com.grinder.content.collectionlog.CollectionLogPages;
 import com.grinder.content.collectionlog.CollectionLogHistory;
+import com.grinder.content.collectionlog.CollectionLogPages;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.GoalStatus;
-import com.grinder.ui.components.GoalComponent;
 import com.grinder.ui.Icon;
+import com.grinder.ui.components.GoalComponent;
 import com.grinder.ui.components.ItemComponent;
 import com.grinder.ui.components.ItemContainerComponent;
+import com.grinder.util.HtmlUtils;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import lombok.Getter;
 import net.runelite.api.Client;
 import net.runelite.api.ItemComposition;
@@ -63,7 +64,7 @@ public class CollectionLogEntryGoal implements Goal {
     public CollectionLogEntryGoal(ItemManager itemManager, CollectionLogEntry entry) {
         this.itemManager = itemManager;
         this.entry = entry;
-        this.pageStruct = java.util.Objects.requireNonNull(entry).getStruct();
+        this.pageStruct = Objects.requireNonNull(entry).getStruct();
         this.pageName = entry.name();
         initializeTransientState();
     }
@@ -74,7 +75,7 @@ public class CollectionLogEntryGoal implements Goal {
         this.itemManager = itemManager;
         this.pageStruct = pageStruct;
         this.pageName = pageName;
-        this.entry = java.util.Arrays.stream(CollectionLogEntry.values()).filter(value -> value.getStruct() == pageStruct).findFirst().orElse(null);
+        this.entry = Arrays.stream(CollectionLogEntry.values()).filter(value -> value.getStruct() == pageStruct).findFirst().orElse(null);
         initializeTransientState();
     }
 

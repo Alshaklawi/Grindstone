@@ -1,13 +1,16 @@
 package com.grinder.content.goal.impl;
 
 
-import com.grinder.content.tracker.TrackerEntry;
+import com.grinder.config.GrinderConfig;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.GoalStatus;
+import com.grinder.content.tracker.TrackerEntry;
+import com.grinder.ui.components.GoalComponent;
 import java.awt.image.BufferedImage;
 import lombok.Getter;
 import net.runelite.api.Client;
+import net.runelite.client.game.ItemManager;
 
 /**
  * @author Ayman Yassen
@@ -22,9 +25,9 @@ public class TrackerGoal implements Goal {
     private int count;
 
     private transient long current;
-    private transient net.runelite.client.game.ItemManager itemManager;
+    private transient ItemManager itemManager;
     private transient boolean activityIcons = true;
-    public void setItemManager(net.runelite.client.game.ItemManager itemManager) {
+    public void setItemManager(ItemManager itemManager) {
         this.itemManager = itemManager;
     }
 
@@ -120,16 +123,16 @@ public class TrackerGoal implements Goal {
     }
 
     @Override
-    public com.grinder.ui.components.GoalComponent build(Client client) {
+    public GoalComponent build(Client client) {
         refresh(client);
         return Goal.super.build(client);
     }
 
     @Override
-    public com.grinder.ui.components.GoalComponent build(Client client, com.grinder.config.GrinderConfig config) {
+    public GoalComponent build(Client client, GrinderConfig config) {
         activityIcons = config == null || config.showActivityIcons();
         refresh(client);
-        com.grinder.ui.components.GoalComponent component = Goal.super.build(client);
+        GoalComponent component = Goal.super.build(client);
         component.setIconVisible(config == null || config.showGoalIcons());
         component.setProgressBarVisible(config == null || config.showProgressBar());
         component.setProgress(current, count, current + " / " + count);

@@ -1,21 +1,24 @@
 package com.grinder.ui.editor;
 
+import com.grinder.content.collectionlog.CollectionLogPages;
 import com.grinder.content.combatachievement.CombatAchievementData;
 import com.grinder.content.combatachievement.CombatAchievementTier;
 import com.grinder.content.diary.AchievementDiaryArea;
 import com.grinder.content.diary.DiaryTier;
-import com.grinder.content.quest.QuestSeries;
 import com.grinder.content.goal.Goal;
+import com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierAreaGoal;
+import com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierGoal;
+import com.grinder.content.goal.impl.collectionlog.CollectionLogEntryGoal;
+import com.grinder.content.goal.impl.combatachievement.CombatAchievementBossGoal;
+import com.grinder.content.goal.impl.combatachievement.CombatAchievementDifficultyGoal;
+import com.grinder.content.goal.impl.combatachievement.CombatAchievementTaskGoal;
+import com.grinder.content.goal.impl.combatachievement.CombatAchievementTierGoal;
 import com.grinder.content.goal.impl.quest.QuestGoal;
 import com.grinder.content.goal.impl.quest.QuestSeriesGoal;
-import com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierGoal;
-import com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierAreaGoal;
-import com.grinder.content.goal.impl.combatachievement.CombatAchievementBossGoal;
-import com.grinder.content.goal.impl.combatachievement.CombatAchievementTierGoal;
-import com.grinder.content.goal.impl.combatachievement.CombatAchievementDifficultyGoal;
+import com.grinder.content.quest.QuestSeries;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.LinkedHashMap;
 import java.util.function.Supplier;
 import net.runelite.api.Client;
 import net.runelite.api.Quest;
@@ -31,8 +34,8 @@ public final class CompletionGoalChoices {
         Map<Integer, Map<String, Supplier<Goal>>> types = new LinkedHashMap<>();
         types.put(6, new TreeMap<>());
         types.put(17, new TreeMap<>());
-        com.grinder.content.combatachievement.CombatAchievementData.tasks(client).forEach((id, task) -> types.get(17).put(task.getName() + " (" + task.getTier() + ")", () -> new com.grinder.content.goal.impl.combatachievement.CombatAchievementTaskGoal(id, task.getName(), task.getDescription())));
-        com.grinder.content.collectionlog.CollectionLogPages.discover(client).forEach((id, name) -> types.get(6).put(name, () -> new com.grinder.content.goal.impl.collectionlog.CollectionLogEntryGoal(null, id, name)));
+        CombatAchievementData.tasks(client).forEach((id, task) -> types.get(17).put(task.getName() + " (" + task.getTier() + ")", () -> new CombatAchievementTaskGoal(id, task.getName(), task.getDescription())));
+        CollectionLogPages.discover(client).forEach((id, name) -> types.get(6).put(name, () -> new CollectionLogEntryGoal(null, id, name)));
         for (int kind = 9; kind <= 15; kind++) {
             types.put(kind, kind == 12 || kind >= 14 ? new LinkedHashMap<>() : new TreeMap<>());
         }

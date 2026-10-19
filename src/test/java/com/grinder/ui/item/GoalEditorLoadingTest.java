@@ -1,15 +1,23 @@
 package com.grinder.ui.item;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.impl.CustomGoal;
+import com.grinder.content.goal.impl.LinkedGoal;
+import com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal;
 import com.grinder.content.goal.impl.combatachievement.CombatAchievementBossGoal;
+import com.grinder.content.goal.impl.combatachievement.CombatAchievementTaskGoal;
 import com.grinder.repository.GrinderProfile;
 import com.grinder.ui.editor.CompletionGoalChoices;
 import com.grinder.ui.editor.GoalEditorPanel;
+import com.grinder.ui.editor.LinkedGoalForm;
+import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import javax.swing.SwingUtilities;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 /**
  * @author Ayman Yassen
@@ -21,7 +29,7 @@ public class GoalEditorLoadingTest {
         SwingUtilities.invokeAndWait(() -> {
             Map<Integer, Map<String, Supplier<Goal>>> choices = CompletionGoalChoices.create(null);
             choices.get(13).put("Barrows", () -> new CombatAchievementBossGoal(1, "Barrows"));
-            choices.get(17).put("Combat task 0", () -> new com.grinder.content.goal.impl.combatachievement.CombatAchievementTaskGoal(0, "Combat task 0", ""));
+            choices.get(17).put("Combat task 0", () -> new CombatAchievementTaskGoal(0, "Combat task 0", ""));
             ItemLookup lookup = (query, callback) -> {
                 int id = Integer.parseInt(query);
                 callback.accept(new ItemSearchService.Response(Collections.singletonList(new ItemSearchService.Result(id, "Item " + id, null)), "Found", true));
@@ -32,15 +40,15 @@ public class GoalEditorLoadingTest {
             try {
                 GrinderProfile profile = new GrinderProfile(42);
                 for (Goal original : profile.getGoals()) {
-                    if (original instanceof com.grinder.content.goal.impl.LinkedGoal) {
-                        java.util.List<com.grinder.ui.editor.LinkedGoalForm.Choice> sources = new java.util.ArrayList<>();
+                    if (original instanceof LinkedGoal) {
+                        List<LinkedGoalForm.Choice> sources = new ArrayList<>();
                         for (Goal source : profile.getGoals()) {
-                            if (!(source instanceof com.grinder.content.goal.impl.LinkedGoal)) {
-                                sources.add(new com.grinder.ui.editor.LinkedGoalForm.Choice(profile.metadata(source).getId(), source.getTitle(null), source.getProgressMaximum(), source instanceof com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal, profile.metadata(source).recurring().isActive()));
+                            if (!(source instanceof LinkedGoal)) {
+                                sources.add(new LinkedGoalForm.Choice(profile.metadata(source).getId(), source.getTitle(null), source.getProgressMaximum(), source instanceof CollectionLogItemGoal, profile.metadata(source).recurring().isActive()));
                             }
                         }
-                        com.grinder.content.goal.impl.LinkedGoal edited = new com.grinder.ui.editor.LinkedGoalForm(sources, (com.grinder.content.goal.impl.LinkedGoal) original).read();
-                        assertTrue(((com.grinder.content.goal.impl.LinkedGoal) original).getMode().toString(), GrinderProfile.sameSelection(original, edited));
+                        LinkedGoal edited = new LinkedGoalForm(sources, (LinkedGoal) original).read();
+                        assertTrue(((LinkedGoal) original).getMode().toString(), GrinderProfile.sameSelection(original, edited));
                         continue;
                     }
                     form.loadGoal(original);
@@ -54,7 +62,7 @@ public class GoalEditorLoadingTest {
                         assertEquals(original.getProgressMaximum(), edited.getProgressMaximum());
                     }
                 }
-            } catch (java.text.ParseException exception) {
+            } catch (ParseException exception) {
                 throw new AssertionError(exception);
             } finally {
                 form.stopSearch();

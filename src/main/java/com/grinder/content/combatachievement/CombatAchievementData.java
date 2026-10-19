@@ -1,10 +1,11 @@
 package com.grinder.content.combatachievement;
-import lombok.Getter;
-import java.util.Map;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.IntUnaryOperator;
+import lombok.Getter;
 import net.runelite.api.Client;
 import net.runelite.api.EnumComposition;
 import net.runelite.api.StructComposition;
@@ -162,7 +163,7 @@ public final class CombatAchievementData {
     public static boolean isComplete(Client client, int task) {
         return isComplete(client::getVarpValue, task);
     }
-    public static boolean isComplete(java.util.function.IntUnaryOperator values, int task) {
+    public static boolean isComplete(IntUnaryOperator values, int task) {
         return task >= 0 && task < COMPLETED.length * 32 && (values.applyAsInt(COMPLETED[task / 32]) & (1 << (task % 32))) != 0;
     }
 }

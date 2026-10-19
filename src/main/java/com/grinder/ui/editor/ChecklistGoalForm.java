@@ -7,11 +7,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 /**
  * @author Ayman Yassen
@@ -35,7 +38,7 @@ public final class ChecklistGoalForm extends JPanel {
         add(field("Checklist steps (one per line)", new JScrollPane(steps)));
     }
 
-    private JPanel field(String title, javax.swing.JComponent control) {
+    private JPanel field(String title, JComponent control) {
         JPanel field = new JPanel(new BorderLayout(0, 4));
         field.setOpaque(false);
         field.setAlignmentX(LEFT_ALIGNMENT);
@@ -67,19 +70,19 @@ public final class ChecklistGoalForm extends JPanel {
     }
 
     public void addStepsListener(Runnable listener) {
-        steps.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+        steps.getDocument().addDocumentListener(new DocumentListener() {
             @Override
-            public void insertUpdate(javax.swing.event.DocumentEvent event) {
+            public void insertUpdate(DocumentEvent event) {
                 listener.run();
             }
 
             @Override
-            public void removeUpdate(javax.swing.event.DocumentEvent event) {
+            public void removeUpdate(DocumentEvent event) {
                 listener.run();
             }
 
             @Override
-            public void changedUpdate(javax.swing.event.DocumentEvent event) {
+            public void changedUpdate(DocumentEvent event) {
                 listener.run();
             }
         });

@@ -8,6 +8,7 @@ import com.grinder.content.goal.impl.item.PossessedItemGoal;
 import com.grinder.content.goal.impl.level.SkillLevelGoal;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -34,14 +35,14 @@ final class GoalExamples {
         Goal bow = profile.findMatchingGoal(new CollectionLogItemGoal(ItemID.TWISTED_BOW, 1));
         add(profile, LinkedGoal.Mode.COLLECTION_SET, Arrays.asList(pickaxe, bow), new long[]{1, 1}, 1);
         Goal coins = profile.findMatchingGoal(new PossessedItemGoal(ItemID.COINS));
-        add(profile, LinkedGoal.Mode.ACHIEVED, java.util.Collections.singletonList(coins), new long[]{100_000_000}, 1);
+        add(profile, LinkedGoal.Mode.ACHIEVED, Collections.singletonList(coins), new long[]{100_000_000}, 1);
         ChecklistGoal routine = new ChecklistGoal(id("daily-checklist"), "Example: daily personal checklist", "A manual daily routine example. The UTC period requires every step; it does not represent a game's daily reset rules.", Arrays.asList("Choose an activity", "Prepare supplies", "Complete the activity"), new boolean[3]);
         GoalMetadata metadata = new GoalMetadata();
         metadata.setSample(true);
         metadata.recurring().configure(RepeatSchedule.DAILY, 3, System.currentTimeMillis());
         profile.add(routine, metadata);
         Goal source = profile.findMatchingGoal(routine, RepeatSchedule.DAILY);
-        add(profile, LinkedGoal.Mode.REPEAT_COMPLETIONS, java.util.Collections.singletonList(source), new long[]{3}, 3);
+        add(profile, LinkedGoal.Mode.REPEAT_COMPLETIONS, Collections.singletonList(source), new long[]{3}, 3);
     }
 
     private static void add(GrinderProfile profile, LinkedGoal.Mode mode, List<Goal> goals, long[] targets, int required) {

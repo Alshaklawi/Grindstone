@@ -4,6 +4,7 @@ import com.grinder.content.goal.impl.LinkedGoal;
 import com.grinder.ui.util.UiTypography;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -11,7 +12,9 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -23,6 +26,7 @@ import javax.swing.RowFilter;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 
@@ -55,7 +59,7 @@ public final class LinkedGoalForm extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
         main = new JComboBox<>(choices.toArray(new Choice[0]));
-        javax.swing.DefaultListCellRenderer sourceRenderer = new javax.swing.DefaultListCellRenderer();
+        DefaultListCellRenderer sourceRenderer = new DefaultListCellRenderer();
         sourceRenderer.putClientProperty("html.disable", Boolean.TRUE);
         main.setRenderer(sourceRenderer);
         model = new DefaultTableModel(new Object[]{"Use", "Source goal", "Required reading"}, 0) {
@@ -73,7 +77,7 @@ public final class LinkedGoalForm extends JPanel {
             model.addRow(new Object[]{false, choice.toString(), Math.max(1, choice.target)});
         }
         table = new JTable(model);
-        javax.swing.table.DefaultTableCellRenderer textRenderer = new javax.swing.table.DefaultTableCellRenderer();
+        DefaultTableCellRenderer textRenderer = new DefaultTableCellRenderer();
         textRenderer.putClientProperty("html.disable", Boolean.TRUE);
         table.setDefaultRenderer(String.class, textRenderer);
         table.setRowHeight(24);
@@ -142,7 +146,7 @@ public final class LinkedGoalForm extends JPanel {
         refreshFields();
     }
 
-    private JPanel field(String text, javax.swing.JComponent control) {
+    private JPanel field(String text, JComponent control) {
         JPanel field = new JPanel(new BorderLayout(0, 4));
         field.setOpaque(false);
         field.setBorder(BorderFactory.createEmptyBorder(0, 0, 9, 0));
@@ -177,7 +181,7 @@ public final class LinkedGoalForm extends JPanel {
         });
     }
 
-    public LinkedGoal read() throws java.text.ParseException {
+    public LinkedGoal read() throws ParseException {
         if (table.isEditing() && !table.getCellEditor().stopCellEditing()) {
             throw new IllegalArgumentException("Finish editing the required reading.");
         }

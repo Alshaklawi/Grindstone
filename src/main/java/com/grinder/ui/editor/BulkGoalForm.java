@@ -7,6 +7,7 @@ import com.grinder.repository.RepeatSchedule;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -24,6 +25,7 @@ import javax.swing.RowFilter;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 
@@ -63,7 +65,7 @@ public final class BulkGoalForm extends JPanel {
             model.addRow(new Object[]{false, row.title, row.category.getDisplayName(), row.schedule.toString(), row.sample});
         }
         table = new JTable(model);
-        javax.swing.table.DefaultTableCellRenderer textRenderer = new javax.swing.table.DefaultTableCellRenderer();
+        DefaultTableCellRenderer textRenderer = new DefaultTableCellRenderer();
         textRenderer.putClientProperty("html.disable", Boolean.TRUE);
         table.setDefaultRenderer(String.class, textRenderer);
         table.setRowHeight(24);
@@ -186,7 +188,7 @@ public final class BulkGoalForm extends JPanel {
         return (RepeatSchedule) schedule.getSelectedItem();
     }
 
-    public long getPeriodTarget() throws java.text.ParseException {
+    public long getPeriodTarget() throws ParseException {
         periodTarget.commitEdit();
         return ((Number) periodTarget.getValue()).longValue();
     }

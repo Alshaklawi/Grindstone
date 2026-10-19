@@ -6,6 +6,7 @@
 - Always put block contents on separate indented lines. Never compress an if, loop, method, constructor or other block into one line.
 - Put each enum constant on its own line.
 - Never wrap lines solely because of their length.
+- Use explicit imports instead of fully qualified type names in code. Keep qualified names only when required to resolve a naming conflict.
 - Keep the requested author, Discord, and since header on every class; do not add other source comments.
 - Set each type's @since to its actual creation date in MM/dd/yyyy format. Do not copy a fixed date to new types, and do not bump creation dates for later edits. Use the first introduction in Git history when checking existing types.
 

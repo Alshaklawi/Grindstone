@@ -3,6 +3,7 @@ package com.grinder.ui;
 import com.grinder.repository.GrinderProfile;
 import com.grinder.repository.GrinderRepository;
 import java.awt.Component;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -138,7 +139,7 @@ public final class ProfileBackupActions {
             }
             try {
                 String snapshot = repository.exportBackup(active);
-                if (snapshot.length() > 5_000_000 || snapshot.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 5_000_000) {
+                if (snapshot.length() > 5_000_000 || snapshot.getBytes(StandardCharsets.UTF_8).length > 5_000_000) {
                     throw new IllegalArgumentException("Backup exceeds the 5 MB safety limit.");
                 }
                 task = executor.submit(() -> {

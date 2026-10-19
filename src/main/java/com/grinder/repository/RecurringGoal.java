@@ -1,16 +1,17 @@
 package com.grinder.repository;
 
-import lombok.Getter;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalStatus;
+import com.grinder.content.goal.ManualGoal;
 import com.grinder.content.goal.impl.TrackerGoal;
 import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
 import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  * @author Ayman Yassen
@@ -49,7 +50,7 @@ public final class RecurringGoal {
     }
 
     public static boolean supports(Goal goal) {
-        return goal instanceof com.grinder.content.goal.ManualGoal || goal instanceof TrackerGoal || goal instanceof SkillExperienceGoal || goal instanceof TotalExperienceGoal;
+        return goal instanceof ManualGoal || goal instanceof TrackerGoal || goal instanceof SkillExperienceGoal || goal instanceof TotalExperienceGoal;
     }
     public List<Period> getHistory() {
         return Collections.unmodifiableList(history);
@@ -116,8 +117,8 @@ public final class RecurringGoal {
                 append(new Period(schedule, previousEnd, periodStart, 0, target, 0, 0, 0, "Not observed"));
             }
             baselineAt = 0;
-            if (goal instanceof com.grinder.content.goal.ManualGoal) {
-                ((com.grinder.content.goal.ManualGoal) goal).resetProgress();
+            if (goal instanceof ManualGoal) {
+                ((ManualGoal) goal).resetProgress();
             }
         }
         long value = Math.max(0, goal.getProgressCurrent());
@@ -128,7 +129,7 @@ public final class RecurringGoal {
             completedAt = 0;
             lastValue = value;
         }
-        if (goal instanceof com.grinder.content.goal.ManualGoal) {
+        if (goal instanceof ManualGoal) {
             progress = value;
         } else if (value >= lastValue) {
             progress = Math.min(Long.MAX_VALUE - (value - lastValue), progress) + (value - lastValue);

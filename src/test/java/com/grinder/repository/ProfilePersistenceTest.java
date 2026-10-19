@@ -1,12 +1,15 @@
 package com.grinder.repository;
 
+import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
@@ -28,9 +31,9 @@ public class ProfilePersistenceTest {
         first.cancel(false);
         assertEquals(1, scheduled.size());
         scheduled.remove().run();
-        assertEquals(java.util.Arrays.asList(1), order);
+        assertEquals(Arrays.asList(1), order);
         scheduled.remove().run();
-        assertEquals(java.util.Arrays.asList(1, 2), order);
+        assertEquals(Arrays.asList(1, 2), order);
     }
 
     @Test
@@ -40,7 +43,7 @@ public class ProfilePersistenceTest {
         List<Integer> order = new ArrayList<>();
         CompletableFuture<Integer> first = persistence.enqueue(() -> {
             order.add(1);
-            throw new java.io.IOException("Simulated disk failure");
+            throw new IOException("Simulated disk failure");
         });
         CompletableFuture<Integer> second = persistence.enqueue(() -> {
             order.add(2);
@@ -54,7 +57,7 @@ public class ProfilePersistenceTest {
         assertFalse(second.isDone());
         scheduled.remove().run();
         assertEquals(Integer.valueOf(2), second.getNow(null));
-        assertEquals(java.util.Arrays.asList(1, 2), order);
+        assertEquals(Arrays.asList(1, 2), order);
     }
 
     @Test

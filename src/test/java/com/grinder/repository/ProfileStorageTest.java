@@ -5,12 +5,14 @@ import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.impl.CustomGoal;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.stream.Stream;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.util.Filepath;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
@@ -55,7 +57,7 @@ public class ProfileStorageTest extends Plugin {
         assertEquals(7, loaded.getGoals().get(0).getProgressMaximum());
         assertTrue(loaded.metadata(loaded.getGoals().get(0)).isPinned());
         assertEquals(RepeatSchedule.DAILY, loaded.metadata(loaded.getGoals().get(0)).recurring().getSchedule());
-        try (java.util.stream.Stream<Filepath> files = directory.walk(1)) {
+        try (Stream<Filepath> files = directory.walk(1)) {
             assertFalse(files.anyMatch(file -> file.getFileName().endsWith(".tmp")));
         }
     }
@@ -70,7 +72,7 @@ public class ProfileStorageTest extends Plugin {
         repository.save(directory, repository.toJson(profile(11)));
         assertEquals(11, repository.load(directory, 42).getGoals().get(0).getProgressMaximum());
         assertEquals(7, repository.readProfile(directory.joinSegment("42.json.bak"), 42).getGoals().get(0).getProgressMaximum());
-        try (java.util.stream.Stream<Filepath> files = directory.walk(1)) {
+        try (Stream<Filepath> files = directory.walk(1)) {
             assertTrue(files.anyMatch(file -> file.getFileName().startsWith("42.corrupt-")));
         }
     }

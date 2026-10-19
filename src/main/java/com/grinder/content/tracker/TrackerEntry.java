@@ -1,12 +1,15 @@
 package com.grinder.content.tracker;
-import lombok.Getter;
-import com.grinder.ui.Icon;
-import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.collectionlog.CollectionLogPages;
+import com.grinder.content.goal.GoalCategory;
+import com.grinder.ui.Icon;
+import java.util.Locale;
+import java.util.Map;
+import java.util.function.IntUnaryOperator;
+import lombok.Getter;
 import net.runelite.api.Client;
+import net.runelite.api.gameval.ItemID;
 import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.api.gameval.VarbitID;
-import net.runelite.api.gameval.ItemID;
 /**
  * @author Ayman Yassen
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
@@ -145,20 +148,20 @@ public enum TrackerEntry {
     public int getCount(Client client) {
         return readCount(client::getVarpValue, client::getVarbitValue);
     }
-    int readCount(java.util.function.IntUnaryOperator varps, java.util.function.IntUnaryOperator varbits) {
+    int readCount(IntUnaryOperator varps, IntUnaryOperator varbits) {
         return Math.max(0, (varbit ? varbits : varps).applyAsInt(id));
     }
     public int iconItem(Client client) {
         if (representativeItem > 0 || iconResolved || client == null) {
             return representativeItem;
         }
-        java.util.Map<Integer, String> pages = CollectionLogPages.discover(client);
+        Map<Integer, String> pages = CollectionLogPages.discover(client);
         if (!pages.isEmpty()) {
             iconResolved = true;
         }
         String name = normalized(displayName);
         int best = 0;
-        for (java.util.Map.Entry<Integer, String> page : pages.entrySet()) {
+        for (Map.Entry<Integer, String> page : pages.entrySet()) {
             String candidate = normalized(page.getValue());
             if (candidate.length() > best && (name.startsWith(candidate) || candidate.startsWith(name))) {
                 int[] items = CollectionLogPages.itemIds(client, page.getKey());
@@ -171,6 +174,6 @@ public enum TrackerEntry {
         return representativeItem;
     }
     private static String normalized(String text) {
-        return text.toLowerCase(java.util.Locale.ROOT).replaceFirst("^the ", "").replaceAll("[^a-z0-9]", "");
+        return text.toLowerCase(Locale.ROOT).replaceFirst("^the ", "").replaceAll("[^a-z0-9]", "");
     }
 }

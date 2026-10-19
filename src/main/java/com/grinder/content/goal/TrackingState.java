@@ -1,5 +1,6 @@
 package com.grinder.content.goal;
 
+import com.grinder.content.goal.impl.LinkedGoal;
 import com.grinder.content.goal.impl.TrackerGoal;
 import com.grinder.content.goal.impl.item.PossessedItemGoal;
 import com.grinder.repository.RecurringGoal;
@@ -32,10 +33,10 @@ public enum TrackingState {
         return this == LATE_BASELINE ? "Partial period" : null;
     }
     public static TrackingState of(Goal goal, RecurringGoal recurring, boolean loggedIn, boolean bankLoaded) {
-        if (goal instanceof com.grinder.content.goal.impl.LinkedGoal) {
-            return ((com.grinder.content.goal.impl.LinkedGoal) goal).isAvailable() ? LINKED : WAITING;
+        if (goal instanceof LinkedGoal) {
+            return ((LinkedGoal) goal).isAvailable() ? LINKED : WAITING;
         }
-        if (goal instanceof com.grinder.content.goal.ManualGoal) {
+        if (goal instanceof ManualGoal) {
             return MANUAL;
         }
         if (!loggedIn || recurring.isActive() && recurring.getBaselineAt() == 0 || goal instanceof ClientCompletionGoal && goal.getProgressMaximum() == 0 || goal.getCategory() == GoalCategory.COLLECTION_LOG && goal.getProgressMaximum() == 0) {

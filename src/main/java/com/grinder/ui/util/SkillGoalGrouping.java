@@ -1,6 +1,7 @@
 package com.grinder.ui.util;
 
 import com.grinder.content.goal.Goal;
+import com.grinder.content.goal.impl.experience.SessionExperienceGoal;
 import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
 import com.grinder.content.goal.impl.level.SkillLevelGoal;
 import java.util.ArrayList;
@@ -20,8 +21,8 @@ public final class SkillGoalGrouping {
     }
 
     public static Skill skill(Goal goal) {
-        if (goal instanceof com.grinder.content.goal.impl.experience.SessionExperienceGoal) {
-            com.grinder.content.goal.impl.experience.SessionExperienceGoal session = (com.grinder.content.goal.impl.experience.SessionExperienceGoal) goal;
+        if (goal instanceof SessionExperienceGoal) {
+            SessionExperienceGoal session = (SessionExperienceGoal) goal;
             return session.isTotal() ? null : session.getSkill();
         }
         return goal instanceof SkillLevelGoal ? ((SkillLevelGoal) goal).getSkill() : goal instanceof SkillExperienceGoal ? ((SkillExperienceGoal) goal).getSkill() : null;

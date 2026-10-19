@@ -5,10 +5,15 @@ import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.GoalStatus;
 import com.grinder.content.goal.impl.CustomGoal;
 import com.grinder.content.goal.impl.LinkedGoal;
+import com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import net.runelite.api.gameval.ItemID;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
@@ -20,7 +25,7 @@ public class LinkedGoalTest {
     @Test
     public void everyLinkedModeHasAHiddenExampleWithResolvableSources() {
         GrinderProfile profile = new GrinderProfile(42);
-        java.util.Set<LinkedGoal.Mode> modes = new java.util.HashSet<>();
+        Set<LinkedGoal.Mode> modes = new HashSet<>();
         for (Goal goal : profile.getGoals()) {
             if (goal instanceof LinkedGoal) {
                 LinkedGoal plan = (LinkedGoal) goal;
@@ -29,23 +34,23 @@ public class LinkedGoalTest {
                 assertTrue(plan.getSources().stream().allMatch(id -> profile.getGoals().stream().anyMatch(source -> profile.metadata(source).getId().equals(id))));
             }
         }
-        assertEquals(new java.util.HashSet<>(Arrays.asList(LinkedGoal.Mode.values())), modes);
+        assertEquals(new HashSet<>(Arrays.asList(LinkedGoal.Mode.values())), modes);
         profile.validateReferences();
     }
 
     @Test
     public void collectionSubsetsUseObservedUnlocksOnly() {
         GrinderProfile profile = empty();
-        com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal first = new com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal(net.runelite.api.gameval.ItemID.DRAGON_PICKAXE, 1);
-        com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal second = new com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal(net.runelite.api.gameval.ItemID.TWISTED_BOW, 1);
+        CollectionLogItemGoal first = new CollectionLogItemGoal(ItemID.DRAGON_PICKAXE, 1);
+        CollectionLogItemGoal second = new CollectionLogItemGoal(ItemID.TWISTED_BOW, 1);
         profile.add(first);
         profile.add(second);
         LinkedGoal goal = new LinkedGoal("Selected unlocks", "", LinkedGoal.Mode.COLLECTION_SET, Arrays.asList(profile.metadata(first).getId(), profile.metadata(second).getId()), new long[]{1, 1}, 1);
-        profile.getCollectionLogHistory().record(net.runelite.api.gameval.ItemID.DRAGON_PICKAXE, 1000);
+        profile.getCollectionLogHistory().record(ItemID.DRAGON_PICKAXE, 1000);
         goal.update(profile, true);
         assertEquals(1, goal.getProgressCurrent());
         assertNotEquals(GoalStatus.COMPLETE, goal.getStatus());
-        profile.getCollectionLogHistory().record(net.runelite.api.gameval.ItemID.TWISTED_BOW, 2000);
+        profile.getCollectionLogHistory().record(ItemID.TWISTED_BOW, 2000);
         goal.update(profile, true);
         assertEquals(GoalStatus.COMPLETE, goal.getStatus());
     }

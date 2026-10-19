@@ -11,11 +11,14 @@ import com.grinder.ui.editor.GoalEditorPanel;
 import java.awt.Component;
 import java.awt.Container;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import net.runelite.api.Skill;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
@@ -54,7 +57,7 @@ public class RecurringGoalUiTest {
         metadata.recurring().configure(RepeatSchedule.NONE, 1, now + 86_400_001);
         SwingUtilities.invokeAndWait(() -> {
             GoalHistoryPanel panel = snapshot.get();
-            java.util.List<JTable> tables = new java.util.ArrayList<>();
+            List<JTable> tables = new ArrayList<>();
             findTables(panel, tables);
             assertEquals(2, tables.size());
             JTable periods = tables.get(0);
@@ -69,7 +72,7 @@ public class RecurringGoalUiTest {
             assertEquals(1, tables.get(1).getRowCount());
         });
     }
-    private void findTables(Container parent, java.util.List<JTable> tables) {
+    private void findTables(Container parent, List<JTable> tables) {
         for (Component child : parent.getComponents()) {
             if (child instanceof JTable) {
                 tables.add((JTable) child);

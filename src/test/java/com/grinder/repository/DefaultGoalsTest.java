@@ -3,12 +3,15 @@ package com.grinder.repository;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.impl.CustomGoal;
+import com.grinder.content.goal.impl.TrackerGoal;
 import com.grinder.content.goal.impl.combatachievement.CombatAchievementBossGoal;
 import com.grinder.content.goal.impl.item.PossessedItemGoal;
+import com.grinder.content.tracker.TrackerEntry;
 import java.util.Set;
 import java.util.stream.Collectors;
 import net.runelite.api.gameval.ItemID;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
@@ -20,8 +23,8 @@ public class DefaultGoalsTest {
     @Test
     public void slayerDefaultsPreserveIndependentTargetsThroughReload() {
         GrinderProfile profile = new GrinderProfile(42);
-        for (com.grinder.content.tracker.TrackerEntry entry : new com.grinder.content.tracker.TrackerEntry[]{com.grinder.content.tracker.TrackerEntry.SLAYER_POINTS, com.grinder.content.tracker.TrackerEntry.SLAYER_STREAK, com.grinder.content.tracker.TrackerEntry.SLAYER_WILDERNESS_STREAK}) {
-            Goal goal = profile.findMatchingGoal(new com.grinder.content.goal.impl.TrackerGoal(entry, 1));
+        for (TrackerEntry entry : new TrackerEntry[]{TrackerEntry.SLAYER_POINTS, TrackerEntry.SLAYER_STREAK, TrackerEntry.SLAYER_WILDERNESS_STREAK}) {
+            Goal goal = profile.findMatchingGoal(new TrackerGoal(entry, 1));
             assertNotNull(goal);
             assertEquals(entry.getDefaultTarget(), goal.getProgressMaximum());
             goal.setTarget(entry.getDefaultTarget() + 7);
@@ -30,8 +33,8 @@ public class DefaultGoalsTest {
         int size = restored.getGoals().size();
         restored.ensureDefaultGoals(null);
         assertEquals(size, restored.getGoals().size());
-        for (com.grinder.content.tracker.TrackerEntry entry : new com.grinder.content.tracker.TrackerEntry[]{com.grinder.content.tracker.TrackerEntry.SLAYER_POINTS, com.grinder.content.tracker.TrackerEntry.SLAYER_STREAK, com.grinder.content.tracker.TrackerEntry.SLAYER_WILDERNESS_STREAK}) {
-            assertEquals(entry.getDefaultTarget() + 7, restored.findMatchingGoal(new com.grinder.content.goal.impl.TrackerGoal(entry, 1)).getProgressMaximum());
+        for (TrackerEntry entry : new TrackerEntry[]{TrackerEntry.SLAYER_POINTS, TrackerEntry.SLAYER_STREAK, TrackerEntry.SLAYER_WILDERNESS_STREAK}) {
+            assertEquals(entry.getDefaultTarget() + 7, restored.findMatchingGoal(new TrackerGoal(entry, 1)).getProgressMaximum());
         }
     }
 

@@ -1,14 +1,16 @@
 package com.grinder.ui;
 
 import com.grinder.content.goal.Goal;
-import com.grinder.content.goal.impl.level.SkillLevelGoal;
+import com.grinder.content.goal.impl.experience.SessionExperienceGoal;
 import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
 import com.grinder.content.goal.impl.level.BaseLevelGoal;
+import com.grinder.content.goal.impl.level.SkillLevelGoal;
 import com.grinder.ui.util.SkillGoalGrouping;
 import java.util.Arrays;
 import java.util.List;
 import net.runelite.api.Skill;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
@@ -23,7 +25,7 @@ public class SkillGoalGroupingTest {
         Goal experience = new SkillExperienceGoal(Skill.ATTACK);
         Goal defence = new SkillLevelGoal(Skill.DEFENCE);
         Goal base = new BaseLevelGoal();
-        Goal session = new com.grinder.content.goal.impl.experience.SessionExperienceGoal(Skill.ATTACK);
+        Goal session = new SessionExperienceGoal(Skill.ATTACK);
         List<List<Goal>> groups = SkillGoalGrouping.group(Arrays.asList(level, defence, base, experience, new BaseLevelGoal(), session), goal -> goal);
         assertEquals(4, groups.size());
         assertEquals(Arrays.asList(level, experience, session), groups.get(0));

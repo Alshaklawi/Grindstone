@@ -1,10 +1,11 @@
 package com.grinder.repository;
 
+import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.temporal.TemporalAdjusters;
-import java.time.DayOfWeek;
+import java.util.Locale;
 
 /**
  * @author Ayman Yassen
@@ -36,6 +37,6 @@ public enum RepeatSchedule {
 
     @Override
     public String toString() {
-        return name().charAt(0) + name().substring(1).toLowerCase(java.util.Locale.ROOT);
+        return name().charAt(0) + name().substring(1).toLowerCase(Locale.ROOT);
     }
 }

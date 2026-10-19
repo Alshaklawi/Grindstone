@@ -1,14 +1,18 @@
 package com.grinder.repository;
-import lombok.Getter;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import com.grinder.content.goal.Goal;
+import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.GoalStatus;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 /**
  * @author Ayman Yassen
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
@@ -32,7 +36,7 @@ public final class GoalMetadata {
     private boolean sample;
     @Getter
     @Setter
-    private com.grinder.content.goal.GoalCategory displayCategory;
+    private GoalCategory displayCategory;
     private RecurringGoal recurring;
     public RecurringGoal recurring() {
         if (recurring == null) {
@@ -57,7 +61,7 @@ public final class GoalMetadata {
         if (deadlineAt == 0) {
             return "";
         }
-        String date = java.time.Instant.ofEpochMilli(deadlineAt - 1).atZone(java.time.ZoneOffset.UTC).toLocalDate().toString();
+        String date = Instant.ofEpochMilli(deadlineAt - 1).atZone(ZoneOffset.UTC).toLocalDate().toString();
         return (now >= deadlineAt ? "Past due · " : "Due · ") + date + " UTC";
     }
     private final List<Completion> completions = new ArrayList<>();
@@ -118,7 +122,7 @@ public final class GoalMetadata {
         }
         StringBuilder text = new StringBuilder("First observed completed (not the historical achievement date):\n\n");
         for (Completion event : completions) {
-            text.append(event.title).append(" — target ").append(String.format(java.util.Locale.ROOT, "%,d", event.target)).append(" — ").append(java.time.Instant.ofEpochMilli(event.observedAt)).append('\n');
+            text.append(event.title).append(" — target ").append(String.format(Locale.ROOT, "%,d", event.target)).append(" — ").append(Instant.ofEpochMilli(event.observedAt)).append('\n');
         }
         return text.toString();
     }

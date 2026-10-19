@@ -2,13 +2,15 @@ package com.grinder.repository;
 
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalStatus;
-import com.grinder.content.goal.impl.level.BaseLevelGoal;
 import com.grinder.content.goal.impl.experience.BaseExperienceGoal;
+import com.grinder.content.goal.impl.level.BaseLevelGoal;
 import com.grinder.ui.editor.GoalEditorPanel;
 import com.grinder.ui.editor.GoalTargetModels;
+import java.text.ParseException;
 import javax.swing.SwingUtilities;
 import net.runelite.api.Skill;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
@@ -72,7 +74,7 @@ public class BaseSkillGoalTest {
                         Goal created = editor.createGoal();
                         assertEquals(goal.getClass(), created.getClass());
                         assertEquals(goal.getProgressMaximum(), created.getProgressMaximum());
-                    } catch (java.text.ParseException failure) {
+                    } catch (ParseException failure) {
                         throw new AssertionError(failure);
                     }
                 }

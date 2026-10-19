@@ -1,21 +1,23 @@
 package com.grinder.content.goal.impl;
 
-import lombok.Getter;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.GoalStatus;
 import com.grinder.content.goal.TrackingState;
-import com.grinder.repository.GrinderProfile;
+import com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal;
 import com.grinder.repository.GoalMetadata;
+import com.grinder.repository.GrinderProfile;
 import com.grinder.repository.RecurringGoal;
 import com.grinder.repository.RepeatSchedule;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import lombok.Getter;
 import net.runelite.api.Client;
 
 /**
@@ -120,7 +122,7 @@ public final class LinkedGoal implements Goal {
                 continue;
             }
             GoalMetadata metadata = profile.metadata(source);
-            if (mode == Mode.COLLECTION_SET && !(source instanceof com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal)) {
+            if (mode == Mode.COLLECTION_SET && !(source instanceof CollectionLogItemGoal)) {
                 available = false;
                 text.append("Invalid collection source · choose individual collection items.\n");
                 continue;
@@ -137,7 +139,7 @@ public final class LinkedGoal implements Goal {
                 known |= complete;
             }
             if (mode == Mode.REPEAT_COMPLETIONS) {
-                recurring.getHistory().stream().filter(period -> period.getCompletedAt() > 0).sorted(java.util.Comparator.comparingLong(RecurringGoal.Period::getStart)).forEach(period -> observePeriod(period.getSchedule(), period.getStart()));
+                recurring.getHistory().stream().filter(period -> period.getCompletedAt() > 0).sorted(Comparator.comparingLong(RecurringGoal.Period::getStart)).forEach(period -> observePeriod(period.getSchedule(), period.getStart()));
                 if (recurring.getCompletedAt() > 0) {
                     observePeriod(recurring.getSchedule(), recurring.getStart());
                 }

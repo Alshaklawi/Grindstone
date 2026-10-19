@@ -2,31 +2,59 @@ package com.grinder.repository;
 
 import com.grinder.content.collectionlog.CollectionLogEntry;
 import com.grinder.content.collectionlog.CollectionLogHistory;
-import com.grinder.content.tracker.TrackerEntry;
+import com.grinder.content.combatachievement.CombatAchievementTier;
+import com.grinder.content.diary.AchievementDiaryArea;
+import com.grinder.content.diary.DiaryTier;
+import com.grinder.content.goal.ClientCompletionGoal;
 import com.grinder.content.goal.Goal;
-import com.grinder.content.goal.impl.TrackerGoal;
-import com.grinder.content.goal.impl.CustomGoal;
 import com.grinder.content.goal.GoalCategory;
-import com.grinder.content.goal.impl.item.PossessedItemGoal;
+import com.grinder.content.goal.impl.ChecklistGoal;
+import com.grinder.content.goal.impl.CustomGoal;
+import com.grinder.content.goal.impl.LinkedGoal;
+import com.grinder.content.goal.impl.TrackerGoal;
+import com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierAreaGoal;
+import com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierGoal;
+import com.grinder.content.goal.impl.collectionlog.CollectionLogEntryGoal;
+import com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal;
 import com.grinder.content.goal.impl.combatachievement.CombatAchievementBossGoal;
 import com.grinder.content.goal.impl.combatachievement.CombatAchievementDifficultyGoal;
-import com.grinder.content.combatachievement.CombatAchievementTier;
+import com.grinder.content.goal.impl.combatachievement.CombatAchievementTaskGoal;
+import com.grinder.content.goal.impl.combatachievement.CombatAchievementTierGoal;
+import com.grinder.content.goal.impl.experience.BaseExperienceGoal;
+import com.grinder.content.goal.impl.experience.SessionExperienceGoal;
+import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
+import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
+import com.grinder.content.goal.impl.item.PossessedItemGoal;
+import com.grinder.content.goal.impl.level.BaseLevelGoal;
 import com.grinder.content.goal.impl.level.CombatLevelGoal;
 import com.grinder.content.goal.impl.level.SkillLevelGoal;
 import com.grinder.content.goal.impl.level.TotalLevelGoal;
-import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
-import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
-import com.grinder.content.goal.impl.collectionlog.CollectionLogEntryGoal;
-
+import com.grinder.content.goal.impl.quest.QuestGoal;
+import com.grinder.content.goal.impl.quest.QuestSeriesGoal;
+import com.grinder.content.quest.QuestSeries;
+import com.grinder.content.storage.PlayerItemStorage;
+import com.grinder.content.tracker.TrackerEntry;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-
-import com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Consumer;
 import lombok.Getter;
+import net.runelite.api.Client;
+import net.runelite.api.GameState;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
+import net.runelite.api.Quest;
 import net.runelite.api.Skill;
 import net.runelite.api.gameval.ItemID;
 import net.runelite.client.game.ItemManager;
@@ -40,10 +68,10 @@ import net.runelite.client.game.ItemManager;
 public class GrinderProfile {
     private final long hash;
     private final List<Goal> goals = new ArrayList<>();
-    private final transient java.util.Map<Goal, GoalMetadata> metadata = new java.util.IdentityHashMap<>();
+    private final transient Map<Goal, GoalMetadata> metadata = new IdentityHashMap<>();
     private transient long revision;
-    private final java.util.Map<String, ArchivedHistory> archivedHistory = new java.util.LinkedHashMap<>();
-    public java.util.Collection<ArchivedHistory> archivedHistory() {
+    private final Map<String, ArchivedHistory> archivedHistory = new LinkedHashMap<>();
+    public Collection<ArchivedHistory> archivedHistory() {
         return Collections.unmodifiableCollection(archivedHistory.values());
     }
     public void restoreArchive(ArchivedHistory history) {
@@ -58,7 +86,7 @@ public class GrinderProfile {
             archivedHistory.remove(archivedHistory.keySet().iterator().next());
         }
     }
-    public void restoreArchiveSnapshot(java.util.Collection<ArchivedHistory> histories) {
+    public void restoreArchiveSnapshot(Collection<ArchivedHistory> histories) {
         if (histories.size() > 500) {
             throw new IllegalArgumentException("Too many archived histories.");
         }
@@ -88,14 +116,14 @@ public class GrinderProfile {
     public void touch() {
         revision++;
     }
-    public java.util.function.Consumer<Goal> snapshotEdit(Goal original) {
+    public Consumer<Goal> snapshotEdit(Goal original) {
         GoalMetadata saved = metadata(original).copy();
         RepeatSchedule previousSchedule = saved.recurring().getSchedule();
         long undoWindow = previousSchedule.start(System.currentTimeMillis());
         long target = original.getProgressMaximum();
         CustomGoal custom = original instanceof CustomGoal ? (CustomGoal) original : null;
         CustomGoal manual = custom == null ? null : new CustomGoal(custom.getId(), custom.getTitle(null), custom.getDescription(), custom.getCategory(), custom.getProgressCurrent(), target);
-        com.grinder.content.goal.impl.ChecklistGoal checklist = original instanceof com.grinder.content.goal.impl.ChecklistGoal ? (com.grinder.content.goal.impl.ChecklistGoal) original : null;
+        ChecklistGoal checklist = original instanceof ChecklistGoal ? (ChecklistGoal) original : null;
         boolean[] savedChecks = checklist == null ? null : checklist.getChecks();
         return replacement -> {
             if (previousSchedule != RepeatSchedule.NONE && previousSchedule.start(System.currentTimeMillis()) != undoWindow) {
@@ -129,7 +157,7 @@ public class GrinderProfile {
     public void restoreMetadata(Goal goal, GoalMetadata saved) {
         metadata.put(goal, GoalMetadata.validated(saved));
     }
-    public void observeRecurring(net.runelite.api.Client client, long now) {
+    public void observeRecurring(Client client, long now) {
         for (Goal goal : goals) {
             RecurringGoal recurring = metadata(goal).recurring();
             if (recurring.isActive() && RecurringGoal.supports(goal)) {
@@ -137,27 +165,27 @@ public class GrinderProfile {
                 recurring.observe(goal, now);
             }
         }
-        updateLinkedGoals(client != null && client.getGameState() == net.runelite.api.GameState.LOGGED_IN && client.getLocalPlayer() != null && client.getAccountHash() == hash);
+        updateLinkedGoals(client != null && client.getGameState() == GameState.LOGGED_IN && client.getLocalPlayer() != null && client.getAccountHash() == hash);
     }
     public void updateLinkedGoals(boolean loggedIn) {
-        java.util.Map<String, Goal> sources = new java.util.HashMap<>();
+        Map<String, Goal> sources = new HashMap<>();
         for (Goal goal : goals) {
-            if (!(goal instanceof com.grinder.content.goal.impl.LinkedGoal)) {
+            if (!(goal instanceof LinkedGoal)) {
                 sources.put(metadata(goal).getId(), goal);
             }
         }
         for (Goal goal : goals) {
-            if (goal instanceof com.grinder.content.goal.impl.LinkedGoal) {
-                ((com.grinder.content.goal.impl.LinkedGoal) goal).update(this, loggedIn, sources);
+            if (goal instanceof LinkedGoal) {
+                ((LinkedGoal) goal).update(this, loggedIn, sources);
             }
         }
     }
     private final List<Item> items = new ArrayList<>();
     private final CollectionLogHistory collectionLogHistory = new CollectionLogHistory();
     private transient ItemManager itemManager;
-    private final transient com.grinder.content.storage.PlayerItemStorage playerStorage = new com.grinder.content.storage.PlayerItemStorage();
+    private final transient PlayerItemStorage playerStorage = new PlayerItemStorage();
 
-    public com.grinder.content.storage.PlayerItemStorage getPlayerStorage() {
+    public PlayerItemStorage getPlayerStorage() {
         return playerStorage;
     }
 
@@ -175,7 +203,7 @@ public class GrinderProfile {
     }
 
     public void ensureDefaultGoals(ItemManager itemManager) {
-        java.util.Set<Goal> existingDefaults = new java.util.HashSet<>(goals);
+        Set<Goal> existingDefaults = new HashSet<>(goals);
         for (CollectionLogEntry entry : CollectionLogEntry.values()) {
             if (!hasCollectionEntry(entry)) {
                 goals.add(new CollectionLogEntryGoal(itemManager, entry));
@@ -211,28 +239,28 @@ public class GrinderProfile {
         }
 
         addDefaultCollectionItem(ItemID.DRAGON_PICKAXE);
-        add(new com.grinder.content.goal.impl.level.BaseLevelGoal());
-        add(new com.grinder.content.goal.impl.experience.BaseExperienceGoal());
-        add(new com.grinder.content.goal.impl.experience.SessionExperienceGoal(Skill.WOODCUTTING));
+        add(new BaseLevelGoal());
+        add(new BaseExperienceGoal());
+        add(new SessionExperienceGoal(Skill.WOODCUTTING));
         Goal sampleSource = findMatchingGoal(new SkillLevelGoal(Skill.ATTACK));
-        String linkedExampleId = java.util.UUID.nameUUIDFromBytes("grinder-default-linked-goal".getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString();
-        add(new com.grinder.content.goal.impl.LinkedGoal(linkedExampleId, "Example: Attack milestones", "A ladder example. Edit its source and milestones, or delete it.", com.grinder.content.goal.impl.LinkedGoal.Mode.MILESTONES, java.util.Collections.singletonList(metadata(sampleSource).getId()), new long[]{50, 75, 99}, 1));
+        String linkedExampleId = UUID.nameUUIDFromBytes("grinder-default-linked-goal".getBytes(StandardCharsets.UTF_8)).toString();
+        add(new LinkedGoal(linkedExampleId, "Example: Attack milestones", "A ladder example. Edit its source and milestones, or delete it.", LinkedGoal.Mode.MILESTONES, Collections.singletonList(metadata(sampleSource).getId()), new long[]{50, 75, 99}, 1));
         addDefaultCollectionItem(ItemID.TWISTED_BOW);
         addDefaultCollectionItem(ItemID.JAR_OF_SPIRITS);
         add(new PossessedItemGoal(ItemID.COINS, 1_500_000_000L));
         add(new PossessedItemGoal(ItemID.DRAGON_PICKAXE, 1));
         add(new CombatAchievementBossGoal("Barrows"));
         add(new CombatAchievementDifficultyGoal(CombatAchievementTier.EASY));
-        add(new com.grinder.content.goal.impl.combatachievement.CombatAchievementTaskGoal(0, "Combat task 0", "The native task name, requirements and completion state load when logged in."));
-        String customExampleId = java.util.UUID.nameUUIDFromBytes("grinder-default-custom-goal".getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString();
+        add(new CombatAchievementTaskGoal(0, "Combat task 0", "The native task name, requirements and completion state load when logged in."));
+        String customExampleId = UUID.nameUUIDFromBytes("grinder-default-custom-goal".getBytes(StandardCharsets.UTF_8)).toString();
         add(new CustomGoal(customExampleId, "Example: complete 10 personal challenges", "A manual tracker example. Edit its title, description, target and progress to suit your own goal.", GoalCategory.OTHER, 0, 10));
-        String checklistExampleId = java.util.UUID.nameUUIDFromBytes("grinder-default-checklist".getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString();
-        add(new com.grinder.content.goal.impl.ChecklistGoal(checklistExampleId, "Example: personal routine", "Check steps manually. Add a repeat schedule to reset and archive this routine each period.", java.util.Arrays.asList("Choose today's activity", "Prepare supplies", "Finish the activity"), new boolean[3]));
-        add(new com.grinder.content.goal.impl.quest.QuestGoal(net.runelite.api.Quest.DRAGON_SLAYER_I));
-        add(new com.grinder.content.goal.impl.quest.QuestSeriesGoal(com.grinder.content.quest.QuestSeries.ELF));
-        add(new com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierAreaGoal( com.grinder.content.diary.AchievementDiaryArea.LUMBRIDGE, com.grinder.content.diary.DiaryTier.EASY));
-        add(new com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierGoal(com.grinder.content.diary.DiaryTier.EASY));
-        add(new com.grinder.content.goal.impl.combatachievement.CombatAchievementTierGoal( com.grinder.content.combatachievement.CombatAchievementTier.EASY));
+        String checklistExampleId = UUID.nameUUIDFromBytes("grinder-default-checklist".getBytes(StandardCharsets.UTF_8)).toString();
+        add(new ChecklistGoal(checklistExampleId, "Example: personal routine", "Check steps manually. Add a repeat schedule to reset and archive this routine each period.", Arrays.asList("Choose today's activity", "Prepare supplies", "Finish the activity"), new boolean[3]));
+        add(new QuestGoal(Quest.DRAGON_SLAYER_I));
+        add(new QuestSeriesGoal(QuestSeries.ELF));
+        add(new AchievementDiaryTierAreaGoal( AchievementDiaryArea.LUMBRIDGE, DiaryTier.EASY));
+        add(new AchievementDiaryTierGoal(DiaryTier.EASY));
+        add(new CombatAchievementTierGoal( CombatAchievementTier.EASY));
         GoalExamples.addLinkedExamples(this);
         for (Goal goal : goals) {
             if (!existingDefaults.contains(goal) && (goal.getTitle(null).startsWith("Example:") || goal.getTitle(null).equals("Combat task 0"))) {
@@ -253,8 +281,8 @@ public class GrinderProfile {
         if (goal instanceof TrackerGoal) {
             ((TrackerGoal) goal).setItemManager(itemManager);
         }
-        if (goal instanceof com.grinder.content.goal.impl.item.PossessedItemGoal) {
-            ((com.grinder.content.goal.impl.item.PossessedItemGoal) goal).attach(playerStorage, itemManager);
+        if (goal instanceof PossessedItemGoal) {
+            ((PossessedItemGoal) goal).attach(playerStorage, itemManager);
         }
         if (goal instanceof CollectionLogEntryGoal) {
             CollectionLogEntryGoal entry = (CollectionLogEntryGoal) goal;
@@ -299,22 +327,22 @@ public class GrinderProfile {
         if (left instanceof CombatAchievementBossGoal) {
             return ((CombatAchievementBossGoal) left).matches((CombatAchievementBossGoal) right);
         }
-        if (left instanceof com.grinder.content.goal.impl.item.PossessedItemGoal) {
-            return ((com.grinder.content.goal.impl.item.PossessedItemGoal) left).getItem()
-            == ((com.grinder.content.goal.impl.item.PossessedItemGoal) right).getItem();
+        if (left instanceof PossessedItemGoal) {
+            return ((PossessedItemGoal) left).getItem()
+            == ((PossessedItemGoal) right).getItem();
         }
-        if (left instanceof com.grinder.content.goal.ClientCompletionGoal) {
-            return ((com.grinder.content.goal.ClientCompletionGoal) left).selectionKey()
-                    .equals(((com.grinder.content.goal.ClientCompletionGoal) right).selectionKey());
+        if (left instanceof ClientCompletionGoal) {
+            return ((ClientCompletionGoal) left).selectionKey()
+                    .equals(((ClientCompletionGoal) right).selectionKey());
         }
         if (left instanceof CustomGoal) {
             return ((CustomGoal) left).getId().equals(((CustomGoal) right).getId());
         }
-        if (left instanceof com.grinder.content.goal.impl.ChecklistGoal) {
-            return ((com.grinder.content.goal.impl.ChecklistGoal) left).getId().equals(((com.grinder.content.goal.impl.ChecklistGoal) right).getId());
+        if (left instanceof ChecklistGoal) {
+            return ((ChecklistGoal) left).getId().equals(((ChecklistGoal) right).getId());
         }
-        if (left instanceof com.grinder.content.goal.impl.LinkedGoal) {
-            return ((com.grinder.content.goal.impl.LinkedGoal) left).getId().equals(((com.grinder.content.goal.impl.LinkedGoal) right).getId());
+        if (left instanceof LinkedGoal) {
+            return ((LinkedGoal) left).getId().equals(((LinkedGoal) right).getId());
         }
         if (left instanceof SkillLevelGoal) {
             return ((SkillLevelGoal) left).getSkill() == ((SkillLevelGoal) right).getSkill();
@@ -322,9 +350,9 @@ public class GrinderProfile {
         if (left instanceof SkillExperienceGoal) {
             return ((SkillExperienceGoal) left).getSkill() == ((SkillExperienceGoal) right).getSkill();
         }
-        if (left instanceof com.grinder.content.goal.impl.experience.SessionExperienceGoal) {
-            com.grinder.content.goal.impl.experience.SessionExperienceGoal first = (com.grinder.content.goal.impl.experience.SessionExperienceGoal) left;
-            com.grinder.content.goal.impl.experience.SessionExperienceGoal second = (com.grinder.content.goal.impl.experience.SessionExperienceGoal) right;
+        if (left instanceof SessionExperienceGoal) {
+            SessionExperienceGoal first = (SessionExperienceGoal) left;
+            SessionExperienceGoal second = (SessionExperienceGoal) right;
             return first.isTotal() == second.isTotal() && first.getSkill() == second.getSkill();
         }
         if (left instanceof TrackerGoal) {
@@ -362,8 +390,8 @@ public class GrinderProfile {
             archive(original);
         }
         GoalMetadata next = sameGoal(original, replacement) ? old : new GoalMetadata();
-        if (sameGoal(original, replacement) && original instanceof com.grinder.content.goal.impl.experience.SessionExperienceGoal) {
-            ((com.grinder.content.goal.impl.experience.SessionExperienceGoal) replacement).copyReadingsFrom((com.grinder.content.goal.impl.experience.SessionExperienceGoal) original);
+        if (sameGoal(original, replacement) && original instanceof SessionExperienceGoal) {
+            ((SessionExperienceGoal) replacement).copyReadingsFrom((SessionExperienceGoal) original);
         }
         next.setPinned(old.isPinned());
         attachCollectionData(replacement);
@@ -375,16 +403,16 @@ public class GrinderProfile {
     }
 
     public void validateReferences() {
-        java.util.Map<String, Goal> byId = new java.util.HashMap<>();
+        Map<String, Goal> byId = new HashMap<>();
         for (Goal goal : goals) {
             if (byId.put(metadata(goal).getId(), goal) != null) {
                 throw new IllegalArgumentException("Duplicate goal metadata ID.");
             }
         }
         for (Goal goal : goals) {
-            if (goal instanceof com.grinder.content.goal.impl.LinkedGoal) {
-                for (String source : ((com.grinder.content.goal.impl.LinkedGoal) goal).getSources()) {
-                    if (byId.get(source) instanceof com.grinder.content.goal.impl.LinkedGoal) {
+            if (goal instanceof LinkedGoal) {
+                for (String source : ((LinkedGoal) goal).getSources()) {
+                    if (byId.get(source) instanceof LinkedGoal) {
                         throw new IllegalArgumentException("Linked goals cannot reference other linked goals.");
                     }
                 }
@@ -407,14 +435,14 @@ public class GrinderProfile {
             throw new IllegalArgumentException("Backup must be mapped to this account before merging.");
         }
         int added = 0;
-        java.util.Map<String, String> mapping = new java.util.HashMap<>();
+        Map<String, String> mapping = new HashMap<>();
         for (Goal goal : backup.getGoals()) {
             Goal existing = findMatchingGoal(goal, backup.metadata(goal).recurring().getSchedule());
             mapping.put(backup.metadata(goal).getId(), existing == null ? backup.metadata(goal).getId() : metadata(existing).getId());
         }
         for (Goal goal : backup.getGoals()) {
-            if (goal instanceof com.grinder.content.goal.impl.LinkedGoal && findMatchingGoal(goal) == null) {
-                ((com.grinder.content.goal.impl.LinkedGoal) goal).remapSources(mapping);
+            if (goal instanceof LinkedGoal && findMatchingGoal(goal) == null) {
+                ((LinkedGoal) goal).remapSources(mapping);
             }
             if (add(goal, backup.metadata(goal))) {
                 added++;

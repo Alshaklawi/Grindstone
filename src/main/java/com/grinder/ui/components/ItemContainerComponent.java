@@ -1,6 +1,8 @@
 package com.grinder.ui.components;
 
+import com.grinder.ui.util.UiTypography;
 import java.awt.BorderLayout;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.util.ArrayList;
@@ -11,7 +13,6 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import net.runelite.client.ui.ColorScheme;
-import com.grinder.ui.util.UiTypography;
 
 /**
  * @author Ayman Yassen
@@ -40,7 +41,7 @@ public class ItemContainerComponent extends JPanel {
         emptyLabel.setFont(UiTypography.BODY);
         emptyLabel.setBorder(BorderFactory.createEmptyBorder(6, 0, 6, 0));
         showMore.setFont(UiTypography.BODY);
-        showMore.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
+        showMore.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         showMore.addActionListener(event -> {
             expanded = !expanded;
             refresh();

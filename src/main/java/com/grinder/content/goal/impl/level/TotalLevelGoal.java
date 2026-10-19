@@ -1,9 +1,11 @@
 package com.grinder.content.goal.impl.level;
 
+import com.grinder.config.GrinderConfig;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.GoalStatus;
 import com.grinder.ui.Icon;
+import com.grinder.ui.components.GoalComponent;
 import java.awt.image.BufferedImage;
 import net.runelite.api.Client;
 import net.runelite.api.Skill;
@@ -84,7 +86,7 @@ public class TotalLevelGoal implements Goal {
     }
 
     @Override
-    public com.grinder.ui.components.GoalComponent build(Client client, com.grinder.config.GrinderConfig config) {
+    public GoalComponent build(Client client, GrinderConfig config) {
         refresh(client);
         return Goal.super.build(client, config);
     }

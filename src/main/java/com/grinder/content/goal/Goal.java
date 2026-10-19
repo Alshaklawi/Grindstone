@@ -2,6 +2,7 @@
 package com.grinder.content.goal;
 
 import com.grinder.config.GrinderConfig;
+import com.grinder.ui.Icon;
 import com.grinder.ui.components.GoalComponent;
 import java.awt.image.BufferedImage;
 import net.runelite.api.Client;
@@ -34,7 +35,7 @@ public interface Goal {
     }
 
     default BufferedImage getIcon(Client client) {
-        return com.grinder.ui.Icon.MAIN.getImage();
+        return Icon.MAIN.getImage();
     }
 
     default GoalStatus getStatus() {

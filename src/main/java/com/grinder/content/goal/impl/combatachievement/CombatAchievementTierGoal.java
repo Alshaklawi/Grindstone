@@ -3,6 +3,7 @@ import com.grinder.content.combatachievement.CombatAchievementTier;
 import com.grinder.content.goal.ClientCompletionGoal;
 import com.grinder.content.goal.GoalCategory;
 import java.util.Objects;
+import java.util.function.IntUnaryOperator;
 import net.runelite.api.Client;
 import net.runelite.api.gameval.VarbitID;
 /**
@@ -30,7 +31,7 @@ public final class CombatAchievementTierGoal extends ClientCompletionGoal {
     @Override public boolean refresh(Client client) {
         return refreshValues(client::getVarbitValue);
     }
-    public boolean refreshValues(java.util.function.IntUnaryOperator values) {
+    public boolean refreshValues(IntUnaryOperator values) {
         int points = values.applyAsInt(VarbitID.CA_POINTS);
         return update(points, values.applyAsInt(tier.getThreshold()), points > 0);
     }

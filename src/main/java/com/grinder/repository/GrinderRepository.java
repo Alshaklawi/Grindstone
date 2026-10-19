@@ -7,16 +7,20 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.grinder.content.collectionlog.CollectionLogEntry;
+import com.grinder.content.goal.ClientCompletionGoal;
 import com.grinder.content.goal.Goal;
-import com.grinder.content.goal.impl.TrackerGoal;
+import com.grinder.content.goal.impl.ChecklistGoal;
 import com.grinder.content.goal.impl.CustomGoal;
-import com.grinder.content.goal.impl.level.SkillLevelGoal;
-import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
+import com.grinder.content.goal.impl.LinkedGoal;
+import com.grinder.content.goal.impl.TrackerGoal;
 import com.grinder.content.goal.impl.collectionlog.CollectionLogEntryGoal;
-import net.runelite.client.util.Filepath;
-
+import com.grinder.content.goal.impl.experience.SessionExperienceGoal;
+import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
+import com.grinder.content.goal.impl.item.PossessedItemGoal;
+import com.grinder.content.goal.impl.level.SkillLevelGoal;
 import java.io.IOException;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -24,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import net.runelite.client.util.Filepath;
 
 /**
  * @author Ayman Yassen
@@ -95,7 +100,7 @@ public final class GrinderRepository {
         long hash = snapshot.get("hash").getAsLong();
         requireHash(hash);
         String text = gson.toJson(snapshot);
-        if (text.length() > MAX_PROFILE_BYTES || text.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > MAX_PROFILE_BYTES) {
+        if (text.length() > MAX_PROFILE_BYTES || text.getBytes(StandardCharsets.UTF_8).length > MAX_PROFILE_BYTES) {
             throw new IOException("The profile exceeds the save size limit. The previous save has not been changed.");
         }
         directory.createDirectories();
@@ -214,25 +219,25 @@ public final class GrinderRepository {
                 } else if (type == CustomGoal.class) {
                     CustomGoal saved = gson.fromJson(data, CustomGoal.class);
                     goal = new CustomGoal(saved.getId(), saved.getTitle(null), saved.getDescription(), saved.getCategory(), saved.getProgressCurrent(), saved.getProgressMaximum());
-                } else if (type == com.grinder.content.goal.impl.item.PossessedItemGoal.class) {
-                    com.grinder.content.goal.impl.item.PossessedItemGoal saved = gson.fromJson(data, com.grinder.content.goal.impl.item.PossessedItemGoal.class);
-                    goal = new com.grinder.content.goal.impl.item.PossessedItemGoal(saved.getItem(), saved.getAmount());
+                } else if (type == PossessedItemGoal.class) {
+                    PossessedItemGoal saved = gson.fromJson(data, PossessedItemGoal.class);
+                    goal = new PossessedItemGoal(saved.getItem(), saved.getAmount());
                 } else {
                     goal = gson.fromJson(data, type);
                 }
 
                 if (goal != null) {
-                    if (goal instanceof com.grinder.content.goal.impl.ChecklistGoal) {
-                        ((com.grinder.content.goal.impl.ChecklistGoal) goal).validate();
+                    if (goal instanceof ChecklistGoal) {
+                        ((ChecklistGoal) goal).validate();
                     }
-                    if (goal instanceof com.grinder.content.goal.impl.experience.SessionExperienceGoal) {
-                        ((com.grinder.content.goal.impl.experience.SessionExperienceGoal) goal).validate();
+                    if (goal instanceof SessionExperienceGoal) {
+                        ((SessionExperienceGoal) goal).validate();
                     }
-                    if (goal instanceof com.grinder.content.goal.impl.LinkedGoal) {
-                        ((com.grinder.content.goal.impl.LinkedGoal) goal).validate();
+                    if (goal instanceof LinkedGoal) {
+                        ((LinkedGoal) goal).validate();
                     }
-                    if (goal instanceof com.grinder.content.goal.ClientCompletionGoal) {
-                        ((com.grinder.content.goal.ClientCompletionGoal) goal).selectionKey();
+                    if (goal instanceof ClientCompletionGoal) {
+                        ((ClientCompletionGoal) goal).selectionKey();
                     }
                     if (goal instanceof SkillLevelGoal && ((SkillLevelGoal) goal).getSkill() == null || goal instanceof SkillExperienceGoal && ((SkillExperienceGoal) goal).getSkill() == null || goal instanceof TrackerGoal && ((TrackerGoal) goal).getTracker() == null) {
                         continue;
@@ -323,7 +328,7 @@ public final class GrinderRepository {
                 if (SavedGoalTypes.fromTag(saved) == CustomGoal.class) {
                     saved.getAsJsonObject("data").addProperty("current", 0);
                 }
-                if (SavedGoalTypes.fromTag(saved) == com.grinder.content.goal.impl.ChecklistGoal.class) {
+                if (SavedGoalTypes.fromTag(saved) == ChecklistGoal.class) {
                     JsonObject data = saved.getAsJsonObject("data");
                     JsonArray cleared = new JsonArray();
                     for (JsonElement ignored : data.getAsJsonArray("checked")) {
@@ -331,7 +336,7 @@ public final class GrinderRepository {
                     }
                     data.add("checked", cleared);
                 }
-                if (SavedGoalTypes.fromTag(saved) == com.grinder.content.goal.impl.LinkedGoal.class) {
+                if (SavedGoalTypes.fromTag(saved) == LinkedGoal.class) {
                     JsonObject data = saved.getAsJsonObject("data");
                     if (data.has("achieved")) {
                         JsonArray cleared = new JsonArray();

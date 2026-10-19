@@ -1,5 +1,6 @@
 package com.grinder.repository;
 
+import com.google.gson.JsonObject;
 import com.grinder.content.collectionlog.CollectionLogEntry;
 import com.grinder.content.collectionlog.CollectionLogHistory;
 import com.grinder.content.goal.GoalStatus;
@@ -9,6 +10,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import net.runelite.api.gameval.ItemID;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
@@ -64,7 +66,7 @@ public class CollectionLogHistoryTest {
     @Test
     public void legacyProfilesDoNotInventUnlockDates() {
         GrinderProfile profile = new GrinderProfile(42);
-        com.google.gson.JsonObject json = TestProfiles.REPOSITORY.toJson(profile);
+        JsonObject json = TestProfiles.REPOSITORY.toJson(profile);
         json.remove("collectionLogFirstSeen");
         GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(json);
         assertTrue(restored.getCollectionLogHistory().snapshot().isEmpty());

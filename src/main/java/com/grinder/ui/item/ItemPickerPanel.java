@@ -1,9 +1,7 @@
 package com.grinder.ui.item;
 
-import com.grinder.util.HtmlUtils;
-
 import com.grinder.ui.util.UiTooltips;
-
+import com.grinder.util.HtmlUtils;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -17,10 +15,12 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import net.runelite.client.ui.ColorScheme;
+import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.components.IconTextField;
 
 /**
@@ -83,7 +83,7 @@ public final class ItemPickerPanel extends JPanel {
         JPanel info = new JPanel(new BorderLayout(0, 8));
         info.setOpaque(false);
         status.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-        status.setFont(net.runelite.client.ui.FontManager.getRunescapeSmallFont());
+        status.setFont(FontManager.getRunescapeSmallFont());
         setStatus("Search by item name or numeric ID.");
         preview.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
         preview.setOpaque(true);
@@ -161,7 +161,7 @@ public final class ItemPickerPanel extends JPanel {
         preview.setText(item == null ? "No item selected" : "<html>" + HtmlUtils.escape(item.name) + "<br>Item ID: " + item.id + "</html>");
         if (item != null && item.image != null) {
             preview.setIcon(new ImageIcon(item.image));
-            item.image.onLoaded(() -> javax.swing.SwingUtilities.invokeLater(() -> {
+            item.image.onLoaded(() -> SwingUtilities.invokeLater(() -> {
                 if (selected == item) {
                     preview.repaint();
                 }

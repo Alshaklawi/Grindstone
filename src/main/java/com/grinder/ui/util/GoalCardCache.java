@@ -1,9 +1,11 @@
 package com.grinder.ui.util;
 
 import com.grinder.content.goal.Goal;
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Ayman Yassen
@@ -29,7 +31,7 @@ public final class GoalCardCache<T> {
         cards.clear();
     }
     public void retain(List<Goal> goals) {
-        java.util.Set<Goal> retained = java.util.Collections.newSetFromMap(new IdentityHashMap<>());
+        Set<Goal> retained = Collections.newSetFromMap(new IdentityHashMap<>());
         retained.addAll(goals);
         keys.keySet().retainAll(retained);
         cards.keySet().retainAll(retained);

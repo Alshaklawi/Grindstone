@@ -2,7 +2,7 @@
 package com.grinder.ui.components;
 
 
-import lombok.Getter;
+import com.grinder.ui.util.UiTypography;
 import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -10,12 +10,13 @@ import java.awt.FlowLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+import lombok.Getter;
 import net.runelite.client.ui.ColorScheme;
-import com.grinder.ui.util.UiTypography;
 
 /**
  * @author Ayman Yassen
@@ -74,7 +75,7 @@ public final class GoalCategorySectionComponent extends JPanel {
         trailingPanel.add(toggleLabel, BorderLayout.EAST);
         header.add(trailingPanel, BorderLayout.EAST);
 
-        content.setLayout(new javax.swing.BoxLayout(content, javax.swing.BoxLayout.Y_AXIS));
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.setOpaque(false);
         content.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
 

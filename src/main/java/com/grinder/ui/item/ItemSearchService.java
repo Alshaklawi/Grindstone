@@ -1,6 +1,7 @@
 package com.grinder.ui.item;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -9,7 +10,6 @@ import java.util.function.Consumer;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.swing.SwingUtilities;
-
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
@@ -206,7 +206,7 @@ public final class ItemSearchService implements ItemLookup {
         public final boolean complete;
 
         public Response(List<Result> results, String message, boolean complete) {
-            this.results = java.util.Collections.unmodifiableList(new ArrayList<>(results));
+            this.results = Collections.unmodifiableList(new ArrayList<>(results));
             this.message = message;
             this.complete = complete;
         }

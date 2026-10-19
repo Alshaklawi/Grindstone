@@ -1,9 +1,10 @@
 package com.grinder.ui.editor;
 
 import com.grinder.repository.RepeatSchedule;
-import javax.swing.*;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.text.ParseException;
+import javax.swing.*;
 import net.runelite.client.ui.FontManager;
 
 /**
@@ -52,7 +53,7 @@ public final class RepeatGoalForm extends JPanel {
     public long getTarget() {
         return ((Number) target.getValue()).longValue();
     }
-    public void commit() throws java.text.ParseException {
+    public void commit() throws ParseException {
         target.commitEdit();
     }
     public void addScheduleListener(Runnable listener) {

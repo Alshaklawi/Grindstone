@@ -4,9 +4,12 @@ import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.impl.CustomGoal;
 import com.grinder.content.goal.impl.level.BaseLevelGoal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
@@ -22,20 +25,20 @@ public class BulkGoalChangesTest {
         profile.add(archived);
         profile.metadata(archived).observe(archived, "Archived", System.currentTimeMillis());
         profile.remove(archived);
-        java.util.List<Goal> before = new java.util.ArrayList<>(profile.getGoals());
-        java.util.List<GrinderProfile.ArchivedHistory> history = new java.util.ArrayList<>(profile.archivedHistory());
+        List<Goal> before = new ArrayList<>(profile.getGoals());
+        List<GrinderProfile.ArchivedHistory> history = new ArrayList<>(profile.archivedHistory());
         BulkGoalChanges.Change change = apply(profile, before, BulkGoalAction.DELETE);
         assertTrue(profile.getGoals().isEmpty());
         GrinderProfile saved = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
         assertTrue(saved.getGoals().isEmpty());
         change.undo.run();
         assertEquals(before, profile.getGoals());
-        assertEquals(history, new java.util.ArrayList<>(profile.archivedHistory()));
+        assertEquals(history, new ArrayList<>(profile.archivedHistory()));
     }
     @Test
     public void pinAndCategoryChangesCanBeUndoneAsOneOperation() {
         GrinderProfile profile = new GrinderProfile(42);
-        java.util.List<Goal> selected = profile.getGoals().subList(0, 3);
+        List<Goal> selected = profile.getGoals().subList(0, 3);
         BulkGoalChanges.Change change = apply(profile, selected, BulkGoalAction.PIN);
         assertTrue(selected.stream().allMatch(goal -> profile.metadata(goal).isPinned()));
         change.undo.run();
@@ -64,8 +67,8 @@ public class BulkGoalChangesTest {
     @Test
     public void deletesAndRestoresOriginalOrderAndMetadata() {
         GrinderProfile profile = new GrinderProfile(42);
-        java.util.List<Goal> before = new java.util.ArrayList<>(profile.getGoals());
-        java.util.List<Goal> selected = new java.util.ArrayList<>(before.subList(0, 3));
+        List<Goal> before = new ArrayList<>(profile.getGoals());
+        List<Goal> selected = new ArrayList<>(before.subList(0, 3));
         profile.metadata(selected.get(0)).setPinned(true);
         String id = profile.metadata(selected.get(0)).getId();
         BulkGoalChanges.Change change = apply(profile, selected, BulkGoalAction.DELETE);
@@ -90,7 +93,7 @@ public class BulkGoalChangesTest {
         assertEquals(RepeatSchedule.NONE, profile.metadata(goal).recurring().getSchedule());
     }
 
-    private static BulkGoalChanges.Change apply(GrinderProfile profile, java.util.List<Goal> selected, BulkGoalAction action) {
-        return BulkGoalChanges.apply(profile, new java.util.ArrayList<>(selected), action, GoalCategory.OTHER, RepeatSchedule.DAILY, 5, 0, false, System.currentTimeMillis());
+    private static BulkGoalChanges.Change apply(GrinderProfile profile, List<Goal> selected, BulkGoalAction action) {
+        return BulkGoalChanges.apply(profile, new ArrayList<>(selected), action, GoalCategory.OTHER, RepeatSchedule.DAILY, 5, 0, false, System.currentTimeMillis());
     }
 }

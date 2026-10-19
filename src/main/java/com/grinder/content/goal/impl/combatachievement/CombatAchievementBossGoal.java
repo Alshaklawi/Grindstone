@@ -3,6 +3,7 @@ import com.grinder.content.combatachievement.CombatAchievementData;
 import com.grinder.content.goal.ClientCompletionGoal;
 import com.grinder.content.goal.GoalCategory;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import net.runelite.api.Client;
 /**
@@ -36,7 +37,7 @@ public final class CombatAchievementBossGoal extends ClientCompletionGoal {
         if (boss < -1 || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Invalid boss");
         }
-        return boss >= 0 ? Integer.toString(boss) : "name:" + name.toLowerCase(java.util.Locale.ROOT);
+        return boss >= 0 ? Integer.toString(boss) : "name:" + name.toLowerCase(Locale.ROOT);
     }
     @Override public String getTitle(Client client) {
         return name + " combat achievements";

@@ -1,14 +1,16 @@
 package com.grinder.content.goal.impl.item;
-import lombok.Getter;
-import com.grinder.content.storage.PlayerItemStorage;
-import com.grinder.content.storage.PlayerStorageSource;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.GoalStatus;
+import com.grinder.content.storage.PlayerItemStorage;
+import com.grinder.content.storage.PlayerStorageSource;
 import com.grinder.ui.Icon;
+import com.grinder.ui.components.GoalComponent;
 import java.awt.image.BufferedImage;
 import java.util.Locale;
+import lombok.Getter;
 import net.runelite.api.Client;
+import net.runelite.api.ItemComposition;
 import net.runelite.api.ItemContainer;
 import net.runelite.client.game.ItemManager;
 /**
@@ -52,7 +54,7 @@ public final class PossessedItemGoal implements Goal {
         amount = target;
     }
     @Override public String getTitle(Client client) {
-        net.runelite.api.ItemComposition definition = client == null ? null : client.getItemDefinition(item);
+        ItemComposition definition = client == null ? null : client.getItemDefinition(item);
         return (definition == null ? "Item " + item : definition.getName()) + " owned";
     }
     @Override public BufferedImage getIcon(Client client) {
@@ -97,9 +99,9 @@ public final class PossessedItemGoal implements Goal {
         current = next;
         return changed;
     }
-    @Override public com.grinder.ui.components.GoalComponent build(Client client) {
+    @Override public GoalComponent build(Client client) {
         refresh(client);
-        com.grinder.ui.components.GoalComponent component = Goal.super.build(client);
+        GoalComponent component = Goal.super.build(client);
         component.setRequiredQuantity(amount);
         return component;
     }

@@ -1,11 +1,15 @@
 package com.grinder.content.goal.impl.experience;
 
-import lombok.Getter;
+import com.grinder.config.GrinderConfig;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.GoalStatus;
+import com.grinder.ui.Icon;
+import com.grinder.ui.components.GoalComponent;
 import com.grinder.util.NumberFormats;
+import java.awt.image.BufferedImage;
 import java.util.Objects;
+import lombok.Getter;
 import net.runelite.api.Client;
 import net.runelite.api.Skill;
 
@@ -57,7 +61,7 @@ public final class SessionExperienceGoal implements Goal {
     }
 
     @Override
-    public com.grinder.ui.components.GoalComponent build(Client client, com.grinder.config.GrinderConfig config) {
+    public GoalComponent build(Client client, GrinderConfig config) {
         refresh(client);
         return Goal.super.build(client, config);
     }
@@ -113,8 +117,8 @@ public final class SessionExperienceGoal implements Goal {
     }
 
     @Override
-    public java.awt.image.BufferedImage getIcon(Client client) {
-        return com.grinder.ui.Icon.SKILLING.getImage();
+    public BufferedImage getIcon(Client client) {
+        return Icon.SKILLING.getImage();
     }
 
     @Override

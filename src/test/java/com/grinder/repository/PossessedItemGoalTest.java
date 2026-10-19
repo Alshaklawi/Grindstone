@@ -1,14 +1,16 @@
 package com.grinder.repository;
-import com.grinder.content.storage.PlayerItemStorage;
 import com.grinder.content.goal.GoalStatus;
 import com.grinder.content.goal.impl.item.PossessedItemGoal;
+import com.grinder.content.storage.PlayerItemStorage;
 import java.util.Collections;
+import java.util.function.IntUnaryOperator;
 import net.runelite.api.Item;
 import net.runelite.api.gameval.InventoryID;
 import net.runelite.api.gameval.ItemID;
-import net.runelite.api.gameval.VarbitID;
 import net.runelite.api.gameval.VarPlayerID;
+import net.runelite.api.gameval.VarbitID;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 /**
  * @author Ayman Yassen
@@ -66,11 +68,11 @@ public class PossessedItemGoalTest {
     }
     @Test public void coinCoffersUseCorrectUnitsAndAreNotAccumulatedTwice() {
         PlayerItemStorage storage = new PlayerItemStorage();
-        java.util.function.IntUnaryOperator varbits = id -> id == VarbitID.NZONE_CASH ? 12
+        IntUnaryOperator varbits = id -> id == VarbitID.NZONE_CASH ? 12
                 : id == VarbitID.BR_COFFER ? 3
                 : id == VarbitID.BLAST_FURNACE_COFFER ? 100
                 : id == VarbitID.MISC_COFFERS ? 200 : 0;
-        java.util.function.IntUnaryOperator varps = id -> id == VarPlayerID.SCAR_ESSENCEMINE_COFFER ? 300 : 0;
+        IntUnaryOperator varps = id -> id == VarPlayerID.SCAR_ESSENCEMINE_COFFER ? 300 : 0;
         storage.refreshCoinValues(varbits, varps);
         storage.refreshCoinValues(varbits, varps);
         assertEquals(15_600, storage.quantity(ItemID.COINS));
@@ -96,7 +98,7 @@ public class PossessedItemGoalTest {
     }
     @Test public void pouchContentsRequireAnOwnedPouchAndUseLiveQuantities() {
         PlayerItemStorage storage = new PlayerItemStorage();
-        java.util.function.IntUnaryOperator values = id -> id == VarbitID.RUNE_POUCH_TYPE_1 ? 1
+        IntUnaryOperator values = id -> id == VarbitID.RUNE_POUCH_TYPE_1 ? 1
                 : id == VarbitID.RUNE_POUCH_QUANTITY_1 ? 150 : 0;
         storage.refreshRuneValues(values, type -> ItemID.DRAGON_PICKAXE);
         assertEquals(0, storage.quantity(ItemID.DRAGON_PICKAXE));

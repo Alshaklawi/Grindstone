@@ -10,8 +10,12 @@ import com.grinder.content.tracker.TrackerEntry;
 import com.grinder.repository.GoalMetadata;
 import com.grinder.repository.RepeatSchedule;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import javax.swing.*;
 import net.runelite.api.Skill;
 import net.runelite.client.ui.FontManager;
@@ -41,7 +45,7 @@ public final class RoutinePresetForm extends JPanel {
             addRow(new SkillExperienceGoal(Skill.FISHING), 50_000);
             addRow(new TrackerGoal(TrackerEntry.WINTERTODT, 1), 3);
         }
-        String id = java.util.UUID.nameUUIDFromBytes(("grinder-routine-" + weekly).getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString();
+        String id = UUID.nameUUIDFromBytes(("grinder-routine-" + weekly).getBytes(StandardCharsets.UTF_8)).toString();
         addRow(new CustomGoal(id, "Personal challenge", "Edit this routine goal to describe your own activity.", GoalCategory.OTHER, 0, 1), 1);
         JLabel note = new JLabel("<html>Existing tracker/schedule matches are skipped, not overwritten.<br>Targets count gains per UTC period. You can edit each goal afterward.</html>");
         note.setFont(FontManager.getRunescapeSmallFont());
@@ -54,7 +58,7 @@ public final class RoutinePresetForm extends JPanel {
         add(row.panel);
         add(Box.createVerticalStrut(6));
     }
-    public List<Goal> selectedGoals() throws java.text.ParseException {
+    public List<Goal> selectedGoals() throws ParseException {
         List<Goal> selected = new ArrayList<>();
         for (Row row : rows) {
             if (row.enabled.isSelected()) {
@@ -90,7 +94,7 @@ public final class RoutinePresetForm extends JPanel {
             enabled.setToolTipText("Include this goal in the routine, or uncheck to skip it.");
             this.target = new JSpinner(new SpinnerNumberModel(target, 1L, (long) Integer.MAX_VALUE, 1L));
             this.target.setEditor(new JSpinner.NumberEditor(this.target, "#,##0"));
-            this.target.setPreferredSize(new java.awt.Dimension(120, 28));
+            this.target.setPreferredSize(new Dimension(120, 28));
             this.target.setToolTipText("Required progress per period. Edit this before adding the routine.");
             enabled.addActionListener(event -> this.target.setEnabled(enabled.isSelected()));
             panel.setOpaque(false);

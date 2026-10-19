@@ -2,6 +2,7 @@ package com.grinder.repository;
 
 import com.grinder.content.goal.Goal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Function;
@@ -51,7 +52,7 @@ public final class HistoryRecord {
         for (GrinderProfile.ArchivedHistory archived : profile.archivedHistory()) {
             append(records, archived.getMetadata(), archived.getTitle() + " (archived)", "");
         }
-        records.sort(java.util.Comparator.comparingLong((HistoryRecord value) -> value.start).reversed());
+        records.sort(Comparator.comparingLong((HistoryRecord value) -> value.start).reversed());
         return records;
     }
     private static void append(List<HistoryRecord> records, GoalMetadata metadata, String name, String id) {

@@ -1,23 +1,26 @@
 package com.grinder.ui.item;
 
-import com.grinder.ui.editor.CustomGoalForm;
-import com.grinder.ui.editor.GoalEditorPanel;
-
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal;
+import com.grinder.content.goal.impl.item.PossessedItemGoal;
 import com.grinder.content.goal.impl.level.SkillLevelGoal;
+import com.grinder.ui.editor.CustomGoalForm;
+import com.grinder.ui.editor.GoalEditorPanel;
 import java.awt.Component;
 import java.awt.Container;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.swing.JComboBox;
+import javax.swing.JSpinner;
 import javax.swing.SwingUtilities;
 import net.runelite.api.Skill;
 import net.runelite.api.gameval.ItemID;
 import net.runelite.client.ui.components.IconTextField;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
@@ -110,17 +113,17 @@ public class ItemPickerTest {
                 assertEquals(ItemID.DRAGON_PICKAXE, ((CollectionLogItemGoal) form.createGoal()).getItem());
                 type.setSelectedItem("Owned item quantity");
                 assertTrue(form.isReady());
-                javax.swing.JSpinner quantity = (javax.swing.JSpinner) descendants(form).stream()
-                        .filter(component -> component instanceof javax.swing.JSpinner).findFirst().get();
+                JSpinner quantity = (JSpinner) descendants(form).stream()
+                        .filter(component -> component instanceof JSpinner).findFirst().get();
                 quantity.setValue(3_000_000_000L);
-                com.grinder.content.goal.impl.item.PossessedItemGoal owned =
-                (com.grinder.content.goal.impl.item.PossessedItemGoal) form.createGoal();
+                PossessedItemGoal owned =
+                (PossessedItemGoal) form.createGoal();
                 assertEquals(ItemID.DRAGON_PICKAXE, owned.getItem());
                 assertEquals(3_000_000_000L, owned.getAmount());
                 type.setSelectedItem("Custom goal");
                 assertTrue(descendants(form).stream().anyMatch(component -> component instanceof CustomGoalForm));
                 assertTrue(form.isReady());
-            } catch (java.text.ParseException exception) {
+            } catch (ParseException exception) {
                 throw new AssertionError(exception);
             } finally {
                 form.stopSearch();

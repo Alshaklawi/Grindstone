@@ -1,25 +1,34 @@
 package com.grinder.repository;
+import com.google.gson.JsonObject;
 import com.grinder.content.goal.Goal;
-import com.grinder.content.goal.impl.TrackerGoal;
+import com.grinder.content.goal.impl.ChecklistGoal;
 import com.grinder.content.goal.impl.CustomGoal;
-import com.grinder.content.goal.impl.level.SkillLevelGoal;
-import com.grinder.content.goal.impl.level.CombatLevelGoal;
-import com.grinder.content.goal.impl.level.TotalLevelGoal;
-import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
-import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
+import com.grinder.content.goal.impl.LinkedGoal;
+import com.grinder.content.goal.impl.TrackerGoal;
+import com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierAreaGoal;
+import com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierGoal;
 import com.grinder.content.goal.impl.collectionlog.CollectionLogEntryGoal;
 import com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal;
-import com.grinder.content.goal.impl.quest.QuestGoal;
-import com.grinder.content.goal.impl.quest.QuestSeriesGoal;
-import com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierGoal;
-import com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierAreaGoal;
-import com.grinder.content.goal.impl.combatachievement.CombatAchievementTierGoal;
 import com.grinder.content.goal.impl.combatachievement.CombatAchievementBossGoal;
 import com.grinder.content.goal.impl.combatachievement.CombatAchievementDifficultyGoal;
+import com.grinder.content.goal.impl.combatachievement.CombatAchievementTaskGoal;
+import com.grinder.content.goal.impl.combatachievement.CombatAchievementTierGoal;
+import com.grinder.content.goal.impl.experience.BaseExperienceGoal;
+import com.grinder.content.goal.impl.experience.SessionExperienceGoal;
+import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
+import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
 import com.grinder.content.goal.impl.item.PossessedItemGoal;
+import com.grinder.content.goal.impl.level.BaseLevelGoal;
+import com.grinder.content.goal.impl.level.CombatLevelGoal;
+import com.grinder.content.goal.impl.level.SkillLevelGoal;
+import com.grinder.content.goal.impl.level.TotalLevelGoal;
+import com.grinder.content.goal.impl.quest.QuestGoal;
+import com.grinder.content.goal.impl.quest.QuestSeriesGoal;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 /**
  * @author Ayman Yassen
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
@@ -33,14 +42,14 @@ final class SavedGoalTypes {
         Map<String, Class<? extends Goal>> types = new LinkedHashMap<>();
         register(types, TrackerGoal.class, "activity", "com.grinder.content.goal.impl.TrackerGoal");
         register(types, CustomGoal.class, "custom", "com.grinder.content.goal.impl.CustomGoal");
-        register(types, com.grinder.content.goal.impl.ChecklistGoal.class, "manual-checklist");
-        register(types, com.grinder.content.goal.impl.LinkedGoal.class, "linked-goal");
+        register(types, ChecklistGoal.class, "manual-checklist");
+        register(types, LinkedGoal.class, "linked-goal");
         register(types, SkillLevelGoal.class, "skill-level", "com.grinder.content.goal.impl.level.SkillLevelGoal", "com.grinder.content.goal.impl.SkillLevelGoal");
         register(types, CombatLevelGoal.class, "combat-level", "com.grinder.content.goal.impl.level.CombatLevelGoal", "com.grinder.content.goal.impl.CombatLevelGoal");
         register(types, TotalLevelGoal.class, "total-level", "com.grinder.content.goal.impl.level.TotalLevelGoal", "com.grinder.content.goal.impl.TotalLevelGoal");
-        register(types, com.grinder.content.goal.impl.level.BaseLevelGoal.class, "base-level");
-        register(types, com.grinder.content.goal.impl.experience.BaseExperienceGoal.class, "base-xp");
-        register(types, com.grinder.content.goal.impl.experience.SessionExperienceGoal.class, "session-xp");
+        register(types, BaseLevelGoal.class, "base-level");
+        register(types, BaseExperienceGoal.class, "base-xp");
+        register(types, SessionExperienceGoal.class, "session-xp");
         register(types, SkillExperienceGoal.class, "skill-xp", "com.grinder.content.goal.impl.experience.SkillExperienceGoal", "com.grinder.content.goal.impl.SkillExperienceGoal");
         register(types, TotalExperienceGoal.class, "total-xp", "com.grinder.content.goal.impl.experience.TotalExperienceGoal", "com.grinder.content.goal.impl.TotalExperienceGoal");
         register(types, CollectionLogEntryGoal.class, "collection-page", "com.grinder.content.goal.impl.colletion_log.CollectionLogEntryGoal");
@@ -53,7 +62,7 @@ final class SavedGoalTypes {
         register(types, CombatAchievementBossGoal.class, "combat-boss", "com.grinder.content.goal.impl.combat_achievement.CombatAchievementBossGoal");
         register(types, CombatAchievementDifficultyGoal.class, "combat-difficulty", "com.grinder.content.goal.impl.combat_achievement.CombatAchievementDifficultyGoal");
         register(types, PossessedItemGoal.class, "owned-item", "com.grinder.content.goal.impl.item.PossesedItemGoal");
-        register(types, com.grinder.content.goal.impl.combatachievement.CombatAchievementTaskGoal.class, "combat-task");
+        register(types, CombatAchievementTaskGoal.class, "combat-task");
         return Collections.unmodifiableMap(types);
     }
     private static void register(Map<String, Class<? extends Goal>> types, Class<? extends Goal> type, String... aliases) {
@@ -62,7 +71,7 @@ final class SavedGoalTypes {
         }
         types.put(type.getName(), type);
     }
-    static Class<? extends Goal> fromTag(com.google.gson.JsonObject saved) {
+    static Class<? extends Goal> fromTag(JsonObject saved) {
         Class<? extends Goal> modern = saved.has("type") ? resolve(saved.get("type").getAsString()) : null;
         Class<? extends Goal> legacy = saved.has("class") ? resolve(saved.get("class").getAsString()) : null;
         if (saved.has("type") && saved.has("class") && modern != legacy) {
@@ -73,8 +82,8 @@ final class SavedGoalTypes {
     static Class<? extends Goal> resolve(String name) {
         return TYPES.get(name);
     }
-    static java.util.Set<Class<? extends Goal>> registeredTypes() {
-        return Collections.unmodifiableSet(new java.util.HashSet<>(TYPES.values()));
+    static Set<Class<? extends Goal>> registeredTypes() {
+        return Collections.unmodifiableSet(new HashSet<>(TYPES.values()));
     }
     static String nameOf(Goal goal) {
         for (Map.Entry<String, Class<? extends Goal>> entry : TYPES.entrySet()) {

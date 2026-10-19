@@ -10,14 +10,22 @@ import com.grinder.repository.GrinderProfile;
 import com.grinder.repository.RecurringGoal;
 import com.grinder.repository.RepeatSchedule;
 import com.grinder.ui.components.GoalComponent;
+import com.grinder.ui.editor.GoalEditorPanel;
 import com.grinder.ui.editor.RoutinePresetForm;
 import com.grinder.ui.util.GoalCardCache;
+import java.awt.Component;
+import java.awt.Container;
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collections;
+import javax.swing.AbstractButton;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.SwingUtilities;
 import net.runelite.api.Skill;
 import net.runelite.api.gameval.ItemID;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
@@ -28,7 +36,7 @@ import static org.junit.Assert.*;
 public class RoutineWorkflowTest {
     @Test public void recurringCustomEditorUsesOnlyThePeriodTarget() throws Exception {
         SwingUtilities.invokeAndWait(() -> {
-            com.grinder.ui.editor.GoalEditorPanel form = new com.grinder.ui.editor.GoalEditorPanel(null, (query, callback) -> () -> {
+            GoalEditorPanel form = new GoalEditorPanel(null, (query, callback) -> () -> {
             });
             try {
                 form.loadGoal(new CustomGoal("Routine", "", GoalCategory.OTHER, 0, 5));
@@ -36,7 +44,7 @@ public class RoutineWorkflowTest {
                 assertEquals(100, form.createGoal().getProgressMaximum());
                 form.loadRepeat(RepeatSchedule.NONE, 100);
                 assertEquals(5, form.createGoal().getProgressMaximum());
-            } catch (java.text.ParseException exception) {
+            } catch (ParseException exception) {
                 throw new AssertionError(exception);
             } finally {
                 form.stopSearch();
@@ -60,7 +68,7 @@ public class RoutineWorkflowTest {
                     }
                 }
                 assertEquals(8, profile.getGoals().size());
-            } catch (java.text.ParseException exception) {
+            } catch (ParseException exception) {
                 throw new AssertionError(exception);
             }
         });
@@ -96,20 +104,20 @@ public class RoutineWorkflowTest {
             component.setManualActions(1, 1, () -> fail("No increment"), () -> {
             }, () -> {
             });
-            assertTrue(hasControl(component, javax.swing.JCheckBox.class, "Completed", true));
+            assertTrue(hasControl(component, JCheckBox.class, "Completed", true));
             component.setManualActions(5, 5, () -> {
             }, () -> {
             }, () -> {
             });
-            assertTrue(hasControl(component, javax.swing.JButton.class, "+1", false));
+            assertTrue(hasControl(component, JButton.class, "+1", false));
         });
     }
-    private boolean hasControl(java.awt.Container parent, Class<?> type, String label, boolean enabled) {
-        for (java.awt.Component child : parent.getComponents()) {
-            if (type.isInstance(child) && child instanceof javax.swing.AbstractButton && ((javax.swing.AbstractButton) child).getText().equals(label) && child.isEnabled() == enabled) {
+    private boolean hasControl(Container parent, Class<?> type, String label, boolean enabled) {
+        for (Component child : parent.getComponents()) {
+            if (type.isInstance(child) && child instanceof AbstractButton && ((AbstractButton) child).getText().equals(label) && child.isEnabled() == enabled) {
                 return true;
             }
-            if (child instanceof java.awt.Container && hasControl((java.awt.Container) child, type, label, enabled)) {
+            if (child instanceof Container && hasControl((Container) child, type, label, enabled)) {
                 return true;
             }
         }

@@ -1,33 +1,39 @@
 package com.grinder.content.storage;
-import java.util.Map;
-import java.util.LinkedHashMap;
-import java.util.HashMap;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.IntUnaryOperator;
 import java.util.stream.Collectors;
 import net.runelite.api.Client;
-import net.runelite.api.Item;
-import net.runelite.api.ItemContainer;
-import net.runelite.api.ItemComposition;
-import net.runelite.api.EnumID;
 import net.runelite.api.EnumComposition;
+import net.runelite.api.EnumID;
+import net.runelite.api.Item;
+import net.runelite.api.ItemComposition;
+import net.runelite.api.ItemContainer;
 import net.runelite.api.gameval.ItemID;
-import net.runelite.api.gameval.VarbitID;
 import net.runelite.api.gameval.VarPlayerID;
+import net.runelite.api.gameval.VarbitID;
 /**
  * @author Ayman Yassen
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
  * @since 10/18/2026
  */
 public final class PlayerItemStorage {
-    private final java.time.Clock clock;
-    private final Map<PlayerStorageSource, java.time.Instant> lastSeen = new EnumMap<>(PlayerStorageSource.class);
+    private final Clock clock;
+    private final Map<PlayerStorageSource, Instant> lastSeen = new EnumMap<>(PlayerStorageSource.class);
     public PlayerItemStorage() {
-        this(java.time.Clock.systemUTC());
+        this(Clock.systemUTC());
     }
-    public PlayerItemStorage(java.time.Clock clock) {
-        this.clock = java.util.Objects.requireNonNull(clock);
+    public PlayerItemStorage(Clock clock) {
+        this.clock = Objects.requireNonNull(clock);
     }
     private final Map<PlayerStorageSource, Map<Integer, Long>> containers = new EnumMap<>(PlayerStorageSource.class);
     private final Map<String, Map<Integer, Long>> variables = new LinkedHashMap<>();
@@ -71,16 +77,16 @@ public final class PlayerItemStorage {
         containers.put(source, counts);
         lastSeen.put(source, clock.instant());
     }
-    public Map<PlayerStorageSource, java.time.Instant> lastSeen() {
-        return java.util.Collections.unmodifiableMap(new EnumMap<>(lastSeen));
+    public Map<PlayerStorageSource, Instant> lastSeen() {
+        return Collections.unmodifiableMap(new EnumMap<>(lastSeen));
     }
     public String freshness() {
-        java.time.Instant seen = lastSeen.get(PlayerStorageSource.BANK);
-        return seen == null ? "Bank not loaded this login" : "Bank snapshot: " + java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss z", Locale.ROOT).withZone(java.time.ZoneId.systemDefault()).format(seen);
+        Instant seen = lastSeen.get(PlayerStorageSource.BANK);
+        return seen == null ? "Bank not loaded this login" : "Bank snapshot: " + DateTimeFormatter.ofPattern("HH:mm:ss z", Locale.ROOT).withZone(ZoneId.systemDefault()).format(seen);
     }
     public String snapshotLabel() {
-        java.time.Instant seen = lastSeen.get(PlayerStorageSource.BANK);
-        return "Last snapshot: " + (seen == null ? "—" : java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss z", Locale.ROOT).withZone(java.time.ZoneId.systemDefault()).format(seen));
+        Instant seen = lastSeen.get(PlayerStorageSource.BANK);
+        return "Last snapshot: " + (seen == null ? "—" : DateTimeFormatter.ofPattern("HH:mm:ss z", Locale.ROOT).withZone(ZoneId.systemDefault()).format(seen));
     }
     public boolean hasBankSnapshot() {
         return containers.containsKey(PlayerStorageSource.BANK);

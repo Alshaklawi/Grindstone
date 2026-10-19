@@ -1,6 +1,7 @@
 package com.grinder.ui.editor;
 
 import java.awt.BorderLayout;
+import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -48,7 +49,7 @@ public final class DeadlineForm extends JPanel {
                 throw new IllegalArgumentException("Choose a UTC date from 1970 to 9998.");
             }
             return due.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
-        } catch (java.time.DateTimeException failure) {
+        } catch (DateTimeException failure) {
             throw new IllegalArgumentException("Enter a valid date as YYYY-MM-DD, or leave it blank.", failure);
         }
     }

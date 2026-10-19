@@ -1,17 +1,20 @@
 package com.grinder.repository;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.grinder.content.goal.Goal;
-import com.grinder.content.goal.impl.level.CombatLevelGoal;
-import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
-import com.grinder.content.goal.impl.level.SkillLevelGoal;
-import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
-import com.grinder.content.goal.impl.level.TotalLevelGoal;
 import com.grinder.content.goal.impl.TrackerGoal;
+import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
+import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
+import com.grinder.content.goal.impl.level.CombatLevelGoal;
+import com.grinder.content.goal.impl.level.SkillLevelGoal;
+import com.grinder.content.goal.impl.level.TotalLevelGoal;
 import com.grinder.content.tracker.TrackerEntry;
+import java.util.Arrays;
 import java.util.Collections;
 import net.runelite.api.Skill;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
@@ -63,9 +66,9 @@ public class GoalManagementTest {
     @Test
     public void goalsSavedBeforePackageReorganizationStillLoad() {
         GrinderProfile profile = new GrinderProfile(42);
-        profile.replace(java.util.Arrays.asList(new SkillLevelGoal(Skill.ATTACK), new SkillExperienceGoal(Skill.FISHING), new TotalLevelGoal(), new TotalExperienceGoal(), new CombatLevelGoal()));
+        profile.replace(Arrays.asList(new SkillLevelGoal(Skill.ATTACK), new SkillExperienceGoal(Skill.FISHING), new TotalLevelGoal(), new TotalExperienceGoal(), new CombatLevelGoal()));
         JsonObject json = TestProfiles.REPOSITORY.toJson(profile);
-        for (com.google.gson.JsonElement element : json.getAsJsonArray("goals")) {
+        for (JsonElement element : json.getAsJsonArray("goals")) {
             JsonObject entry = element.getAsJsonObject();
             String oldClass = SavedGoalTypes.resolve(entry.get("type").getAsString()).getName()
                     .replace(".impl.level.", ".impl.").replace(".impl.experience.", ".impl.");

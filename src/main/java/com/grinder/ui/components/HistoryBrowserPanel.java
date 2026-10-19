@@ -5,16 +5,18 @@ import com.grinder.repository.RepeatSchedule;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import net.runelite.client.ui.FontManager;
 
@@ -64,10 +66,10 @@ public final class HistoryBrowserPanel extends JPanel {
         for (int column = 0; column < model.getColumnCount(); column++) {
             table.getColumnModel().getColumn(column).setPreferredWidth(column == 0 ? 230 : column == 4 || column == 5 ? 90 : 175);
         }
-        table.setDefaultRenderer(Long.class, new javax.swing.table.DefaultTableCellRenderer() {
+        table.setDefaultRenderer(Long.class, new DefaultTableCellRenderer() {
             @Override protected void setValue(Object value) {
                 setHorizontalAlignment(SwingConstants.RIGHT);
-                setText(value == null ? "—" : String.format(java.util.Locale.ROOT, "%,d", value));
+                setText(value == null ? "—" : String.format(Locale.ROOT, "%,d", value));
             }
         });
         JButton open = new JButton("Go to selected goal");

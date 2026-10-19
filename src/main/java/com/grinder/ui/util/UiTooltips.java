@@ -1,6 +1,7 @@
 package com.grinder.ui.util;
 
 import java.awt.Component;
+import java.util.Objects;
 import javax.swing.JComponent;
 
 /**
@@ -19,7 +20,7 @@ public final class UiTooltips {
             if (child instanceof JComponent) {
                 JComponent nested = (JComponent) child;
                 String existing = nested.getToolTipText();
-                if (existing == null || java.util.Objects.equals(existing, previous)) {
+                if (existing == null || Objects.equals(existing, previous)) {
                     set(nested, text);
                 }
             }

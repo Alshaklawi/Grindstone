@@ -1,33 +1,42 @@
 package com.grinder.ui.editor;
 
-import com.grinder.util.NumberFormats;
-
-import com.grinder.util.HtmlUtils;
-
-import com.grinder.ui.item.ItemLookup;
-import com.grinder.ui.item.ItemPickerPanel;
-import com.grinder.ui.util.UiTooltips;
-
 import com.grinder.content.collectionlog.CollectionLogEntry;
-import com.grinder.content.tracker.TrackerEntry;
 import com.grinder.content.goal.Goal;
+import com.grinder.content.goal.ManualGoal;
+import com.grinder.content.goal.impl.ChecklistGoal;
+import com.grinder.content.goal.impl.CustomGoal;
 import com.grinder.content.goal.impl.TrackerGoal;
 import com.grinder.content.goal.impl.collectionlog.CollectionLogEntryGoal;
 import com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal;
+import com.grinder.content.goal.impl.experience.BaseExperienceGoal;
+import com.grinder.content.goal.impl.experience.SessionExperienceGoal;
 import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
 import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
+import com.grinder.content.goal.impl.item.PossessedItemGoal;
+import com.grinder.content.goal.impl.level.BaseLevelGoal;
 import com.grinder.content.goal.impl.level.CombatLevelGoal;
 import com.grinder.content.goal.impl.level.SkillLevelGoal;
 import com.grinder.content.goal.impl.level.TotalLevelGoal;
+import com.grinder.content.tracker.TrackerEntry;
+import com.grinder.repository.GrinderProfile;
+import com.grinder.repository.RepeatSchedule;
+import com.grinder.ui.item.ItemLookup;
+import com.grinder.ui.item.ItemPickerPanel;
+import com.grinder.ui.util.UiTooltips;
+import com.grinder.util.HtmlUtils;
+import com.grinder.util.NumberFormats;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.text.ParseException;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Supplier;
 import javax.swing.*;
 import net.runelite.api.Skill;
+import net.runelite.api.gameval.ItemID;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
@@ -42,8 +51,8 @@ public final class GoalEditorPanel extends JPanel {
     private final ChecklistGoalForm checklistForm = new ChecklistGoalForm();
     private final CustomGoalForm customForm = new CustomGoalForm();
     private final RepeatGoalForm repeatForm = new RepeatGoalForm();
-    public com.grinder.repository.RepeatSchedule getRepeatSchedule() {
-        return repeatForm.isVisible() ? repeatForm.getSchedule() : com.grinder.repository.RepeatSchedule.NONE;
+    public RepeatSchedule getRepeatSchedule() {
+        return repeatForm.isVisible() ? repeatForm.getSchedule() : RepeatSchedule.NONE;
     }
     public long getRepeatTarget() {
         if (type.getSelectedIndex() == 21) {
@@ -51,7 +60,7 @@ public final class GoalEditorPanel extends JPanel {
         }
         return repeatForm.getTarget();
     }
-    public void loadRepeat(com.grinder.repository.RepeatSchedule schedule, long target) {
+    public void loadRepeat(RepeatSchedule schedule, long target) {
         repeatForm.load(schedule, target);
     }
     private final ItemPickerPanel itemPicker;
@@ -64,14 +73,14 @@ public final class GoalEditorPanel extends JPanel {
     private final Map<String, Supplier<Goal>> choices = new LinkedHashMap<>();
     private final ItemManager itemManager;
     private boolean updating;
-    private Map<Goal, com.grinder.repository.RepeatSchedule> existingGoals;
+    private Map<Goal, RepeatSchedule> existingGoals;
     private final Map<Integer, Map<String, Supplier<Goal>>> completionChoices;
 
     public GoalEditorPanel(ItemManager itemManager, ItemLookup searchService) {
-        this(itemManager, searchService, com.grinder.ui.editor.CompletionGoalChoices.create(null));
+        this(itemManager, searchService, CompletionGoalChoices.create(null));
     }
 
-    public void setExistingGoals(Map<Goal, com.grinder.repository.RepeatSchedule> existingGoals) {
+    public void setExistingGoals(Map<Goal, RepeatSchedule> existingGoals) {
         this.existingGoals = new LinkedHashMap<>(existingGoals);
     }
 
@@ -88,12 +97,12 @@ public final class GoalEditorPanel extends JPanel {
         text.append("Type: ").append(type.getSelectedItem()).append('\n');
         text.append("Target: ").append(goal.getProgressMaximum() > 0 ? String.format(Locale.ROOT, "%,d", goal.getProgressMaximum()) : "native completion; reading loads after saving").append('\n');
         text.append("Repeat: ").append(getRepeatSchedule());
-        if (getRepeatSchedule() != com.grinder.repository.RepeatSchedule.NONE) {
+        if (getRepeatSchedule() != RepeatSchedule.NONE) {
             text.append(" · ").append(String.format(Locale.ROOT, "%,d per period", getRepeatTarget()));
         }
-        boolean duplicate = existingGoals != null && existingGoals.entrySet().stream().anyMatch(entry -> entry.getValue() == getRepeatSchedule() && com.grinder.repository.GrinderProfile.sameSelection(goal, entry.getKey()));
+        boolean duplicate = existingGoals != null && existingGoals.entrySet().stream().anyMatch(entry -> entry.getValue() == getRepeatSchedule() && GrinderProfile.sameSelection(goal, entry.getKey()));
         text.append("\n\n").append(duplicate ? "A matching tracker and schedule existed when this editor opened. You will be asked before changing its target; no duplicate is added." : "This adds a new goal. Matching trackers are checked again before saving.");
-        text.append("\n\n").append(goal instanceof com.grinder.content.goal.ManualGoal ? "Manual progress only. Grinder never performs game actions." : "Client progress starts after saving. Some counters, storage and collection logs need their native interface opened. Unavailable readings are not confirmed zero.");
+        text.append("\n\n").append(goal instanceof ManualGoal ? "Manual progress only. Grinder never performs game actions." : "Client progress starts after saving. Some counters, storage and collection logs need their native interface opened. Unavailable readings are not confirmed zero.");
         if (!goal.getDescription().isEmpty()) {
             text.append("\n\n").append(goal.getDescription());
         }
@@ -135,7 +144,7 @@ public final class GoalEditorPanel extends JPanel {
             }
         });
         repeatForm.addScheduleListener(() -> {
-            customForm.setRecurring(type.getSelectedIndex() == 8 && repeatForm.getSchedule() != com.grinder.repository.RepeatSchedule.NONE);
+            customForm.setRecurring(type.getSelectedIndex() == 8 && repeatForm.getSchedule() != RepeatSchedule.NONE);
             firePropertyChange("formLayout", false, true);
         });
         rebuild();
@@ -164,7 +173,7 @@ public final class GoalEditorPanel extends JPanel {
             body.add(checklistForm);
             setHint("Check each step manually. Daily, weekly and monthly routines require every step, reset at the next UTC period and keep observed history. No game actions are performed.");
         } else if (kind == 8) {
-            customForm.setRecurring(repeatForm.getSchedule() != com.grinder.repository.RepeatSchedule.NONE);
+            customForm.setRecurring(repeatForm.getSchedule() != RepeatSchedule.NONE);
             customForm.setAlignmentX(LEFT_ALIGNMENT);
             body.add(customForm);
             setHint("Write your own goal. You control its progress and can edit its details later.");
@@ -174,7 +183,7 @@ public final class GoalEditorPanel extends JPanel {
             itemPicker.resumeSearch();
             if (kind == 16) {
                 body.add(Box.createVerticalStrut(12));
-                target.setModel(GoalTargetModels.create(new com.grinder.content.goal.impl.item.PossessedItemGoal( net.runelite.api.gameval.ItemID.COINS)));
+                target.setModel(GoalTargetModels.create(new PossessedItemGoal( ItemID.COINS)));
                 target.setEditor(new JSpinner.NumberEditor(target, "#,##0"));
                 GoalTargetModels.describe(target);
                 JPanel quantity = field("Target quantity", target);
@@ -235,26 +244,26 @@ public final class GoalEditorPanel extends JPanel {
 
     private void populateChoices(int kind) {
         if (kind == 20) {
-            choices.put("All skills (total gains)", com.grinder.content.goal.impl.experience.SessionExperienceGoal::new);
+            choices.put("All skills (total gains)", SessionExperienceGoal::new);
             for (Skill skill : Skill.values()) {
-                choices.put(skill.getName(), () -> new com.grinder.content.goal.impl.experience.SessionExperienceGoal(skill));
+                choices.put(skill.getName(), () -> new SessionExperienceGoal(skill));
             }
             return;
         }
-        if (kind == 6 && !completionChoices.getOrDefault(6, java.util.Collections.emptyMap()).isEmpty()) {
+        if (kind == 6 && !completionChoices.getOrDefault(6, Collections.emptyMap()).isEmpty()) {
             choices.putAll(completionChoices.get(6));
             return;
         }
         if (kind == 18) {
-            choices.put("Base level", com.grinder.content.goal.impl.level.BaseLevelGoal::new);
+            choices.put("Base level", BaseLevelGoal::new);
             return;
         }
         if (kind == 19) {
-            choices.put("Base experience", com.grinder.content.goal.impl.experience.BaseExperienceGoal::new);
+            choices.put("Base experience", BaseExperienceGoal::new);
             return;
         }
         if (kind >= 9) {
-            choices.putAll(completionChoices.getOrDefault(kind, java.util.Collections.emptyMap()));
+            choices.putAll(completionChoices.getOrDefault(kind, Collections.emptyMap()));
             return;
         }
         if (kind < 2) {
@@ -345,7 +354,7 @@ public final class GoalEditorPanel extends JPanel {
         firePropertyChange("ready", !isReady(), isReady());
     }
 
-    public Goal createGoal() throws java.text.ParseException {
+    public Goal createGoal() throws ParseException {
         if (type.getSelectedIndex() == 21) {
             repeatForm.commit();
             return checklistForm.read();
@@ -354,14 +363,14 @@ public final class GoalEditorPanel extends JPanel {
             repeatForm.commit();
         }
         if (type.getSelectedIndex() == 8) {
-            return customForm.read(getRepeatSchedule() == com.grinder.repository.RepeatSchedule.NONE ? 0 : getRepeatTarget());
+            return customForm.read(getRepeatSchedule() == RepeatSchedule.NONE ? 0 : getRepeatTarget());
         }
         if (type.getSelectedIndex() == 7) {
             return new CollectionLogItemGoal(itemPicker.getSelectedItemId(), 1);
         }
         if (type.getSelectedIndex() == 16) {
             target.commitEdit();
-            return new com.grinder.content.goal.impl.item.PossessedItemGoal( itemPicker.getSelectedItemId(), ((Number) target.getValue()).longValue());
+            return new PossessedItemGoal( itemPicker.getSelectedItemId(), ((Number) target.getValue()).longValue());
         }
         Goal goal = choices.get(subject.getSelectedItem()).get();
         if (goal.supportsTarget()) {
@@ -375,16 +384,16 @@ public final class GoalEditorPanel extends JPanel {
         itemPicker.stopSearch();
     }
     public void loadGoal(Goal goal) {
-        if (goal instanceof com.grinder.content.goal.impl.ChecklistGoal) {
+        if (goal instanceof ChecklistGoal) {
             type.setSelectedIndex(21);
-            checklistForm.load((com.grinder.content.goal.impl.ChecklistGoal) goal);
+            checklistForm.load((ChecklistGoal) goal);
             repeatForm.setFixedTarget(goal.getProgressMaximum());
             return;
         }
-        if (goal instanceof com.grinder.content.goal.impl.item.PossessedItemGoal) {
+        if (goal instanceof PossessedItemGoal) {
             type.setSelectedIndex(16);
             target.setValue(goal.getProgressMaximum());
-            itemPicker.loadItem(((com.grinder.content.goal.impl.item.PossessedItemGoal) goal).getItem());
+            itemPicker.loadItem(((PossessedItemGoal) goal).getItem());
             return;
         }
         if (goal instanceof CollectionLogItemGoal) {
@@ -392,9 +401,9 @@ public final class GoalEditorPanel extends JPanel {
             itemPicker.loadItem(((CollectionLogItemGoal) goal).getItem());
             return;
         }
-        if (goal instanceof com.grinder.content.goal.impl.CustomGoal) {
+        if (goal instanceof CustomGoal) {
             type.setSelectedIndex(8);
-            customForm.load((com.grinder.content.goal.impl.CustomGoal) goal);
+            customForm.load((CustomGoal) goal);
             return;
         }
         for (int kind = 0; kind < type.getItemCount(); kind++) {
@@ -403,7 +412,7 @@ public final class GoalEditorPanel extends JPanel {
             }
             type.setSelectedIndex(kind);
             for (Map.Entry<String, Supplier<Goal>> choice : choices.entrySet()) {
-                if (com.grinder.repository.GrinderProfile.sameSelection(goal, choice.getValue().get())) {
+                if (GrinderProfile.sameSelection(goal, choice.getValue().get())) {
                     subject.setSelectedItem(choice.getKey());
                     if (goal.supportsTarget()) {
                         target.setValue(goal.getProgressMaximum());

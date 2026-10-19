@@ -1,4 +1,5 @@
 package com.grinder.content.diary;
+import java.util.function.IntUnaryOperator;
 import net.runelite.api.Client;
 import net.runelite.api.gameval.VarbitID;
 /**
@@ -30,13 +31,13 @@ public enum AchievementDiaryArea {
     public int taskCount(Client client, DiaryTier tier) {
         return taskCount(client::getVarbitValue, tier);
     }
-    public int taskCount(java.util.function.IntUnaryOperator values, DiaryTier tier) {
+    public int taskCount(IntUnaryOperator values, DiaryTier tier) {
         return Math.max(0, values.applyAsInt(counts[tier.ordinal()]));
     }
     public boolean isComplete(Client client, DiaryTier tier) {
         return isComplete(client::getVarbitValue, tier);
     }
-    public boolean isComplete(java.util.function.IntUnaryOperator values, DiaryTier tier) {
+    public boolean isComplete(IntUnaryOperator values, DiaryTier tier) {
         int index = tier.ordinal();
         return completed[index] >= 0 ? values.applyAsInt(completed[index]) > 0 : taskCount(values, tier) >= new int[]{10, 19, 10}[index];
     }

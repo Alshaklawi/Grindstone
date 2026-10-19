@@ -1,16 +1,18 @@
 
 package com.grinder.content.goal.impl.collectionlog;
 
-import lombok.Getter;
 import com.grinder.config.GrinderConfig;
 import com.grinder.content.collectionlog.CollectionLogHistory;
+import com.grinder.content.collectionlog.CollectionLogPages;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.GoalStatus;
-import com.grinder.ui.components.GoalComponent;
 import com.grinder.ui.Icon;
+import com.grinder.ui.components.GoalComponent;
 import java.awt.image.BufferedImage;
+import lombok.Getter;
 import net.runelite.api.Client;
+import net.runelite.api.ItemComposition;
 import net.runelite.api.ItemContainer;
 import net.runelite.api.gameval.InventoryID;
 import net.runelite.client.game.ItemManager;
@@ -61,7 +63,7 @@ public class CollectionLogItemGoal implements Goal {
     }
 
     private boolean isObtained(ItemContainer container) {
-        return history != null && history.contains(item) || container != null && container.contains(com.grinder.content.collectionlog.CollectionLogPages.canonicalItemId(item));
+        return history != null && history.contains(item) || container != null && container.contains(CollectionLogPages.canonicalItemId(item));
     }
 
     @Override
@@ -70,7 +72,7 @@ public class CollectionLogItemGoal implements Goal {
             return "Item " + item;
         }
 
-        net.runelite.api.ItemComposition definition = client.getItemDefinition(item);
+        ItemComposition definition = client.getItemDefinition(item);
         return definition == null ? "Item " + item : definition.getName();
     }
 

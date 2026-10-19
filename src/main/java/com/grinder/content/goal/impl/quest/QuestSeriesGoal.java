@@ -1,8 +1,9 @@
 package com.grinder.content.goal.impl.quest;
-import com.grinder.content.quest.QuestSeries;
 import com.grinder.content.goal.ClientCompletionGoal;
 import com.grinder.content.goal.GoalCategory;
+import com.grinder.content.quest.QuestSeries;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import net.runelite.api.Client;
 import net.runelite.api.Quest;
@@ -32,7 +33,7 @@ public final class QuestSeriesGoal extends ClientCompletionGoal {
     @Override public boolean refresh(Client client) {
         return refreshStates(quest -> quest.getState(client));
     }
-    public boolean refreshStates(java.util.function.Function<Quest, QuestState> states) {
+    public boolean refreshStates(Function<Quest, QuestState> states) {
         int done = 0;
         boolean started = false;
         for (Quest quest : series.getQuests()) {

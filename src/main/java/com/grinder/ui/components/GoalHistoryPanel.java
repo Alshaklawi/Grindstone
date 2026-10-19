@@ -7,7 +7,12 @@ import java.awt.Dimension;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.function.Supplier;
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import net.runelite.client.ui.FontManager;
 
@@ -18,19 +23,19 @@ import net.runelite.client.ui.FontManager;
  */
 public final class GoalHistoryPanel extends JPanel {
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'UTC'").withZone(ZoneOffset.UTC);
-    public static java.util.function.Supplier<GoalHistoryPanel> snapshot(GoalMetadata metadata) {
-        java.util.List<Object[]> periods = new java.util.ArrayList<>();
-        java.util.List<Object[]> milestones = new java.util.ArrayList<>();
+    public static Supplier<GoalHistoryPanel> snapshot(GoalMetadata metadata) {
+        List<Object[]> periods = new ArrayList<>();
+        List<Object[]> milestones = new ArrayList<>();
         RecurringGoal recurring = metadata.recurring();
         if (recurring.isActive()) {
             periods.add(new Object[]{recurring.getSchedule(), date(recurring.getStart()), recurring.getBaselineAt() == 0 ? "—" : date(recurring.getSchedule().next(recurring.getStart())), recurring.getProgress(), recurring.getTarget(), recurring.getBaselineAt() == 0 ? "Waiting for login" : recurring.getCompletedAt() > 0 ? "Completed · current period" : "Current period", date(recurring.getBaselineAt()), date(recurring.getLastObservedAt()), date(recurring.getCompletedAt())});
         }
-        java.util.List<RecurringGoal.Period> history = recurring.getHistory();
+        List<RecurringGoal.Period> history = recurring.getHistory();
         for (int index = history.size() - 1; index >= 0; index--) {
             RecurringGoal.Period period = history.get(index);
             periods.add(new Object[]{period.getSchedule(), date(period.getStart()), date(period.getEnd()), period.getBaselineAt() == 0 ? null : period.getProgress(), period.getTarget(), period.getOutcome(), date(period.getBaselineAt()), date(period.getLastObservedAt()), date(period.getCompletedAt())});
         }
-        java.util.List<GoalMetadata.Completion> completions = metadata.getCompletions();
+        List<GoalMetadata.Completion> completions = metadata.getCompletions();
         for (int index = completions.size() - 1; index >= 0; index--) {
             GoalMetadata.Completion event = completions.get(index);
             milestones.add(new Object[]{event.getTitle(), event.getTarget(), date(event.getObservedAt())});
@@ -38,7 +43,7 @@ public final class GoalHistoryPanel extends JPanel {
         boolean showPeriods = recurring.isActive() || !history.isEmpty();
         return () -> new GoalHistoryPanel(periods, milestones, showPeriods);
     }
-    private GoalHistoryPanel(java.util.List<Object[]> periodRows, java.util.List<Object[]> milestoneRows, boolean showPeriods) {
+    private GoalHistoryPanel(List<Object[]> periodRows, List<Object[]> milestoneRows, boolean showPeriods) {
         super(new BorderLayout(0, 10));
         JTabbedPane tabs = new JTabbedPane();
         DefaultTableModel periods = model("Schedule", "Period start", "Period end", "Progress", "Target", "Outcome", "Baseline captured", "Last observed", "Completed at");
@@ -80,10 +85,10 @@ public final class GoalHistoryPanel extends JPanel {
         table.setRowHeight(26);
         table.setAutoCreateRowSorter(true);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        table.setDefaultRenderer(Long.class, new javax.swing.table.DefaultTableCellRenderer() {
+        table.setDefaultRenderer(Long.class, new DefaultTableCellRenderer() {
             @Override protected void setValue(Object value) {
                 setHorizontalAlignment(SwingConstants.RIGHT);
-                setText(value == null ? "—" : String.format(java.util.Locale.ROOT, "%,d", value));
+                setText(value == null ? "—" : String.format(Locale.ROOT, "%,d", value));
             }
         });
         table.getTableHeader().setReorderingAllowed(false);

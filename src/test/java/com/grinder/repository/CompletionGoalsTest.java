@@ -1,5 +1,6 @@
 package com.grinder.repository;
 
+import com.google.gson.JsonObject;
 import com.grinder.content.combatachievement.CombatAchievementData;
 import com.grinder.content.combatachievement.CombatAchievementTier;
 import com.grinder.content.diary.AchievementDiaryArea;
@@ -14,18 +15,20 @@ import com.grinder.content.goal.impl.quest.QuestGoal;
 import com.grinder.content.goal.impl.quest.QuestSeriesGoal;
 import com.grinder.content.quest.QuestSeries;
 import com.grinder.ui.editor.CompletionGoalChoices;
-import com.google.gson.JsonObject;
+import com.grinder.ui.editor.GoalEditorPanel;
+import java.text.ParseException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.function.Supplier;
 import javax.swing.JComboBox;
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import net.runelite.api.Quest;
 import net.runelite.api.QuestState;
-import net.runelite.api.gameval.VarbitID;
 import net.runelite.api.gameval.VarPlayerID;
-import com.grinder.ui.editor.GoalEditorPanel;
+import net.runelite.api.gameval.VarbitID;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 /**
  * @author Ayman Yassen
@@ -127,7 +130,7 @@ public class CompletionGoalsTest {
             choices.get(13).put("Test boss", () -> new CombatAchievementBossGoal(1, "Test boss"));
             GoalEditorPanel form = new GoalEditorPanel(null, (query, callback) -> () -> {
             }, choices);
-            JComboBox<?> types = (JComboBox<?>) ((javax.swing.JPanel) form.getComponent(0)).getComponent(1);
+            JComboBox<?> types = (JComboBox<?>) ((JPanel) form.getComponent(0)).getComponent(1);
             try {
                 for (int kind = 9; kind <= 15; kind++) {
                     types.setSelectedIndex(kind);
@@ -137,7 +140,7 @@ public class CompletionGoalsTest {
                     assertFalse(goal.supportsTarget());
                     assertNotNull(((ClientCompletionGoal) goal).selectionKey());
                 }
-            } catch (java.text.ParseException exception) {
+            } catch (ParseException exception) {
                 throw new AssertionError(exception);
             } finally {
                 form.stopSearch();

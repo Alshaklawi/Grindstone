@@ -1,12 +1,16 @@
 package com.grinder.repository;
 
+import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalStatus;
 import com.grinder.content.goal.impl.ChecklistGoal;
 import com.grinder.ui.editor.GoalEditorPanel;
+import java.text.ParseException;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.function.Consumer;
 import javax.swing.SwingUtilities;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
@@ -20,7 +24,7 @@ public class ChecklistGoalTest {
         GrinderProfile profile = new GrinderProfile(42);
         ChecklistGoal goal = new ChecklistGoal("Supplies", "Prepare", Arrays.asList("Food", "Potions"));
         profile.add(goal);
-        java.util.function.Consumer<com.grinder.content.goal.Goal> undo = profile.snapshotEdit(goal);
+        Consumer<Goal> undo = profile.snapshotEdit(goal);
         goal.setChecked(0, true);
         assertEquals(1, goal.getProgressCurrent());
         assertEquals(GoalStatus.IN_PROGRESS, goal.getStatus());
@@ -75,7 +79,7 @@ public class ChecklistGoalTest {
                 ChecklistGoal result = (ChecklistGoal) form.createGoal();
                 assertEquals(goal.getId(), result.getId());
                 assertEquals(1, result.getProgressCurrent());
-            } catch (java.text.ParseException failure) {
+            } catch (ParseException failure) {
                 throw new AssertionError(failure);
             } finally {
                 form.stopSearch();

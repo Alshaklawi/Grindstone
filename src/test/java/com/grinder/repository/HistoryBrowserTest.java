@@ -1,9 +1,12 @@
 package com.grinder.repository;
 
+import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.impl.CustomGoal;
 import java.util.Collections;
+import java.util.function.Consumer;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
@@ -17,7 +20,7 @@ public class HistoryBrowserTest {
         CustomGoal original = new CustomGoal("Original", "", GoalCategory.OTHER, 1, 1);
         profile.replace(Collections.singletonList(original));
         profile.metadata(original).observe(original, "Original", 1000);
-        java.util.function.Consumer<com.grinder.content.goal.Goal> restore = profile.snapshotEdit(original);
+        Consumer<Goal> restore = profile.snapshotEdit(original);
         CustomGoal replacement = new CustomGoal("Replacement", "", GoalCategory.OTHER, 0, 1);
         profile.replaceGoal(original, replacement);
         assertEquals(1, profile.archivedHistory().size());

@@ -4,6 +4,7 @@ import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
+import net.runelite.client.config.Notification;
 import net.runelite.client.config.Range;
 
 /**
@@ -116,8 +117,8 @@ public interface GrinderConfig extends Config {
     }
 
     @ConfigItem(keyName = "completionNotification", name = "Desktop completion notification", description = "Optional RuneLite notification with the standard sound, focus and desktop settings. Customize using its cogwheel; its own game-message option may duplicate Grinder's separate chat message.", section = NOTIFICATIONS_SECTION, position = 3)
-    default net.runelite.client.config.Notification completionNotification() {
-        return net.runelite.client.config.Notification.OFF;
+    default Notification completionNotification() {
+        return Notification.OFF;
     }
 
     @ConfigSection(name = "General", description = "Enable Grinder and control when your profile is saved.", position = 0)

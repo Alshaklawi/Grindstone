@@ -1,9 +1,11 @@
 package com.grinder.repository;
+import com.google.gson.JsonObject;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.impl.CustomGoal;
 import java.util.Collections;
 import net.runelite.api.gameval.ItemID;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 /**
  * @author Ayman Yassen
@@ -48,7 +50,7 @@ public class ProfileBackupTest {
         assertTrue(original.metadata(original.getGoals().get(0)).isPinned());
     }
     @Test public void unsupportedGoalTypesAndFutureBackupVersionsAreRejected() {
-        com.google.gson.JsonObject json = TestProfiles.REPOSITORY.toJson(completedProfile());
+        JsonObject json = TestProfiles.REPOSITORY.toJson(completedProfile());
         json.addProperty("backupVersion", 2);
         try {
             TestProfiles.REPOSITORY.importBackup(json.toString(), 42);

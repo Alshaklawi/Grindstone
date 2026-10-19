@@ -1,4 +1,6 @@
 package com.grinder.content.goal;
+import com.grinder.config.GrinderConfig;
+import com.grinder.ui.components.GoalComponent;
 import java.awt.image.BufferedImage;
 import net.runelite.api.Client;
 import net.runelite.api.ItemContainer;
@@ -41,7 +43,7 @@ public abstract class ClientCompletionGoal implements Goal {
     @Override public boolean isAffectedBy(ItemContainer container) {
         return false;
     }
-    @Override public com.grinder.ui.components.GoalComponent build(Client client, com.grinder.config.GrinderConfig config) {
+    @Override public GoalComponent build(Client client, GrinderConfig config) {
         if (!initialized) {
             refresh(client);
         }

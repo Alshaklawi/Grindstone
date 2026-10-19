@@ -1,8 +1,8 @@
 package com.grinder.ui.editor;
 
-import com.grinder.ui.Icon;
-
 import com.grinder.content.goal.Goal;
+import com.grinder.ui.Icon;
+import com.grinder.ui.util.UiTypography;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dialog;
@@ -11,6 +11,7 @@ import java.awt.FlowLayout;
 import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
+import java.text.ParseException;
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -18,6 +19,7 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -112,17 +114,17 @@ public final class GoalCreationDialog extends JDialog {
             Goal candidate = form.createGoal();
             if (form.isReviewEnabled()) {
                 JTextArea preview = new JTextArea(form.reviewText(candidate), 12, 38);
-                preview.setFont(com.grinder.ui.util.UiTypography.BODY);
+                preview.setFont(UiTypography.BODY);
                 preview.setEditable(false);
                 preview.setLineWrap(true);
                 preview.setWrapStyleWord(true);
-                if (javax.swing.JOptionPane.showConfirmDialog(this, new JScrollPane(preview), "Review goal", javax.swing.JOptionPane.OK_CANCEL_OPTION, javax.swing.JOptionPane.PLAIN_MESSAGE) != javax.swing.JOptionPane.OK_OPTION) {
+                if (JOptionPane.showConfirmDialog(this, new JScrollPane(preview), "Review goal", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) {
                     return;
                 }
             }
             result = candidate;
             dispose();
-        } catch (java.text.ParseException | IllegalArgumentException exception) {
+        } catch (ParseException | IllegalArgumentException exception) {
             error.setText(exception instanceof IllegalArgumentException ? exception.getMessage() : "Enter a number within the target's allowed range.");
             error.setVisible(true);
             fitToForm();

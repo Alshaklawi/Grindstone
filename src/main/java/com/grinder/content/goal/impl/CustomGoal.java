@@ -1,9 +1,10 @@
 package com.grinder.content.goal.impl;
 
-import lombok.Getter;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.GoalStatus;
+import com.grinder.content.goal.ManualGoal;
 import java.util.UUID;
+import lombok.Getter;
 import net.runelite.api.Client;
 
 /**
@@ -11,7 +12,7 @@ import net.runelite.api.Client;
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
  * @since 10/18/2026
  */
-public final class CustomGoal implements com.grinder.content.goal.ManualGoal {
+public final class CustomGoal implements ManualGoal {
     @Getter
     private final String id;
     private String title;

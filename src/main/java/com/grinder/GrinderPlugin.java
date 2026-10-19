@@ -1,42 +1,52 @@
 package com.grinder;
 
-import com.grinder.content.goal.ClientCompletionGoal;
-import com.grinder.content.goal.impl.item.PossessedItemGoal;
-
-import com.grinder.ui.GrinderPanel;
-
+import com.google.gson.JsonObject;
 import com.google.inject.Provides;
 import com.grinder.config.GrinderConfig;
+import com.grinder.content.combatachievement.CombatAchievementData;
+import com.grinder.content.goal.BaseSkillGoal;
+import com.grinder.content.goal.ClientCompletionGoal;
 import com.grinder.content.goal.Goal;
-import com.grinder.content.goal.impl.level.CombatLevelGoal;
-import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
-import com.grinder.content.goal.impl.level.SkillLevelGoal;
-import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
-import com.grinder.content.goal.impl.level.TotalLevelGoal;
 import com.grinder.content.goal.impl.TrackerGoal;
+import com.grinder.content.goal.impl.experience.SessionExperienceGoal;
+import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
+import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
+import com.grinder.content.goal.impl.item.PossessedItemGoal;
+import com.grinder.content.goal.impl.level.CombatLevelGoal;
+import com.grinder.content.goal.impl.level.SkillLevelGoal;
+import com.grinder.content.goal.impl.level.TotalLevelGoal;
+import com.grinder.notification.GoalCompletionNotifications;
+import com.grinder.notification.GoalCompletionOverlay;
 import com.grinder.repository.GrinderProfile;
 import com.grinder.repository.GrinderRepository;
 import com.grinder.repository.ProfilePersistence;
-
+import com.grinder.ui.GrinderPanel;
 import java.awt.image.BufferedImage;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Inject;
-
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.ItemContainer;
 import net.runelite.api.events.GameStateChanged;
+import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.events.StatChanged;
 import net.runelite.api.events.VarbitChanged;
+import net.runelite.api.gameval.InventoryID;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
+import net.runelite.client.ui.overlay.OverlayManager;
+import net.runelite.client.util.ImageUtil;
 
 /**
  * @author Ayman Yassen
@@ -68,16 +78,16 @@ public class GrinderPlugin extends Plugin {
     @Inject
     private ProfilePersistence persistence;
     @Inject
-    private com.grinder.notification.GoalCompletionNotifications completionNotifications;
+    private GoalCompletionNotifications completionNotifications;
     @Inject
-    private com.grinder.notification.GoalCompletionOverlay completionOverlay;
+    private GoalCompletionOverlay completionOverlay;
     @Inject
-    private net.runelite.client.ui.overlay.OverlayManager overlayManager;
+    private OverlayManager overlayManager;
 
     private NavigationButton navigationButton;
     private volatile GrinderProfile profile;
-    private final java.util.Map<Long, GrinderProfile> sessionProfiles = new java.util.concurrent.ConcurrentHashMap<>();
-    private final java.util.concurrent.atomic.AtomicInteger loadGeneration = new java.util.concurrent.atomic.AtomicInteger();
+    private final Map<Long, GrinderProfile> sessionProfiles = new ConcurrentHashMap<>();
+    private final AtomicInteger loadGeneration = new AtomicInteger();
     private volatile boolean running;
     private volatile long loadingHash;
     private boolean completionProgressDirty;
@@ -93,7 +103,7 @@ public class GrinderPlugin extends Plugin {
         sessionProfiles.clear();
         persistence.configure(this::getPluginDirectory);
         panel.setMigrationHandler(this::installMigratedProfile);
-        com.grinder.content.combatachievement.CombatAchievementData.clearCache();
+        CombatAchievementData.clearCache();
 
         navigationButton = NavigationButton.builder()
                 .tooltip("Grinder")
@@ -141,7 +151,7 @@ public class GrinderPlugin extends Plugin {
     }
 
     @Subscribe
-    public void onConfigChanged(net.runelite.client.events.ConfigChanged event) {
+    public void onConfigChanged(ConfigChanged event) {
         if (!"grinder".equals(event.getGroup())) {
             return;
         }
@@ -206,7 +216,7 @@ public class GrinderPlugin extends Plugin {
     }
 
     @Subscribe
-    public void onGameTick(net.runelite.api.events.GameTick event) {
+    public void onGameTick(GameTick event) {
         if (hasActivePlayerProfile() && System.currentTimeMillis() - lastRecurringRefresh >= 30_000) {
             lastRecurringRefresh = System.currentTimeMillis();
             if (profile.getGoals().stream().anyMatch(goal -> profile.metadata(goal).recurring().isActive() || profile.metadata(goal).getDeadlineAt() > 0)) {
@@ -243,7 +253,7 @@ public class GrinderPlugin extends Plugin {
         boolean changed = false;
 
         for (Goal goal : profile.getGoals()) {
-            if ((goal instanceof SkillLevelGoal && ((SkillLevelGoal) goal).getSkill() == event.getSkill()) || (goal instanceof SkillExperienceGoal && ((SkillExperienceGoal) goal).getSkill() == event.getSkill()) || goal instanceof TotalLevelGoal || goal instanceof TotalExperienceGoal || goal instanceof CombatLevelGoal || goal instanceof com.grinder.content.goal.BaseSkillGoal || goal instanceof com.grinder.content.goal.impl.experience.SessionExperienceGoal) {
+            if ((goal instanceof SkillLevelGoal && ((SkillLevelGoal) goal).getSkill() == event.getSkill()) || (goal instanceof SkillExperienceGoal && ((SkillExperienceGoal) goal).getSkill() == event.getSkill()) || goal instanceof TotalLevelGoal || goal instanceof TotalExperienceGoal || goal instanceof CombatLevelGoal || goal instanceof BaseSkillGoal || goal instanceof SessionExperienceGoal) {
                 changed |= goal.refresh(client);
             }
         }
@@ -313,10 +323,10 @@ public class GrinderPlugin extends Plugin {
         loaded.setItemManager(itemManager);
         loaded.getPlayerStorage().reset();
         loaded.getPlayerStorage().captureLoaded(client);
-        loaded.getCollectionLogHistory().observe(client.getItemContainer(net.runelite.api.gameval.InventoryID.COLLECTION_TRANSMIT));
+        loaded.getCollectionLogHistory().observe(client.getItemContainer(InventoryID.COLLECTION_TRANSMIT));
         for (Goal goal : loaded.getGoals()) {
-            if (goal instanceof com.grinder.content.goal.impl.experience.SessionExperienceGoal) {
-                ((com.grinder.content.goal.impl.experience.SessionExperienceGoal) goal).restart();
+            if (goal instanceof SessionExperienceGoal) {
+                ((SessionExperienceGoal) goal).restart();
             }
             goal.refresh(client);
         }
@@ -358,7 +368,7 @@ public class GrinderPlugin extends Plugin {
         }
         clientThread.invoke(() -> {
             try {
-                com.google.gson.JsonObject snapshot = repository.toJson(active);
+                JsonObject snapshot = repository.toJson(active);
                 if (running && profile == active) {
                     panel.setStorageStatus("Saving profile…");
                 }
@@ -394,7 +404,7 @@ public class GrinderPlugin extends Plugin {
     }
 
     private BufferedImage loadIcon() {
-        return net.runelite.client.util.ImageUtil.loadImageResource(getClass(), "/grinder.png");
+        return ImageUtil.loadImageResource(getClass(), "/grinder.png");
     }
 
     @Provides
