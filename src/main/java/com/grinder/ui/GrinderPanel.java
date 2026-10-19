@@ -1841,11 +1841,11 @@ public class GrinderPanel extends PluginPanel {
     }
 
     private boolean isLevelGoal(Goal goal) {
-        return goal instanceof SkillLevelGoal || goal instanceof CombatLevelGoal || goal instanceof TotalLevelGoal;
+        return goal instanceof SkillLevelGoal || goal instanceof CombatLevelGoal || goal instanceof TotalLevelGoal || goal instanceof com.grinder.content.goal.impl.level.BaseLevelGoal;
     }
 
     private boolean isExperienceGoal(Goal goal) {
-        return goal instanceof SkillExperienceGoal || goal instanceof TotalExperienceGoal;
+        return goal instanceof SkillExperienceGoal || goal instanceof TotalExperienceGoal || goal instanceof com.grinder.content.goal.impl.experience.BaseExperienceGoal;
     }
 
 

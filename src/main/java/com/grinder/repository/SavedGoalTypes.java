@@ -36,6 +36,8 @@ final class SavedGoalTypes {
         register(types, SkillLevelGoal.class, "skill-level", "com.grinder.content.goal.impl.level.SkillLevelGoal", "com.grinder.content.goal.impl.SkillLevelGoal");
         register(types, CombatLevelGoal.class, "combat-level", "com.grinder.content.goal.impl.level.CombatLevelGoal", "com.grinder.content.goal.impl.CombatLevelGoal");
         register(types, TotalLevelGoal.class, "total-level", "com.grinder.content.goal.impl.level.TotalLevelGoal", "com.grinder.content.goal.impl.TotalLevelGoal");
+        register(types, com.grinder.content.goal.impl.level.BaseLevelGoal.class, "base-level");
+        register(types, com.grinder.content.goal.impl.experience.BaseExperienceGoal.class, "base-xp");
         register(types, SkillExperienceGoal.class, "skill-xp", "com.grinder.content.goal.impl.experience.SkillExperienceGoal", "com.grinder.content.goal.impl.SkillExperienceGoal");
         register(types, TotalExperienceGoal.class, "total-xp", "com.grinder.content.goal.impl.experience.TotalExperienceGoal", "com.grinder.content.goal.impl.TotalExperienceGoal");
         register(types, CollectionLogEntryGoal.class, "collection-page", "com.grinder.content.goal.impl.colletion_log.CollectionLogEntryGoal");

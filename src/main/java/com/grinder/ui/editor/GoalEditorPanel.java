@@ -38,7 +38,7 @@ import net.runelite.client.ui.FontManager;
  * @since 10/18/2026
  */
 public final class GoalEditorPanel extends JPanel {
-    private final JComboBox<String> type = new JComboBox<>(new String[]{ "Skill level", "Skill experience", "Combat level", "Total level", "Total experience", "Activity tracker", "Collection log", "Collection item", "Custom goal", "Quest", "Quest series", "Diary region & tier", "Diary tier (all regions)", "Combat achievements: boss", "Combat achievements: reward tier", "Combat achievements: difficulty tasks", "Owned item quantity", "Combat achievement task"});
+    private final JComboBox<String> type = new JComboBox<>(new String[]{ "Skill level", "Skill experience", "Combat level", "Total level", "Total experience", "Activity tracker", "Collection log", "Collection item", "Custom goal", "Quest", "Quest series", "Diary region & tier", "Diary tier (all regions)", "Combat achievements: boss", "Combat achievements: reward tier", "Combat achievements: difficulty tasks", "Owned item quantity", "Combat achievement task", "Base level (all skills)", "Base experience (all skills)"});
     private final CustomGoalForm customForm = new CustomGoalForm();
     private final RepeatGoalForm repeatForm = new RepeatGoalForm();
     public com.grinder.repository.RepeatSchedule getRepeatSchedule() {
@@ -150,14 +150,14 @@ public final class GoalEditorPanel extends JPanel {
             updating = true;
             subject.setModel(new DefaultComboBoxModel<>(choices.keySet().toArray(new String[0])));
             updating = false;
-            if (kind < 2 || kind == 5 || kind == 6 || kind >= 9) {
+            if (kind < 2 || kind == 5 || kind == 6 || kind >= 9 && kind < 18) {
                 body.add(field(kind >= 9 ? "Track" : kind == 5 ? "Activity" : kind == 6 ? "Collection-log page" : "Skill", subject));
                 body.add(Box.createVerticalStrut(12));
             }
             Goal sample = choices.isEmpty() ? null : choices.values().iterator().next().get();
             if (sample != null && sample.supportsTarget()) {
                 configureTarget(false);
-                JPanel targetField = field(kind == 1 || kind == 4 ? "Target experience" : kind == 5 ? "Target completions" : "Target level", target);
+                JPanel targetField = field(kind == 1 || kind == 4 || kind == 19 ? "Target experience" : kind == 5 ? "Target completions" : "Target level", target);
                 targetField.add(presets, BorderLayout.SOUTH);
                 presets.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
                 body.add(targetField);
@@ -166,6 +166,9 @@ public final class GoalEditorPanel extends JPanel {
             updatePreview();
             body.add(preview);
             setHint(kind >= 9 ? (choices.isEmpty() ? "Client data is not ready. Log in and reopen this dialog." : "Progress reads your logged-in character automatically. Completion goals have no manual target.") : kind == 6 ? "Open your in-game collection log to refresh unlocks. Each item keeps its first-seen date." : kind == 5 ? "Progress reads your character's activity count automatically." : kind == 1 || kind == 4 ? "Progress reads your character's real experience automatically." : "Uses real levels. Temporary boosts do not advance level goals.");
+            if (kind == 18 || kind == 19) {
+                setHint("Every skill must reach this target. The bar shows your lowest " + (kind == 18 ? "real skill level; temporary boosts do not count." : "skill XP, not total or average experience."));
+            }
         }
         repeatForm.setVisible(kind == 1 || kind == 4 || kind == 5 || kind == 8);
         if (repeatForm.isVisible()) {
@@ -183,6 +186,14 @@ public final class GoalEditorPanel extends JPanel {
     private void populateChoices(int kind) {
         if (kind == 6 && !completionChoices.getOrDefault(6, java.util.Collections.emptyMap()).isEmpty()) {
             choices.putAll(completionChoices.get(6));
+            return;
+        }
+        if (kind == 18) {
+            choices.put("Base level", com.grinder.content.goal.impl.level.BaseLevelGoal::new);
+            return;
+        }
+        if (kind == 19) {
+            choices.put("Base experience", com.grinder.content.goal.impl.experience.BaseExperienceGoal::new);
             return;
         }
         if (kind >= 9) {
@@ -231,8 +242,8 @@ public final class GoalEditorPanel extends JPanel {
         presets.removeAll();
         int kind = type.getSelectedIndex();
         long maximum = ((Number) model.getMaximum()).longValue();
-        long[] values = kind == 0 ? new long[]{50, 75, 99}
-                : kind == 1 ? new long[]{1_000_000, SkillExperienceGoal.LEVEL_99_EXPERIENCE, maximum}
+        long[] values = kind == 0 || kind == 18 ? new long[]{50, 75, 99}
+                : kind == 1 || kind == 19 ? new long[]{1_000_000, SkillExperienceGoal.LEVEL_99_EXPERIENCE, maximum}
                 : kind == 2 ? new long[]{70, 100, 126}
                 : kind == 3 ? new long[]{1000, 1500, maximum}
                 : kind == 4 ? new long[]{100_000_000, goal.getProgressMaximum(), maximum}

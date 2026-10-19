@@ -178,6 +178,8 @@ public class GrinderProfile {
         }
 
         addDefaultCollectionItem(ItemID.DRAGON_PICKAXE);
+        add(new com.grinder.content.goal.impl.level.BaseLevelGoal());
+        add(new com.grinder.content.goal.impl.experience.BaseExperienceGoal());
         addDefaultCollectionItem(ItemID.TWISTED_BOW);
         addDefaultCollectionItem(ItemID.JAR_OF_SPIRITS);
         add(new PossessedItemGoal(ItemID.COINS, 1_500_000_000L));
