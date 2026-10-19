@@ -48,6 +48,32 @@ public class GoalComponent extends JPanel {
     private final JLabel progressLabel = new JLabel();
     private final SegmentedProgressBar progressBar = new SegmentedProgressBar();
     private final JLabel statusLabel = new JLabel();
+    private final JPanel manualControls = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+    public void setManualActions(long current, long target, Runnable increment, Runnable toggle, Runnable setProgress) {
+        manualControls.removeAll();
+        manualControls.setOpaque(false);
+        if (target == 1) {
+            javax.swing.JCheckBox complete = new javax.swing.JCheckBox("Completed", current >= target);
+            complete.setOpaque(false);
+            complete.setFont(UiTypography.BODY);
+            complete.setToolTipText("Check or uncheck this personal goal. This does not perform any game action.");
+            complete.addActionListener(event -> toggle.run());
+            manualControls.add(complete);
+        } else {
+            JButton plus = new JButton("+1");
+            plus.setFont(UiTypography.BODY);
+            plus.setEnabled(current < target);
+            plus.setToolTipText("Add one to this personal goal's progress. Undo is available in the header.");
+            plus.addActionListener(event -> increment.run());
+            manualControls.add(plus);
+        }
+        JButton set = new JButton("Set progress");
+        set.setFont(UiTypography.BODY);
+        set.setToolTipText("Enter manual progress without opening the full goal editor.");
+        set.addActionListener(event -> setProgress.run());
+        manualControls.add(set);
+        manualControls.setVisible(true);
+    }
     private final JButton expandButton = new JButton("−");
     private final JButton editButton = new JButton("...");
     private final JPanel headerActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
@@ -148,7 +174,12 @@ public class GoalComponent extends JPanel {
         footer.setOpaque(false);
         footer.setLayout(new BorderLayout(0, 4));
         footer.add(progressBar, BorderLayout.CENTER);
-        footer.add(progressLabel, BorderLayout.SOUTH);
+        JPanel bottom = new JPanel(new BorderLayout(0, 6));
+        bottom.setOpaque(false);
+        bottom.add(progressLabel, BorderLayout.NORTH);
+        bottom.add(manualControls, BorderLayout.SOUTH);
+        manualControls.setVisible(false);
+        footer.add(bottom, BorderLayout.SOUTH);
         statusLabel.setFont(UiTypography.BODY);
         footer.add(statusLabel, BorderLayout.NORTH);
 

@@ -47,6 +47,7 @@ public final class GrinderRepository {
 
     private GrinderRepository() {
     }
+    public static GoalMetadata copyMetadata(GoalMetadata metadata) { return GoalMetadata.validated(GSON.fromJson(GSON.toJsonTree(metadata), GoalMetadata.class)); }
 
     public static synchronized void load() throws IOException {
         Files.createDirectories(DIRECTORY);

@@ -41,6 +41,26 @@ public class GrinderProfile {
     private final long hash;
     private final List<Goal> goals = new ArrayList<>();
     private final transient java.util.Map<Goal, GoalMetadata> metadata = new java.util.IdentityHashMap<>();
+    private transient long revision;
+    public long revision() { return revision; }
+    public void touch() { revision++; }
+    public java.util.function.Consumer<Goal> snapshotEdit(Goal original) {
+        GoalMetadata saved = GrinderRepository.copyMetadata(metadata(original));
+        long target = original.getProgressMaximum();
+        CustomGoal custom = original instanceof CustomGoal ? (CustomGoal) original : null;
+        CustomGoal manual = custom == null ? null : new CustomGoal(custom.getId(), custom.getTitle(null), custom.getDescription(), custom.getCategory(), custom.getProgressCurrent(), target);
+        return replacement -> {
+            int index = goals.indexOf(replacement);
+            if (index < 0) { throw new IllegalStateException("The edited goal no longer exists."); }
+            if (custom != null) { custom.update(manual.getTitle(null), manual.getDescription(), manual.getCategory(), manual.getProgressCurrent(), manual.getProgressMaximum()); }
+            else if (original.supportsTarget()) { original.setTarget(target); }
+            goals.set(index, original);
+            if (original != replacement) { metadata.remove(replacement); }
+            metadata.put(original, saved);
+            attachCollectionData(original);
+            touch();
+        };
+    }
     public GoalMetadata metadata(Goal goal) { return metadata.computeIfAbsent(goal, ignored -> new GoalMetadata()); }
     public void restoreMetadata(Goal goal, GoalMetadata saved) { metadata.put(goal, GoalMetadata.validated(saved)); }
     public void observeRecurring(net.runelite.api.Client client, long now) {
@@ -159,6 +179,7 @@ public class GrinderProfile {
         }
         attachCollectionData(goal);
         metadata.put(goal, details);
+        touch();
         return goals.add(goal);
     }
 
@@ -219,11 +240,14 @@ public class GrinderProfile {
         goals.set(index, replacement);
         metadata.put(replacement, next);
         metadata.remove(original);
+        touch();
         return true;
     }
 
     public boolean remove(Goal goal) {
-        return goals.remove(goal);
+        boolean removed = goals.remove(goal);
+        if (removed) { touch(); }
+        return removed;
     }
     public int mergeBackup(GrinderProfile backup) {
         if (backup.hash != hash) { throw new IllegalArgumentException("Backup must be mapped to this account before merging."); }
