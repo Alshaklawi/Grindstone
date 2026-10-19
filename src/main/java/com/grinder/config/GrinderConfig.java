@@ -94,6 +94,31 @@ public interface GrinderConfig extends Config {
     String GOALS_SECTION = "goals";
     String COLLECTION_LOG_SECTION = "collectionLog";
     String DISPLAY_SECTION = "display";
+    String NOTIFICATIONS_SECTION = "notifications";
+
+    @ConfigSection(name = "Notifications", description = "Celebrate newly reached personal goals without repeating alerts on login or refresh.", position = 4)
+    String notificationsSection = NOTIFICATIONS_SECTION;
+
+    @ConfigItem(keyName = "completionPopup", name = "Completion popup", description = "Show a non-blocking RuneLite overlay when a personal goal is newly completed. Examples and already-complete goals loaded or added are excluded.", section = NOTIFICATIONS_SECTION, position = 0)
+    default boolean completionPopup() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "completionChat", name = "Completion chat message", description = "Add a local RuneLite chat message for newly completed personal goals. Nothing is sent to other players.", section = NOTIFICATIONS_SECTION, position = 1)
+    default boolean completionChat() {
+        return true;
+    }
+
+    @Range(min = 3, max = 15)
+    @ConfigItem(keyName = "completionPopupSeconds", name = "Popup duration (seconds)", description = "How long a completion popup remains visible.", section = NOTIFICATIONS_SECTION, position = 2)
+    default int completionPopupSeconds() {
+        return 6;
+    }
+
+    @ConfigItem(keyName = "completionNotification", name = "Desktop completion notification", description = "Optional RuneLite notification with the standard sound, focus and desktop settings. Customize using its cogwheel; its own game-message option may duplicate Grinder's separate chat message.", section = NOTIFICATIONS_SECTION, position = 3)
+    default net.runelite.client.config.Notification completionNotification() {
+        return net.runelite.client.config.Notification.OFF;
+    }
 
     @ConfigSection(name = "General", description = "Enable Grinder and control when your profile is saved.", position = 0)
     String generalSection = GENERAL_SECTION;

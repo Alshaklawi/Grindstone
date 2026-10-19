@@ -76,6 +76,7 @@ import net.runelite.client.ui.PluginPanel;
  * @since 10/18/2026
  */
 public class GrinderPanel extends PluginPanel {
+    @Inject private com.grinder.notification.GoalCompletionNotifications completionNotifications;
     @Inject private ProfileBackupActions backupActions;
     private static final String ALL_CATEGORIES = "All categories";
     private static final String ALL_STATUSES = "All statuses";
@@ -629,6 +630,7 @@ public class GrinderPanel extends PluginPanel {
                 cardCache.retain(currentProfile.getGoals());
                 if (client.getGameState() == net.runelite.api.GameState.LOGGED_IN && client.getLocalPlayer() != null && currentProfile.getHash() == client.getAccountHash()) {
                     currentProfile.observeRecurring(client, System.currentTimeMillis());
+                    completionNotifications.observe(currentProfile);
                 }
                 for (Goal goal : currentProfile.getGoals()) {
                     if ((!config.showSampleGoals() && currentProfile.metadata(goal).isSample()) || (!config.linkedGoalsEnabled() && goal instanceof com.grinder.content.goal.impl.LinkedGoal)) {

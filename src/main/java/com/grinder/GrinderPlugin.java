@@ -67,6 +67,12 @@ public class GrinderPlugin extends Plugin {
     private GrinderRepository repository;
     @Inject
     private ProfilePersistence persistence;
+    @Inject
+    private com.grinder.notification.GoalCompletionNotifications completionNotifications;
+    @Inject
+    private com.grinder.notification.GoalCompletionOverlay completionOverlay;
+    @Inject
+    private net.runelite.client.ui.overlay.OverlayManager overlayManager;
 
     private NavigationButton navigationButton;
     private volatile GrinderProfile profile;
@@ -81,6 +87,8 @@ public class GrinderPlugin extends Plugin {
     @Override
     protected void startUp() {
         running = true;
+        completionNotifications.reset();
+        overlayManager.add(completionOverlay);
         loadGeneration.incrementAndGet();
         sessionProfiles.clear();
         persistence.configure(this::getPluginDirectory);
@@ -106,6 +114,8 @@ public class GrinderPlugin extends Plugin {
     @Override
     protected void shutDown() {
         running = false;
+        overlayManager.remove(completionOverlay);
+        completionNotifications.reset();
         loadGeneration.incrementAndGet();
         loadingHash = 0;
         if (config.saveOnShutdown()) {
@@ -137,6 +147,7 @@ public class GrinderPlugin extends Plugin {
         }
 
         if (!config.enabled()) {
+            completionNotifications.reset();
             saveProfile();
             loadGeneration.incrementAndGet();
             loadingHash = 0;
@@ -296,6 +307,7 @@ public class GrinderPlugin extends Plugin {
     }
 
     private void activateProfile(GrinderProfile loaded) {
+        completionNotifications.reset();
         profile = loaded;
         sessionProfiles.put(loaded.getHash(), loaded);
         loaded.setItemManager(itemManager);
@@ -324,6 +336,7 @@ public class GrinderPlugin extends Plugin {
     }
 
     private void onLogout() {
+        completionNotifications.reset();
         loadGeneration.incrementAndGet();
         loadingHash = 0;
         completionProgressDirty = false;
