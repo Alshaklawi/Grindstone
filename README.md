@@ -1,73 +1,80 @@
 # Grindstone
 
-[![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=github)](https://github.com/sponsors/Alshaklawi)
 [![Version](https://img.shields.io/badge/version-1.0.0-gold)](https://github.com/Alshaklawi/Grindstone)
-
-Track your next Old School RuneScape milestone with skill, boss, collection-log and personal goals in one RuneLite sidebar.
-
-<details>
-<summary>Plugin Hub statistics — pending publication</summary>
-
-Grindstone is not published on the Plugin Hub yet. Installation and rank statistics are unavailable until its listing is live.
-
 [![Installs](https://img.shields.io/endpoint?url=https%3A%2F%2Fapi.runelite.net%2Fpluginhub%2Fshields%2Finstalls%2Fplugin%2Fgrindstone)](https://runelite.net/plugin-hub/show/grindstone)
 [![Plugin Rank](https://img.shields.io/endpoint?url=https%3A%2F%2Fapi.runelite.net%2Fpluginhub%2Fshields%2Frank%2Fplugin%2Fgrindstone)](https://runelite.net/plugin-hub/show/grindstone)
+[![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=github)](https://github.com/sponsors/Alshaklawi)
 
-</details>
-
-## Screenshots
-
-Captured from the running plugin in RuneLite, cropped to keep account names and chat out of the images.
-
-| Dashboard and progress | Choose a goal |
-| --- | --- |
-| ![Grindstone dashboard with skill progress, completed goals and recurring goals](docs/images/dashboard.png) | ![Grindstone Add goal dialog with six focus groups, searchable skills and target presets](docs/images/add-goal.png) |
-
-| Collection-log goals | Review before saving |
-| --- | --- |
-| ![Collection-log goal showing item icons, an expandable item grid and obtained progress](docs/images/collection-log.png) | ![Review dialog confirming the selected skill, target and repeat schedule](docs/images/review-goal.png) |
-
-## Features
-
-- Track skill levels and experience, combat and total levels, and base levels across all skills.
-- Follow quests, achievement diaries, combat achievements, collection-log unlocks, activity counters, Slayer points and task streaks.
-- Set item-quantity goals using known inventory, equipment, bank and supported storage contents.
-- Create custom goals, checklists, linked goals, and daily, weekly or monthly routines.
-- Search, filter, categorize and pin goals; edit targets and view completion history.
-- Choose completion popups, local chat messages and optional desktop notifications.
-- Export and import local backups of your account's goals.
+Turn your next Old School RuneScape grind into a clear goal. Track skills, boss kills, collection-log unlocks and personal routines in one RuneLite sidebar.
 
 ## Getting started
 
-Open Grindstone from the RuneLite sidebar and select **Add goal**. New profiles start empty. Use a goal's actions menu to edit or delete it. The header menu contains optional presets, bulk management, backups and **Clear all goals**.
+With the plugin enabled:
 
-Adjust appearance and notification preferences in **RuneLite settings → Grindstone**.
+1. Log in and open **Grindstone** from the RuneLite sidebar.
+2. Select **+ Add goal**, choose what to track and set your target.
+3. Review and save your goal, then watch its progress as you play.
 
-The dashboard separates new, active, completed and waiting goals. Use the counters as quick status filters, or open **Filters** for category, type, schedule, pinned-only and sorting options. Search matches words across goal titles, descriptions and categories; **Clear filters** resets all selections.
+New profiles start empty. Open the header's **…** menu for goal presets, daily and weekly routine packs, bulk actions and profile backups. Adjust appearance, goal types and notifications in **RuneLite settings → Grindstone**.
 
-Goal pickers have searchable, categorized lists. Activities are grouped into bossing, raids, Slayer, clues, minigames and skilling.
+## What you can track
 
-Item search lists normal items only; entering a noted or placeholder ID resolves its normal item. Owned-item goals combine normal and noted quantities, but never count bank placeholders.
+| Goal type | Examples |
+| --- | --- |
+| Skills | Skill level and XP, session XP, total level and XP, combat level, base level and XP |
+| Activities | Boss kills, raid and minigame completions, Slayer points and task streaks |
+| Unlocks | Quests and quest series, achievement diaries, Combat Achievement tasks and tiers |
+| Collection log | Individual item unlocks and page completion, with item icons and obtained progress |
+| Owned items | Target quantities across known inventory, equipment, bank and supported storage |
+| Personal goals | Manual progress, notes, checklists and linked goals built from existing trackers |
 
-## Add goals where you play
+Make goals daily, weekly or monthly, add personal deadlines, and browse past completions in **History**. Completion alerts include a popup, a local chat message and optional desktop notifications.
 
-Right-click these entries to open a preselected goal editor. Choose your target and review it before saving; matching goals are checked to avoid duplicates.
+## Keep your goals organized
 
-| Right-click | Goal options | Settings toggle |
-| --- | --- | --- |
-| A skill in the Skills tab | Skill level or XP | Skills tab goal shortcuts |
-| Total level in the Skills tab | Total level, total XP, base level or base XP | Skills tab goal shortcuts |
-| Combat level in Combat Options | Combat level | Combat level goal shortcut |
-| A collection-log item or page | Item unlock or page completion | Collection log goal shortcut |
-| A Combat Achievement task | Individual task completion | Combat task goal shortcut |
-| A supported boss NPC or Combat Achievements boss entry | Kill count or boss-task completion | Boss goal shortcuts |
+- Pin your priorities and group related goals by category or skill.
+- Search titles, descriptions and categories; filter by status, type, schedule or pinned goals.
+- Select a dashboard status counter to show new, active, completed or waiting goals.
+- Switch to **Today** to focus on recurring goals and their next resets.
+- Use a goal's actions menu to edit or delete it, or manage several goals through **Manage goals / bulk actions**.
+- Export a local profile backup or import missing goals without replacing existing targets.
 
-Every shortcut can be switched off independently of the others. Disabling its associated goal type also hides the shortcut. These options only open Grindstone's editor; they never attack, move, switch combat styles or perform game actions.
+The header menu also offers **Add all collection-log pages** to create missing page goals from the client's collection-log catalogue.
 
-## Progress and privacy
+## Add goals from the game interface
 
-Progress uses information available to your logged-in client. Some readings require opening the relevant game interface. Item quantities cover known storage, not every possible location, and collection-log dates record when Grindstone first observed an unlock.
+Right-click a supported entry to open a goal editor with the subject already selected. Choose your target and review it before saving.
 
-Personal routines reset at UTC day, week or month boundaries. Offline progress across a reset may not be attributable to the correct period.
+| Right-click | Available goals |
+| --- | --- |
+| A skill in the Skills tab | Skill level or XP |
+| Total level in the Skills tab | Total level, total XP, base level or base XP |
+| Combat level in Combat Options | Combat level |
+| A quest in the quest list | Quest completion |
+| An achievement diary region | Easy, Medium, Hard or Elite diary completion |
+| A collection-log item or page | Item unlock or page completion |
+| A Combat Achievement task | Task completion |
+| A supported boss NPC | Kill count |
+| A Combat Achievements boss entry | Boss-task completion |
 
-Profiles and backups are local. Grindstone does not automate gameplay or send chat messages to other players.
+Shortcuts can be disabled in Grindstone's settings. They open the editor and perform no game actions.
+
+## Screenshots
+
+| Dashboard and progress | Choose a goal |
+| --- | --- |
+| ![Grindstone dashboard with skill progress, completed goals and recurring goals](docs/images/dashboard.png) | ![Add goal dialog with searchable skills and target presets](docs/images/add-goal.png) |
+
+| Collection-log goals | Review before saving |
+| --- | --- |
+| ![Collection-log goal with item icons and obtained progress](docs/images/collection-log.png) | ![Review dialog with the selected skill, target and repeat schedule](docs/images/review-goal.png) |
+
+## How tracking works
+
+Progress uses information available to your logged-in client. Some goals need you to open the relevant game interface before a reading is available. A **waiting** goal needs a login or a client reading; it does not mean your progress has been lost.
+
+Owned-item goals use known storage contents. Normal and noted quantities are combined; bank placeholders are excluded. Collection-log dates show when Grindstone first observed an unlock.
+
+Personal routines reset at UTC day, week or month boundaries. These schedules track your chosen routines; offline progress across a reset may not be attributable to the correct period.
+
+Profiles and backups stay local. Grindstone does not automate gameplay or send chat messages to other players.
