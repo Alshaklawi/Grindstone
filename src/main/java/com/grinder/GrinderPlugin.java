@@ -31,9 +31,12 @@ import com.grinder.repository.ProfilePersistence;
 import com.grinder.ui.GrinderPanel;
 import com.grinder.ui.util.SkillWidgets;
 import java.awt.image.BufferedImage;
+import java.awt.Rectangle;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -223,10 +226,6 @@ public class GrinderPlugin extends Plugin {
             }
             return;
         }
-        if (original.getParam1() >>> 16 == InterfaceID.CA_BOSSES) {
-            addBossAchievementMenu(original);
-            return;
-        }
         if (original.getParam1() >>> 16 == InterfaceID.CA_TASKS) {
             addCombatAchievementGoalMenu(original);
             return;
@@ -304,6 +303,14 @@ public class GrinderPlugin extends Plugin {
         if (!hasActivePlayerProfile()) {
             return;
         }
+        MenuEntry[] entries = event.getMenuEntries();
+        for (int i = entries.length - 1; i >= 0; i--) {
+            MenuEntry entry = entries[i];
+            if (entry.getParam1() >>> 16 == InterfaceID.CA_BOSSES && (entry.getType() == MenuAction.CC_OP || entry.getType() == MenuAction.CC_OP_LOW_PRIORITY)) {
+                addBossAchievementMenu(entry);
+                break;
+            }
+        }
         if (config.combatLevelGoalMenu() && config.levelGoalsEnabled() && isMouseOverWidget(InterfaceID.CombatInterface.LEVEL)) {
             client.getMenu().createMenuEntry(-1)
                     .setOption("Add combat level goal")
@@ -366,33 +373,72 @@ public class GrinderPlugin extends Plugin {
     }
 
     private void addBossAchievementMenu(MenuEntry original) {
-        if (!config.bossGoalMenu() || !config.combatAchievementGoalsEnabled() || original.getIdentifier() != 1) {
-            return;
-        }
-        String name = Text.removeTags(original.getTarget()).trim();
-        if (name.isEmpty()) {
+        if (!config.bossGoalMenu() || !config.combatAchievementGoalsEnabled()) {
             return;
         }
         if (combatBossIds.isEmpty()) {
             CombatAchievementData.tasksByBoss(client).forEach((boss, tasks) -> {
                 if (!tasks.isEmpty()) {
-                    combatBossIds.put(Text.removeTags(CombatAchievementData.bossName(client, boss)).trim().toLowerCase(Locale.ROOT), boss);
+                    combatBossIds.put(bossNameKey(CombatAchievementData.bossName(client, boss)), boss);
                 }
             });
         }
-        Integer boss = combatBossIds.get(name.toLowerCase(Locale.ROOT));
+        String name = Text.removeTags(original.getTarget().replace("<br>", " ")).trim();
+        Integer boss = combatBossIds.get(bossNameKey(name));
+        if (boss == null && original.getWidget() != null) {
+            Set<String> names = new LinkedHashSet<>();
+            findBossCardNames(client.getWidget(InterfaceID.CaBosses.BOSSES_LIST), original.getWidget().getBounds(), names);
+            if (names.size() == 1) {
+                name = names.iterator().next();
+                boss = combatBossIds.get(bossNameKey(name));
+            }
+        }
         if (boss == null) {
             return;
         }
+        final String selectedName = name;
+        final int selectedBoss = boss;
+        for (MenuEntry entry : client.getMenu().getMenuEntries()) {
+            if ("Add goal".equals(entry.getOption()) && bossNameKey(entry.getTarget()).equals(bossNameKey(selectedName))) {
+                return;
+            }
+        }
         client.getMenu().createMenuEntry(-2)
                 .setOption("Add goal")
-                .setTarget(original.getTarget())
+                .setTarget(selectedName)
                 .setType(MenuAction.RUNELITE_LOW_PRIORITY)
                 .onClick(entry -> {
                     if (hasActivePlayerProfile() && config.bossGoalMenu() && config.combatAchievementGoalsEnabled()) {
-                        openGoalEditor(new CombatAchievementBossGoal(boss, name));
+                        openGoalEditor(new CombatAchievementBossGoal(selectedBoss, selectedName));
                     }
                 });
+    }
+
+    private static String bossNameKey(String text) {
+        return text == null ? "" : Text.removeTags(text.replace("<br>", " ")).trim().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
+    }
+
+    private void findBossCardNames(Widget widget, Rectangle card, Set<String> names) {
+        if (widget == null || widget.isHidden()) {
+            return;
+        }
+        Rectangle bounds = widget.getBounds();
+        String text = widget.getText();
+        if (text != null && card.contains(bounds.getCenterX(), bounds.getCenterY()) && combatBossIds.containsKey(bossNameKey(text))) {
+            names.add(Text.removeTags(text.replace("<br>", " ")).trim().replaceAll("\\s+", " "));
+        }
+        Widget[] dynamic = widget.getDynamicChildren();
+        if (dynamic != null) {
+            for (Widget child : dynamic) {
+                findBossCardNames(child, card, names);
+            }
+        }
+        Widget[] fixed = widget.getStaticChildren();
+        if (fixed != null) {
+            for (Widget child : fixed) {
+                findBossCardNames(child, card, names);
+            }
+        }
     }
 
     @Subscribe
