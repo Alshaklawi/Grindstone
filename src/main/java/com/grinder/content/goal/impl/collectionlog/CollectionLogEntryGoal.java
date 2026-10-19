@@ -65,7 +65,7 @@ public class CollectionLogEntryGoal implements Goal {
         this.itemManager = itemManager;
         this.entry = entry;
         this.pageStruct = Objects.requireNonNull(entry).getStruct();
-        this.pageName = entry.name();
+        this.pageName = entry.getTitle(null);
         initializeTransientState();
     }
     public CollectionLogEntryGoal(ItemManager itemManager, int pageStruct, String pageName) {

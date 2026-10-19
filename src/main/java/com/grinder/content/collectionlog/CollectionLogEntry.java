@@ -14,12 +14,12 @@ import net.runelite.api.gameval.InventoryID;
  * @since 10/18/2026
  */
 public enum CollectionLogEntry {
-    VETION_AND_CALVARION(502),
-    VENENATIS_AND_SPINDEL(501),
-    CHAMBERS_OF_XERIC(507),
-    WINTERTODT(504),
-    CORPOREAL_BEAST(484),
-    HESPORI(541);
+    VETION_AND_CALVARION(502, "Vet'ion and Calvar'ion"),
+    VENENATIS_AND_SPINDEL(501, "Venenatis and Spindel"),
+    CHAMBERS_OF_XERIC(507, "Chambers of Xeric"),
+    WINTERTODT(504, "Wintertodt"),
+    CORPOREAL_BEAST(484, "Corporeal Beast"),
+    HESPORI(541, "Hespori");
 
     private static final int COLLECTION_LOG_CONTAINER_ID = InventoryID.COLLECTION_TRANSMIT;
     private static final int TITLE_PARAM_ID = 689;
@@ -27,18 +27,20 @@ public enum CollectionLogEntry {
 
     @Getter
     private final int struct;
+    private final String displayName;
 
-    CollectionLogEntry(final int struct) {
+    CollectionLogEntry(final int struct, String displayName) {
         this.struct = struct;
+        this.displayName = displayName;
     }
 
     public String getTitle(Client client) {
         if (client == null || client.getStructComposition(struct) == null) {
-            return name();
+            return displayName;
         }
 
         String title = client.getStructComposition(struct).getStringValue(TITLE_PARAM_ID);
-        return title == null || title.trim().isEmpty() ? name() : title;
+        return title == null || title.trim().isEmpty() ? displayName : title;
     }
 
     public ItemComposition[] getItems(Client client) {
