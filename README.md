@@ -1,6 +1,31 @@
 # Grindstone
 
-A RuneLite plugin for tracking your Old School RuneScape goals.
+[![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=github)](https://github.com/sponsors/Alshaklawi)
+[![Version](https://img.shields.io/badge/version-1.0.0-gold)](https://github.com/Alshaklawi/Grindstone)
+
+Track your next Old School RuneScape milestone with skill, boss, collection-log and personal goals in one RuneLite sidebar.
+
+<details>
+<summary>Plugin Hub statistics — pending publication</summary>
+
+Grindstone is not published on the Plugin Hub yet. Installation and rank statistics are unavailable until its listing is live.
+
+[![Installs](https://img.shields.io/endpoint?url=https%3A%2F%2Fapi.runelite.net%2Fpluginhub%2Fshields%2Finstalls%2Fplugin%2Fgrindstone)](https://runelite.net/plugin-hub/show/grindstone)
+[![Plugin Rank](https://img.shields.io/endpoint?url=https%3A%2F%2Fapi.runelite.net%2Fpluginhub%2Fshields%2Frank%2Fplugin%2Fgrindstone)](https://runelite.net/plugin-hub/show/grindstone)
+
+</details>
+
+## Screenshots
+
+Captured from the running plugin in RuneLite, cropped to keep account names and chat out of the images.
+
+| Dashboard and progress | Choose a goal |
+| --- | --- |
+| ![Grindstone dashboard with skill progress, completed goals and recurring goals](https://raw.githubusercontent.com/Alshaklawi/Grindstone/master/docs/images/dashboard.png) | ![Grindstone Add goal dialog with six focus groups, searchable skills and target presets](https://raw.githubusercontent.com/Alshaklawi/Grindstone/master/docs/images/add-goal.png) |
+
+| Collection-log goals | Review before saving |
+| --- | --- |
+| ![Collection-log goal showing item icons, an expandable item grid and obtained progress](https://raw.githubusercontent.com/Alshaklawi/Grindstone/master/docs/images/collection-log.png) | ![Review dialog confirming the selected skill, target and repeat schedule](https://raw.githubusercontent.com/Alshaklawi/Grindstone/master/docs/images/review-goal.png) |
 
 ## Features
 
@@ -18,21 +43,26 @@ Open Grindstone from the RuneLite sidebar and select **Add goal**. New profiles 
 
 Adjust appearance and notification preferences in **RuneLite settings → Grindstone**.
 
-You can also right-click an item or page entry in the in-game collection log and select **Add goal** to open a preselected goal editor. Disable this shortcut in the collection-log settings if preferred.
-
-Combat Achievement tasks also offer **Add goal** alongside their expand/collapse action. This shortcut can be disabled in the goal settings.
-
-Supported boss NPCs offer kill-count goals, while entries in the Combat Achievements boss list offer boss-task goals. Toggle **Boss goal shortcuts**, **Combat task goal shortcut**, and **Collection log goal shortcut** independently in the settings.
-
-Right-click a skill for level or XP goals. Right-click **Total level** for total level, total XP, base level or base XP goals. Disable **Skills tab goal shortcuts** to hide these options.
-
-Right-click the combat-level display in **Combat Options** for a combat-level goal. Its **Combat level goal shortcut** setting is independent of the Skills tab shortcuts.
-
 The dashboard separates new, active, completed and waiting goals. Use the counters as quick status filters, or open **Filters** for category, type, schedule, pinned-only and sorting options. Search matches words across goal titles, descriptions and categories; **Clear filters** resets all selections.
 
 Goal pickers have searchable, categorized lists. Activities are grouped into bossing, raids, Slayer, clues, minigames and skilling.
 
 Item search lists normal items only; entering a noted or placeholder ID resolves its normal item. Owned-item goals combine normal and noted quantities, but never count bank placeholders.
+
+## Add goals where you play
+
+Right-click these entries to open a preselected goal editor. Choose your target and review it before saving; matching goals are checked to avoid duplicates.
+
+| Right-click | Goal options | Settings toggle |
+| --- | --- | --- |
+| A skill in the Skills tab | Skill level or XP | Skills tab goal shortcuts |
+| Total level in the Skills tab | Total level, total XP, base level or base XP | Skills tab goal shortcuts |
+| Combat level in Combat Options | Combat level | Combat level goal shortcut |
+| A collection-log item or page | Item unlock or page completion | Collection log goal shortcut |
+| A Combat Achievement task | Individual task completion | Combat task goal shortcut |
+| A supported boss NPC or Combat Achievements boss entry | Kill count or boss-task completion | Boss goal shortcuts |
+
+Every shortcut can be switched off independently of the others. Disabling its associated goal type also hides the shortcut. These options only open Grindstone's editor; they never attack, move, switch combat styles or perform game actions.
 
 ## Progress and privacy
 
