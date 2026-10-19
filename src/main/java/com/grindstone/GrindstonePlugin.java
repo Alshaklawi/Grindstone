@@ -726,7 +726,7 @@ public class GrindstonePlugin extends Plugin {
     }
 
     private BufferedImage loadIcon() {
-        return ImageUtil.loadImageResource(getClass(), "/grindstone.png");
+        return ImageUtil.loadImageResource(GrindstonePlugin.class, "grindstone.png");
     }
 
     @Provides

@@ -11,13 +11,13 @@ import net.runelite.client.util.ImageUtil;
  * @since 10/18/2026
  */
 public enum Icon {
-    MAIN("/grindstone.png"),
-    QUEST("/quests_icon.png"),
-    COLLECTION_LOG("/collection_log_icon.png"),
-    BOSSING("/bossing.png"),
-    ACHIEVEMENT_DIARY("/achievement_diary_icon.png"),
-    COMBAT_ACHIEVEMENT("/combat_achievement_icon.png"),
-    SKILLING("/skilling.png");
+    MAIN("grindstone.png"),
+    QUEST("quests_icon.png"),
+    COLLECTION_LOG("collection_log_icon.png"),
+    BOSSING("bossing.png"),
+    ACHIEVEMENT_DIARY("achievement_diary_icon.png"),
+    COMBAT_ACHIEVEMENT("combat_achievement_icon.png"),
+    SKILLING("skilling.png");
 
     @Getter
     private final BufferedImage image;
