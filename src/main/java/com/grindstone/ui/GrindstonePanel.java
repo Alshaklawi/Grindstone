@@ -717,7 +717,7 @@ public class GrindstonePanel extends PluginPanel {
             renderQueued.set(false);
             int version = renderVersion.incrementAndGet();
             GrindstoneProfile currentProfile = profile;
-            List<GoalView> allGoals = new ArrayList<>();
+            List<Supplier<GoalView>> preparedViews = new ArrayList<>();
 
             if (currentProfile != null && config.enabled()) {
                 cardCache.retain(currentProfile.getGoals());
@@ -745,52 +745,12 @@ public class GrindstonePanel extends PluginPanel {
                     key = Arrays.asList(key, metadata.getDeadlineAt(), metadata.getDeadlineAt() > 0 && System.currentTimeMillis() >= metadata.getDeadlineAt(), metadata.getDisplayCategory());
                     GoalView cached = cardCache.get(goal, key);
                     if (cached != null && tracking != TrackingState.WAITING && goal.getProgressMaximum() > 0) {
-                        allGoals.add(cached);
+                        preparedViews.add(() -> cached);
                         continue;
                     }
-                    GoalComponent component = goal.build(client, config);
-                    if (goal instanceof ChecklistGoal) {
-                        ChecklistGoal checklist = (ChecklistGoal) goal;
-                        boolean[] checked = checklist.getChecks();
-                        RepeatSchedule openedSchedule = recurring.getSchedule();
-                        long openedPeriod = openedSchedule.start(System.currentTimeMillis());
-                        for (int step = 0; step < checked.length; step++) {
-                            int index = step;
-                            JCheckBox check = new JCheckBox("", checked[step]);
-                            check.getAccessibleContext().setAccessibleName(checklist.getSteps().get(step));
-                            check.setOpaque(false);
-                            check.setFont(UiTypography.BODY);
-                            check.setToolTipText("Manually mark this personal step complete. No game action is performed; repeating checklists reset at their UTC boundary.");
-                            check.setAlignmentX(LEFT_ALIGNMENT);
-                            check.addActionListener(event -> {
-                                boolean selected = check.isSelected();
-                                clientThread.invokeLater(() -> {
-                                    if (profile == currentProfile && currentProfile.getGoals().contains(goal) && currentProfile.metadata(goal).recurring().getSchedule() == openedSchedule && openedSchedule.start(System.currentTimeMillis()) == openedPeriod) {
-                                        Consumer<Goal> restore = currentProfile.snapshotEdit(goal);
-                                        checklist.setChecked(index, selected);
-                                        currentProfile.touch();
-                                        recordGoalUndo(currentProfile, goal, "checklist step", () -> restore.accept(goal));
-                                    }
-                                    refreshAll();
-                                });
-                            });
-                            JPanel stepRow = new ContentHeightPanel();
-                            stepRow.setLayout(new BorderLayout(5, 0));
-                            stepRow.setOpaque(false);
-                            stepRow.setAlignmentX(LEFT_ALIGNMENT);
-                            JTextArea stepText = new JTextArea(checklist.getSteps().get(step), 0, 14);
-                            stepText.setEditable(false);
-                            stepText.setLineWrap(true);
-                            stepText.setWrapStyleWord(true);
-                            stepText.setOpaque(false);
-                            stepText.setFont(UiTypography.BODY);
-                            stepText.setToolTipText(check.getToolTipText());
-                            stepRow.add(check, BorderLayout.WEST);
-                            stepRow.add(stepText, BorderLayout.CENTER);
-                            component.addDetail(stepRow);
-                        }
-                    }
+                    Supplier<GoalComponent> preparedCard = goal.prepare(client, config);
                     tracking = TrackingState.of(goal, recurring, client.getGameState() == GameState.LOGGED_IN && client.getLocalPlayer() != null && client.getAccountHash() == currentProfile.getHash(), currentProfile.getPlayerStorage().hasBankSnapshot());
+                    TrackingState displayTracking = tracking;
                     GoalStatus status = repeating ? recurring.getStatus() : goal.getStatus();
                     long progressCurrent = repeating ? recurring.getProgress() : goal.getProgressCurrent();
                     long progressMaximum = repeating ? recurring.getTarget() : goal.getProgressMaximum();
@@ -799,94 +759,147 @@ public class GrindstonePanel extends PluginPanel {
                         progressCurrent = 0;
                         progressMaximum = 0;
                     }
-                    component.setGoalStatus(status);
-                    component.putClientProperty("grindstone.repeat", repeating ? recurring.getSchedule() : RepeatSchedule.NONE);
-                    component.putClientProperty("grindstone.id", metadata.getId());
-                    component.putClientProperty("grindstone.ready", tracking != TrackingState.WAITING);
-                    if (repeating) {
-                        component.setProgress(progressCurrent, progressMaximum, String.format(Locale.ROOT, "%,d / %,d this period", progressCurrent, progressMaximum));
-                    }
-                    if (tracking == TrackingState.WAITING) {
-                        component.setProgress(0, 0, "Waiting for client data");
-                    } else if (tracking == TrackingState.OBSERVED_LOG) {
-                        component.setProgress(progressCurrent, progressMaximum, String.format(Locale.ROOT, "%,d / %,d", progressCurrent, progressMaximum));
-                    } else if (tracking == TrackingState.PARTIAL_STORAGE || tracking == TrackingState.SNAPSHOT) {
-                        component.setProgress(progressCurrent, progressMaximum, String.format(Locale.ROOT, "%,d / %,d", progressCurrent, progressMaximum));
-                    }
-                    String baselineDetail = recurring.getBaselineAt() == 0 ? "" : " Baseline: " + Instant.ofEpochMilli(recurring.getBaselineAt()) + ".";
                     if (!repeating && tracking != TrackingState.WAITING) {
                         metadata.observe(goal, title, System.currentTimeMillis());
                     }
-                    long observedAt = repeating ? recurring.getLastObservedAt() : metadata.getLastObservedAt();
+                    GoalMetadata displayMetadata = metadata.copy();
+                    RecurringGoal displayRecurring = displayMetadata.recurring();
+                    GoalCategory category = safeCategory(goal);
+                    boolean hasProgress = goal.hasProgress();
                     String sourceDetail = goal.getCardDescription().isEmpty() ? goal.getDescription() : "";
-                    component.setReliability(config.showTrackingState() ? tracking.getCardLabel() : null, tracking.getDetail() + baselineDetail + (observedAt == 0 ? "" : " Last reading: " + Instant.ofEpochMilli(observedAt) + ".") + (sourceDetail.isEmpty() ? "" : " " + sourceDetail));
-                    component.setDeadlineNote(metadata.deadlineText(System.currentTimeMillis()));
-                    component.putClientProperty("grindstone.deadline", metadata.getDeadlineAt());
-                    component.setExpansionListener(null);
-                    component.setExpanded(!metadata.isCollapsed(config.collapseDetailsByDefault()));
-                    component.setExpansionListener(expanded -> clientThread.invokeLater(() -> {
-                        if (profile == currentProfile && currentProfile.getGoals().contains(goal)) {
-                            currentProfile.metadata(goal).setCollapsed(!expanded);
-                        }
-                    }));
-                    component.setMaximumProgressChunks(config.maxProgressChunks());
-                    component.setGoalActions(event -> editGoal(currentProfile, goal, title), event -> deleteGoal(currentProfile, goal, title));
-                    component.addGoalAction("Deadline / reminder...", "Set a personal UTC deadline and optional reminder in Grindstone's header.", event -> editDeadline(currentProfile, goal));
-                    if (goal instanceof CustomGoal) {
-                        CustomGoal custom = (CustomGoal) goal;
-                        long shownCurrent = progressCurrent;
-                        long shownTarget = progressMaximum;
-                        component.setManualActions(shownCurrent, shownTarget, () -> changeManualProgress(currentProfile, custom, value -> Math.min(custom.getProgressMaximum(), value + 1)), () -> changeManualProgress(currentProfile, custom, value -> value >= custom.getProgressMaximum() ? 0 : 1), () -> promptManualProgress(currentProfile, custom, shownCurrent, shownTarget));
-                    }
-                    RepeatSchedule repeatSchedule = recurring.getSchedule();
-                    long repeatTarget = recurring.getTarget();
-                    boolean pinned = metadata.isPinned();
-                    component.putClientProperty("grindstone.pinned", pinned);
-                    component.addGoalAction(pinned ? "Unpin goal" : "Pin goal", "Pinned goals appear first, while still respecting your search and filters.", event -> clientThread.invokeLater(() -> {
-                        if (profile == currentProfile && currentProfile.getGoals().contains(goal)) {
-                            currentProfile.metadata(goal).setPinned(!pinned);
-                            currentProfile.touch();
-                            render();
-                        }
-                    }));
-                    if (config.showCompletionHistory()) {
-                        component.addGoalAction("Goal history...", "View recurring periods, progress, outcomes and first-observed completion dates.", event -> clientThread.invokeLater(() -> {
-                            if (profile != currentProfile || !currentProfile.getGoals().contains(goal)) {
-                                return;
-                            }
-                            Supplier<GoalHistoryPanel> history = GoalHistoryPanel.snapshot(metadata);
-                            SwingUtilities.invokeLater(() -> {
-                                if (profile == currentProfile) {
-                                    JOptionPane.showMessageDialog(this, history.get(), title + " — history", JOptionPane.PLAIN_MESSAGE);
-                                }
-                            });
-                        }));
-                    }
-                    if (RecurringGoal.supports(goal)) {
-                        component.addGoalAction("Repeat schedule...", "Make this a daily, weekly or monthly goal, or return to lifetime tracking.", event -> editRepeat(currentProfile, goal, repeatSchedule, repeatTarget));
-                    }
-                    if (repeating) {
-                        component.addGoalAction("Restart current period...", "Archive observed progress and capture a fresh baseline. Game progress is never reset.", event -> restartPeriod(currentProfile, goal));
-                    }
-                    if (goal instanceof SessionExperienceGoal) {
-                        component.addGoalAction("Restart session XP...", "Clear only this goal's observed login gains and capture the current XP as its new baseline.", event -> {
-                            if (JOptionPane.showConfirmDialog(this, "Reset this goal's session XP progress? Your game XP and saved completion history are unchanged.", "Restart session goal", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
-                                clientThread.invokeLater(() -> {
-                                    if (profile == currentProfile && currentProfile.getGoals().contains(goal) && hasClientProfile(currentProfile)) {
-                                        ((SessionExperienceGoal) goal).restart();
-                                        goal.refresh(client);
-                                        currentProfile.touch();
+                    long shownCurrent = progressCurrent;
+                    long shownMaximum = progressMaximum;
+                    GoalStatus shownStatus = status;
+                    List<String> steps = goal instanceof ChecklistGoal ? new ArrayList<>(((ChecklistGoal) goal).getSteps()) : new ArrayList<>();
+                    boolean[] checks = goal instanceof ChecklistGoal ? ((ChecklistGoal) goal).getChecks().clone() : new boolean[0];
+                    List<?> cacheKey = key;
+                    preparedViews.add(() -> {
+                        GoalComponent component = preparedCard.get();
+                        if (goal instanceof ChecklistGoal) {
+                            ChecklistGoal checklist = (ChecklistGoal) goal;
+                            boolean[] checked = checks;
+                            RepeatSchedule openedSchedule = displayRecurring.getSchedule();
+                            long openedPeriod = openedSchedule.start(System.currentTimeMillis());
+                            for (int step = 0; step < checked.length; step++) {
+                                int index = step;
+                                JCheckBox check = new JCheckBox("", checked[step]);
+                                check.getAccessibleContext().setAccessibleName(steps.get(step));
+                                check.setOpaque(false);
+                                check.setFont(UiTypography.BODY);
+                                check.setToolTipText("Manually mark this personal step complete. No game action is performed; repeating checklists reset at their UTC boundary.");
+                                check.setAlignmentX(LEFT_ALIGNMENT);
+                                check.addActionListener(event -> {
+                                    boolean selected = check.isSelected();
+                                    clientThread.invokeLater(() -> {
+                                        if (profile == currentProfile && currentProfile.getGoals().contains(goal) && currentProfile.metadata(goal).recurring().getSchedule() == openedSchedule && openedSchedule.start(System.currentTimeMillis()) == openedPeriod) {
+                                            Consumer<Goal> restore = currentProfile.snapshotEdit(goal);
+                                            checklist.setChecked(index, selected);
+                                            currentProfile.touch();
+                                            recordGoalUndo(currentProfile, goal, "checklist step", () -> restore.accept(goal));
+                                        }
                                         refreshAll();
+                                    });
+                                });
+                                JPanel stepRow = new ContentHeightPanel();
+                                stepRow.setLayout(new BorderLayout(5, 0));
+                                stepRow.setOpaque(false);
+                                stepRow.setAlignmentX(LEFT_ALIGNMENT);
+                                JTextArea stepText = new JTextArea(steps.get(step), 0, 14);
+                                stepText.setEditable(false);
+                                stepText.setLineWrap(true);
+                                stepText.setWrapStyleWord(true);
+                                stepText.setOpaque(false);
+                                stepText.setFont(UiTypography.BODY);
+                                stepText.setToolTipText(check.getToolTipText());
+                                stepRow.add(check, BorderLayout.WEST);
+                                stepRow.add(stepText, BorderLayout.CENTER);
+                                component.addDetail(stepRow);
+                            }
+                        }
+                        component.setGoalStatus(shownStatus);
+                        component.putClientProperty("grindstone.repeat", repeating ? displayRecurring.getSchedule() : RepeatSchedule.NONE);
+                        component.putClientProperty("grindstone.id", displayMetadata.getId());
+                        component.putClientProperty("grindstone.ready", displayTracking != TrackingState.WAITING);
+                        if (repeating) {
+                            component.setProgress(shownCurrent, shownMaximum, String.format(Locale.ROOT, "%,d / %,d this period", shownCurrent, shownMaximum));
+                        }
+                        if (displayTracking == TrackingState.WAITING) {
+                            component.setProgress(0, 0, "Waiting for client data");
+                        } else if (displayTracking == TrackingState.OBSERVED_LOG) {
+                            component.setProgress(shownCurrent, shownMaximum, String.format(Locale.ROOT, "%,d / %,d", shownCurrent, shownMaximum));
+                        } else if (displayTracking == TrackingState.PARTIAL_STORAGE || displayTracking == TrackingState.SNAPSHOT) {
+                            component.setProgress(shownCurrent, shownMaximum, String.format(Locale.ROOT, "%,d / %,d", shownCurrent, shownMaximum));
+                        }
+                        String baselineDetail = displayRecurring.getBaselineAt() == 0 ? "" : " Baseline: " + Instant.ofEpochMilli(displayRecurring.getBaselineAt()) + ".";
+                        long observedAt = repeating ? displayRecurring.getLastObservedAt() : displayMetadata.getLastObservedAt();
+                        component.setReliability(config.showTrackingState() ? displayTracking.getCardLabel() : null, displayTracking.getDetail() + baselineDetail + (observedAt == 0 ? "" : " Last reading: " + Instant.ofEpochMilli(observedAt) + ".") + (sourceDetail.isEmpty() ? "" : " " + sourceDetail));
+                        component.setDeadlineNote(displayMetadata.deadlineText(System.currentTimeMillis()));
+                        component.putClientProperty("grindstone.deadline", displayMetadata.getDeadlineAt());
+                        component.setExpansionListener(null);
+                        component.setExpanded(!displayMetadata.isCollapsed(config.collapseDetailsByDefault()));
+                        component.setExpansionListener(expanded -> clientThread.invokeLater(() -> {
+                            if (profile == currentProfile && currentProfile.getGoals().contains(goal)) {
+                                currentProfile.metadata(goal).setCollapsed(!expanded);
+                            }
+                        }));
+                        component.setMaximumProgressChunks(config.maxProgressChunks());
+                        component.setGoalActions(event -> editGoal(currentProfile, goal, title), event -> deleteGoal(currentProfile, goal, title));
+                        component.addGoalAction("Deadline / reminder...", "Set a personal UTC deadline and optional reminder in Grindstone's header.", event -> editDeadline(currentProfile, goal));
+                        if (goal instanceof CustomGoal) {
+                            CustomGoal custom = (CustomGoal) goal;
+                            long shownTarget = shownMaximum;
+                            component.setManualActions(shownCurrent, shownTarget, () -> changeManualProgress(currentProfile, custom, value -> Math.min(custom.getProgressMaximum(), value + 1)), () -> changeManualProgress(currentProfile, custom, value -> value >= custom.getProgressMaximum() ? 0 : 1), () -> promptManualProgress(currentProfile, custom, shownCurrent, shownTarget));
+                        }
+                        RepeatSchedule repeatSchedule = displayRecurring.getSchedule();
+                        long repeatTarget = displayRecurring.getTarget();
+                        boolean pinned = displayMetadata.isPinned();
+                        component.putClientProperty("grindstone.pinned", pinned);
+                        component.addGoalAction(pinned ? "Unpin goal" : "Pin goal", "Pinned goals appear first, while still respecting your search and filters.", event -> clientThread.invokeLater(() -> {
+                            if (profile == currentProfile && currentProfile.getGoals().contains(goal)) {
+                                currentProfile.metadata(goal).setPinned(!pinned);
+                                currentProfile.touch();
+                                render();
+                            }
+                        }));
+                        if (config.showCompletionHistory()) {
+                            component.addGoalAction("Goal history...", "View recurring periods, progress, outcomes and first-observed completion dates.", event -> clientThread.invokeLater(() -> {
+                                if (profile != currentProfile || !currentProfile.getGoals().contains(goal)) {
+                                    return;
+                                }
+                                Supplier<GoalHistoryPanel> history = GoalHistoryPanel.snapshot(currentProfile.metadata(goal));
+                                SwingUtilities.invokeLater(() -> {
+                                    if (profile == currentProfile) {
+                                        JOptionPane.showMessageDialog(this, history.get(), title + " — history", JOptionPane.PLAIN_MESSAGE);
                                     }
                                 });
-                            }
-                        });
-                    }
-                    component.setAchievementNote(repeating ? recurring.getSchedule() + " · " + (recurring.getBaselineAt() == 0 ? "Baseline pending" : "This period") : config.showCompletionHistory() && !metadata.getCompletions().isEmpty() && status != GoalStatus.COMPLETE ? "Previously reached · now incomplete" : null);
+                            }));
+                        }
+                        if (RecurringGoal.supports(goal)) {
+                            component.addGoalAction("Repeat schedule...", "Make this a daily, weekly or monthly goal, or return to lifetime tracking.", event -> editRepeat(currentProfile, goal, repeatSchedule, repeatTarget));
+                        }
+                        if (repeating) {
+                            component.addGoalAction("Restart current period...", "Archive observed progress and capture a fresh baseline. Game progress is never reset.", event -> restartPeriod(currentProfile, goal));
+                        }
+                        if (goal instanceof SessionExperienceGoal) {
+                            component.addGoalAction("Restart session XP...", "Clear only this goal's observed login gains and capture the current XP as its new baseline.", event -> {
+                                if (JOptionPane.showConfirmDialog(this, "Reset this goal's session XP progress? Your game XP and saved completion history are unchanged.", "Restart session goal", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
+                                    clientThread.invokeLater(() -> {
+                                        if (profile == currentProfile && currentProfile.getGoals().contains(goal) && hasClientProfile(currentProfile)) {
+                                            ((SessionExperienceGoal) goal).restart();
+                                            goal.refresh(client);
+                                            currentProfile.touch();
+                                            refreshAll();
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                        component.setAchievementNote(repeating ? displayRecurring.getSchedule() + " · " + (displayRecurring.getBaselineAt() == 0 ? "Baseline pending" : "This period") : config.showCompletionHistory() && !displayMetadata.getCompletions().isEmpty() && shownStatus != GoalStatus.COMPLETE ? "Previously reached · now incomplete" : null);
 
-                    GoalView view = new GoalView( goal, component, safeTitle(goal), safeCategory(goal), status, goal.hasProgress(), progressCurrent, progressMaximum);
-                    cardCache.put(goal, key, view);
-                    allGoals.add(view);
+                        GoalView view = new GoalView(goal, component, title, category, shownStatus, hasProgress, shownCurrent, shownMaximum);
+                        cardCache.put(goal, cacheKey, view);
+                        return view;
+                    });
                 }
             }
 
@@ -903,6 +916,10 @@ public class GrindstonePanel extends PluginPanel {
                 updateStatusLabel.setText("<html>" + (storageStatus == null ? "" : HtmlUtils.escape(storageStatus) + "<br>") + (dueCount == 0 ? "" : dueCount + " personal deadline(s) due within 24h / past due<br>") + (config.showUpdateStatus() ? updateText : "") + "</html>");
                 updateStatusLabel.setVisible(config.showUpdateStatus() && currentProfile != null || storageStatus != null || dueCount > 0);
                 updateStatusLabel.setToolTipText("Latest inventory, equipment or storage snapshot captured this login. This does not mean every storage has been loaded.");
+                List<GoalView> allGoals = new ArrayList<>(preparedViews.size());
+                for (Supplier<GoalView> prepared : preparedViews) {
+                    allGoals.add(prepared.get());
+                }
                 renderPrepared(currentProfile, allGoals);
             });
         });

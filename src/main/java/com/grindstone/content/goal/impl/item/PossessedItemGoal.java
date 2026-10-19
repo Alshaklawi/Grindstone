@@ -1,4 +1,5 @@
 package com.grindstone.content.goal.impl.item;
+import com.grindstone.config.GrindstoneConfig;
 import com.grindstone.content.goal.Goal;
 import com.grindstone.content.goal.GoalCategory;
 import com.grindstone.content.goal.GoalStatus;
@@ -8,6 +9,7 @@ import com.grindstone.ui.Icon;
 import com.grindstone.ui.components.GoalComponent;
 import java.awt.image.BufferedImage;
 import java.util.Locale;
+import java.util.function.Supplier;
 import lombok.Getter;
 import net.runelite.api.Client;
 import net.runelite.api.ItemComposition;
@@ -114,10 +116,14 @@ public final class PossessedItemGoal implements Goal {
         return changed;
     }
     @Override
-    public GoalComponent build(Client client) {
+    public Supplier<GoalComponent> prepare(Client client, GrindstoneConfig config) {
         refresh(client);
-        GoalComponent component = Goal.super.build(client);
-        component.setRequiredQuantity(amount);
-        return component;
+        Supplier<GoalComponent> prepared = Goal.super.prepare(client, config);
+        long quantity = amount;
+        return () -> {
+            GoalComponent component = prepared.get();
+            component.setRequiredQuantity(quantity);
+            return component;
+        };
     }
 }

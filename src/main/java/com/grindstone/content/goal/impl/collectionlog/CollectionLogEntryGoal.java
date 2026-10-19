@@ -16,10 +16,9 @@ import com.grindstone.util.HtmlUtils;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 import lombok.Getter;
 import net.runelite.api.Client;
 import net.runelite.api.ItemComposition;
@@ -53,9 +52,6 @@ public class CollectionLogEntryGoal implements Goal {
     private boolean isKnownObtained(ItemContainer container, ItemComposition item) {
         return history != null && history.contains(item.getId()) || container != null && container.contains(item.getId());
     }
-    private transient Map<Integer, ItemComponent> itemComponents = new HashMap<>();
-    private transient GoalComponent current;
-    private transient ItemContainerComponent main;
     private transient long obtained;
     private transient long total;
     @Getter
@@ -66,7 +62,6 @@ public class CollectionLogEntryGoal implements Goal {
         this.entry = entry;
         this.pageStruct = Objects.requireNonNull(entry).getStruct();
         this.pageName = entry.getTitle(null);
-        initializeTransientState();
     }
     public CollectionLogEntryGoal(ItemManager itemManager, int pageStruct, String pageName) {
         if (pageStruct <= 0 || pageName == null || pageName.trim().isEmpty() || pageName.length() > 200) {
@@ -76,97 +71,63 @@ public class CollectionLogEntryGoal implements Goal {
         this.pageStruct = pageStruct;
         this.pageName = pageName;
         this.entry = Arrays.stream(CollectionLogEntry.values()).filter(value -> value.getStruct() == pageStruct).findFirst().orElse(null);
-        initializeTransientState();
-    }
-
-    private void initializeTransientState() {
-        if (itemComponents == null) {
-            itemComponents = new HashMap<>();
-        }
     }
 
     public void setItemManager(ItemManager itemManager) {
         this.itemManager = itemManager;
-        initializeTransientState();
-        itemComponents.clear();
     }
 
     @Override
-    public GoalComponent build(Client client) {
-        return build(client, null);
-    }
-
-    @Override
-    public GoalComponent build(Client client, GrindstoneConfig config) {
-        initializeTransientState();
-
-        if (current == null) {
-            current = new GoalComponent();
-            main = new ItemContainerComponent();
-            current.getContent().add(main);
-        }
-
-        refresh(client, config);
-
-        current.setIconVisible(config == null || config.showGoalIcons());
-        current.setProgressBarVisible(config == null || config.showProgressBar());
-        return current;
-    }
-
-    private void refresh(Client client, GrindstoneConfig config) {
+    public Supplier<GoalComponent> prepare(Client client, GrindstoneConfig config) {
         ItemContainer container = client.getItemContainer(COLLECTION_LOG_CONTAINER_ID);
         ItemComposition[] items = CollectionLogPages.items(client, pageStruct);
-        List<ItemComponent> components = new ArrayList<>(items.length);
-
+        List<Supplier<ItemComponent>> preparedItems = new ArrayList<>(items.length);
         long nextObtained = 0;
         long nextTotal = 0;
-
-        current.setTitle(getTitle(client));
-        current.setIcon(config != null && !config.showActivityIcons() ? Icon.COLLECTION_LOG.getImage() : getIcon(client));
-
-        main.configure(config == null ? 4 : config.itemsPerRow(), config == null ? 5 : config.maxItemRows());
-
+        String title = getTitle(client);
+        BufferedImage icon = config != null && !config.showActivityIcons() ? Icon.COLLECTION_LOG.getImage() : getIcon(client);
+        int columns = config == null ? 4 : config.itemsPerRow();
+        int rows = config == null ? 5 : config.maxItemRows();
         for (ItemComposition item : items) {
             if (item == null) {
                 continue;
             }
-
             nextTotal++;
             boolean isObtained = isKnownObtained(container, item);
-
             if (isObtained) {
                 nextObtained++;
             }
-
             if (config != null && !config.showObtainedItems() && isObtained) {
                 continue;
             }
-
-            ItemComponent component = itemComponents.get(item.getId());
-
-            if (component == null) {
-                component = new ItemComponent(itemManager, item);
-                itemComponents.put(item.getId(), component);
-            } else {
-                component.setItem(item);
-            }
-
-            String observed = history == null ? "Date not recorded" : history.firstSeenText(item.getId());
-            String tooltip = "<html>" + HtmlUtils.escape(item.getName()) + "<br>"
-                    + (isObtained ? "Obtained" : "Not obtained") + "<br>" + HtmlUtils.escape(observed) + "</html>";
-            component.setTooltip(config == null || config.showItemTooltips() ? tooltip : null);
-            component.setObtained(isObtained);
-            components.add(component);
+            int id = item.getId();
+            String name = item.getName();
+            BufferedImage image = itemManager == null ? null : itemManager.getImage(id);
+            String observed = history == null ? "Date not recorded" : history.firstSeenText(id);
+            String tooltip = config == null || config.showItemTooltips() ? "<html>" + HtmlUtils.escape(name) + "<br>" + (isObtained ? "Obtained" : "Not obtained") + "<br>" + HtmlUtils.escape(observed) + "</html>" : null;
+            preparedItems.add(() -> new ItemComponent(id, name, image, tooltip, isObtained));
         }
-
         obtained = nextObtained;
         total = nextTotal;
-        main.setEmptyMessage(total == 0 ? "Open the collection log to load items" : obtained >= total ? "All items obtained" : "No items to display");
-        main.set(components);
-
         long percentage = total == 0 ? 0 : obtained * 100 / total;
         progressText = obtained + " / " + total + " obtained (" + percentage + "%)";
-        current.setProgress(obtained, total, progressText);
+        Supplier<GoalComponent> prepared = Goal.super.prepare(client, config);
+        String emptyMessage = total == 0 ? "Open the collection log to load items" : obtained >= total ? "All items obtained" : "No items to display";
+        return () -> {
+            GoalComponent component = prepared.get();
+            component.setTitle(title);
+            component.setIcon(icon);
+            ItemContainerComponent grid = new ItemContainerComponent();
+            grid.configure(columns, rows);
+            grid.setEmptyMessage(emptyMessage);
+            List<ItemComponent> components = new ArrayList<>(preparedItems.size());
+            for (Supplier<ItemComponent> item : preparedItems) {
+                components.add(item.get());
+            }
+            grid.set(components);
+            component.getContent().add(grid);
+            return component;
+        };
     }
 
     @Override

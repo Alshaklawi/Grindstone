@@ -2,6 +2,7 @@ package com.grindstone.content.goal;
 import com.grindstone.config.GrindstoneConfig;
 import com.grindstone.ui.components.GoalComponent;
 import java.awt.image.BufferedImage;
+import java.util.function.Supplier;
 import net.runelite.api.Client;
 import net.runelite.api.ItemContainer;
 /**
@@ -50,10 +51,10 @@ public abstract class ClientCompletionGoal implements Goal {
         return false;
     }
     @Override
-    public GoalComponent build(Client client, GrindstoneConfig config) {
+    public Supplier<GoalComponent> prepare(Client client, GrindstoneConfig config) {
         if (!initialized) {
             refresh(client);
         }
-        return Goal.super.build(client, config);
+        return Goal.super.prepare(client, config);
     }
 }

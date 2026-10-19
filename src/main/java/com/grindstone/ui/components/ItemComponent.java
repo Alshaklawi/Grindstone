@@ -38,6 +38,8 @@ public class ItemComponent extends JPanel {
     @Getter
     private Color borderColor = DEFAULT_BORDER_COLOR;
     private int renderedItemId = -1;
+    private int itemId = -1;
+    private String itemName = "";
     private String amountText = "";
     @Getter
     private BufferedImage image;
@@ -77,16 +79,26 @@ public class ItemComponent extends JPanel {
     }
 
     public int getItemId() {
-        return item == null ? -1 : item.getId();
+        return itemId;
     }
 
     public String getItemName() {
-        return item == null ? "" : item.getName();
+        return itemName;
+    }
+
+    public ItemComponent(int itemId, String itemName, BufferedImage image, String tooltip, boolean obtained) {
+        this(null, null, image, 1, tooltip, null);
+        this.itemId = itemId;
+        this.itemName = itemName;
+        getAccessibleContext().setAccessibleName(itemName);
+        setObtained(obtained);
     }
 
 
     public void setItem(ItemComposition item) {
         this.item = item;
+        itemId = item == null ? -1 : item.getId();
+        itemName = item == null ? "" : item.getName();
         int nextId = getItemId();
         if (renderedItemId != nextId) {
             renderedItemId = nextId;

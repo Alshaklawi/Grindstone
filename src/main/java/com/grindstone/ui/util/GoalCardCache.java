@@ -15,22 +15,22 @@ import java.util.Set;
 public final class GoalCardCache<T> {
     private final Map<Goal, List<?>> keys = new IdentityHashMap<>();
     private final Map<Goal, T> cards = new IdentityHashMap<>();
-    public T get(Goal goal, List<?> key) {
+    public synchronized T get(Goal goal, List<?> key) {
         return key.equals(keys.get(goal)) ? cards.get(goal) : null;
     }
-    public void put(Goal goal, List<?> key, T card) {
+    public synchronized void put(Goal goal, List<?> key, T card) {
         keys.put(goal, key);
         cards.put(goal, card);
     }
-    public void invalidate(Goal goal) {
+    public synchronized void invalidate(Goal goal) {
         keys.remove(goal);
         cards.remove(goal);
     }
-    public void clear() {
+    public synchronized void clear() {
         keys.clear();
         cards.clear();
     }
-    public void retain(List<Goal> goals) {
+    public synchronized void retain(List<Goal> goals) {
         Set<Goal> retained = Collections.newSetFromMap(new IdentityHashMap<>());
         retained.addAll(goals);
         keys.keySet().retainAll(retained);

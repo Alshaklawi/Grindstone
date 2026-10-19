@@ -5,6 +5,7 @@ import com.grindstone.config.GrindstoneConfig;
 import com.grindstone.ui.Icon;
 import com.grindstone.ui.components.GoalComponent;
 import java.awt.image.BufferedImage;
+import java.util.function.Supplier;
 import net.runelite.api.Client;
 import net.runelite.api.ItemContainer;
 
@@ -62,26 +63,31 @@ public interface Goal {
         return hasProgress() ? getProgressCurrent() + " / " + getProgressMaximum() : "";
     }
 
-    default GoalComponent build(Client client) {
-        GoalComponent component = new GoalComponent();
-        component.setTitle(getTitle(client));
-        component.setDescription(getCardDescription());
-        component.setIcon(getIcon(client));
-
-        if (hasProgress()) {
-            component.setProgress(getProgressCurrent(), getProgressMaximum(), getProgressText());
-        } else {
-            component.setProgressStatus(getStatus().name());
-        }
-
-        return component;
-    }
-
-    default GoalComponent build(Client client, GrindstoneConfig config) {
-        GoalComponent component = build(client);
-        component.setIconVisible(config == null || config.showGoalIcons());
-        component.setProgressBarVisible(config == null || config.showProgressBar());
-        return component;
+    default Supplier<GoalComponent> prepare(Client client, GrindstoneConfig config) {
+        String title = getTitle(client);
+        String description = getCardDescription();
+        BufferedImage icon = getIcon(client);
+        boolean progress = hasProgress();
+        long current = getProgressCurrent();
+        long maximum = getProgressMaximum();
+        String text = getProgressText();
+        String status = getStatus().name();
+        boolean showIcon = config == null || config.showGoalIcons();
+        boolean showBar = config == null || config.showProgressBar();
+        return () -> {
+            GoalComponent component = new GoalComponent();
+            component.setTitle(title);
+            component.setDescription(description);
+            component.setIcon(icon);
+            if (progress) {
+                component.setProgress(current, maximum, text);
+            } else {
+                component.setProgressStatus(status);
+            }
+            component.setIconVisible(showIcon);
+            component.setProgressBarVisible(showBar);
+            return component;
+        };
     }
 
     default void onItemContainerUpdated(Client client, ItemContainer container) {

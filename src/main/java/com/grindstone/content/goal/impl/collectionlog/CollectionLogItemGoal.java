@@ -9,6 +9,7 @@ import com.grindstone.content.goal.GoalCategory;
 import com.grindstone.content.goal.GoalStatus;
 import com.grindstone.ui.Icon;
 import com.grindstone.ui.components.GoalComponent;
+import java.util.function.Supplier;
 import java.awt.image.BufferedImage;
 import lombok.Getter;
 import net.runelite.api.Client;
@@ -121,15 +122,9 @@ public class CollectionLogItemGoal implements Goal {
     }
 
     @Override
-    public GoalComponent build(Client client) {
+    public Supplier<GoalComponent> prepare(Client client, GrindstoneConfig config) {
         obtained = isObtained(client);
-        return Goal.super.build(client);
-    }
-
-    @Override
-    public GoalComponent build(Client client, GrindstoneConfig config) {
-        obtained = isObtained(client);
-        return Goal.super.build(client, config);
+        return Goal.super.prepare(client, config);
     }
 
     @Override

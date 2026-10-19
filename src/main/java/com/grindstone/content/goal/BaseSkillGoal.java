@@ -5,6 +5,7 @@ import com.grindstone.ui.Icon;
 import com.grindstone.ui.components.GoalComponent;
 import com.grindstone.util.NumberFormats;
 import java.awt.image.BufferedImage;
+import java.util.function.Supplier;
 import java.util.function.ToIntFunction;
 import net.runelite.api.Client;
 import net.runelite.api.Skill;
@@ -87,9 +88,9 @@ public abstract class BaseSkillGoal implements Goal {
     }
 
     @Override
-    public final GoalComponent build(Client client, GrindstoneConfig config) {
+    public final Supplier<GoalComponent> prepare(Client client, GrindstoneConfig config) {
         refresh(client);
-        return Goal.super.build(client, config);
+        return Goal.super.prepare(client, config);
     }
 
     public final boolean updateReadings(ToIntFunction<Skill> readings) {

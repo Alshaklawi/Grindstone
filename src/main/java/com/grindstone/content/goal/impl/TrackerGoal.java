@@ -7,6 +7,7 @@ import com.grindstone.content.goal.GoalCategory;
 import com.grindstone.content.goal.GoalStatus;
 import com.grindstone.content.tracker.TrackerEntry;
 import com.grindstone.ui.components.GoalComponent;
+import java.util.function.Supplier;
 import java.awt.image.BufferedImage;
 import lombok.Getter;
 import net.runelite.api.Client;
@@ -123,20 +124,10 @@ public class TrackerGoal implements Goal {
     }
 
     @Override
-    public GoalComponent build(Client client) {
-        refresh(client);
-        return Goal.super.build(client);
-    }
-
-    @Override
-    public GoalComponent build(Client client, GrindstoneConfig config) {
+    public Supplier<GoalComponent> prepare(Client client, GrindstoneConfig config) {
         activityIcons = config == null || config.showActivityIcons();
         refresh(client);
-        GoalComponent component = Goal.super.build(client);
-        component.setIconVisible(config == null || config.showGoalIcons());
-        component.setProgressBarVisible(config == null || config.showProgressBar());
-        component.setProgress(current, count, current + " / " + count);
-        return component;
+        return Goal.super.prepare(client, config);
     }
 
     @Override

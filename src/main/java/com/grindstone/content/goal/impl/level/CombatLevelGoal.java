@@ -7,6 +7,7 @@ import com.grindstone.content.goal.GoalStatus;
 import com.grindstone.ui.Icon;
 import com.grindstone.ui.components.GoalComponent;
 import java.awt.image.BufferedImage;
+import java.util.function.Supplier;
 import net.runelite.api.Client;
 import net.runelite.api.Player;
 
@@ -90,8 +91,8 @@ public class CombatLevelGoal implements Goal {
     }
 
     @Override
-    public GoalComponent build(Client client, GrindstoneConfig config) {
+    public Supplier<GoalComponent> prepare(Client client, GrindstoneConfig config) {
         refresh(client);
-        return Goal.super.build(client, config);
+        return Goal.super.prepare(client, config);
     }
 }
