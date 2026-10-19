@@ -69,6 +69,7 @@ public class GrinderPlugin extends Plugin {
     private GrinderProfile profile;
     private boolean completionProgressDirty;
     private boolean storageProgressDirty;
+    private long lastRecurringRefresh;
 
     @Override
     protected void startUp() {
@@ -182,6 +183,10 @@ public class GrinderPlugin extends Plugin {
 
     @Subscribe
     public void onGameTick(net.runelite.api.events.GameTick event) {
+        if (hasActivePlayerProfile() && System.currentTimeMillis() - lastRecurringRefresh >= 30_000) {
+            lastRecurringRefresh = System.currentTimeMillis();
+            if (profile.getGoals().stream().anyMatch(goal -> profile.metadata(goal).recurring().isActive())) { panel.refreshAll(); }
+        }
         if ((!completionProgressDirty && !storageProgressDirty) || !hasActivePlayerProfile()) { return; }
         boolean variablesChanged = completionProgressDirty;
         boolean storageChanged = storageProgressDirty;

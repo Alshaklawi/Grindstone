@@ -29,10 +29,12 @@ public interface GrinderConfig extends Config {
     default boolean showUpdateStatus() { return true; }
     @ConfigItem(keyName = "showPinnedSection", name = "Show pinned section", description = "Keep pinned goals above categories. Turning this off displays them in the normal list.", section = DISPLAY_SECTION, position = 8)
     default boolean showPinnedSection() { return true; }
-    @ConfigItem(keyName = "showCompletionHistory", name = "Show completion history", description = "Show observed completion history actions and reminders. Saved history is retained.", section = DISPLAY_SECTION, position = 9)
+    @ConfigItem(keyName = "showCompletionHistory", name = "Show goal history", description = "Show recurring period history, observed lifetime completions and reminders. Saved history is retained.", section = DISPLAY_SECTION, position = 9)
     default boolean showCompletionHistory() { return true; }
     @ConfigItem(keyName = "showActivityIcons", name = "Activity-specific icons", description = "Use native item icons for activities when goal icons are enabled.", section = DISPLAY_SECTION, position = 10)
     default boolean showActivityIcons() { return true; }
+    @ConfigItem(keyName = "groupRecurringGoals", name = "Group recurring goals", description = "Show daily, weekly and monthly sections with UTC reset countdowns. Turning this off keeps repeat goals in the normal layout.", section = DISPLAY_SECTION, position = 11)
+    default boolean groupRecurringGoals() { return true; }
     @Range(min = 1, max = 20)
     @ConfigItem(keyName = "maxProgressChunks", name = "Maximum progress chunks", description = "At most 20 chunks. For a target of 100 and 20 chunks, each chunk represents 5.", section = DISPLAY_SECTION, position = 4)
     default int maxProgressChunks() { return 20; }

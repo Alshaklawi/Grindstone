@@ -178,7 +178,7 @@ public class GoalComponent extends JPanel {
     }
     public void setAchievementNote(String text) {
         achievementNoteLabel.setText(text);
-        achievementNoteLabel.setToolTipText(text + ". See Completion history in goal actions for dates and targets.");
+        achievementNoteLabel.setToolTipText(text == null ? null : text + ". See Goal history in goal actions for dates and targets.");
         achievementNoteLabel.setVisible(text != null && !text.isEmpty());
         revalidate();
     }

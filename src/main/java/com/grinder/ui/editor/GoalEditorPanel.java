@@ -45,6 +45,10 @@ public final class GoalEditorPanel extends JPanel {
             "Combat achievements: boss", "Combat achievements: reward tier", "Combat achievements: difficulty tasks",
             "Owned item quantity", "Combat achievement task"});
     private final CustomGoalForm customForm = new CustomGoalForm();
+    private final RepeatGoalForm repeatForm = new RepeatGoalForm();
+    public com.grinder.repository.RepeatSchedule getRepeatSchedule() { return repeatForm.isVisible() ? repeatForm.getSchedule() : com.grinder.repository.RepeatSchedule.NONE; }
+    public long getRepeatTarget() { return repeatForm.getTarget(); }
+    public void loadRepeat(com.grinder.repository.RepeatSchedule schedule, long target) { repeatForm.load(schedule, target); }
     private final ItemPickerPanel itemPicker;
     private final JComboBox<String> subject = new JComboBox<>();
     private final JSpinner target = new JSpinner();
@@ -166,6 +170,8 @@ public final class GoalEditorPanel extends JPanel {
                     : kind == 1 || kind == 4 ? "Progress reads your character's real experience automatically."
                     : "Uses real levels. Temporary boosts do not advance level goals.");
         }
+        repeatForm.setVisible(kind == 1 || kind == 4 || kind == 5 || kind == 8);
+        if (repeatForm.isVisible()) { repeatForm.setAlignmentX(LEFT_ALIGNMENT); body.add(repeatForm); }
         body.add(Box.createVerticalStrut(10));
         body.add(hint);
         notifyReadiness();
@@ -262,6 +268,7 @@ public final class GoalEditorPanel extends JPanel {
     private void notifyReadiness() { firePropertyChange("ready", !isReady(), isReady()); }
 
     public Goal createGoal() throws java.text.ParseException {
+        if (repeatForm.isVisible()) { repeatForm.commit(); }
         if (type.getSelectedIndex() == 8) { return customForm.read(); }
         if (type.getSelectedIndex() == 7) { return new CollectionLogItemGoal(itemPicker.getSelectedItemId(), 1); }
         if (type.getSelectedIndex() == 16) {

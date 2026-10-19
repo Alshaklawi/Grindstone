@@ -43,6 +43,12 @@ public class GrinderProfile {
     private final transient java.util.Map<Goal, GoalMetadata> metadata = new java.util.IdentityHashMap<>();
     public GoalMetadata metadata(Goal goal) { return metadata.computeIfAbsent(goal, ignored -> new GoalMetadata()); }
     public void restoreMetadata(Goal goal, GoalMetadata saved) { metadata.put(goal, GoalMetadata.validated(saved)); }
+    public void observeRecurring(net.runelite.api.Client client, long now) {
+        for (Goal goal : goals) {
+            RecurringGoal recurring = metadata(goal).recurring();
+            if (recurring.isActive() && RecurringGoal.supports(goal)) { goal.refresh(client); recurring.observe(goal, now); }
+        }
+    }
     private final List<Item> items = new ArrayList<>();
     private final CollectionLogHistory collectionLogHistory = new CollectionLogHistory();
     private transient ItemManager itemManager;

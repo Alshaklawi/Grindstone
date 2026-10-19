@@ -132,6 +132,7 @@ public class GrinderPanel extends PluginPanel {
     private final JScrollPane scrollPane;
 
     private final Map<GoalCategory, Boolean> collapsedCategories = new LinkedHashMap<>();
+    private final Map<com.grinder.repository.RepeatSchedule, Boolean> collapsedRepeats = new LinkedHashMap<>();
     private final AtomicInteger renderVersion = new AtomicInteger();
     private final AtomicBoolean renderQueued = new AtomicBoolean();
     private final Timer filterRenderTimer = new Timer(150, event -> render());
@@ -490,6 +491,7 @@ public class GrinderPanel extends PluginPanel {
         for (GoalCategory category : GoalCategory.values()) {
             collapsedCategories.put(category, collapsed);
         }
+        for (com.grinder.repository.RepeatSchedule schedule : com.grinder.repository.RepeatSchedule.values()) { collapsedRepeats.put(schedule, collapsed); }
         render();
     }
 
@@ -534,6 +536,7 @@ public class GrinderPanel extends PluginPanel {
             List<GoalView> allGoals = new ArrayList<>();
 
             if (currentProfile != null && config.enabled()) {
+                if (client.getGameState() == net.runelite.api.GameState.LOGGED_IN && client.getLocalPlayer() != null && currentProfile.getHash() == client.getAccountHash()) { currentProfile.observeRecurring(client, System.currentTimeMillis()); }
                 for (Goal goal : currentProfile.getGoals()) {
                     if (goal == null || (!config.collectionLogEnabled() && isCollectionLogGoal(goal))
                             || (!config.levelGoalsEnabled() && isLevelGoal(goal))
@@ -547,35 +550,48 @@ public class GrinderPanel extends PluginPanel {
                         continue;
                     }
 
-                    GoalComponent component = goal.build(client, config);
-                    component.setGoalStatus(goal.getStatus());
                     String title = safeTitle(goal);
                     com.grinder.repository.GoalMetadata metadata = currentProfile.metadata(goal);
+                    com.grinder.repository.RecurringGoal recurring = metadata.recurring();
+                    boolean repeating = recurring.isActive() && com.grinder.repository.RecurringGoal.supports(goal);
+                    GoalComponent component = goal.build(client, config);
+                    GoalStatus status = repeating ? recurring.getStatus() : goal.getStatus();
+                    long progressCurrent = repeating ? recurring.getProgress() : goal.getProgressCurrent();
+                    long progressMaximum = repeating ? recurring.getTarget() : goal.getProgressMaximum();
+                    component.setGoalStatus(status);
+                    component.putClientProperty("grinder.repeat", repeating ? recurring.getSchedule() : com.grinder.repository.RepeatSchedule.NONE);
+                    if (repeating) { component.setProgress(progressCurrent, progressMaximum, String.format(Locale.ROOT, "%,d / %,d this period", progressCurrent, progressMaximum)); }
                     component.setExpansionListener(null);
                     component.setExpanded(!metadata.isCollapsed(config.collapseDetailsByDefault()));
                     component.setExpansionListener(expanded -> clientThread.invokeLater(() -> { if (profile == currentProfile && currentProfile.getGoals().contains(goal)) { currentProfile.metadata(goal).setCollapsed(!expanded); } }));
                     component.setMaximumProgressChunks(config.maxProgressChunks());
-                    metadata.observe(goal, title, System.currentTimeMillis());
+                    if (!repeating) { metadata.observe(goal, title, System.currentTimeMillis()); }
                     component.setGoalActions(event -> editGoal(currentProfile, goal, title),
                             event -> deleteGoal(currentProfile, goal, title));
-                    String history = metadata.historyText();
+                    com.grinder.repository.RepeatSchedule repeatSchedule = recurring.getSchedule();
+                    long repeatTarget = recurring.getTarget();
                     boolean pinned = metadata.isPinned();
                     component.putClientProperty("grinder.pinned", pinned);
                     component.addGoalAction(pinned ? "Unpin goal" : "Pin goal", "Pinned goals appear first, while still respecting your search and filters.", event -> clientThread.invokeLater(() -> {
                         if (profile == currentProfile && currentProfile.getGoals().contains(goal)) { currentProfile.metadata(goal).setPinned(!pinned); render(); }
                     }));
-                    if (config.showCompletionHistory()) { component.addGoalAction("Completion history...", "View first-observed completion times for this goal's targets.", event -> showHistory(history)); }
-                    component.setAchievementNote(config.showCompletionHistory() && !metadata.getCompletions().isEmpty() && goal.getStatus() != GoalStatus.COMPLETE ? "Previously reached a target · currently incomplete" : null);
+                    if (config.showCompletionHistory()) { component.addGoalAction("Goal history...", "View recurring periods, progress, outcomes and first-observed completion dates.", event -> clientThread.invokeLater(() -> {
+                        if (profile != currentProfile || !currentProfile.getGoals().contains(goal)) { return; }
+                        java.util.function.Supplier<com.grinder.ui.components.GoalHistoryPanel> history = com.grinder.ui.components.GoalHistoryPanel.snapshot(metadata);
+                        SwingUtilities.invokeLater(() -> { if (profile == currentProfile) { JOptionPane.showMessageDialog(this, history.get(), title + " — history", JOptionPane.PLAIN_MESSAGE); } });
+                    })); }
+                    if (com.grinder.repository.RecurringGoal.supports(goal)) { component.addGoalAction("Repeat schedule...", "Make this a daily, weekly or monthly goal, or return to lifetime tracking.", event -> editRepeat(currentProfile, goal, repeatSchedule, repeatTarget)); }
+                    component.setAchievementNote(repeating ? recurring.getSchedule() + " · " + (recurring.getBaselineAt() == 0 ? "Waiting for login baseline" : "Since " + java.time.format.DateTimeFormatter.ofPattern("MMM d HH:mm 'UTC'", Locale.ROOT).withZone(java.time.ZoneOffset.UTC).format(java.time.Instant.ofEpochMilli(recurring.getBaselineAt()))) : config.showCompletionHistory() && !metadata.getCompletions().isEmpty() && status != GoalStatus.COMPLETE ? "Previously reached a target · currently incomplete" : null);
 
                     allGoals.add(new GoalView(
                             goal,
                             component,
                             safeTitle(goal),
                             safeCategory(goal),
-                            goal.getStatus(),
+                            status,
                             goal.hasProgress(),
-                            goal.getProgressCurrent(),
-                            goal.getProgressMaximum()));
+                            progressCurrent,
+                            progressMaximum));
                 }
             }
 
@@ -638,6 +654,16 @@ public class GrinderPanel extends PluginPanel {
             main.add(pinnedHeading);
             main.add(Box.createVerticalStrut(8));
             for (GoalView view : pinnedGoals) { view.component.setAlignmentX(LEFT_ALIGNMENT); main.add(view.component); main.add(Box.createVerticalStrut(12)); }
+        }
+        if (config.groupRecurringGoals()) {
+            for (com.grinder.repository.RepeatSchedule schedule : com.grinder.repository.RepeatSchedule.values()) {
+                if (schedule == com.grinder.repository.RepeatSchedule.NONE) { continue; }
+                List<GoalView> repeats = new ArrayList<>();
+                for (GoalView view : remainingGoals) { if (view.component.getClientProperty("grinder.repeat") == schedule) { repeats.add(view); } }
+                if (repeats.isEmpty()) { continue; }
+                addRepeatSection(schedule, repeats);
+                remainingGoals.removeAll(repeats);
+            }
         }
         if (!config.categorizedGoals()) {
             for (GoalView view : remainingGoals) { view.component.setAlignmentX(LEFT_ALIGNMENT); main.add(view.component); main.add(Box.createVerticalStrut(12)); }
@@ -824,6 +850,26 @@ public class GrinderPanel extends PluginPanel {
         }
     }
 
+    private void addRepeatSection(com.grinder.repository.RepeatSchedule schedule, List<GoalView> goals) {
+        boolean collapsed = Boolean.TRUE.equals(collapsedRepeats.get(schedule));
+        long now = System.currentTimeMillis();
+        long minutes = Math.max(1, (schedule.next(schedule.start(now)) - now + 59_999) / 60_000);
+        String countdown = minutes >= 1440 ? minutes / 1440 + "d " + minutes % 1440 / 60 + "h" : minutes >= 60 ? minutes / 60 + "h " + minutes % 60 + "m" : minutes + "m";
+        long completed = goals.stream().filter(view -> isComplete(view.status)).count();
+        JButton heading = new JButton("<html>" + (collapsed ? "▶ " : "▼ ") + schedule + " · " + completed + "/" + goals.size() + "<br>Resets in " + countdown + " (UTC)</html>");
+        heading.setFont(UiTypography.SECTION);
+        heading.setAlignmentX(LEFT_ALIGNMENT);
+        heading.setMaximumSize(new java.awt.Dimension(Integer.MAX_VALUE, 48));
+        heading.setHorizontalAlignment(SwingConstants.LEFT);
+        heading.setToolTipText("Click to expand or collapse. Resets use UTC: midnight daily, Monday weekly, first of the month monthly. Countdown refreshes while logged in.");
+        heading.addActionListener(event -> { collapsedRepeats.put(schedule, !Boolean.TRUE.equals(collapsedRepeats.get(schedule))); render(); });
+        main.add(heading);
+        main.add(Box.createVerticalStrut(8));
+        if (!collapsed) {
+            for (GoalView view : goals) { view.component.setAlignmentX(LEFT_ALIGNMENT); main.add(view.component); main.add(Box.createVerticalStrut(12)); }
+        }
+    }
+
     private void addCategorySection(GoalCategory category, List<GoalView> goals) {
         boolean collapsed = Boolean.TRUE.equals(collapsedCategories.get(category));
 
@@ -956,13 +1002,31 @@ public class GrinderPanel extends PluginPanel {
         emptyPanel.add(messageLabel);
         main.add(emptyPanel);
     }
-    private void showHistory(String history) {
-        javax.swing.JTextArea text = new javax.swing.JTextArea(history, 14, 42);
-        text.setEditable(false);
-        text.setLineWrap(true);
-        text.setWrapStyleWord(true);
-        text.setCaretPosition(0);
-        JOptionPane.showMessageDialog(this, new JScrollPane(text), "Completion history", JOptionPane.INFORMATION_MESSAGE);
+    private void editRepeat(GrinderProfile active, Goal goal, com.grinder.repository.RepeatSchedule schedule, long target) {
+        if (active == null || profile != active) { return; }
+        com.grinder.ui.editor.RepeatGoalForm form = new com.grinder.ui.editor.RepeatGoalForm();
+        form.load(schedule, target);
+        while (JOptionPane.showConfirmDialog(this, form, "Repeat schedule", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
+            try {
+                form.commit();
+                com.grinder.repository.RepeatSchedule selected = form.getSchedule();
+                long selectedTarget = form.getTarget();
+                clientThread.invokeLater(() -> {
+                    if (profile == active && active.getGoals().contains(goal)) { configureRepeat(active, goal, selected, selectedTarget); render(); }
+                });
+                return;
+            } catch (java.text.ParseException exception) { JOptionPane.showMessageDialog(this, "Enter a valid period target."); }
+        }
+    }
+    private void configureRepeat(GrinderProfile active, Goal goal, com.grinder.repository.RepeatSchedule schedule, long target) {
+        if (!com.grinder.repository.RecurringGoal.supports(goal)) { return; }
+        com.grinder.repository.RecurringGoal recurring = active.metadata(goal).recurring();
+        boolean newSchedule = recurring.getSchedule() != schedule;
+        recurring.configure(schedule, target, System.currentTimeMillis());
+        if (goal instanceof CustomGoal && schedule != com.grinder.repository.RepeatSchedule.NONE) {
+            CustomGoal custom = (CustomGoal) goal;
+            custom.update(custom.getTitle(null), custom.getDescription(), custom.getCategory(), newSchedule ? 0 : Math.min(custom.getProgressCurrent(), target), target);
+        }
     }
     private void transferBackup(boolean importing) {
         GrinderProfile active = profile;
@@ -1027,6 +1091,8 @@ public class GrinderPanel extends PluginPanel {
         GoalEditorPanel form = new GoalEditorPanel(itemManager, itemSearchService, choices);
         Goal candidate = GoalCreationDialog.showDialog(this, form);
         if (candidate == null) { return; }
+        com.grinder.repository.RepeatSchedule schedule = form.getRepeatSchedule();
+        long periodTarget = form.getRepeatTarget();
         clientThread.invokeLater(() -> {
             if (profile != active) { return; }
             Goal existing = active.findMatchingGoal(candidate);
@@ -1039,12 +1105,13 @@ public class GrinderPanel extends PluginPanel {
                     if (existing.supportsTarget()) {
                         if (JOptionPane.showConfirmDialog(this,
                                 title + " is already tracked.\nUpdate its target from "
-                                        + String.format(Locale.ROOT, "%,d to %,d?", oldTarget, newTarget),
+                                        + String.format(Locale.ROOT, "%,d to %,d?", oldTarget, newTarget) + "\nRepeat: " + schedule + (schedule == com.grinder.repository.RepeatSchedule.NONE ? " (lifetime tracking)" : String.format(Locale.ROOT, " · %,d per period", periodTarget)) + "\nChanging repeat settings archives the current observed period.",
                                 "Update existing goal", JOptionPane.OK_CANCEL_OPTION,
                                 JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION) {
                             clientThread.invokeLater(() -> {
                                 if (profile == active && active.getGoals().contains(existing)) {
                                     existing.setTarget(newTarget);
+                                    configureRepeat(active, existing, schedule, periodTarget);
                                     render();
                                 }
                             });
@@ -1058,6 +1125,7 @@ public class GrinderPanel extends PluginPanel {
             else {
                 candidate.refresh(client);
                 active.add(candidate);
+                configureRepeat(active, candidate, schedule, periodTarget);
                 SwingUtilities.invokeLater(() -> {
                     if (profile != active) { return; }
                     collapsedCategories.put(candidate.getCategory(), false);
@@ -1074,17 +1142,22 @@ public class GrinderPanel extends PluginPanel {
         clientThread.invokeLater(() -> {
             if (profile != active || !active.getGoals().contains(goal)) { return; }
             java.util.Map<Integer, java.util.Map<String, java.util.function.Supplier<Goal>>> choices = com.grinder.ui.editor.CompletionGoalChoices.create(client);
+            com.grinder.repository.RepeatSchedule schedule = active.metadata(goal).recurring().getSchedule();
+            long periodTarget = active.metadata(goal).recurring().getTarget();
             SwingUtilities.invokeLater(() -> {
                 if (profile != active) { return; }
                 GoalEditorPanel form = new GoalEditorPanel(itemManager, itemSearchService, choices);
                 try { form.loadGoal(goal); }
                 catch (IllegalArgumentException exception) { form.stopSearch(); JOptionPane.showMessageDialog(this, exception.getMessage()); return; }
+                form.loadRepeat(schedule, periodTarget);
                 Goal replacement = GoalCreationDialog.showDialog(this, form, "Edit " + title, "Save changes");
                 if (replacement == null) { return; }
+                com.grinder.repository.RepeatSchedule selectedSchedule = form.getRepeatSchedule();
+                long selectedTarget = form.getRepeatTarget();
                 clientThread.invokeLater(() -> {
                     if (profile != active) { return; }
                     try {
-                        if (active.replaceGoal(goal, replacement)) { replacement.refresh(client); render(); }
+                        if (active.replaceGoal(goal, replacement)) { replacement.refresh(client); configureRepeat(active, replacement, selectedSchedule, selectedTarget); render(); }
                     } catch (IllegalArgumentException exception) {
                         SwingUtilities.invokeLater(() -> { if (profile == active) { JOptionPane.showMessageDialog(this, exception.getMessage()); } });
                     }
@@ -1096,14 +1169,23 @@ public class GrinderPanel extends PluginPanel {
     private void editCustomGoal(GrinderProfile active, CustomGoal goal, String title) {
         CustomGoalForm form = new CustomGoalForm();
         form.load(goal);
-        while (JOptionPane.showConfirmDialog(this, form, "Edit " + title,
+        com.grinder.ui.editor.RepeatGoalForm repeat = new com.grinder.ui.editor.RepeatGoalForm();
+        repeat.load(active.metadata(goal).recurring().getSchedule(), active.metadata(goal).recurring().getTarget());
+        JPanel editor = new JPanel(new BorderLayout(0, 8));
+        editor.add(form, BorderLayout.CENTER);
+        editor.add(repeat, BorderLayout.SOUTH);
+        while (JOptionPane.showConfirmDialog(this, editor, "Edit " + title,
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
             try {
                 CustomGoal draft = form.read();
+                repeat.commit();
+                com.grinder.repository.RepeatSchedule schedule = repeat.getSchedule();
+                long periodTarget = repeat.getTarget();
                 clientThread.invokeLater(() -> {
                     if (profile == active && active.getGoals().contains(goal)) {
                         goal.update(draft.getTitle(null), draft.getDescription(), draft.getCategory(),
                                 draft.getProgressCurrent(), draft.getProgressMaximum());
+                        configureRepeat(active, goal, schedule, periodTarget);
                         render();
                     }
                 });
