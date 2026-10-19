@@ -58,6 +58,19 @@ public class GrinderProfile {
             archivedHistory.remove(archivedHistory.keySet().iterator().next());
         }
     }
+    public void restoreArchiveSnapshot(java.util.Collection<ArchivedHistory> histories) {
+        if (histories.size() > 500) {
+            throw new IllegalArgumentException("Too many archived histories.");
+        }
+        for (ArchivedHistory history : histories) {
+            if (history == null || history.title == null || history.title.length() > 300) {
+                throw new IllegalArgumentException("Invalid archived history.");
+            }
+            GoalMetadata.validated(history.metadata);
+        }
+        archivedHistory.clear();
+        histories.forEach(this::restoreArchive);
+    }
     private void archive(Goal goal) {
         GoalMetadata saved = metadata(goal).copy();
         if (saved.getCompletions().isEmpty() && saved.recurring().getHistory().isEmpty() && saved.recurring().getBaselineAt() == 0) {

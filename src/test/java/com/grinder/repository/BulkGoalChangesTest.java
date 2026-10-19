@@ -16,6 +16,23 @@ import static org.junit.Assert.*;
  */
 public class BulkGoalChangesTest {
     @Test
+    public void clearingAllIncludesHiddenGoalsAndUndoRestoresPriorArchives() {
+        GrinderProfile profile = new GrinderProfile(42);
+        CustomGoal archived = new CustomGoal("Archived", "", GoalCategory.OTHER, 1, 1);
+        profile.add(archived);
+        profile.metadata(archived).observe(archived, "Archived", System.currentTimeMillis());
+        profile.remove(archived);
+        java.util.List<Goal> before = new java.util.ArrayList<>(profile.getGoals());
+        java.util.List<GrinderProfile.ArchivedHistory> history = new java.util.ArrayList<>(profile.archivedHistory());
+        BulkGoalChanges.Change change = apply(profile, before, BulkGoalAction.DELETE);
+        assertTrue(profile.getGoals().isEmpty());
+        GrinderProfile saved = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
+        assertTrue(saved.getGoals().isEmpty());
+        change.undo.run();
+        assertEquals(before, profile.getGoals());
+        assertEquals(history, new java.util.ArrayList<>(profile.archivedHistory()));
+    }
+    @Test
     public void pinAndCategoryChangesCanBeUndoneAsOneOperation() {
         GrinderProfile profile = new GrinderProfile(42);
         java.util.List<Goal> selected = profile.getGoals().subList(0, 3);

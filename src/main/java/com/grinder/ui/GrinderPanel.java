@@ -332,6 +332,10 @@ public class GrinderPanel extends PluginPanel {
         manage.setToolTipText("Search and select several goals to pin, delete, categorize, change schedules, set deadlines or manage examples together.");
         manage.addActionListener(event -> showBulkManager());
         moreMenu.add(manage);
+        JMenuItem clearGoals = new JMenuItem("Clear all goals...");
+        clearGoals.setToolTipText("Remove all goals from this profile, including hidden goals. Confirmation and undo are available.");
+        clearGoals.addActionListener(event -> clearAllGoals());
+        moreMenu.add(clearGoals);
         JMenuItem export = new JMenuItem("Export profile backup...");
         export.setToolTipText("Save a private local JSON backup. No network is used.");
         export.addActionListener(event -> transferBackup(false));
@@ -461,6 +465,13 @@ public class GrinderPanel extends PluginPanel {
         filterOptions.add(createControlLabel("Goal type"));
         filterOptions.add(Box.createVerticalStrut(3));
         filterOptions.add(typeFilter);
+        styleButton(clearFiltersButton);
+        clearFiltersButton.setText("Clear filters");
+        clearFiltersButton.setToolTipText("Reset search, filters and sorting.");
+        clearFiltersButton.setAlignmentX(LEFT_ALIGNMENT);
+        clearFiltersButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
+        filterOptions.add(Box.createVerticalStrut(8));
+        filterOptions.add(clearFiltersButton);
         filterOptions.setVisible(false);
         styleButton(filtersToggle);
         filtersToggle.setToolTipText("Show category, status, sort and goal-type options. The number indicates active options.");
@@ -486,11 +497,7 @@ public class GrinderPanel extends PluginPanel {
         resultsLabel.setForeground(MUTED_COLOR);
         resultsLabel.setFont(FontManager.getRunescapeSmallFont());
 
-        styleButton(clearFiltersButton);
-        clearFiltersButton.setToolTipText("Reset search, all filters and sorting. Saved goals are unaffected.");
-
         actionRow.add(resultsLabel, BorderLayout.CENTER);
-        actionRow.add(clearFiltersButton, BorderLayout.EAST);
         controlsPanel.add(actionRow);
     }
 
@@ -1980,6 +1987,41 @@ public class GrinderPanel extends PluginPanel {
                         JOptionPane.showMessageDialog(this, failure.getMessage(), "Review selections", JOptionPane.WARNING_MESSAGE);
                     }
                 }
+            });
+        });
+    }
+
+    private void clearAllGoals() {
+        GrinderProfile active = profile;
+        if (active == null) {
+            return;
+        }
+        clientThread.invokeLater(() -> {
+            if (profile != active) {
+                return;
+            }
+            List<Goal> selected = new ArrayList<>(active.getGoals());
+            long revision = active.revision();
+            if (selected.isEmpty()) {
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, "There are no goals to clear."));
+                return;
+            }
+            SwingUtilities.invokeLater(() -> {
+                if (profile != active || JOptionPane.showConfirmDialog(this, "Remove all " + selected.size() + " goals, including hidden goals?\nRecorded history is retained within the 500-goal archive limit.\nYou can undo this until another edit or a relevant period reset.", "Clear all goals", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
+                    return;
+                }
+                clientThread.invokeLater(() -> {
+                    if (profile != active) {
+                        return;
+                    }
+                    if (active.revision() != revision) {
+                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, "Goals changed while confirmation was open. Nothing was cleared; try again."));
+                        return;
+                    }
+                    com.grinder.repository.BulkGoalChanges.Change change = com.grinder.repository.BulkGoalChanges.apply(active, selected, com.grinder.repository.BulkGoalAction.DELETE, null, com.grinder.repository.RepeatSchedule.NONE, 1, 0, false, System.currentTimeMillis());
+                    recordUndo(active, "clear all goals", change.undo, change.allowed);
+                    render();
+                });
             });
         });
     }

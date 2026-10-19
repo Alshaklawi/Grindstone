@@ -53,6 +53,7 @@ public final class BulkGoalChanges {
             }
         }
         List<Goal> originalOrder = new ArrayList<>(profile.getGoals());
+        List<GrinderProfile.ArchivedHistory> originalArchives = new ArrayList<>(profile.archivedHistory());
         Map<Goal, GoalMetadata> metadata = new LinkedHashMap<>();
         Map<Goal, Consumer<Goal>> restore = new LinkedHashMap<>();
         Map<RepeatSchedule, Long> periods = new LinkedHashMap<>();
@@ -124,6 +125,7 @@ public final class BulkGoalChanges {
                     profile.add(goal, metadata.get(goal));
                 }
                 profile.replace(originalOrder);
+                profile.restoreArchiveSnapshot(originalArchives);
             } else {
                 restore.forEach((goal, operation) -> operation.accept(goal));
             }
