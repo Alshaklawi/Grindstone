@@ -1,0 +1,93 @@
+package com.grinder.ui.editor;
+
+import com.grinder.content.goal.Goal;
+import com.grinder.content.goal.GoalCategory;
+import com.grinder.content.goal.impl.CustomGoal;
+import com.grinder.content.goal.impl.TrackerGoal;
+import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
+import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
+import com.grinder.content.tracker.TrackerEntry;
+import com.grinder.repository.GoalMetadata;
+import com.grinder.repository.RepeatSchedule;
+import java.awt.BorderLayout;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.*;
+import net.runelite.api.Skill;
+import net.runelite.client.ui.FontManager;
+
+/**
+ * @author Ayman Yassen
+ * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
+ * @since 10/18/2026
+ */
+public final class RoutinePresetForm extends JPanel {
+    private final JComboBox<RepeatSchedule> schedule = new JComboBox<>(new RepeatSchedule[]{RepeatSchedule.DAILY, RepeatSchedule.WEEKLY, RepeatSchedule.MONTHLY});
+    private final List<Row> rows = new ArrayList<>();
+    public RoutinePresetForm(boolean weekly) {
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        schedule.setSelectedItem(weekly ? RepeatSchedule.WEEKLY : RepeatSchedule.DAILY);
+        schedule.setToolTipText("Choose the schedule for this routine. Native activity reset rules are not changed.");
+        add(new JLabel("Preview your routine · choose goals and edit targets"));
+        add(Box.createVerticalStrut(8));
+        add(schedule);
+        add(Box.createVerticalStrut(8));
+        if (weekly) {
+            addRow(new TotalExperienceGoal(), 1_000_000);
+            addRow(new TrackerGoal(TrackerEntry.WINTERTODT, 1), 10);
+            addRow(new TrackerGoal(TrackerEntry.CORPOREAL_BEAST, 1), 5);
+        } else {
+            addRow(new SkillExperienceGoal(Skill.WOODCUTTING), 100_000);
+            addRow(new SkillExperienceGoal(Skill.FISHING), 50_000);
+            addRow(new TrackerGoal(TrackerEntry.WINTERTODT, 1), 3);
+        }
+        String id = java.util.UUID.nameUUIDFromBytes(("grinder-routine-" + weekly).getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString();
+        addRow(new CustomGoal(id, "Personal challenge", "Edit this routine goal to describe your own activity.", GoalCategory.OTHER, 0, 1), 1);
+        JLabel note = new JLabel("<html>Existing tracker/schedule matches are skipped, not overwritten.<br>Targets count gains per UTC period. You can edit each goal afterward.</html>");
+        note.setFont(FontManager.getRunescapeSmallFont());
+        add(Box.createVerticalStrut(8));
+        add(note);
+    }
+    private void addRow(Goal goal, long target) {
+        Row row = new Row(goal, target);
+        rows.add(row);
+        add(row.panel);
+        add(Box.createVerticalStrut(6));
+    }
+    public List<Goal> selectedGoals() throws java.text.ParseException {
+        List<Goal> selected = new ArrayList<>();
+        for (Row row : rows) { if (row.enabled.isSelected()) { row.target.commitEdit(); if (row.goal instanceof CustomGoal) { row.goal.setTarget(((Number) row.target.getValue()).longValue()); } selected.add(row.goal); } }
+        return selected;
+    }
+    public GoalMetadata metadata(Goal goal, long now) {
+        Row row = rows.stream().filter(value -> value.goal == goal).findFirst().orElseThrow(IllegalArgumentException::new);
+        GoalMetadata metadata = new GoalMetadata();
+        metadata.recurring().configure((RepeatSchedule) schedule.getSelectedItem(), ((Number) row.target.getValue()).longValue(), now);
+        return metadata;
+    }
+    /**
+     * @author Ayman Yassen
+     * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
+     * @since 10/18/2026
+     */
+    private static final class Row {
+        private final Goal goal;
+        private final JPanel panel = new JPanel(new BorderLayout(8, 0));
+        private final JCheckBox enabled;
+        private final JSpinner target;
+        private Row(Goal goal, long target) {
+            this.goal = goal;
+            enabled = new JCheckBox(goal.getTitle(null), true);
+            enabled.setFont(FontManager.getRunescapeFont());
+            enabled.setToolTipText("Include this goal in the routine, or uncheck to skip it.");
+            this.target = new JSpinner(new SpinnerNumberModel(target, 1L, (long) Integer.MAX_VALUE, 1L));
+            this.target.setEditor(new JSpinner.NumberEditor(this.target, "#,##0"));
+            this.target.setPreferredSize(new java.awt.Dimension(120, 28));
+            this.target.setToolTipText("Required progress per period. Edit this before adding the routine.");
+            enabled.addActionListener(event -> this.target.setEnabled(enabled.isSelected()));
+            panel.setOpaque(false);
+            panel.add(enabled, BorderLayout.CENTER);
+            panel.add(this.target, BorderLayout.EAST);
+        }
+    }
+}
