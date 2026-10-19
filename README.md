@@ -15,6 +15,8 @@ Saved goals use stable short type IDs, not Java class names. Existing class-tagg
 
 ## Development
 
+See [policy compatibility and profile migration](COMPLIANCE.md) for the runtime restrictions, storage guarantees and remaining player checks.
+
 Use Java 11, then run `./gradlew test` to run the automated tests or `./gradlew run` to launch the development client.
 
 Only a player can confirm behavior in-game. Do not automate game input.
