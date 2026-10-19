@@ -21,11 +21,11 @@ Captured from the running plugin in RuneLite, cropped to keep account names and 
 
 | Dashboard and progress | Choose a goal |
 | --- | --- |
-| ![Grindstone dashboard with skill progress, completed goals and recurring goals](https://raw.githubusercontent.com/Alshaklawi/Grindstone/master/docs/images/dashboard.png) | ![Grindstone Add goal dialog with six focus groups, searchable skills and target presets](https://raw.githubusercontent.com/Alshaklawi/Grindstone/master/docs/images/add-goal.png) |
+| ![Grindstone dashboard with skill progress, completed goals and recurring goals](docs/images/dashboard.png) | ![Grindstone Add goal dialog with six focus groups, searchable skills and target presets](docs/images/add-goal.png) |
 
 | Collection-log goals | Review before saving |
 | --- | --- |
-| ![Collection-log goal showing item icons, an expandable item grid and obtained progress](https://raw.githubusercontent.com/Alshaklawi/Grindstone/master/docs/images/collection-log.png) | ![Review dialog confirming the selected skill, target and repeat schedule](https://raw.githubusercontent.com/Alshaklawi/Grindstone/master/docs/images/review-goal.png) |
+| ![Collection-log goal showing item icons, an expandable item grid and obtained progress](docs/images/collection-log.png) | ![Review dialog confirming the selected skill, target and repeat schedule](docs/images/review-goal.png) |
 
 ## Features
 
