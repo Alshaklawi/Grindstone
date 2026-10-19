@@ -76,4 +76,47 @@ public class RecurringGoalTest {
         recurring.observe(goal, time("2026-10-20T10:00:01Z"));
         assertEquals(20, recurring.getProgress());
     }
+    @Test public void sameSettingsPreserveProgressAndChangesArchiveTheOldTarget() {
+        CustomGoal goal = new CustomGoal("Daily", "", GoalCategory.OTHER, 2, 5);
+        RecurringGoal recurring = new RecurringGoal();
+        long now = time("2026-10-19T00:00:00Z");
+        recurring.configure(RepeatSchedule.DAILY, 5, now);
+        recurring.observe(goal, now);
+        recurring.configure(RepeatSchedule.DAILY, 5, now);
+        assertEquals(2, recurring.getProgress());
+        assertTrue(recurring.getHistory().isEmpty());
+        recurring.configure(RepeatSchedule.WEEKLY, 10, now);
+        recurring.validate();
+        assertEquals(5, recurring.getHistory().get(0).getTarget());
+        assertEquals("Schedule changed", recurring.getHistory().get(0).getOutcome());
+        assertEquals(0, recurring.getBaselineAt());
+    }
+    @Test public void transferredBackupsKeepSchedulesButNotAnotherPlayersPeriods() {
+        GrinderProfile profile = new GrinderProfile(42);
+        CustomGoal goal = new CustomGoal("Daily", "", GoalCategory.OTHER, 2, 5);
+        profile.replace(Collections.singletonList(goal));
+        RecurringGoal recurring = profile.metadata(goal).recurring();
+        long now = time("2026-10-19T10:00:00Z");
+        recurring.configure(RepeatSchedule.DAILY, 5, now);
+        recurring.observe(goal, now);
+        recurring.observe(goal, time("2026-10-20T10:00:00Z"));
+        GrinderProfile restored = GrinderRepository.importBackup(GrinderRepository.exportBackup(profile), 99);
+        RecurringGoal transferred = restored.metadata(restored.getGoals().get(0)).recurring();
+        assertEquals(RepeatSchedule.DAILY, transferred.getSchedule());
+        assertEquals(5, transferred.getTarget());
+        assertEquals(0, transferred.getBaselineAt());
+        assertTrue(transferred.getHistory().isEmpty());
+    }
+    @Test public void retainsOnlyTheLatestFiveHundredPeriodsAndIgnoresClockRollback() {
+        CustomGoal goal = new CustomGoal("Daily", "", GoalCategory.OTHER, 0, 5);
+        RecurringGoal recurring = new RecurringGoal();
+        long now = time("2026-10-19T10:00:00Z");
+        recurring.configure(RepeatSchedule.DAILY, 5, now);
+        for (int index = 0; index < 510; index++) { recurring.observe(goal, now + index * 86_400_000L); }
+        assertEquals(500, recurring.getHistory().size());
+        long baseline = recurring.getBaselineAt();
+        recurring.observe(goal, now);
+        assertEquals(baseline, recurring.getBaselineAt());
+        recurring.validate();
+    }
 }

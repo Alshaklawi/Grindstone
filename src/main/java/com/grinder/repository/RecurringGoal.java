@@ -79,7 +79,7 @@ public final class RecurringGoal {
         if (progress >= target && completedAt == 0) { completedAt = now; }
     }
 
-    private void archive(long end, String outcome) { append(new Period(schedule, start, end, progress, target, baselineAt, lastObservedAt, completedAt, outcome)); }
+    private void archive(long end, String outcome) { append(new Period(schedule, start, Math.max(start + 1, end), progress, target, baselineAt, lastObservedAt, completedAt, outcome)); }
     private void append(Period period) { history.add(period); if (history.size() > 500) { history.remove(0); } }
 
     public void validate() {
