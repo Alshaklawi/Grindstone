@@ -165,8 +165,7 @@ public class CollectionLogEntryGoal implements Goal {
 
         obtained = nextObtained;
         total = nextTotal;
-        main.setEmptyMessage(total == 0 ? "Open the collection log to load items"
-                : obtained >= total ? "All items obtained" : "No items to display");
+        main.setEmptyMessage(total == 0 ? "Open the collection log to load items" : obtained >= total ? "All items obtained" : "No items to display");
         main.set(components);
 
         long percentage = total == 0 ? 0 : obtained * 100 / total;

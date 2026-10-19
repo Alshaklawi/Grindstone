@@ -47,34 +47,33 @@ public class ItemComponent extends JPanel {
         this(itemManager, item, null, 1, item == null ? null : item.getName(), null);
     }
 
-    public ItemComponent(ItemManager itemManager, ItemComposition item, BufferedImage image,
-                         int amount, String tooltip, Color borderColor) {
-                             this.itemManager = itemManager;
-                             setOpaque(false);
-                             setPreferredSize(new Dimension(CELL_SIZE, CELL_SIZE));
-                             setMinimumSize(new Dimension(CELL_SIZE, CELL_SIZE));
-                             setMaximumSize(new Dimension(Integer.MAX_VALUE, CELL_SIZE));
-                             setItem(item);
-                             if (image != null) {
-                                 setImage(image);
-                             }
-                             setAmount(amount);
-                             setBorderColor(borderColor);
-                             setTooltip(tooltip);
-                             addMouseListener(new MouseAdapter() {
-                                 @Override
-                                 public void mouseEntered(MouseEvent event) {
-                                     hovered = true;
-                                     repaint();
-                                 }
+    public ItemComponent(ItemManager itemManager, ItemComposition item, BufferedImage image, int amount, String tooltip, Color borderColor) {
+        this.itemManager = itemManager;
+        setOpaque(false);
+        setPreferredSize(new Dimension(CELL_SIZE, CELL_SIZE));
+        setMinimumSize(new Dimension(CELL_SIZE, CELL_SIZE));
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, CELL_SIZE));
+        setItem(item);
+        if (image != null) {
+            setImage(image);
+        }
+        setAmount(amount);
+        setBorderColor(borderColor);
+        setTooltip(tooltip);
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent event) {
+                hovered = true;
+                repaint();
+            }
 
-                                 @Override
-                                 public void mouseExited(MouseEvent event) {
-                                     hovered = false;
-                                     repaint();
-                                 }
-                             });
-                         }
+            @Override
+            public void mouseExited(MouseEvent event) {
+                hovered = false;
+                repaint();
+            }
+        });
+    }
 
     public int getItemId() {
         return item == null ? -1 : item.getId();
@@ -149,8 +148,7 @@ public class ItemComponent extends JPanel {
         try {
             g.setColor(hovered ? ColorScheme.DARKER_GRAY_HOVER_COLOR : ColorScheme.DARKER_GRAY_COLOR);
             g.fillRect(0, 0, getWidth(), getHeight());
-            g.setColor(hovered ? ColorScheme.LIGHT_GRAY_COLOR
-                    : Boolean.TRUE.equals(obtained) ? ColorScheme.PROGRESS_COMPLETE_COLOR : borderColor);
+            g.setColor(hovered ? ColorScheme.LIGHT_GRAY_COLOR : Boolean.TRUE.equals(obtained) ? ColorScheme.PROGRESS_COMPLETE_COLOR : borderColor);
             g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
             if (image != null) {
                 if (Boolean.FALSE.equals(obtained) && !hovered) {

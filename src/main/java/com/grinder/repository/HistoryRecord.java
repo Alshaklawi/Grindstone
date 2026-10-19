@@ -56,15 +56,15 @@ public final class HistoryRecord {
     }
     private static void append(List<HistoryRecord> records, GoalMetadata metadata, String name, String id) {
         RecurringGoal recurring = metadata.recurring();
-            if (recurring.isActive()) {
-                long start = recurring.getStart();
-                records.add(new HistoryRecord(id, name, recurring.getSchedule(), start, recurring.getBaselineAt() == 0 ? 0 : recurring.getSchedule().next(start), recurring.getBaselineAt() == 0 ? null : recurring.getProgress(), recurring.getTarget(), recurring.getBaselineAt() == 0 ? "Waiting for data" : recurring.getCompletedAt() > 0 ? "Completed · current period" : "Current period", recurring.getBaselineAt(), recurring.getLastObservedAt(), recurring.getCompletedAt(), false));
-            }
-            for (RecurringGoal.Period period : recurring.getHistory()) {
-                records.add(new HistoryRecord(id, name, period.getSchedule(), period.getStart(), period.getEnd(), period.getBaselineAt() == 0 ? null : period.getProgress(), period.getTarget(), period.getOutcome(), period.getBaselineAt(), period.getLastObservedAt(), period.getCompletedAt(), false));
-            }
-            for (GoalMetadata.Completion completion : metadata.getCompletions()) {
-                records.add(new HistoryRecord(id, completion.getTitle(), RepeatSchedule.NONE, completion.getObservedAt(), completion.getObservedAt() + 1, completion.getTarget(), completion.getTarget(), "Lifetime target reached", 0, completion.getObservedAt(), completion.getObservedAt(), true));
-            }
+        if (recurring.isActive()) {
+            long start = recurring.getStart();
+            records.add(new HistoryRecord(id, name, recurring.getSchedule(), start, recurring.getBaselineAt() == 0 ? 0 : recurring.getSchedule().next(start), recurring.getBaselineAt() == 0 ? null : recurring.getProgress(), recurring.getTarget(), recurring.getBaselineAt() == 0 ? "Waiting for data" : recurring.getCompletedAt() > 0 ? "Completed · current period" : "Current period", recurring.getBaselineAt(), recurring.getLastObservedAt(), recurring.getCompletedAt(), false));
+        }
+        for (RecurringGoal.Period period : recurring.getHistory()) {
+            records.add(new HistoryRecord(id, name, period.getSchedule(), period.getStart(), period.getEnd(), period.getBaselineAt() == 0 ? null : period.getProgress(), period.getTarget(), period.getOutcome(), period.getBaselineAt(), period.getLastObservedAt(), period.getCompletedAt(), false));
+        }
+        for (GoalMetadata.Completion completion : metadata.getCompletions()) {
+            records.add(new HistoryRecord(id, completion.getTitle(), RepeatSchedule.NONE, completion.getObservedAt(), completion.getObservedAt() + 1, completion.getTarget(), completion.getTarget(), "Lifetime target reached", 0, completion.getObservedAt(), completion.getObservedAt(), true));
+        }
     }
 }

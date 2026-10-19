@@ -35,8 +35,7 @@ public class ItemPickerTest {
         assertEquals(-1, ItemSearchService.parseId("999999999999999999999"));
         assertTrue(ItemSearchService.matchesName("Dragon pickaxe", "PICK dragon"));
         assertFalse(ItemSearchService.matchesName("Dragon pickaxe", "dragon sword"));
-        assertTrue(ItemSearchService.rank("Twisted bow", "twisted bow")
-                < ItemSearchService.rank("Twisted bow (damaged)", "twisted bow"));
+        assertTrue(ItemSearchService.rank("Twisted bow", "twisted bow") < ItemSearchService.rank("Twisted bow (damaged)", "twisted bow"));
     }
 
     @Test
@@ -115,7 +114,7 @@ public class ItemPickerTest {
                         .filter(component -> component instanceof javax.swing.JSpinner).findFirst().get();
                 quantity.setValue(3_000_000_000L);
                 com.grinder.content.goal.impl.item.PossessedItemGoal owned =
-                        (com.grinder.content.goal.impl.item.PossessedItemGoal) form.createGoal();
+                (com.grinder.content.goal.impl.item.PossessedItemGoal) form.createGoal();
                 assertEquals(ItemID.DRAGON_PICKAXE, owned.getItem());
                 assertEquals(3_000_000_000L, owned.getAmount());
                 type.setSelectedItem("Custom goal");
@@ -130,8 +129,7 @@ public class ItemPickerTest {
     }
 
     private static ItemSearchService.Response response(int id, String name) {
-        return new ItemSearchService.Response(Collections.singletonList(
-                new ItemSearchService.Result(id, name, null)), "Found", true);
+        return new ItemSearchService.Response(Collections.singletonList( new ItemSearchService.Result(id, name, null)), "Found", true);
     }
 
     private static List<Component> descendants(Container parent) {

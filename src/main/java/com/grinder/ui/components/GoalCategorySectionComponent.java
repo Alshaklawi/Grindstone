@@ -36,10 +36,7 @@ public final class GoalCategorySectionComponent extends JPanel {
         setLayout(new BorderLayout());
         setOpaque(true);
         setBackground(ColorScheme.DARK_GRAY_COLOR);
-        setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(ColorScheme.MEDIUM_GRAY_COLOR, 1),
-            BorderFactory.createEmptyBorder(0, 0, 0, 0)
-        ));
+        setBorder(BorderFactory.createCompoundBorder( BorderFactory.createLineBorder(ColorScheme.MEDIUM_GRAY_COLOR, 1), BorderFactory.createEmptyBorder(0, 0, 0, 0) ));
 
         iconLabel.setIcon(icon);
         iconLabel.setHorizontalAlignment(SwingConstants.CENTER);

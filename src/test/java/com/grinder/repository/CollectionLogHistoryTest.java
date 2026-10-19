@@ -30,8 +30,7 @@ public class CollectionLogHistoryTest {
     public void observationsSurviveProfileReloadAndAttachToSingleItemGoals() {
         GrinderProfile profile = new GrinderProfile(42);
         profile.getCollectionLogHistory().record(ItemID.DRAGON_PICKAXE, 1000);
-        profile.replace(Arrays.asList(new CollectionLogItemGoal(ItemID.DRAGON_PICKAXE, 1),
-                new CollectionLogEntryGoal(null, CollectionLogEntry.VETION_AND_CALVARION)));
+        profile.replace(Arrays.asList(new CollectionLogItemGoal(ItemID.DRAGON_PICKAXE, 1), new CollectionLogEntryGoal(null, CollectionLogEntry.VETION_AND_CALVARION)));
         GrinderProfile restored = GrinderRepository.fromJson(GrinderRepository.toJson(profile));
         assertEquals(2, restored.getGoals().size());
         assertEquals(Long.valueOf(1000), restored.getCollectionLogHistory().firstSeenAt(ItemID.DRAGON_PICKAXE));
@@ -69,7 +68,6 @@ public class CollectionLogHistoryTest {
         json.remove("collectionLogFirstSeen");
         GrinderProfile restored = GrinderRepository.fromJson(json);
         assertTrue(restored.getCollectionLogHistory().snapshot().isEmpty());
-        assertEquals("Not yet observed in your collection log",
-                restored.getCollectionLogHistory().firstSeenText(ItemID.DRAGON_PICKAXE));
+        assertEquals("Not yet observed in your collection log", restored.getCollectionLogHistory().firstSeenText(ItemID.DRAGON_PICKAXE));
     }
 }

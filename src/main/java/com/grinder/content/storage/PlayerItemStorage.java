@@ -101,9 +101,9 @@ public final class PlayerItemStorage {
     public void refreshRuneValues(IntUnaryOperator varbits, IntUnaryOperator mapping) {
         Map<Integer, Long> runes = new HashMap<>();
         boolean hasPouch = quantity(ItemID.BH_RUNE_POUCH) > 0
-                || quantity(ItemID.BH_RUNE_POUCH_TROUVER) > 0
-                || quantity(ItemID.DIVINE_RUNE_POUCH) > 0
-                || quantity(ItemID.DIVINE_RUNE_POUCH_TROUVER) > 0;
+        || quantity(ItemID.BH_RUNE_POUCH_TROUVER) > 0
+        || quantity(ItemID.DIVINE_RUNE_POUCH) > 0
+        || quantity(ItemID.DIVINE_RUNE_POUCH_TROUVER) > 0;
         if (hasPouch) {
             for (int slot = 0; slot < RUNE_TYPES.length; slot++) {
                 int type = varbits.applyAsInt(RUNE_TYPES[slot]);

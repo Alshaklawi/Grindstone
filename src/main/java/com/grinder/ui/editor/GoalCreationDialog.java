@@ -93,8 +93,7 @@ public final class GoalCreationDialog extends JDialog {
 
     private void updateReady() {
         add.setEnabled(form.isReady());
-        add.setToolTipText(form.isReady() ? "Save this goal to the current player profile."
-                : "Search for an item and select a result first.");
+        add.setToolTipText(form.isReady() ? "Save this goal to the current player profile." : "Search for an item and select a result first.");
     }
 
     private void fitToForm() {
@@ -104,8 +103,7 @@ public final class GoalCreationDialog extends JDialog {
         pack();
         setSize(Math.max(420, getWidth()), Math.min(getHeight(), bounds.height - 40));
         if (isShowing()) {
-            setLocation(Math.max(bounds.x, Math.min(getX(), bounds.x + bounds.width - getWidth())),
-                    Math.max(bounds.y, Math.min(getY(), bounds.y + bounds.height - getHeight())));
+            setLocation(Math.max(bounds.x, Math.min(getX(), bounds.x + bounds.width - getWidth())), Math.max(bounds.y, Math.min(getY(), bounds.y + bounds.height - getHeight())));
         }
     }
 
@@ -114,8 +112,7 @@ public final class GoalCreationDialog extends JDialog {
             result = form.createGoal();
             dispose();
         } catch (java.text.ParseException | IllegalArgumentException exception) {
-            error.setText(exception instanceof IllegalArgumentException ? exception.getMessage()
-                    : "Enter a number within the target's allowed range.");
+            error.setText(exception instanceof IllegalArgumentException ? exception.getMessage() : "Enter a number within the target's allowed range.");
             error.setVisible(true);
             fitToForm();
         }

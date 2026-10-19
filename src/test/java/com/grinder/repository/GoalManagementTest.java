@@ -35,8 +35,8 @@ public class GoalManagementTest {
         GrinderProfile profile = new GrinderProfile(42);
         profile.replace(Collections.emptyList());
         Goal[] goals = {new SkillLevelGoal(Skill.ATTACK), new SkillExperienceGoal(Skill.FISHING),
-                new CombatLevelGoal(), new TotalLevelGoal(), new TotalExperienceGoal(),
-                new TrackerGoal(TrackerEntry.values()[0], 5000)};
+            new CombatLevelGoal(), new TotalLevelGoal(), new TotalExperienceGoal(),
+            new TrackerGoal(TrackerEntry.values()[0], 5000)};
         long[] targets = {75, 2_000_000, 100, 1500, 4_000_000_000L, 250};
         for (int i = 0; i < goals.length; i++) {
             goals[i].setTarget(targets[i]);
@@ -63,9 +63,7 @@ public class GoalManagementTest {
     @Test
     public void goalsSavedBeforePackageReorganizationStillLoad() {
         GrinderProfile profile = new GrinderProfile(42);
-        profile.replace(java.util.Arrays.asList(new SkillLevelGoal(Skill.ATTACK),
-                new SkillExperienceGoal(Skill.FISHING), new TotalLevelGoal(),
-                new TotalExperienceGoal(), new CombatLevelGoal()));
+        profile.replace(java.util.Arrays.asList(new SkillLevelGoal(Skill.ATTACK), new SkillExperienceGoal(Skill.FISHING), new TotalLevelGoal(), new TotalExperienceGoal(), new CombatLevelGoal()));
         JsonObject json = GrinderRepository.toJson(profile);
         for (com.google.gson.JsonElement element : json.getAsJsonArray("goals")) {
             JsonObject entry = element.getAsJsonObject();

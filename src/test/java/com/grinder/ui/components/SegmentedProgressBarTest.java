@@ -18,8 +18,7 @@ public class SegmentedProgressBarTest {
     public void activeAndCompleteHaveDistinctRuneLiteColors() {
         assertEquals(ColorScheme.PROGRESS_INPROGRESS_COLOR, SegmentedProgressBar.colorFor(GoalStatus.IN_PROGRESS));
         assertEquals(ColorScheme.PROGRESS_COMPLETE_COLOR, SegmentedProgressBar.colorFor(GoalStatus.COMPLETE));
-        assertNotEquals(SegmentedProgressBar.colorFor(GoalStatus.IN_PROGRESS),
-                SegmentedProgressBar.colorFor(GoalStatus.COMPLETE));
+        assertNotEquals(SegmentedProgressBar.colorFor(GoalStatus.IN_PROGRESS), SegmentedProgressBar.colorFor(GoalStatus.COMPLETE));
     }
 
     @Test

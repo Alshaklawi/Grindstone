@@ -31,14 +31,13 @@ public final class CustomGoalForm extends JPanel {
         category.setSelectedItem(GoalCategory.OTHER);
         category.setRenderer(new DefaultListCellRenderer() {
             @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                    boolean selected, boolean focus) {
-                        JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, selected, focus);
-                        if (value instanceof GoalCategory) {
-                            label.setText(((GoalCategory) value).getDisplayName());
-                        }
-                        return label;
-                    }
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean selected, boolean focus) {
+                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, selected, focus);
+                if (value instanceof GoalCategory) {
+                    label.setText(((GoalCategory) value).getDisplayName());
+                }
+                return label;
+            }
         });
         current.setEditor(new JSpinner.NumberEditor(current, "#,##0"));
         target.setEditor(new JSpinner.NumberEditor(target, "#,##0"));
@@ -77,7 +76,6 @@ public final class CustomGoalForm extends JPanel {
     public CustomGoal read() throws ParseException {
         current.commitEdit();
         target.commitEdit();
-        return new CustomGoal(title.getText(), description.getText(), (GoalCategory) category.getSelectedItem(),
-                ((Number) current.getValue()).longValue(), ((Number) target.getValue()).longValue());
+        return new CustomGoal(title.getText(), description.getText(), (GoalCategory) category.getSelectedItem(), ((Number) current.getValue()).longValue(), ((Number) target.getValue()).longValue());
     }
 }

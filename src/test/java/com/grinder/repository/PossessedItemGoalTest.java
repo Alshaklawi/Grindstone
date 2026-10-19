@@ -51,10 +51,7 @@ public class PossessedItemGoalTest {
         PlayerItemStorage storage = new PlayerItemStorage();
         int note = 100_001;
         int placeholder = 100_002;
-        storage.replace(InventoryID.BANK, new Item[]{
-                new Item(ItemID.DRAGON_PICKAXE, 2), new Item(note, 3),
-                new Item(placeholder, 5), new Item(-1, 10), new Item(ItemID.COINS, 0), null},
-                id -> id == note ? ItemID.DRAGON_PICKAXE : id == placeholder ? -1 : id);
+        storage.replace(InventoryID.BANK, new Item[]{ new Item(ItemID.DRAGON_PICKAXE, 2), new Item(note, 3), new Item(placeholder, 5), new Item(-1, 10), new Item(ItemID.COINS, 0), null}, id -> id == note ? ItemID.DRAGON_PICKAXE : id == placeholder ? -1 : id);
         assertEquals(5, storage.quantity(ItemID.DRAGON_PICKAXE));
         assertEquals(0, storage.quantity(note));
         assertEquals(0, storage.quantity(placeholder));

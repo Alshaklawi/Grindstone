@@ -189,11 +189,9 @@ public class GrinderProfile {
         add(new CustomGoal(customExampleId, "Example: complete 10 personal challenges", "A manual tracker example. Edit its title, description, target and progress to suit your own goal.", GoalCategory.OTHER, 0, 10));
         add(new com.grinder.content.goal.impl.quest.QuestGoal(net.runelite.api.Quest.DRAGON_SLAYER_I));
         add(new com.grinder.content.goal.impl.quest.QuestSeriesGoal(com.grinder.content.quest.QuestSeries.ELF));
-        add(new com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierAreaGoal(
-                com.grinder.content.diary.AchievementDiaryArea.LUMBRIDGE, com.grinder.content.diary.DiaryTier.EASY));
+        add(new com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierAreaGoal( com.grinder.content.diary.AchievementDiaryArea.LUMBRIDGE, com.grinder.content.diary.DiaryTier.EASY));
         add(new com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierGoal(com.grinder.content.diary.DiaryTier.EASY));
-        add(new com.grinder.content.goal.impl.combatachievement.CombatAchievementTierGoal(
-                com.grinder.content.combatachievement.CombatAchievementTier.EASY));
+        add(new com.grinder.content.goal.impl.combatachievement.CombatAchievementTierGoal( com.grinder.content.combatachievement.CombatAchievementTier.EASY));
         setItemManager(itemManager);
     }
 
@@ -256,7 +254,7 @@ public class GrinderProfile {
         }
         if (left instanceof com.grinder.content.goal.impl.item.PossessedItemGoal) {
             return ((com.grinder.content.goal.impl.item.PossessedItemGoal) left).getItem()
-                    == ((com.grinder.content.goal.impl.item.PossessedItemGoal) right).getItem();
+            == ((com.grinder.content.goal.impl.item.PossessedItemGoal) right).getItem();
         }
         if (left instanceof com.grinder.content.goal.ClientCompletionGoal) {
             return ((com.grinder.content.goal.ClientCompletionGoal) left).selectionKey()
@@ -352,28 +350,23 @@ public class GrinderProfile {
     }
 
     private boolean hasCollectionEntry(CollectionLogEntry entry) {
-        return goals.stream().anyMatch(goal -> goal instanceof CollectionLogEntryGoal
-                && ((CollectionLogEntryGoal) goal).getEntry() == entry);
+        return goals.stream().anyMatch(goal -> goal instanceof CollectionLogEntryGoal && ((CollectionLogEntryGoal) goal).getEntry() == entry);
     }
 
     private boolean hasTracker(TrackerEntry entry) {
-        return goals.stream().anyMatch(goal -> goal instanceof TrackerGoal
-                && ((TrackerGoal) goal).getTracker() == entry && metadata(goal).recurring().getSchedule() == RepeatSchedule.NONE);
+        return goals.stream().anyMatch(goal -> goal instanceof TrackerGoal && ((TrackerGoal) goal).getTracker() == entry && metadata(goal).recurring().getSchedule() == RepeatSchedule.NONE);
     }
 
     private boolean hasSkillGoal(Skill skill) {
-        return goals.stream().anyMatch(goal -> goal instanceof SkillLevelGoal
-                && ((SkillLevelGoal) goal).getSkill() == skill);
+        return goals.stream().anyMatch(goal -> goal instanceof SkillLevelGoal && ((SkillLevelGoal) goal).getSkill() == skill);
     }
 
     private boolean hasExperienceGoal(Skill skill) {
-        return goals.stream().anyMatch(goal -> goal instanceof SkillExperienceGoal
-                && ((SkillExperienceGoal) goal).getSkill() == skill && metadata(goal).recurring().getSchedule() == RepeatSchedule.NONE);
+        return goals.stream().anyMatch(goal -> goal instanceof SkillExperienceGoal && ((SkillExperienceGoal) goal).getSkill() == skill && metadata(goal).recurring().getSchedule() == RepeatSchedule.NONE);
     }
 
     private void addDefaultCollectionItem(int itemId) {
-        boolean exists = goals.stream().anyMatch(goal -> goal instanceof CollectionLogItemGoal
-                && ((CollectionLogItemGoal) goal).getItem() == itemId);
+        boolean exists = goals.stream().anyMatch(goal -> goal instanceof CollectionLogItemGoal && ((CollectionLogItemGoal) goal).getItem() == itemId);
         if (!exists) {
             goals.add(new CollectionLogItemGoal(itemId, 1));
         }

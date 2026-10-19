@@ -133,8 +133,7 @@ public class ItemContainerComponent extends JPanel {
         boolean overflow = items.size() > columns * maxRows;
         showMore.setVisible(overflow);
         showMore.setText(expanded ? "Show fewer" : "Show all " + items.size() + " items");
-        showMore.setToolTipText(expanded ? "Return to the configured preview height."
-                : "Expand this grid. Use the main sidebar scrollbar to view the remaining items.");
+        showMore.setToolTipText(expanded ? "Return to the configured preview height." : "Expand this grid. Use the main sidebar scrollbar to view the remaining items.");
         revalidate();
         repaint();
     }

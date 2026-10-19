@@ -208,11 +208,9 @@ public final class GrinderRepository {
                     if (goal instanceof com.grinder.content.goal.ClientCompletionGoal) {
                         ((com.grinder.content.goal.ClientCompletionGoal) goal).selectionKey();
                     }
-                    if (goal instanceof SkillLevelGoal && ((SkillLevelGoal) goal).getSkill() == null
-                            || goal instanceof SkillExperienceGoal && ((SkillExperienceGoal) goal).getSkill() == null
-                            || goal instanceof TrackerGoal && ((TrackerGoal) goal).getTracker() == null) {
-                                continue;
-                            }
+                    if (goal instanceof SkillLevelGoal && ((SkillLevelGoal) goal).getSkill() == null || goal instanceof SkillExperienceGoal && ((SkillExperienceGoal) goal).getSkill() == null || goal instanceof TrackerGoal && ((TrackerGoal) goal).getTracker() == null) {
+                        continue;
+                    }
                     if (goal.supportsTarget()) {
                         goal.setTarget(goal.getProgressMaximum());
                     }

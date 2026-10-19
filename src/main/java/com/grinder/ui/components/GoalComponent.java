@@ -109,9 +109,7 @@ public class GoalComponent extends JPanel {
         super(new BorderLayout(0, 6));
         setOpaque(true);
         setBackground(CARD_COLOR);
-        setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(ColorScheme.BORDER_COLOR),
-                BorderFactory.createEmptyBorder(9, 8, 9, 8)));
+        setBorder(BorderFactory.createCompoundBorder( BorderFactory.createLineBorder(ColorScheme.BORDER_COLOR), BorderFactory.createEmptyBorder(9, 8, 9, 8)));
 
         header.setOpaque(false);
         headerText.setOpaque(false);
@@ -233,12 +231,9 @@ public class GoalComponent extends JPanel {
 
     public void setGoalStatus(GoalStatus status) {
         GoalStatus state = status == null ? GoalStatus.NOT_STARTED : status;
-        statusLabel.setText(state == GoalStatus.COMPLETE ? "Complete"
-                : state == GoalStatus.IN_PROGRESS ? "In progress" : "Not started");
+        statusLabel.setText(state == GoalStatus.COMPLETE ? "Complete" : state == GoalStatus.IN_PROGRESS ? "In progress" : "Not started");
         statusLabel.setForeground(SegmentedProgressBar.colorFor(state));
-        statusLabel.setToolTipText(state == GoalStatus.COMPLETE ? "This goal has reached its target."
-                : state == GoalStatus.IN_PROGRESS ? "Progress has started and the target has not been reached."
-                : "No progress has been recorded toward this goal yet.");
+        statusLabel.setToolTipText(state == GoalStatus.COMPLETE ? "This goal has reached its target." : state == GoalStatus.IN_PROGRESS ? "Progress has started and the target has not been reached." : "No progress has been recorded toward this goal yet.");
         progressBar.setStatus(state);
     }
 
@@ -250,9 +245,7 @@ public class GoalComponent extends JPanel {
         text.setLineWrap(true);
         text.setWrapStyleWord(true);
         text.setEditable(false);
-        text.setToolTipText(description.startsWith("First seen:")
-                ? "When Grinder first observed this unlock on this character, not the historical drop date."
-                : "Additional goal details. Custom descriptions can be edited from the goal actions menu.");
+        text.setToolTipText(description.startsWith("First seen:") ? "When Grinder first observed this unlock on this character, not the historical drop date." : "Additional goal details. Custom descriptions can be edited from the goal actions menu.");
         text.setOpaque(false);
         text.setForeground(MUTED_COLOR);
         text.setFont(UiTypography.BODY);
@@ -305,20 +298,19 @@ public class GoalComponent extends JPanel {
         menu.add(item);
     }
 
-    public void update(String title, BufferedImage icon, LocalDateTime startDate, LocalDateTime endDate,
-                       long current, long maximum, String progressText, String status) {
-                           this.title = title == null ? "" : title;
-                           this.icon = icon;
-                           this.startDate = startDate;
-                           this.endDate = endDate;
-                           this.progressCurrent = Math.max(0, current);
-                           this.progressMaximum = Math.max(0, maximum);
-                           this.progressText = progressText == null ? "" : progressText;
-                           this.progressStatus = status == null ? "" : status;
+    public void update(String title, BufferedImage icon, LocalDateTime startDate, LocalDateTime endDate, long current, long maximum, String progressText, String status) {
+        this.title = title == null ? "" : title;
+        this.icon = icon;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.progressCurrent = Math.max(0, current);
+        this.progressMaximum = Math.max(0, maximum);
+        this.progressText = progressText == null ? "" : progressText;
+        this.progressStatus = status == null ? "" : status;
 
-                           applyValues();
-                           refreshLayout();
-                       }
+        applyValues();
+        refreshLayout();
+    }
 
     public void setTitle(String title) {
         String next = title == null ? "" : title;
@@ -342,8 +334,7 @@ public class GoalComponent extends JPanel {
 
         this.icon = icon;
         iconLabel.setIcon(icon == null ? null : new ImageIcon(icon));
-        iconLabel.setPreferredSize(new Dimension(icon == null ? 24 : Math.max(24, icon.getWidth()),
-                icon == null ? 24 : Math.max(24, icon.getHeight())));
+        iconLabel.setPreferredSize(new Dimension(icon == null ? 24 : Math.max(24, icon.getWidth()), icon == null ? 24 : Math.max(24, icon.getHeight())));
         if (icon instanceof net.runelite.client.util.AsyncBufferedImage) {
             ((net.runelite.client.util.AsyncBufferedImage) icon).addTo(iconLabel);
         }
@@ -469,14 +460,10 @@ public class GoalComponent extends JPanel {
     private void updateProgress() {
         expandButton.setVisible(content.getComponentCount() > 0);
         progressBar.setProgress(progressCurrent, progressMaximum);
-        setGoalStatus(progressMaximum > 0 && progressCurrent >= progressMaximum ? GoalStatus.COMPLETE
-                : progressCurrent > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED);
+        setGoalStatus(progressMaximum > 0 && progressCurrent >= progressMaximum ? GoalStatus.COMPLETE : progressCurrent > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED);
         progressLabel.setText(progressText);
         progressLabel.setToolTipText(progressText);
-        progressBar.setToolTipText(progressMaximum > 0
-                ? String.format(java.util.Locale.ROOT, "%,d of %,d (%.1f%%). Yellow: in progress; green: complete.",
-                        progressCurrent, progressMaximum, Math.min(100, progressCurrent * 100.0 / progressMaximum))
-                : "No numeric target is available for this goal.");
+        progressBar.setToolTipText(progressMaximum > 0 ? String.format(java.util.Locale.ROOT, "%,d of %,d (%.1f%%). Yellow: in progress; green: complete.", progressCurrent, progressMaximum, Math.min(100, progressCurrent * 100.0 / progressMaximum)) : "No numeric target is available for this goal.");
         progressBar.setVisible(progressBarVisible);
         revalidate();
         repaint();

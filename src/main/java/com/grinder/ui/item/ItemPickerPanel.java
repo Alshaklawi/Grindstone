@@ -59,18 +59,17 @@ public final class ItemPickerPanel extends JPanel {
         results.setVisibleRowCount(4);
         results.setCellRenderer(new DefaultListCellRenderer() {
             @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                    boolean selected, boolean focus) {
-                        JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, selected, focus);
-                        if (value instanceof ItemSearchService.Result) {
-                            ItemSearchService.Result item = (ItemSearchService.Result) value;
-                            label.setText("<html>" + HtmlUtils.escape(item.name) + "<br><small>Item ID: " + item.id + "</small></html>");
-                            label.setIcon(item.image == null ? null : new ImageIcon(item.image));
-                            label.setToolTipText(item.name + " (ID " + item.id + ")");
-                            label.setBorder(BorderFactory.createEmptyBorder(3, 6, 3, 6));
-                        }
-                        return label;
-                    }
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean selected, boolean focus) {
+                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, selected, focus);
+                if (value instanceof ItemSearchService.Result) {
+                    ItemSearchService.Result item = (ItemSearchService.Result) value;
+                    label.setText("<html>" + HtmlUtils.escape(item.name) + "<br><small>Item ID: " + item.id + "</small></html>");
+                    label.setIcon(item.image == null ? null : new ImageIcon(item.image));
+                    label.setToolTipText(item.name + " (ID " + item.id + ")");
+                    label.setBorder(BorderFactory.createEmptyBorder(3, 6, 3, 6));
+                }
+                return label;
+            }
         });
         results.addListSelectionListener(event -> {
             if (!event.getValueIsAdjusting() && !updating) {
@@ -159,8 +158,7 @@ public final class ItemPickerPanel extends JPanel {
     private void select(ItemSearchService.Result item) {
         selected = item;
         preview.setIcon(null);
-        preview.setText(item == null ? "No item selected"
-                : "<html>" + HtmlUtils.escape(item.name) + "<br>Item ID: " + item.id + "</html>");
+        preview.setText(item == null ? "No item selected" : "<html>" + HtmlUtils.escape(item.name) + "<br>Item ID: " + item.id + "</html>");
         if (item != null && item.image != null) {
             preview.setIcon(new ImageIcon(item.image));
             item.image.onLoaded(() -> javax.swing.SwingUtilities.invokeLater(() -> {
