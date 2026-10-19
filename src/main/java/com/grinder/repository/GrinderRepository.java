@@ -240,7 +240,15 @@ public final class GrinderRepository {
             json.remove("collectionLogFirstSeen");
             for (JsonElement element : json.getAsJsonArray("goals")) {
                 JsonObject saved = element.getAsJsonObject();
-                if (saved.has("metadata") && saved.get("metadata").isJsonObject()) { saved.getAsJsonObject("metadata").add("completions", new JsonArray()); }
+                if (saved.has("metadata") && saved.get("metadata").isJsonObject()) {
+                    JsonObject metadata = saved.getAsJsonObject("metadata");
+                    metadata.add("completions", new JsonArray());
+                    if (metadata.has("recurring") && metadata.get("recurring").isJsonObject()) {
+                        JsonObject recurring = metadata.getAsJsonObject("recurring");
+                        for (String key : new String[]{"start", "baselineAt", "lastValue", "progress", "completedAt", "lastObservedAt"}) { recurring.addProperty(key, 0); }
+                        recurring.add("history", new JsonArray());
+                    }
+                }
                 if (SavedGoalTypes.fromTag(saved) == CustomGoal.class) { saved.getAsJsonObject("data").addProperty("current", 0); }
             }
         }

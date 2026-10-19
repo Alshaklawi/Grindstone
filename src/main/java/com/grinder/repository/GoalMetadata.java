@@ -14,6 +14,8 @@ public final class GoalMetadata {
     private final String id;
     private boolean pinned;
     private Boolean collapsed;
+    private RecurringGoal recurring;
+    public RecurringGoal recurring() { if (recurring == null) { recurring = new RecurringGoal(); } return recurring; }
     public boolean isCollapsed(boolean defaultValue) { return collapsed == null ? defaultValue : collapsed; }
     public void setCollapsed(boolean collapsed) { this.collapsed = collapsed; }
     public boolean isPinned() { return pinned; }
@@ -30,6 +32,7 @@ public final class GoalMetadata {
     }
     public static GoalMetadata validated(GoalMetadata saved) {
         UUID.fromString(saved.id);
+        if (saved.recurring != null) { saved.recurring.validate(); }
         if (saved.completions == null || saved.completions.size() > 2000) { throw new IllegalArgumentException("Invalid completion history"); }
         for (Completion event : saved.completions) {
             if (event == null || event.title == null || event.title.length() > 300 || event.target <= 0 || event.observedAt <= 0) { throw new IllegalArgumentException("Invalid completion observation"); }
