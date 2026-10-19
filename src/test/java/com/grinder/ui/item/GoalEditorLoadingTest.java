@@ -21,6 +21,7 @@ public class GoalEditorLoadingTest {
         SwingUtilities.invokeAndWait(() -> {
             Map<Integer, Map<String, Supplier<Goal>>> choices = CompletionGoalChoices.create(null);
             choices.get(13).put("Barrows", () -> new CombatAchievementBossGoal(1, "Barrows"));
+            choices.get(17).put("Combat task 0", () -> new com.grinder.content.goal.impl.combatachievement.CombatAchievementTaskGoal(0, "Combat task 0", ""));
             ItemLookup lookup = (query, callback) -> {
                 int id = Integer.parseInt(query);
                 callback.accept(new ItemSearchService.Response(Collections.singletonList(new ItemSearchService.Result(id, "Item " + id, null)), "Found", true));

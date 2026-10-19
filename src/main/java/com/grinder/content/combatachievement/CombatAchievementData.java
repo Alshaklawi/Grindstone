@@ -17,6 +17,48 @@ public final class CombatAchievementData {
     private static final int BOSS_NAMES_ENUM = 3971;
     private static final int TASK_ID_PARAM = 1306;
     private static final int TASK_BOSS_PARAM = 1312;
+    private static final int TASK_NAME_PARAM = 1308;
+    private static final int TASK_DESCRIPTION_PARAM = 1309;
+    private static volatile Map<Integer, Task> cachedTasks = Collections.emptyMap();
+    public static void clearCache() { cachedTasks = Collections.emptyMap(); }
+    public static boolean supportsTask(int task) { return task >= 0 && task < COMPLETED.length * 32; }
+    public static Map<Integer, Task> tasks(Client client) {
+        if (client == null) { return Collections.emptyMap(); }
+        if (!cachedTasks.isEmpty()) { return cachedTasks; }
+        Map<Integer, Task> result = new LinkedHashMap<>();
+        boolean ready = true;
+        for (CombatAchievementTier tier : CombatAchievementTier.values()) {
+            EnumComposition definitions = client.getEnum(tier.getTaskEnum());
+            if (definitions == null || definitions.getIntVals() == null) { ready = false; continue; }
+            for (int structId : definitions.getIntVals()) {
+                StructComposition definition = client.getStructComposition(structId);
+                if (definition == null) { ready = false; continue; }
+                int id = definition.getIntValue(TASK_ID_PARAM);
+                String name = definition.getStringValue(TASK_NAME_PARAM);
+                String description = definition.getStringValue(TASK_DESCRIPTION_PARAM);
+                if (supportsTask(id) && name != null && !name.trim().isEmpty() && !"null".equals(name)) { result.put(id, new Task(id, name, description == null ? "" : description, tier)); }
+            }
+        }
+        Map<Integer, Task> snapshot = Collections.unmodifiableMap(result);
+        if (ready && !snapshot.isEmpty()) { cachedTasks = snapshot; }
+        return snapshot;
+    }
+    /**
+     * @author Ayman Yassen
+     * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
+     * @since 10/18/2026
+     */
+    public static final class Task {
+        private final int id;
+        private final String name;
+        private final String description;
+        private final CombatAchievementTier tier;
+        private Task(int id, String name, String description, CombatAchievementTier tier) { this.id = id; this.name = name; this.description = description; this.tier = tier; }
+        public int getId() { return id; }
+        public String getName() { return name; }
+        public String getDescription() { return description; }
+        public CombatAchievementTier getTier() { return tier; }
+    }
     private static final int[] COMPLETED = {
         VarPlayerID.CA_TASK_COMPLETED_0,
         VarPlayerID.CA_TASK_COMPLETED_1,

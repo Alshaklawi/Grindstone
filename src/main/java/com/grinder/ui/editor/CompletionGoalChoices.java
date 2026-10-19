@@ -29,6 +29,8 @@ public final class CompletionGoalChoices {
     public static Map<Integer, Map<String, Supplier<Goal>>> create(Client client) {
         Map<Integer, Map<String, Supplier<Goal>>> types = new LinkedHashMap<>();
         types.put(6, new TreeMap<>());
+        types.put(17, new TreeMap<>());
+        com.grinder.content.combatachievement.CombatAchievementData.tasks(client).forEach((id, task) -> types.get(17).put(task.getName() + " (" + task.getTier() + ")", () -> new com.grinder.content.goal.impl.combatachievement.CombatAchievementTaskGoal(id, task.getName(), task.getDescription())));
         com.grinder.content.collectionlog.CollectionLogPages.discover(client).forEach((id, name) -> types.get(6).put(name, () -> new com.grinder.content.goal.impl.collectionlog.CollectionLogEntryGoal(null, id, name)));
         for (int kind = 9; kind <= 15; kind++)
         { types.put(kind, kind == 12 || kind >= 14 ? new LinkedHashMap<>() : new TreeMap<>()); }

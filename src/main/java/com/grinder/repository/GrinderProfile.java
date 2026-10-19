@@ -105,6 +105,7 @@ public class GrinderProfile {
         add(new PossessedItemGoal(ItemID.DRAGON_PICKAXE, 1));
         add(new CombatAchievementBossGoal("Barrows"));
         add(new CombatAchievementDifficultyGoal(CombatAchievementTier.EASY));
+        add(new com.grinder.content.goal.impl.combatachievement.CombatAchievementTaskGoal(0, "Combat task 0", "The native task name, requirements and completion state load when logged in."));
         String customExampleId = java.util.UUID.nameUUIDFromBytes("grinder-default-custom-goal".getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString();
         add(new CustomGoal(customExampleId, "Example: complete 10 personal challenges", "A manual tracker example. Edit its title, description, target and progress to suit your own goal.", GoalCategory.OTHER, 0, 10));
         add(new com.grinder.content.goal.impl.quest.QuestGoal(net.runelite.api.Quest.DRAGON_SLAYER_I));

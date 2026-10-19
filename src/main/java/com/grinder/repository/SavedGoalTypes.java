@@ -47,6 +47,7 @@ final class SavedGoalTypes {
         register(types, CombatAchievementBossGoal.class, "combat-boss", "com.grinder.content.goal.impl.combat_achievement.CombatAchievementBossGoal");
         register(types, CombatAchievementDifficultyGoal.class, "combat-difficulty", "com.grinder.content.goal.impl.combat_achievement.CombatAchievementDifficultyGoal");
         register(types, PossessedItemGoal.class, "owned-item", "com.grinder.content.goal.impl.item.PossesedItemGoal");
+        register(types, com.grinder.content.goal.impl.combatachievement.CombatAchievementTaskGoal.class, "combat-task");
         return Collections.unmodifiableMap(types);
     }
     private static void register(Map<String, Class<? extends Goal>> types, Class<? extends Goal> type, String... aliases) {

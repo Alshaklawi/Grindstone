@@ -43,7 +43,7 @@ public final class GoalEditorPanel extends JPanel {
             "Total experience", "Activity tracker", "Collection log", "Collection item", "Custom goal",
             "Quest", "Quest series", "Diary region & tier", "Diary tier (all regions)",
             "Combat achievements: boss", "Combat achievements: reward tier", "Combat achievements: difficulty tasks",
-            "Owned item quantity"});
+            "Owned item quantity", "Combat achievement task"});
     private final CustomGoalForm customForm = new CustomGoalForm();
     private final ItemPickerPanel itemPicker;
     private final JComboBox<String> subject = new JComboBox<>();

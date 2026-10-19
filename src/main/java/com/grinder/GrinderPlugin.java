@@ -72,6 +72,7 @@ public class GrinderPlugin extends Plugin {
 
     @Override
     protected void startUp() {
+        com.grinder.content.combatachievement.CombatAchievementData.clearCache();
         try {
             GrinderRepository.load();
         } catch (IOException e) {
