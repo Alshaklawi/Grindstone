@@ -18,6 +18,8 @@ Open Grinder from the RuneLite sidebar and select **Add goal**. New profiles sta
 
 Adjust appearance and notification preferences in **RuneLite settings → Grinder**.
 
+The dashboard separates new, active, completed and waiting goals. Use the counters as quick status filters, or open **Filters** for category, type, schedule, pinned-only and sorting options. Search matches words across goal titles, descriptions and categories; **Clear filters** resets all selections.
+
 ## Progress and privacy
 
 Progress uses information available to your logged-in client. Some readings require opening the relevant game interface. Item quantities cover known storage, not every possible location, and collection-log dates record when Grinder first observed an unlock.

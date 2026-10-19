@@ -146,6 +146,9 @@ public class GrinderPanel extends PluginPanel {
     private static final String IN_PROGRESS = "In progress";
     private static final String COMPLETE = "Complete";
     private static final String UNFINISHED = "Unfinished";
+    private static final String WAITING = "Waiting for data";
+    private static final String ALL_SCHEDULES = "All schedules";
+    private static final String ONE_OFF = "One-off goals";
     private static final String ALL_TYPES = "All goal types";
     private static final String AUTOMATIC = "Automatic";
     private static final String CUSTOM = "Custom";
@@ -181,6 +184,8 @@ public class GrinderPanel extends PluginPanel {
     private final JPanel header = new JPanel();
     private final JPanel controlsPanel = new JPanel();
     private final JLabel summaryLabel = new JLabel("No profile loaded");
+    private final JLabel progressPercent = new JLabel();
+    private final JLabel filterSummary = new JLabel();
     private final JLabel updateStatusLabel = new JLabel();
     private final JLabel resultsLabel = new JLabel();
     private final SegmentedProgressBar overallProgress = new SegmentedProgressBar();
@@ -189,9 +194,12 @@ public class GrinderPanel extends PluginPanel {
     private final JComboBox<String> statusFilter = new JComboBox<>();
     private final JComboBox<String> sortFilter = new JComboBox<>();
     private final JComboBox<String> typeFilter = new JComboBox<>();
+    private final JComboBox<String> scheduleFilter = new JComboBox<>();
+    private final JCheckBox pinnedOnly = new JCheckBox("Pinned goals only");
     private final JToggleButton newGoalsButton = new JToggleButton("New 0");
     private final JToggleButton activeGoalsButton = new JToggleButton("Active 0");
     private final JToggleButton completeGoalsButton = new JToggleButton("Done 0");
+    private final JToggleButton waitingGoalsButton = new JToggleButton("Waiting 0");
     private final JButton filtersToggle = new JButton("Filters");
     private final JButton clearFiltersButton = new JButton("Clear");
     private final JButton undoDeleteButton = new JButton("Undo delete");
@@ -312,35 +320,47 @@ public class GrinderPanel extends PluginPanel {
         titleRow.add(more, BorderLayout.EAST);
         header.add(titleRow);
         header.add(Box.createVerticalStrut(6));
-        header.add(summaryLabel);
+        JPanel summaryRow = new JPanel(new BorderLayout(6, 0));
+        summaryRow.setOpaque(false);
+        summaryRow.setAlignmentX(LEFT_ALIGNMENT);
+        summaryLabel.setFont(UiTypography.BODY);
+        progressPercent.setFont(UiTypography.TITLE);
+        progressPercent.setForeground(TEXT_COLOR);
+        progressPercent.setToolTipText("Average progress across goals with available readings.");
+        summaryRow.add(summaryLabel, BorderLayout.CENTER);
+        summaryRow.add(progressPercent, BorderLayout.EAST);
+        header.add(summaryRow);
         header.add(Box.createVerticalStrut(8));
         header.add(overallProgress);
         updateStatusLabel.setFont(UiTypography.META);
         updateStatusLabel.setAlignmentX(LEFT_ALIGNMENT);
-        updateStatusLabel.setToolTipText("Client view refresh and last known bank snapshot. Open storage to load or refresh it; this is not an all-storage live total.");
+        updateStatusLabel.setToolTipText("Last known bank snapshot. Open storage to refresh it.");
         header.add(Box.createVerticalStrut(4));
         header.add(updateStatusLabel);
 
-        JPanel counters = new JPanel(new GridLayout(1, 3, 4, 0));
+        JPanel counters = new JPanel(new GridLayout(2, 2, 4, 4));
         counters.setOpaque(false);
         counters.setAlignmentX(LEFT_ALIGNMENT);
         newGoalsButton.setForeground(SegmentedProgressBar.colorFor(GoalStatus.NOT_STARTED));
         activeGoalsButton.setForeground(SegmentedProgressBar.colorFor(GoalStatus.IN_PROGRESS));
         completeGoalsButton.setForeground(SegmentedProgressBar.colorFor(GoalStatus.COMPLETE));
         newGoalsButton.setToolTipText("Show not-started goals. Click again to show all statuses.");
-        activeGoalsButton.setToolTipText("Show in-progress goals (yellow). Click again to show all statuses.");
-        completeGoalsButton.setToolTipText("Show complete goals (green), including hidden completions. Click again to show all statuses.");
-        for (JToggleButton counter : new JToggleButton[]{newGoalsButton, activeGoalsButton, completeGoalsButton}) {
-            counter.setFont(FontManager.getRunescapeSmallFont());
+        activeGoalsButton.setToolTipText("Show in-progress goals. Click again to show all statuses.");
+        completeGoalsButton.setToolTipText("Show completed goals, including hidden completions. Click again to show all statuses.");
+        waitingGoalsButton.setToolTipText("Show goals needing a login or native client reading. Click again to show all statuses.");
+        for (JToggleButton counter : new JToggleButton[]{newGoalsButton, activeGoalsButton, completeGoalsButton, waitingGoalsButton}) {
+            counter.setFont(UiTypography.BODY);
             counter.setMargin(new Insets(3, 3, 3, 3));
             counter.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         }
         newGoalsButton.addActionListener(event -> toggleQuickStatus(NOT_STARTED));
         activeGoalsButton.addActionListener(event -> toggleQuickStatus(IN_PROGRESS));
         completeGoalsButton.addActionListener(event -> toggleQuickStatus(COMPLETE));
+        waitingGoalsButton.addActionListener(event -> toggleQuickStatus(WAITING));
         counters.add(newGoalsButton);
         counters.add(activeGoalsButton);
         counters.add(completeGoalsButton);
+        counters.add(waitingGoalsButton);
         header.add(Box.createVerticalStrut(8));
         header.add(counters);
 
@@ -461,7 +481,7 @@ public class GrinderPanel extends PluginPanel {
 
         searchField.setIcon(IconTextField.Icon.SEARCH);
         searchField.setFont(UiTypography.BODY);
-        UiTooltips.set(searchField, "Search goal titles and descriptions. Use the clear icon to clear the search.");
+        UiTooltips.set(searchField, "Search titles, descriptions and categories. Every search word must match; word order does not matter.");
         searchField.setBackground(ColorScheme.DARKER_GRAY_COLOR);
         searchField.setHoverBackgroundColor(ColorScheme.DARKER_GRAY_HOVER_COLOR);
         searchField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
@@ -469,7 +489,16 @@ public class GrinderPanel extends PluginPanel {
         searchField.setAlignmentX(LEFT_ALIGNMENT);
 
         categoryFilter.setModel(new DefaultComboBoxModel<>(new String[]{ALL_CATEGORIES}));
-        statusFilter.setModel(new DefaultComboBoxModel<>(new String[]{ALL_STATUSES, UNFINISHED, NOT_STARTED, IN_PROGRESS, COMPLETE}));
+        statusFilter.setModel(new DefaultComboBoxModel<>(new String[]{ALL_STATUSES, UNFINISHED, NOT_STARTED, IN_PROGRESS, COMPLETE, WAITING}));
+        scheduleFilter.setModel(new DefaultComboBoxModel<>(new String[]{ALL_SCHEDULES, ONE_OFF, "Daily", "Weekly", "Monthly"}));
+        styleComboBox(scheduleFilter);
+        scheduleFilter.setAlignmentX(LEFT_ALIGNMENT);
+        scheduleFilter.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
+        UiTooltips.set(scheduleFilter, "Show one-off goals or goals repeating daily, weekly or monthly.");
+        pinnedOnly.setOpaque(false);
+        pinnedOnly.setFont(UiTypography.BODY);
+        pinnedOnly.setAlignmentX(LEFT_ALIGNMENT);
+        pinnedOnly.setToolTipText("Show only goals you pinned, without changing your pins or other filters.");
         sortFilter.setModel(new DefaultComboBoxModel<>(new String[]{SORT_NAME, SORT_NAME_DESC, SORT_CLOSEST, SORT_PROGRESS_DESC, SORT_PROGRESS_ASC, SORT_STATUS}));
         typeFilter.setModel(new DefaultComboBoxModel<>(new String[]{ALL_TYPES, AUTOMATIC, CUSTOM, LINKED, BASE, SESSION, DEADLINES, PAST_DUE}));
         styleComboBox(typeFilter);
@@ -515,6 +544,12 @@ public class GrinderPanel extends PluginPanel {
         filterOptions.add(createControlLabel("Goal type"));
         filterOptions.add(Box.createVerticalStrut(3));
         filterOptions.add(typeFilter);
+        filterOptions.add(Box.createVerticalStrut(7));
+        filterOptions.add(createControlLabel("Schedule"));
+        filterOptions.add(Box.createVerticalStrut(3));
+        filterOptions.add(scheduleFilter);
+        filterOptions.add(Box.createVerticalStrut(7));
+        filterOptions.add(pinnedOnly);
         styleButton(clearFiltersButton);
         clearFiltersButton.setText("Clear filters");
         clearFiltersButton.setToolTipText("Reset search, filters and sorting.");
@@ -522,20 +557,35 @@ public class GrinderPanel extends PluginPanel {
         clearFiltersButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
         filterOptions.add(Box.createVerticalStrut(8));
         filterOptions.add(clearFiltersButton);
-        filterOptions.setVisible(false);
+        JScrollPane filterScroll = new JScrollPane(filterOptions);
+        filterScroll.setBorder(BorderFactory.createEmptyBorder());
+        filterScroll.setOpaque(false);
+        filterScroll.getViewport().setOpaque(false);
+        filterScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        filterScroll.getVerticalScrollBar().setUnitIncrement(16);
+        filterScroll.setAlignmentX(LEFT_ALIGNMENT);
+        filterScroll.setPreferredSize(new Dimension(200, 180));
+        filterScroll.setMinimumSize(new Dimension(0, 100));
+        filterScroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 180));
+        filterScroll.setVisible(false);
         styleButton(filtersToggle);
-        filtersToggle.setToolTipText("Show category, status, sort and goal-type options. The number indicates active options.");
+        filtersToggle.setToolTipText("Show category, status, type, schedule, pin and sort options. The number includes search and active selections.");
         filtersToggle.setAlignmentX(LEFT_ALIGNMENT);
         filtersToggle.addActionListener(event -> {
-            boolean show = !filterOptions.isVisible();
-            filterOptions.setVisible(show);
+            boolean show = !filterScroll.isVisible();
+            filterScroll.setVisible(show);
             filtersToggle.setToolTipText(show ? "Hide filter options" : "Show filter options");
             revalidate();
             repaint();
         });
         controlsPanel.add(filtersToggle);
         controlsPanel.add(Box.createVerticalStrut(6));
-        controlsPanel.add(filterOptions);
+        controlsPanel.add(filterScroll);
+        filterSummary.setFont(UiTypography.META);
+        filterSummary.setForeground(MUTED_COLOR);
+        filterSummary.setAlignmentX(LEFT_ALIGNMENT);
+        filterSummary.setVisible(false);
+        controlsPanel.add(filterSummary);
 
         JPanel actionRow = new JPanel(new BorderLayout(8, 0));
         actionRow.setBackground(PANEL_COLOR);
@@ -594,6 +644,8 @@ public class GrinderPanel extends PluginPanel {
         statusFilter.addActionListener(this::onFilterChanged);
         sortFilter.addActionListener(this::onFilterChanged);
         typeFilter.addActionListener(this::onFilterChanged);
+        scheduleFilter.addActionListener(this::onFilterChanged);
+        pinnedOnly.addActionListener(this::onFilterChanged);
 
         clearFiltersButton.addActionListener(event -> {
             searchField.setText("");
@@ -601,6 +653,8 @@ public class GrinderPanel extends PluginPanel {
             statusFilter.setSelectedItem(ALL_STATUSES);
             sortFilter.setSelectedItem(SORT_NAME);
             typeFilter.setSelectedItem(ALL_TYPES);
+            scheduleFilter.setSelectedItem(ALL_SCHEDULES);
+            pinnedOnly.setSelected(false);
             render();
         });
     }
@@ -621,6 +675,7 @@ public class GrinderPanel extends PluginPanel {
         newGoalsButton.setSelected(NOT_STARTED.equals(status));
         activeGoalsButton.setSelected(IN_PROGRESS.equals(status));
         completeGoalsButton.setSelected(COMPLETE.equals(status));
+        waitingGoalsButton.setSelected(WAITING.equals(status));
     }
 
     private void setAllCategoriesCollapsed(boolean collapsed) {
@@ -1086,6 +1141,9 @@ public class GrinderPanel extends PluginPanel {
         int known = 0;
 
         for (GoalView view : goals) {
+            if (!Boolean.TRUE.equals(view.component.getClientProperty("grinder.ready"))) {
+                continue;
+            }
             if (isComplete(view.status)) {
                 completed++;
             } else if (view.status == GoalStatus.IN_PROGRESS) {
@@ -1093,10 +1151,8 @@ public class GrinderPanel extends PluginPanel {
             } else {
                 notStarted++;
             }
-            if (Boolean.TRUE.equals(view.component.getClientProperty("grinder.ready"))) {
-                ratios += getProgressRatio(view);
-                known++;
-            }
+            ratios += getProgressRatio(view);
+            known++;
         }
 
         int percentage = known == 0 ? 0 : (int) Math.round(ratios * 100 / known);
@@ -1104,12 +1160,14 @@ public class GrinderPanel extends PluginPanel {
         overallProgress.setMaximumChunks(config.maxProgressChunks());
         overallProgress.setProgress(percentage, 100);
         overallProgress.setStatus(!goals.isEmpty() && completed == goals.size() ? GoalStatus.COMPLETE : active > 0 || completed > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED);
-        summaryLabel.setText(completed + " / " + goals.size() + " reached" + (known < goals.size() ? " · " + (goals.size() - known) + " waiting" : " · " + percentage + "%"));
-        summaryLabel.setToolTipText("Average across known readings; waiting-for-data goals are excluded. Each known goal has equal weight.");
+        summaryLabel.setText(goals.isEmpty() ? "Create your first goal" : completed + " of " + goals.size() + " completed");
+        summaryLabel.setToolTipText("Overview of all enabled goals, independent of search and filters.");
+        progressPercent.setText(known == 0 ? "—" : percentage + "%");
         overallProgress.setToolTipText("Average completion of goals with available readings.");
         newGoalsButton.setText("New " + notStarted);
         activeGoalsButton.setText("Active " + active);
         completeGoalsButton.setText("Done " + completed);
+        waitingGoalsButton.setText("Waiting " + (goals.size() - known));
         syncQuickStatus();
     }
 
@@ -1119,14 +1177,48 @@ public class GrinderPanel extends PluginPanel {
         String selectedCategory = (String) categoryFilter.getSelectedItem();
         String selectedStatus = (String) statusFilter.getSelectedItem();
         String selectedType = (String) typeFilter.getSelectedItem();
+        String selectedSchedule = (String) scheduleFilter.getSelectedItem();
         int filterCount = (ALL_CATEGORIES.equals(selectedCategory) ? 0 : 1)
                 + (ALL_STATUSES.equals(selectedStatus) ? 0 : 1)
                 + (ALL_TYPES.equals(selectedType) ? 0 : 1)
-                + (SORT_NAME.equals(sortFilter.getSelectedItem()) ? 0 : 1);
+                + (SORT_NAME.equals(sortFilter.getSelectedItem()) ? 0 : 1)
+                + (ALL_SCHEDULES.equals(selectedSchedule) ? 0 : 1)
+                + (pinnedOnly.isSelected() ? 1 : 0)
+                + (query.isEmpty() ? 0 : 1);
         filtersToggle.setText(filterCount == 0 ? "Filters" : "Filters (" + filterCount + ")");
+        clearFiltersButton.setEnabled(filterCount > 0);
+        List<String> selections = new ArrayList<>();
+        if (!query.isEmpty()) {
+            selections.add("Search: " + searchField.getText().trim());
+        }
+        if (!ALL_CATEGORIES.equals(selectedCategory)) {
+            selections.add(selectedCategory);
+        }
+        if (!ALL_STATUSES.equals(selectedStatus)) {
+            selections.add(selectedStatus);
+        }
+        if (!ALL_TYPES.equals(selectedType)) {
+            selections.add(selectedType);
+        }
+        if (!ALL_SCHEDULES.equals(selectedSchedule)) {
+            selections.add(selectedSchedule);
+        }
+        if (pinnedOnly.isSelected()) {
+            selections.add("Pinned only");
+        }
+        if (!SORT_NAME.equals(sortFilter.getSelectedItem())) {
+            selections.add("Sort: " + sortFilter.getSelectedItem());
+        }
+        if (config.hideCompletedGoals() && ALL_STATUSES.equals(selectedStatus)) {
+            selections.add("Completed hidden by settings");
+        }
+        filterSummary.setVisible(!selections.isEmpty());
+        String selectionText = String.join(" · ", selections);
+        filterSummary.setText("<html><div style='width: 190px'>" + HtmlUtils.escape(selectionText) + "</div></html>");
+        filterSummary.setToolTipText(selectionText);
 
         for (GoalView view : goals) {
-            if (!query.isEmpty() && !view.title.toLowerCase(Locale.ROOT).contains(query) && !view.goal.getDescription().toLowerCase(Locale.ROOT).contains(query)) {
+            if (!matchesSearch(query, view.title, view.goal.getDescription(), view.category.getDisplayName())) {
                 continue;
             }
 
@@ -1134,7 +1226,10 @@ public class GrinderPanel extends PluginPanel {
                 continue;
             }
 
-            if (!matchesStatus(view.status, selectedStatus, config.hideCompletedGoals())) {
+            if (!matchesStatus(view.status, selectedStatus, config.hideCompletedGoals(), Boolean.TRUE.equals(view.component.getClientProperty("grinder.ready")))) {
+                continue;
+            }
+            if (!matchesSchedule((RepeatSchedule) view.component.getClientProperty("grinder.repeat"), selectedSchedule) || pinnedOnly.isSelected() && !Boolean.TRUE.equals(view.component.getClientProperty("grinder.pinned"))) {
                 continue;
             }
             Object deadline = view.component.getClientProperty("grinder.deadline");
@@ -1146,6 +1241,37 @@ public class GrinderPanel extends PluginPanel {
         }
 
         return filtered;
+    }
+
+    static boolean matchesSearch(String query, String title, String description, String category) {
+        if (query == null || query.trim().isEmpty()) {
+            return true;
+        }
+        String text = ((title == null ? "" : title) + " " + (description == null ? "" : description) + " " + (category == null ? "" : category)).toLowerCase(Locale.ROOT);
+        for (String word : query.trim().toLowerCase(Locale.ROOT).split("\\s+")) {
+            if (!text.contains(word)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    static boolean matchesSchedule(RepeatSchedule schedule, String selected) {
+        if (selected == null || ALL_SCHEDULES.equals(selected)) {
+            return true;
+        }
+        RepeatSchedule actual = schedule == null ? RepeatSchedule.NONE : schedule;
+        return ONE_OFF.equals(selected) ? actual == RepeatSchedule.NONE : actual != RepeatSchedule.NONE && actual.name().equalsIgnoreCase(selected);
+    }
+
+    static boolean matchesStatus(GoalStatus status, String selected, boolean hideCompleted, boolean ready) {
+        if (WAITING.equals(selected)) {
+            return !ready;
+        }
+        if (!ready && (NOT_STARTED.equals(selected) || IN_PROGRESS.equals(selected) || COMPLETE.equals(selected))) {
+            return false;
+        }
+        return matchesStatus(status, selected, hideCompleted);
     }
 
     static boolean matchesType(Goal goal, GoalStatus status, String selectedType, long deadline, long now) {
