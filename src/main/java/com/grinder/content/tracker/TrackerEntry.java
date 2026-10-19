@@ -2,6 +2,7 @@ package com.grinder.content.tracker;
 import com.grinder.content.collectionlog.CollectionLogPages;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.ui.Icon;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.IntUnaryOperator;
@@ -106,6 +107,14 @@ public enum TrackerEntry {
     SLAYER_STREAK("Slayer task streak (normal)", VarbitID.SLAYER_TASKS_COMPLETED, true, 100),
     SLAYER_WILDERNESS_STREAK("Slayer task streak (Wilderness)", VarbitID.SLAYER_WILDERNESS_TASKS_COMPLETED, true, 100),
     CLUES_TOTAL("Clue scrolls completed", VarPlayerID.COMPLETED_CLUES_TOTAL, GoalCategory.CLUES);
+    private static final Map<String, TrackerEntry> BOSS_TRACKERS = new HashMap<>();
+    static {
+        for (TrackerEntry entry : values()) {
+            if ((entry.category == GoalCategory.BOSSING || entry.category == GoalCategory.SKILLING) && entry.displayName.endsWith(" kills")) {
+                BOSS_TRACKERS.put(normalized(entry.displayName.substring(0, entry.displayName.length() - 6)), entry);
+            }
+        }
+    }
     @Getter
     private final String displayName;
     @Getter
@@ -144,6 +153,12 @@ public enum TrackerEntry {
     }
     public Icon getIcon() {
         return category.getIcon();
+    }
+    public static TrackerEntry forBossName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return null;
+        }
+        return BOSS_TRACKERS.get(normalized(name));
     }
     public int getCount(Client client) {
         return readCount(client::getVarpValue, client::getVarbitValue);

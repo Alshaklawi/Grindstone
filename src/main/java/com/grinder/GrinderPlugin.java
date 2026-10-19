@@ -12,6 +12,8 @@ import com.grinder.content.goal.impl.TrackerGoal;
 import com.grinder.content.goal.impl.collectionlog.CollectionLogEntryGoal;
 import com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal;
 import com.grinder.content.goal.impl.combatachievement.CombatAchievementTaskGoal;
+import com.grinder.content.goal.impl.combatachievement.CombatAchievementBossGoal;
+import com.grinder.content.tracker.TrackerEntry;
 import com.grinder.content.goal.impl.experience.SessionExperienceGoal;
 import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
 import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
@@ -27,6 +29,8 @@ import com.grinder.repository.ProfilePersistence;
 import com.grinder.ui.GrinderPanel;
 import java.awt.image.BufferedImage;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Inject;
@@ -102,6 +106,7 @@ public class GrinderPlugin extends Plugin {
     private volatile long loadingHash;
     private boolean completionProgressDirty;
     private boolean storageProgressDirty;
+    private final Map<String, Integer> combatBossIds = new HashMap<>();
     private long lastRecurringRefresh;
 
     @Override
@@ -114,6 +119,7 @@ public class GrinderPlugin extends Plugin {
         persistence.configure(this::getPluginDirectory);
         panel.setMigrationHandler(this::installMigratedProfile);
         CombatAchievementData.clearCache();
+        combatBossIds.clear();
 
         navigationButton = NavigationButton.builder()
                 .tooltip("Grindstone")
@@ -147,6 +153,7 @@ public class GrinderPlugin extends Plugin {
         profile = null;
         completionProgressDirty = false;
         storageProgressDirty = false;
+        combatBossIds.clear();
     }
 
     @Subscribe
@@ -189,7 +196,18 @@ public class GrinderPlugin extends Plugin {
     @Subscribe
     public void onMenuEntryAdded(MenuEntryAdded event) {
         MenuEntry original = event.getMenuEntry();
-        if (!hasActivePlayerProfile() || original.getType() != MenuAction.CC_OP && original.getType() != MenuAction.CC_OP_LOW_PRIORITY) {
+        if (!hasActivePlayerProfile()) {
+            return;
+        }
+        if (original.getType() == MenuAction.EXAMINE_NPC) {
+            addBossTrackerMenu(original);
+            return;
+        }
+        if (original.getType() != MenuAction.CC_OP && original.getType() != MenuAction.CC_OP_LOW_PRIORITY) {
+            return;
+        }
+        if (original.getParam1() >>> 16 == InterfaceID.CA_BOSSES) {
+            addBossAchievementMenu(original);
             return;
         }
         if (original.getParam1() >>> 16 == InterfaceID.CA_TASKS) {
@@ -262,6 +280,56 @@ public class GrinderPlugin extends Plugin {
                 panel.showAddGoalDialog(selection);
             }
         });
+    }
+
+    private void addBossTrackerMenu(MenuEntry original) {
+        if (!config.bossGoalMenu() || !config.trackerGoalsEnabled()) {
+            return;
+        }
+        String name = original.getNpc() == null ? Text.removeTags(original.getTarget()).replaceFirst("\\s*\\(level-\\d+\\)\\s*$", "") : original.getNpc().getName();
+        TrackerEntry tracker = TrackerEntry.forBossName(name);
+        if (tracker == null) {
+            return;
+        }
+        client.getMenu().createMenuEntry(-2)
+                .setOption("Add goal")
+                .setTarget(original.getTarget())
+                .setType(MenuAction.RUNELITE_LOW_PRIORITY)
+                .onClick(entry -> {
+                    if (hasActivePlayerProfile() && config.bossGoalMenu() && config.trackerGoalsEnabled()) {
+                        openGoalEditor(new TrackerGoal(tracker, tracker.getDefaultTarget()));
+                    }
+                });
+    }
+
+    private void addBossAchievementMenu(MenuEntry original) {
+        if (!config.bossGoalMenu() || !config.combatAchievementGoalsEnabled() || original.getIdentifier() != 1) {
+            return;
+        }
+        String name = Text.removeTags(original.getTarget()).trim();
+        if (name.isEmpty()) {
+            return;
+        }
+        if (combatBossIds.isEmpty()) {
+            CombatAchievementData.tasksByBoss(client).forEach((boss, tasks) -> {
+                if (!tasks.isEmpty()) {
+                    combatBossIds.put(Text.removeTags(CombatAchievementData.bossName(client, boss)).trim().toLowerCase(Locale.ROOT), boss);
+                }
+            });
+        }
+        Integer boss = combatBossIds.get(name.toLowerCase(Locale.ROOT));
+        if (boss == null) {
+            return;
+        }
+        client.getMenu().createMenuEntry(-2)
+                .setOption("Add goal")
+                .setTarget(original.getTarget())
+                .setType(MenuAction.RUNELITE_LOW_PRIORITY)
+                .onClick(entry -> {
+                    if (hasActivePlayerProfile() && config.bossGoalMenu() && config.combatAchievementGoalsEnabled()) {
+                        openGoalEditor(new CombatAchievementBossGoal(boss, name));
+                    }
+                });
     }
 
     @Subscribe

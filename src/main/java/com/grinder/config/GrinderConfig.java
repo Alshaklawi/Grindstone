@@ -43,6 +43,11 @@ public interface GrinderConfig extends Config {
     default boolean combatAchievementGoalMenu() {
         return true;
     }
+
+    @ConfigItem(keyName = "bossGoalMenu", name = "Boss goal shortcuts", description = "Add goal shortcuts to supported boss NPCs and Combat Achievement boss entries. NPCs create kill-count goals; boss entries create Combat Achievement goals. No game actions are performed.", section = GOALS_SECTION, position = 11)
+    default boolean bossGoalMenu() {
+        return true;
+    }
     @ConfigItem(keyName = "ownedItemGoalsEnabled", name = "Owned item goals", description = "Show quantities across known personal item storage.", section = GOALS_SECTION, position = 7)
     default boolean ownedItemGoalsEnabled() {
         return true;

@@ -22,6 +22,8 @@ You can also right-click an item or page entry in the in-game collection log and
 
 Combat Achievement tasks also offer **Add goal** alongside their expand/collapse action. This shortcut can be disabled in the goal settings.
 
+Supported boss NPCs offer kill-count goals, while entries in the Combat Achievements boss list offer boss-task goals. Toggle **Boss goal shortcuts**, **Combat task goal shortcut**, and **Collection log goal shortcut** independently in the settings.
+
 The dashboard separates new, active, completed and waiting goals. Use the counters as quick status filters, or open **Filters** for category, type, schedule, pinned-only and sorting options. Search matches words across goal titles, descriptions and categories; **Clear filters** resets all selections.
 
 Goal pickers have searchable, categorized lists. Activities are grouped into bossing, raids, Slayer, clues, minigames and skilling.
