@@ -24,6 +24,7 @@ function format(source) {
     const parts = tokens(source);
     const stack = [];
     let parentheses = 0;
+    const parenStack = [];
     let depth = 0;
     let line = -1;
     let baseDepth = 0;
@@ -34,18 +35,30 @@ function format(source) {
             line = token.line;
             baseDepth = depth - (token.value === '}' && stack.length && stack[stack.length - 1].block ? 1 : 0);
             const enclosing = [...stack].reverse().find(item => item.block);
-            lineIndent = token.value === '}' && stack.length && stack[stack.length - 1].block ? stack[stack.length - 1].indent : Math.max(token.indentation, enclosing ? enclosing.indent + 4 : 0);
+            const continuation = parentheses > (enclosing ? enclosing.parentheses : 0) || ['.', '?', ':', '+', '&&', '||'].includes(token.value);
+            const array = stack.length && !stack[stack.length - 1].block ? stack[stack.length - 1] : null;
+            lineIndent = token.value === '}' && stack.length ? stack[stack.length - 1].indent : array ? array.indent + 4 : continuation ? Math.max(token.indentation, enclosing ? enclosing.indent + 4 : 0) : enclosing ? enclosing.indent + (enclosing.isSwitch && !['case', 'default'].includes(token.value) ? 8 : 4) : 0;
         }
         token.lineIndent = lineIndent;
         token.parent = [...stack].reverse().find(item => item.block);
-        if (token.value === '(') { parentheses++; }
-        if (token.value === ')') { parentheses--; }
+        token.parenBefore = parentheses;
+        if (token.value === '(') {
+            parenStack.push({indent: lineIndent + 4 * (depth - baseDepth), header: parts[index - 1] ? parts[index - 1].value : ''});
+            parentheses++;
+        }
+        if (token.value === ')') {
+            const opening = parenStack.pop();
+            token.statementIndent = opening.indent;
+            token.header = opening.header;
+            parentheses--;
+        }
         if (token.value === '{') {
             const previous = parts[index - 1];
             const value = previous ? previous.value : '';
             const array = value === '=' || value === ']' || (stack.length && !stack[stack.length - 1].block && (value === '{' || value === ','));
             token.block = !array;
-            token.indent = lineIndent + 4 * (depth - baseDepth);
+            token.indent = previous && previous.value === ')' ? previous.statementIndent : lineIndent + 4 * (depth - baseDepth);
+            token.isSwitch = previous && previous.header === 'switch';
             token.parentheses = parentheses;
             stack.push(token);
             if (token.block) { depth++; }
@@ -78,6 +91,8 @@ function format(source) {
         } else if (previous.splitStatement && token.line === previous.line && !token.comment) {
             gap = newline(Math.max(token.lineIndent, previous.parent.indent + 4));
         } else if (token.block && gap.includes('\n') && !previous.comment && [')', 'else', 'try', 'finally', 'do', 'static'].includes(previous.value)) {
+            gap = ' ';
+        } else if (gap.includes('\n') && !previous.comment && !token.comment && token.parenBefore > (token.parent ? token.parent.parentheses : 0)) {
             gap = ' ';
         }
         output += gap + token.value;
