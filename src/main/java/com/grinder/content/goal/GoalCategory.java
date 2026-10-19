@@ -2,6 +2,7 @@ package com.grinder.content.goal;
 
 import com.grinder.ui.Icon;
 import lombok.Getter;
+import java.util.Locale;
 
 /**
  * @author Ayman Yassen
@@ -10,6 +11,10 @@ import lombok.Getter;
  */
 public enum GoalCategory {
     BOSSING("Bossing", Icon.BOSSING),
+    RAIDS("Raids", Icon.BOSSING),
+    SLAYER("Slayer", Icon.BOSSING),
+    CLUES("Clues", Icon.COLLECTION_LOG),
+    MINIGAMES("Minigames", Icon.MAIN),
     COLLECTION_LOG("Collection Log", Icon.COLLECTION_LOG),
     SKILLING("Skilling", Icon.SKILLING),
     QUEST("Quests", Icon.QUEST),
@@ -37,7 +42,19 @@ public enum GoalCategory {
             return OTHER;
         }
 
-        String normalized = name.trim().toLowerCase();
+        String normalized = name.trim().toLowerCase(Locale.ROOT);
+        if (normalized.contains("slayer")) {
+            return SLAYER;
+        }
+        if (normalized.contains("clue")) {
+            return CLUES;
+        }
+        if (normalized.contains("raid")) {
+            return RAIDS;
+        }
+        if (normalized.contains("minigame")) {
+            return MINIGAMES;
+        }
 
         if (normalized.contains("collection") || normalized.contains("collectionlog")) {
             return COLLECTION_LOG;

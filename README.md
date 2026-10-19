@@ -20,6 +20,8 @@ Adjust appearance and notification preferences in **RuneLite settings → Grinde
 
 The dashboard separates new, active, completed and waiting goals. Use the counters as quick status filters, or open **Filters** for category, type, schedule, pinned-only and sorting options. Search matches words across goal titles, descriptions and categories; **Clear filters** resets all selections.
 
+Goal pickers have searchable, categorized lists. Activities are grouped into bossing, raids, Slayer, clues, minigames and skilling.
+
 ## Progress and privacy
 
 Progress uses information available to your logged-in client. Some readings require opening the relevant game interface. Item quantities cover known storage, not every possible location, and collection-log dates record when Grinder first observed an unlock.

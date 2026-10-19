@@ -20,6 +20,7 @@ import com.grinder.content.goal.impl.level.TotalLevelGoal;
 import com.grinder.content.tracker.TrackerEntry;
 import com.grinder.repository.GrinderProfile;
 import com.grinder.repository.RepeatSchedule;
+import com.grinder.ui.components.SearchableList;
 import com.grinder.ui.item.ItemLookup;
 import com.grinder.ui.item.ItemPickerPanel;
 import com.grinder.ui.util.UiTooltips;
@@ -64,7 +65,18 @@ public final class GoalEditorPanel extends JPanel {
         repeatForm.load(schedule, target);
     }
     private final ItemPickerPanel itemPicker;
-    private final JComboBox<String> subject = new JComboBox<>();
+    private final SearchableList<String> subject = new SearchableList<String>(this::onSubjectSelected) {
+        @Override
+        protected String getText(String value) {
+            return value;
+        }
+
+        @Override
+        protected String getCategory(String value) {
+            Supplier<Goal> factory = choices.get(value);
+            return factory == null ? "" : factory.get().getCategory().getDisplayName();
+        }
+    };
     private final JSpinner target = new JSpinner();
     private final JPanel body = new JPanel();
     private final JLabel hint = new JLabel();
@@ -131,12 +143,6 @@ public final class GoalEditorPanel extends JPanel {
         hint.setAlignmentX(LEFT_ALIGNMENT);
         presets.setOpaque(false);
         type.addActionListener(event -> rebuild());
-        subject.addActionListener(event -> {
-            if (!updating) {
-                configureTarget(true);
-                updatePreview();
-            }
-        });
         target.addChangeListener(event -> updatePreview());
         checklistForm.addStepsListener(() -> {
             if (type.getSelectedIndex() == 21) {
@@ -201,7 +207,7 @@ public final class GoalEditorPanel extends JPanel {
         } else {
             populateChoices(kind);
             updating = true;
-            subject.setModel(new DefaultComboBoxModel<>(choices.keySet().toArray(new String[0])));
+            subject.setItems(choices.keySet());
             updating = false;
             if (kind < 2 || kind == 5 || kind == 6 || kind >= 9 && kind < 18 || kind == 20) {
                 body.add(field(kind >= 9 ? "Track" : kind == 5 ? "Activity" : kind == 6 ? "Collection-log page" : "Skill", subject));
@@ -289,7 +295,7 @@ public final class GoalEditorPanel extends JPanel {
     }
 
     private void configureTarget(boolean preserve) {
-        Supplier<Goal> factory = choices.get(subject.getSelectedItem());
+        Supplier<Goal> factory = choices.get(subject.getSelectedValue());
         if (factory == null) {
             return;
         }
@@ -323,6 +329,14 @@ public final class GoalEditorPanel extends JPanel {
         }
     }
 
+    private void onSubjectSelected(String value) {
+        if (!updating) {
+            configureTarget(true);
+            updatePreview();
+            notifyReadiness();
+        }
+    }
+
     private void updatePreview() {
         if (choices.isEmpty()) {
             preview.setText("No choices available");
@@ -331,8 +345,9 @@ public final class GoalEditorPanel extends JPanel {
         if (type.getSelectedIndex() == 7 || type.getSelectedIndex() == 8) {
             return;
         }
-        String name = (String) subject.getSelectedItem();
+        String name = subject.getSelectedValue();
         if (name == null) {
+            preview.setText("No matching choices");
             return;
         }
         Goal sample = choices.get(name).get();
@@ -347,7 +362,7 @@ public final class GoalEditorPanel extends JPanel {
 
     public boolean isReady() {
         return type.getSelectedIndex() == 7 || type.getSelectedIndex() == 16 ? itemPicker.hasSelection()
-                : type.getSelectedIndex() == 8 || type.getSelectedIndex() == 21 || !choices.isEmpty();
+                : type.getSelectedIndex() == 8 || type.getSelectedIndex() == 21 || subject.getSelectedValue() != null;
     }
 
     private void notifyReadiness() {
@@ -372,7 +387,11 @@ public final class GoalEditorPanel extends JPanel {
             target.commitEdit();
             return new PossessedItemGoal( itemPicker.getSelectedItemId(), ((Number) target.getValue()).longValue());
         }
-        Goal goal = choices.get(subject.getSelectedItem()).get();
+        Supplier<Goal> factory = choices.get(subject.getSelectedValue());
+        if (factory == null) {
+            throw new IllegalArgumentException("Choose a matching goal from the list first.");
+        }
+        Goal goal = factory.get();
         if (goal.supportsTarget()) {
             target.commitEdit();
             goal.setTarget(((Number) target.getValue()).longValue());
@@ -413,7 +432,7 @@ public final class GoalEditorPanel extends JPanel {
             type.setSelectedIndex(kind);
             for (Map.Entry<String, Supplier<Goal>> choice : choices.entrySet()) {
                 if (GrinderProfile.sameSelection(goal, choice.getValue().get())) {
-                    subject.setSelectedItem(choice.getKey());
+                    subject.setSelectedValue(choice.getKey());
                     if (goal.supportsTarget()) {
                         target.setValue(goal.getProgressMaximum());
                     }

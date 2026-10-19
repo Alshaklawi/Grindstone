@@ -3,6 +3,7 @@ package com.grinder.content.tracker;
 import com.grinder.content.goal.GoalCategory;
 import net.runelite.api.gameval.ItemID;
 import net.runelite.api.gameval.VarbitID;
+import net.runelite.api.gameval.VarPlayerID;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -12,6 +13,16 @@ import static org.junit.Assert.*;
  * @since 10/19/2026
  */
 public class SlayerTrackerTest {
+    @Test
+    public void activitiesUseDistinctUsefulCategoriesAndNamedClueTotal() {
+        assertEquals(GoalCategory.RAIDS, TrackerEntry.CHAMBERS_OF_XERIC.getCategory());
+        assertEquals(GoalCategory.BOSSING, TrackerEntry.VORKATH.getCategory());
+        assertEquals(GoalCategory.MINIGAMES, TrackerEntry.SOUL_WARS_WINS.getCategory());
+        assertEquals(GoalCategory.CLUES, TrackerEntry.CLUES_TOTAL.getCategory());
+        assertEquals(VarPlayerID.COMPLETED_CLUES_TOTAL, TrackerEntry.CLUES_TOTAL.getId());
+        assertEquals(18, TrackerEntry.CLUES_TOTAL.readCount(id -> 18, id -> failVarp()));
+    }
+
     @Test
     public void slayerCountersReadSeparateNamedVarbitsInsteadOfVarps() {
         assertEquals(250, TrackerEntry.SLAYER_POINTS.readCount(id -> failVarp(), id -> id == VarbitID.SLAYER_POINTS ? 250 : 0));
@@ -32,7 +43,7 @@ public class SlayerTrackerTest {
     public void slayerDefaultsHaveAppropriateTargetsIconsAndSourceDetails() {
         for (TrackerEntry entry : new TrackerEntry[]{TrackerEntry.SLAYER_POINTS, TrackerEntry.SLAYER_STREAK, TrackerEntry.SLAYER_WILDERNESS_STREAK}) {
             assertTrue(entry.isVarbit());
-            assertEquals(GoalCategory.SKILLING, entry.getCategory());
+            assertEquals(GoalCategory.SLAYER, entry.getCategory());
             assertEquals(ItemID.SLAYER_HELM, entry.iconItem(null));
             assertFalse(entry.getDescription().isEmpty());
         }

@@ -26,7 +26,7 @@ public class NativeCatalogTest {
             assertFalse(entry.getDisplayName().isEmpty());
             assertNotNull(entry.getIcon());
         }
-        assertEquals(90, variables.size());
+        assertEquals(91, variables.size());
         assertEquals(VarPlayerID.TOTAL_WINTERTODT_KILLS, TrackerEntry.WINTERTODT.getId());
         assertEquals(VarPlayerID.TOTAL_CORP_KILLS, TrackerEntry.CORPOREAL_BEAST.getId());
     }

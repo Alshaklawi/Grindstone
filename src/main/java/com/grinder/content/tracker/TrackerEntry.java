@@ -44,14 +44,14 @@ public enum TrackerEntry {
     CATA_BOSS("Skotizo kills", VarPlayerID.TOTAL_CATA_BOSS_KILLS, GoalCategory.BOSSING),
     WINTERTODT("Wintertodt kills", VarPlayerID.TOTAL_WINTERTODT_KILLS, GoalCategory.SKILLING),
     HILLGIANT_BOSS("Obor kills", VarPlayerID.TOTAL_HILLGIANT_BOSS_KILLS, GoalCategory.BOSSING),
-    CHAMBERS_OF_XERIC("Chambers of Xeric completions", VarPlayerID.TOTAL_COMPLETED_XERICCHAMBERS, GoalCategory.BOSSING),
+    CHAMBERS_OF_XERIC("Chambers of Xeric completions", VarPlayerID.TOTAL_COMPLETED_XERICCHAMBERS, GoalCategory.RAIDS),
     ZUK("TzKal-Zuk kills", VarPlayerID.TOTAL_ZUK_KILLS, GoalCategory.BOSSING),
     DERANGEDARCHAEOLOGIST("Deranged Archaeologist kills", VarPlayerID.TOTAL_DERANGEDARCHAEOLOGIST_KILLS, GoalCategory.BOSSING),
     GARGBOSS("Grotesque Guardians kills", VarPlayerID.TOTAL_GARGBOSS_KILLS, GoalCategory.BOSSING),
     VORKATH("Vorkath kills", VarPlayerID.TOTAL_VORKATH_KILLS, GoalCategory.BOSSING),
     BRYOPHYTA("Bryophyta kills", VarPlayerID.TOTAL_BRYOPHYTA_KILLS, GoalCategory.BOSSING),
-    XERICCHAMBERS_CHALLENGE("Chambers of Xeric: Challenge Mode completions", VarPlayerID.TOTAL_COMPLETED_XERICCHAMBERS_CHALLENGE, GoalCategory.BOSSING),
-    THEATREOFBLOOD("Theatre of Blood completions", VarPlayerID.TOTAL_COMPLETED_THEATREOFBLOOD, GoalCategory.BOSSING),
+    XERICCHAMBERS_CHALLENGE("Chambers of Xeric: Challenge Mode completions", VarPlayerID.TOTAL_COMPLETED_XERICCHAMBERS_CHALLENGE, GoalCategory.RAIDS),
+    THEATREOFBLOOD("Theatre of Blood completions", VarPlayerID.TOTAL_COMPLETED_THEATREOFBLOOD, GoalCategory.RAIDS),
     HYDRABOSS("Alchemical Hydra kills", VarPlayerID.TOTAL_HYDRABOSS_KILLS, GoalCategory.BOSSING),
     HESPORI("Hespori kills", VarPlayerID.TOTAL_HESPORI_KILLS, GoalCategory.BOSSING),
     MIMIC("Mimic kills", VarPlayerID.TOTAL_MIMIC_KILLS, GoalCategory.BOSSING),
@@ -61,19 +61,19 @@ public enum TrackerEntry {
     GAUNTLET_HM("Corrupted Gauntlet completions", VarPlayerID.TOTAL_COMPLETED_GAUNTLET_HM, GoalCategory.BOSSING),
     NIGHTMARE("Nightmare kills", VarPlayerID.TOTAL_NIGHTMARE_KILLS, GoalCategory.BOSSING),
     NIGHTMARE_CHALLENGE("Phosani's Nightmare kills", VarPlayerID.TOTAL_NIGHTMARE_CHALLENGE_KILLS, GoalCategory.BOSSING),
-    SOUL_WARS_KILLS("Soul Wars kills", VarPlayerID.SOUL_WARS_TOTAL_KILLS, GoalCategory.OTHER),
-    SOUL_WARS_DEATHS("Soul Wars deaths", VarPlayerID.SOUL_WARS_TOTAL_DEATHS, GoalCategory.OTHER),
-    SOUL_WARS_GAMES("Soul Wars games", VarPlayerID.SOUL_WARS_TOTAL_GAMES, GoalCategory.OTHER),
-    SOUL_WARS_WINS("Soul Wars wins", VarPlayerID.SOUL_WARS_TOTAL_WINS, GoalCategory.OTHER),
+    SOUL_WARS_KILLS("Soul Wars kills", VarPlayerID.SOUL_WARS_TOTAL_KILLS, GoalCategory.MINIGAMES),
+    SOUL_WARS_DEATHS("Soul Wars deaths", VarPlayerID.SOUL_WARS_TOTAL_DEATHS, GoalCategory.MINIGAMES),
+    SOUL_WARS_GAMES("Soul Wars games", VarPlayerID.SOUL_WARS_TOTAL_GAMES, GoalCategory.MINIGAMES),
+    SOUL_WARS_WINS("Soul Wars wins", VarPlayerID.SOUL_WARS_TOTAL_WINS, GoalCategory.MINIGAMES),
     TEMPOROSS("Tempoross kills", VarPlayerID.TOTAL_TEMPOROSS_KILLS, GoalCategory.SKILLING),
-    THEATREOFBLOOD_HARD("Theatre of Blood: Hard Mode completions", VarPlayerID.TOTAL_COMPLETED_THEATREOFBLOOD_HARD, GoalCategory.BOSSING),
-    THEATREOFBLOOD_STORY("Theatre of Blood: Entry Mode completions", VarPlayerID.TOTAL_COMPLETED_THEATREOFBLOOD_STORY, GoalCategory.BOSSING),
+    THEATREOFBLOOD_HARD("Theatre of Blood: Hard Mode completions", VarPlayerID.TOTAL_COMPLETED_THEATREOFBLOOD_HARD, GoalCategory.RAIDS),
+    THEATREOFBLOOD_STORY("Theatre of Blood: Entry Mode completions", VarPlayerID.TOTAL_COMPLETED_THEATREOFBLOOD_STORY, GoalCategory.RAIDS),
     NEX("Nex kills", VarPlayerID.TOTAL_NEX_KILLS, GoalCategory.BOSSING),
-    SPEEDRUNS("Speedruns completed", VarPlayerID.TOTAL_SPEEDRUNS, GoalCategory.OTHER),
-    GOTR("Guardians of the Rift kills", VarPlayerID.TOTAL_GOTR_KILLS, GoalCategory.SKILLING),
-    TOMBSOFAMASCUT_ENTRY("Tombs of Amascut: Entry Mode completions", VarPlayerID.TOTAL_COMPLETED_TOMBSOFAMASCUT_ENTRY, GoalCategory.BOSSING),
-    TOMBSOFAMASCUT("Tombs of Amascut completions", VarPlayerID.TOTAL_COMPLETED_TOMBSOFAMASCUT, GoalCategory.BOSSING),
-    TOMBSOFAMASCUT_EXPERT("Tombs of Amascut: Expert Mode completions", VarPlayerID.TOTAL_COMPLETED_TOMBSOFAMASCUT_EXPERT, GoalCategory.BOSSING),
+    SPEEDRUNS("Speedruns completed", VarPlayerID.TOTAL_SPEEDRUNS, GoalCategory.QUEST),
+    GOTR("Guardians of the Rift kills", VarPlayerID.TOTAL_GOTR_KILLS, GoalCategory.MINIGAMES),
+    TOMBSOFAMASCUT_ENTRY("Tombs of Amascut: Entry Mode completions", VarPlayerID.TOTAL_COMPLETED_TOMBSOFAMASCUT_ENTRY, GoalCategory.RAIDS),
+    TOMBSOFAMASCUT("Tombs of Amascut completions", VarPlayerID.TOTAL_COMPLETED_TOMBSOFAMASCUT, GoalCategory.RAIDS),
+    TOMBSOFAMASCUT_EXPERT("Tombs of Amascut: Expert Mode completions", VarPlayerID.TOTAL_COMPLETED_TOMBSOFAMASCUT_EXPERT, GoalCategory.RAIDS),
     MUSPAH("Phantom Muspah kills", VarPlayerID.TOTAL_MUSPAH_KILLS, GoalCategory.BOSSING),
     ARTIO("Artio kills", VarPlayerID.TOTAL_ARTIO_KILLS, GoalCategory.BOSSING),
     SPINDEL("Spindel kills", VarPlayerID.TOTAL_SPINDEL_KILLS, GoalCategory.BOSSING),
@@ -87,13 +87,13 @@ public enum TrackerEntry {
     LEVIATHAN_AWAKENED("Leviathan: Awakened kills", VarPlayerID.TOTAL_LEVIATHAN_AWAKENED_KILLS, GoalCategory.BOSSING),
     DUKE_SUCELLUS_AWAKENED("Duke Sucellus: Awakened kills", VarPlayerID.TOTAL_DUKE_SUCELLUS_AWAKENED_KILLS, GoalCategory.BOSSING),
     RAT_BOSS("Scurrius kills", VarPlayerID.TOTAL_RAT_BOSS_KILLS, GoalCategory.BOSSING),
-    COLOSSEUM_WAVES("Colosseum waves completed", VarPlayerID.TOTAL_COLOSSEUM_WAVES_COMPLETED, GoalCategory.BOSSING),
+    COLOSSEUM_WAVES("Colosseum waves completed", VarPlayerID.TOTAL_COLOSSEUM_WAVES_COMPLETED, GoalCategory.MINIGAMES),
     PERILOUS_MOONS("Perilous Moons chests", VarPlayerID.TOTAL_PMOON_CHESTS, GoalCategory.BOSSING),
     SOL("Sol Heredit kills", VarPlayerID.TOTAL_SOL_KILLS, GoalCategory.BOSSING),
     ARAXXOR("Araxxor kills", VarPlayerID.TOTAL_ARAXXOR_KILLS, GoalCategory.BOSSING),
     AMOXLIATL("Amoxliatl kills", VarPlayerID.TOTAL_AMOXLIATL_KILLS, GoalCategory.BOSSING),
     HUEY("Hueycoatl kills", VarPlayerID.TOTAL_HUEY_KILLS, GoalCategory.BOSSING),
-    MIXOLOGY_ORDERS("Mastering Mixology orders", VarPlayerID.TOTAL_MIXOLOGY_ORDERS, GoalCategory.SKILLING),
+    MIXOLOGY_ORDERS("Mastering Mixology orders", VarPlayerID.TOTAL_MIXOLOGY_ORDERS, GoalCategory.MINIGAMES),
     ROYAL_TITAN("Royal Titans kills", VarPlayerID.TOTAL_ROYAL_TITAN_KILLS, GoalCategory.BOSSING),
     YAMA("Yama kills", VarPlayerID.TOTAL_YAMA_KILLS, GoalCategory.BOSSING),
     DOM_LEVELS("Delve levels completed", VarPlayerID.TOTAL_DOM_LEVELS, GoalCategory.BOSSING),
@@ -105,7 +105,8 @@ public enum TrackerEntry {
     MAD_ANGEL("Mad Angel kills", VarPlayerID.TOTAL_MAD_ANGEL_KILLS, GoalCategory.BOSSING),
     SLAYER_POINTS("Slayer points", VarbitID.SLAYER_POINTS, true, 1000),
     SLAYER_STREAK("Slayer task streak (normal)", VarbitID.SLAYER_TASKS_COMPLETED, true, 100),
-    SLAYER_WILDERNESS_STREAK("Slayer task streak (Wilderness)", VarbitID.SLAYER_WILDERNESS_TASKS_COMPLETED, true, 100);
+    SLAYER_WILDERNESS_STREAK("Slayer task streak (Wilderness)", VarbitID.SLAYER_WILDERNESS_TASKS_COMPLETED, true, 100),
+    CLUES_TOTAL("Clue scrolls completed", VarPlayerID.COMPLETED_CLUES_TOTAL, GoalCategory.CLUES);
     @Getter
     private final String displayName;
     @Getter
@@ -128,7 +129,7 @@ public enum TrackerEntry {
     TrackerEntry(String displayName, int id, boolean varbit, int defaultTarget) {
         this.displayName = displayName;
         this.id = id;
-        this.category = GoalCategory.SKILLING;
+        this.category = GoalCategory.SLAYER;
         this.varbit = varbit;
         this.defaultTarget = defaultTarget;
         this.representativeItem = ItemID.SLAYER_HELM;
@@ -143,7 +144,7 @@ public enum TrackerEntry {
         return "";
     }
     public Icon getIcon() {
-        return category == GoalCategory.BOSSING ? Icon.BOSSING : category == GoalCategory.SKILLING ? Icon.SKILLING : Icon.MAIN;
+        return category.getIcon();
     }
     public int getCount(Client client) {
         return readCount(client::getVarpValue, client::getVarbitValue);
@@ -152,6 +153,9 @@ public enum TrackerEntry {
         return Math.max(0, (varbit ? varbits : varps).applyAsInt(id));
     }
     public int iconItem(Client client) {
+        if (this == CLUES_TOTAL) {
+            return ItemID.TRAIL_REWARD_CASKET_MASTER;
+        }
         if (representativeItem > 0 || iconResolved || client == null) {
             return representativeItem;
         }
