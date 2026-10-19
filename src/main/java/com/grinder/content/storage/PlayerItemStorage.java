@@ -59,6 +59,7 @@ public final class PlayerItemStorage {
         java.time.Instant seen = lastSeen.get(PlayerStorageSource.BANK);
         return seen == null ? "Bank not loaded this login" : "Bank snapshot: " + java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss z", Locale.ROOT).withZone(java.time.ZoneId.systemDefault()).format(seen);
     }
+    public boolean hasBankSnapshot() { return containers.containsKey(PlayerStorageSource.BANK); }
     public int normalize(Client client, int id) {
         return normalized.computeIfAbsent(id, key -> {
             ItemComposition definition = client.getItemDefinition(key);
