@@ -26,6 +26,8 @@ Supported boss NPCs offer kill-count goals, while entries in the Combat Achievem
 
 Right-click a skill for level or XP goals. Right-click **Total level** for total level, total XP, base level or base XP goals. Disable **Skills tab goal shortcuts** to hide these options.
 
+Right-click the combat-level display in **Combat Options** for a combat-level goal. Its **Combat level goal shortcut** setting is independent of the Skills tab shortcuts.
+
 The dashboard separates new, active, completed and waiting goals. Use the counters as quick status filters, or open **Filters** for category, type, schedule, pinned-only and sorting options. Search matches words across goal titles, descriptions and categories; **Clear filters** resets all selections.
 
 Goal pickers have searchable, categorized lists. Activities are grouped into bossing, raids, Slayer, clues, minigames and skilling.

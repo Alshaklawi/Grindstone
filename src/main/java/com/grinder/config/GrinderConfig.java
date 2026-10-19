@@ -53,6 +53,11 @@ public interface GrinderConfig extends Config {
     default boolean skillGoalMenu() {
         return true;
     }
+
+    @ConfigItem(keyName = "combatLevelGoalMenu", name = "Combat level goal shortcut", description = "Right-click the combat-level display in Combat Options to open a combat-level goal. Does not change combat settings or perform game actions.", section = GOALS_SECTION, position = 13)
+    default boolean combatLevelGoalMenu() {
+        return true;
+    }
     @ConfigItem(keyName = "ownedItemGoalsEnabled", name = "Owned item goals", description = "Show quantities across known personal item storage.", section = GOALS_SECTION, position = 7)
     default boolean ownedItemGoalsEnabled() {
         return true;

@@ -302,18 +302,33 @@ public class GrinderPlugin extends Plugin {
 
     @Subscribe
     public void onMenuOpened(MenuOpened event) {
-        if (!hasActivePlayerProfile() || !config.skillGoalMenu()) {
+        if (!hasActivePlayerProfile()) {
             return;
         }
-        Widget total = client.getWidget(InterfaceID.Stats.TOTAL);
-        Point mouse = client.getMouseCanvasPosition();
-        if (total == null || total.isHidden() || !total.getBounds().contains(mouse.getX(), mouse.getY())) {
+        if (config.combatLevelGoalMenu() && config.levelGoalsEnabled() && isMouseOverWidget(InterfaceID.CombatInterface.LEVEL)) {
+            client.getMenu().createMenuEntry(-1)
+                    .setOption("Add combat level goal")
+                    .setTarget("Combat level")
+                    .setType(MenuAction.RUNELITE_LOW_PRIORITY)
+                    .onClick(entry -> {
+                        if (hasActivePlayerProfile() && config.combatLevelGoalMenu() && config.levelGoalsEnabled()) {
+                            openGoalEditor(new CombatLevelGoal());
+                        }
+                    });
+        }
+        if (!config.skillGoalMenu() || !isMouseOverWidget(InterfaceID.Stats.TOTAL)) {
             return;
         }
         addSkillGoalOption("Add total level goal", "All skills", TotalLevelGoal::new, false);
         addSkillGoalOption("Add total XP goal", "All skills", TotalExperienceGoal::new, true);
         addSkillGoalOption("Add base level goal", "All skills", BaseLevelGoal::new, false);
         addSkillGoalOption("Add base XP goal", "All skills", BaseExperienceGoal::new, true);
+    }
+
+    private boolean isMouseOverWidget(int componentId) {
+        Widget widget = client.getWidget(componentId);
+        Point mouse = client.getMouseCanvasPosition();
+        return widget != null && !widget.isHidden() && widget.getBounds().contains(mouse.getX(), mouse.getY());
     }
 
     private void addSkillGoalOption(String label, String target, Supplier<Goal> factory, boolean experience) {
