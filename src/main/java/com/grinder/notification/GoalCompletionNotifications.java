@@ -85,7 +85,7 @@ public final class GoalCompletionNotifications {
         }
         String message = completed.size() == 1 ? "Goal complete: " + completed.get(0) : completed.size() + " goals complete: " + String.join(", ", completed.subList(0, Math.min(3, completed.size()))) + (completed.size() > 3 ? " and " + (completed.size() - 3) + " more" : "");
         if (config.completionChat()) {
-            chat.queue(QueuedMessage.builder().type(ChatMessageType.CONSOLE).value("[Grinder] " + message).build());
+            chat.queue(QueuedMessage.builder().type(ChatMessageType.CONSOLE).value("[Grindstone] " + message).build());
         }
         if (config.completionNotification().isEnabled()) {
             notifier.notify(config.completionNotification(), message);

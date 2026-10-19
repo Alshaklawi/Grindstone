@@ -54,7 +54,7 @@ import net.runelite.client.util.ImageUtil;
  * @since 10/18/2026
  */
 @Slf4j
-@PluginDescriptor( internalName = "grinder", legacyDataDirectory = "grinder", name = "Grinder", description = "Track collection log progress and personal goals", tags = {"collection", "goals", "tracker"} )
+@PluginDescriptor( internalName = "grinder", legacyDataDirectory = "grinder", name = "Grindstone", description = "Track collection log progress and personal goals", tags = {"collection", "goals", "tracker"} )
 public class GrinderPlugin extends Plugin {
     @Inject
     private Client client;
@@ -106,7 +106,7 @@ public class GrinderPlugin extends Plugin {
         CombatAchievementData.clearCache();
 
         navigationButton = NavigationButton.builder()
-                .tooltip("Grinder")
+                .tooltip("Grindstone")
                 .icon(loadIcon())
                 .priority(5)
                 .panel(panel)
@@ -308,7 +308,7 @@ public class GrinderPlugin extends Plugin {
             }
             loadingHash = 0;
             if (failure != null) {
-                log.warn("Unable to load Grinder profile; existing saves were not replaced", failure);
+                log.warn("Unable to load Grindstone profile; existing saves were not replaced", failure);
                 panel.setStorageStatus("Profile could not be loaded · saved files kept");
                 return;
             }
@@ -332,7 +332,7 @@ public class GrinderPlugin extends Plugin {
         }
         panel.setStorageStatus(null);
         panel.load(loaded);
-        log.debug("Loaded Grinder profile with {} goals", loaded.getGoals().size());
+        log.debug("Loaded Grindstone profile with {} goals", loaded.getGoals().size());
     }
 
     private void installMigratedProfile(GrinderProfile restored) {
@@ -374,7 +374,7 @@ public class GrinderPlugin extends Plugin {
                 }
                 persistence.save(snapshot).whenComplete((ignored, failure) -> {
                     if (failure != null) {
-                        log.warn("Unable to save Grinder profile; the previous save was retained", failure);
+                        log.warn("Unable to save Grindstone profile; the previous save was retained", failure);
                     }
                     clientThread.invokeLater(() -> {
                         if (running && profile == active) {
@@ -383,7 +383,7 @@ public class GrinderPlugin extends Plugin {
                     });
                 });
             } catch (RuntimeException failure) {
-                log.warn("Unable to capture Grinder profile; saved files were not changed", failure);
+                log.warn("Unable to capture Grindstone profile; saved files were not changed", failure);
                 if (running && profile == active) {
                     panel.setStorageStatus("Could not capture profile · saved files kept");
                 }

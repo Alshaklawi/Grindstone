@@ -1,4 +1,4 @@
-# Grinder
+# Grindstone
 
 A RuneLite plugin for tracking your Old School RuneScape goals.
 
@@ -14,9 +14,9 @@ A RuneLite plugin for tracking your Old School RuneScape goals.
 
 ## Getting started
 
-Open Grinder from the RuneLite sidebar and select **Add goal**. New profiles start empty. Use a goal's actions menu to edit or delete it. The header menu contains optional presets, bulk management, backups and **Clear all goals**.
+Open Grindstone from the RuneLite sidebar and select **Add goal**. New profiles start empty. Use a goal's actions menu to edit or delete it. The header menu contains optional presets, bulk management, backups and **Clear all goals**.
 
-Adjust appearance and notification preferences in **RuneLite settings → Grinder**.
+Adjust appearance and notification preferences in **RuneLite settings → Grindstone**.
 
 The dashboard separates new, active, completed and waiting goals. Use the counters as quick status filters, or open **Filters** for category, type, schedule, pinned-only and sorting options. Search matches words across goal titles, descriptions and categories; **Clear filters** resets all selections.
 
@@ -26,8 +26,8 @@ Item search lists normal items only; entering a noted or placeholder ID resolves
 
 ## Progress and privacy
 
-Progress uses information available to your logged-in client. Some readings require opening the relevant game interface. Item quantities cover known storage, not every possible location, and collection-log dates record when Grinder first observed an unlock.
+Progress uses information available to your logged-in client. Some readings require opening the relevant game interface. Item quantities cover known storage, not every possible location, and collection-log dates record when Grindstone first observed an unlock.
 
 Personal routines reset at UTC day, week or month boundaries. Offline progress across a reset may not be attributable to the correct period.
 
-Profiles and backups are local. Grinder does not automate gameplay or send chat messages to other players.
+Profiles and backups are local. Grindstone does not automate gameplay or send chat messages to other players.

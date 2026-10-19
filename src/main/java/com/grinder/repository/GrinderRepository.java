@@ -60,7 +60,7 @@ public final class GrinderRepository {
                 throw new IOException("The saved profile could not be read. It has not been replaced.", failure);
             }
             GrinderProfile restored = readProfile(recovery, hash);
-            log.warn("Recovered a Grinder profile from its previous valid save");
+            log.warn("Recovered a Grindstone profile from its previous valid save");
             return restored;
         }
     }
@@ -131,7 +131,7 @@ public final class GrinderRepository {
             try {
                 temporary.deleteIfExists();
             } catch (IOException cleanupFailure) {
-                log.debug("Unable to remove an unused Grinder save temporary file", cleanupFailure);
+                log.debug("Unable to remove an unused Grindstone save temporary file", cleanupFailure);
             }
         }
     }
@@ -261,7 +261,7 @@ public final class GrinderRepository {
                 if (strict) {
                     throw new IllegalArgumentException("Invalid saved goal", exception);
                 }
-                log.debug("Skipping an invalid saved Grinder goal", exception);
+                log.debug("Skipping an invalid saved Grindstone goal", exception);
             }
         }
 
@@ -298,7 +298,7 @@ public final class GrinderRepository {
         }
         JsonObject json = new JsonParser().parse(text).getAsJsonObject();
         if (!json.has("hash") || !json.has("goals") || !json.get("goals").isJsonArray() || json.getAsJsonArray("goals").size() > 5000) {
-            throw new IllegalArgumentException("Not a valid Grinder profile backup.");
+            throw new IllegalArgumentException("Not a valid Grindstone profile backup.");
         }
         if (json.has("backupVersion") && json.get("backupVersion").getAsInt() != 1) {
             throw new IllegalArgumentException("Unsupported backup version.");

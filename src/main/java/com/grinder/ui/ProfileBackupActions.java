@@ -66,11 +66,11 @@ public final class ProfileBackupActions {
             return;
         }
         int token = generation.get();
-        Filepath.Chooser chooser = new Filepath.Chooser().setAcceptsFiles().addExtensionFilter("Grinder JSON profile", "json").setDefaultExtension("json").setDialogTitle(migration != null ? "Choose legacy grinder/profiles JSON" : importing ? "Import Grinder backup" : "Export Grinder backup");
+        Filepath.Chooser chooser = new Filepath.Chooser().setAcceptsFiles().addExtensionFilter("Grindstone JSON profile", "json").setDefaultExtension("json").setDialogTitle(migration != null ? "Choose legacy grinder/profiles JSON" : importing ? "Import Grindstone backup" : "Export Grindstone backup");
         if (importing) {
             chooser.setIsOpen();
         } else {
-            chooser.setIsSave().setFileName("grinder-backup.json");
+            chooser.setIsSave().setFileName("grindstone-backup.json");
         }
         List<Filepath> selected;
         try {

@@ -12,7 +12,7 @@ import lombok.Getter;
  * @since 10/19/2026
  */
 public enum TrackingState {
-    MANUAL("Manual progress", "Progress is entered by you. Grinder does not perform game actions."),
+    MANUAL("Manual progress", "Progress is entered by you. Grindstone does not perform game actions."),
     LINKED("Linked tracker readings", "Uses selected local trackers and captured targets. Collection sources count observed unlocks, not confirmed absence; owned items use known storage, not guaranteed all-storage totals. Missing sources are unavailable. Repeat counts cover observed completed periods; prerequisites never gate gameplay."),
     LIVE("Live client read", "Read from the logged-in client. Only data exposed by the client can be tracked."),
     COUNTER("Client-reported counter", "Uses the client's activity total. Some counters require opening the native activity interface or completing that activity to refresh; a client-reported zero is not proof of a fully synchronized server total."),

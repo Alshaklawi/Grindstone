@@ -289,7 +289,7 @@ public class GrinderPanel extends PluginPanel {
         header.setOpaque(true);
         header.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
 
-        JLabel titleLabel = new JLabel("Grinder Goals");
+        JLabel titleLabel = new JLabel("Grindstone Goals");
         titleLabel.setForeground(TEXT_COLOR);
         titleLabel.setFont(FontManager.getRunescapeBoldFont());
         titleLabel.setAlignmentX(LEFT_ALIGNMENT);
@@ -846,7 +846,7 @@ public class GrinderPanel extends PluginPanel {
                     }));
                     component.setMaximumProgressChunks(config.maxProgressChunks());
                     component.setGoalActions(event -> editGoal(currentProfile, goal, title), event -> deleteGoal(currentProfile, goal, title));
-                    component.addGoalAction("Deadline / reminder...", "Set a personal UTC deadline and optional reminder in Grinder's header.", event -> editDeadline(currentProfile, goal));
+                    component.addGoalAction("Deadline / reminder...", "Set a personal UTC deadline and optional reminder in Grindstone's header.", event -> editDeadline(currentProfile, goal));
                     if (goal instanceof CustomGoal) {
                         CustomGoal custom = (CustomGoal) goal;
                         long shownCurrent = progressCurrent;
@@ -939,7 +939,7 @@ public class GrinderPanel extends PluginPanel {
             layoutKey = null;
             updateSummary(new ArrayList<>());
             resultsLabel.setText("0 goals");
-            addMessage("Grinder is disabled", "Enable Grinder in the plugin configuration to display your goals.");
+            addMessage("Grindstone is disabled", "Enable Grindstone in the plugin configuration to display your goals.");
             refreshPanel();
             return;
         }
@@ -1878,7 +1878,7 @@ public class GrinderPanel extends PluginPanel {
                 return;
             }
         }
-        JOptionPane.showMessageDialog(this, "This goal is hidden by its tracker visibility setting. Enable that goal type in Grinder configuration to reveal it.");
+        JOptionPane.showMessageDialog(this, "This goal is hidden by its tracker visibility setting. Enable that goal type in Grindstone configuration to reveal it.");
     }
 
     private void showAddGoalDialog() {

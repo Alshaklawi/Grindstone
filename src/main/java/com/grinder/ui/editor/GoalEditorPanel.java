@@ -114,7 +114,7 @@ public final class GoalEditorPanel extends JPanel {
         }
         boolean duplicate = existingGoals != null && existingGoals.entrySet().stream().anyMatch(entry -> entry.getValue() == getRepeatSchedule() && GrinderProfile.sameSelection(goal, entry.getKey()));
         text.append("\n\n").append(duplicate ? "A matching tracker and schedule existed when this editor opened. You will be asked before changing its target; no duplicate is added." : "This adds a new goal. Matching trackers are checked again before saving.");
-        text.append("\n\n").append(goal instanceof ManualGoal ? "Manual progress only. Grinder never performs game actions." : "Client progress starts after saving. Some counters, storage and collection logs need their native interface opened. Unavailable readings are not confirmed zero.");
+        text.append("\n\n").append(goal instanceof ManualGoal ? "Manual progress only. Grindstone never performs game actions." : "Client progress starts after saving. Some counters, storage and collection logs need their native interface opened. Unavailable readings are not confirmed zero.");
         if (!goal.getDescription().isEmpty()) {
             text.append("\n\n").append(goal.getDescription());
         }

@@ -27,7 +27,7 @@ public final class DeadlineForm extends JPanel {
         add(date, BorderLayout.CENTER);
         reminder.setSelected(remind);
         reminder.setOpaque(false);
-        reminder.setToolTipText("Only a reminder in Grinder's header while the profile is loaded. No external notification or game action.");
+        reminder.setToolTipText("Only a reminder in Grindstone's header while the profile is loaded. No external notification or game action.");
         add(reminder, BorderLayout.SOUTH);
     }
 

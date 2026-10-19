@@ -1,4 +1,4 @@
-# Grinder
+# Grindstone
 
 - Build for Java 11 and use RuneLite APIs and native UI components.
 - Use Lombok for straightforward boilerplate; preserve validation, defensive copies and custom behavior.

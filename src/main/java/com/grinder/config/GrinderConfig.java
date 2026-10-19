@@ -14,7 +14,7 @@ import net.runelite.client.config.Range;
  */
 @ConfigGroup("grinder")
 public interface GrinderConfig extends Config {
-    @ConfigItem(keyName = "showDeadlineReminders", name = "Show deadline reminders", description = "Show opted-in personal deadlines in Grinder's header within 24 hours and while past due. This is not an external notification or game reset.", section = DISPLAY_SECTION, position = 18)
+    @ConfigItem(keyName = "showDeadlineReminders", name = "Show deadline reminders", description = "Show opted-in personal deadlines in Grindstone's header within 24 hours and while past due. This is not an external notification or game reset.", section = DISPLAY_SECTION, position = 18)
     default boolean showDeadlineReminders() {
         return true;
     }
@@ -112,12 +112,12 @@ public interface GrinderConfig extends Config {
         return 6;
     }
 
-    @ConfigItem(keyName = "completionNotification", name = "Desktop completion notification", description = "Optional RuneLite notification with the standard sound, focus and desktop settings. Customize using its cogwheel; its own game-message option may duplicate Grinder's separate chat message.", section = NOTIFICATIONS_SECTION, position = 3)
+    @ConfigItem(keyName = "completionNotification", name = "Desktop completion notification", description = "Optional RuneLite notification with the standard sound, focus and desktop settings. Customize using its cogwheel; its own game-message option may duplicate Grindstone's separate chat message.", section = NOTIFICATIONS_SECTION, position = 3)
     default Notification completionNotification() {
         return Notification.OFF;
     }
 
-    @ConfigSection(name = "General", description = "Enable Grinder and control when your profile is saved.", position = 0)
+    @ConfigSection(name = "General", description = "Enable Grindstone and control when your profile is saved.", position = 0)
     String generalSection = GENERAL_SECTION;
 
     @ConfigSection(name = "Goals", description = "Choose the kinds of goals shown in the side panel.", position = 1)
@@ -129,7 +129,7 @@ public interface GrinderConfig extends Config {
     @ConfigSection(name = "Display", description = "Adjust the side panel layout without affecting your saved goals.", position = 3)
     String displaySection = DISPLAY_SECTION;
 
-    @ConfigItem(keyName = "enabled", name = "Enable Grinder", description = "Show the Grinder button and begin tracking while logged in.", section = GENERAL_SECTION, position = 0)
+    @ConfigItem(keyName = "enabled", name = "Enable Grindstone", description = "Show the Grindstone button and begin tracking while logged in.", section = GENERAL_SECTION, position = 0)
     default boolean enabled() {
         return true;
     }
