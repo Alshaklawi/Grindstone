@@ -169,6 +169,11 @@ public interface GrinderConfig extends Config {
         return true;
     }
 
+    @ConfigItem(keyName = "collectionLogGoalMenu", name = "Collection log goal shortcut", description = "Add an Add goal right-click option to collection-log items and page entries. Opens the goal editor without performing game actions.", section = COLLECTION_LOG_SECTION, position = 3)
+    default boolean collectionLogGoalMenu() {
+        return true;
+    }
+
     @ConfigItem(keyName = "showObtainedItems", name = "Show obtained items", description = "Include items you already have in collection-log grids.", section = COLLECTION_LOG_SECTION, position = 1)
     default boolean showObtainedItems() {
         return true;

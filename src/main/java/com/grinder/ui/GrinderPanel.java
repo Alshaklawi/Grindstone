@@ -1882,6 +1882,10 @@ public class GrinderPanel extends PluginPanel {
     }
 
     private void showAddGoalDialog() {
+        showAddGoalDialog(null);
+    }
+
+    public void showAddGoalDialog(Goal initialGoal) {
         GrinderProfile active = profile;
         if (active == null) {
             JOptionPane.showMessageDialog(this, "Log in to add goals to your player profile.");
@@ -1899,15 +1903,24 @@ public class GrinderPanel extends PluginPanel {
             }
             SwingUtilities.invokeLater(() -> {
                 if (profile == active) {
-                    showAddGoalDialog(active, choices, existing);
+                    showAddGoalDialog(active, choices, existing, initialGoal);
                 }
             });
         });
     }
 
-    private void showAddGoalDialog(GrinderProfile active, Map<Integer, Map<String, Supplier<Goal>>> choices, Map<Goal, RepeatSchedule> existingGoalsSnapshot) {
+    private void showAddGoalDialog(GrinderProfile active, Map<Integer, Map<String, Supplier<Goal>>> choices, Map<Goal, RepeatSchedule> existingGoalsSnapshot, Goal initialGoal) {
         GoalEditorPanel form = new GoalEditorPanel(itemManager, itemSearchService, choices);
         form.setExistingGoals(existingGoalsSnapshot);
+        if (initialGoal != null) {
+            try {
+                form.loadGoal(initialGoal);
+            } catch (IllegalArgumentException exception) {
+                form.stopSearch();
+                JOptionPane.showMessageDialog(this, exception.getMessage(), "Add goal", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+        }
         Goal candidate = GoalCreationDialog.showDialog(this, form);
         if (candidate == null) {
             return;

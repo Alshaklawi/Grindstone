@@ -3,11 +3,14 @@ package com.grinder;
 import com.google.gson.JsonObject;
 import com.google.inject.Provides;
 import com.grinder.config.GrinderConfig;
+import com.grinder.content.collectionlog.CollectionLogPages;
 import com.grinder.content.combatachievement.CombatAchievementData;
 import com.grinder.content.goal.BaseSkillGoal;
 import com.grinder.content.goal.ClientCompletionGoal;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.impl.TrackerGoal;
+import com.grinder.content.goal.impl.collectionlog.CollectionLogEntryGoal;
+import com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal;
 import com.grinder.content.goal.impl.experience.SessionExperienceGoal;
 import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
 import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
@@ -26,16 +29,21 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Inject;
+import javax.swing.SwingUtilities;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.ItemContainer;
+import net.runelite.api.MenuAction;
+import net.runelite.api.MenuEntry;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemContainerChanged;
+import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.api.events.StatChanged;
 import net.runelite.api.events.VarbitChanged;
 import net.runelite.api.gameval.InventoryID;
+import net.runelite.api.gameval.InterfaceID;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -47,6 +55,7 @@ import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.ImageUtil;
+import net.runelite.client.util.Text;
 
 /**
  * @author Ayman Yassen
@@ -174,6 +183,49 @@ public class GrinderPlugin extends Plugin {
         } else {
             panel.render();
         }
+    }
+
+    @Subscribe
+    public void onMenuEntryAdded(MenuEntryAdded event) {
+        MenuEntry original = event.getMenuEntry();
+        if (!hasActivePlayerProfile() || !config.collectionLogEnabled() || !config.collectionLogGoalMenu() || original.getParam1() >>> 16 != InterfaceID.COLLECTION || !"Check".equals(original.getOption()) || original.getType() != MenuAction.CC_OP && original.getType() != MenuAction.CC_OP_LOW_PRIORITY) {
+            return;
+        }
+        int itemId = original.getItemId();
+        if (itemId <= 0 && original.getWidget() != null) {
+            itemId = original.getWidget().getItemId();
+        }
+        final int selectedItem = itemId;
+        final String selectedName = Text.removeTags(original.getTarget()).trim();
+        client.getMenu().createMenuEntry(-2)
+                .setOption("Add goal")
+                .setTarget(original.getTarget())
+                .setType(MenuAction.RUNELITE_LOW_PRIORITY)
+                .onClick(entry -> {
+                    if (!hasActivePlayerProfile() || !config.collectionLogEnabled() || !config.collectionLogGoalMenu()) {
+                        return;
+                    }
+                    Goal goal = null;
+                    if (selectedItem > 0) {
+                        goal = new CollectionLogItemGoal(CollectionLogPages.canonicalItemId(selectedItem), 1);
+                    } else {
+                        for (Map.Entry<Integer, String> page : CollectionLogPages.discover(client).entrySet()) {
+                            if (page.getValue().equalsIgnoreCase(selectedName)) {
+                                goal = new CollectionLogEntryGoal(itemManager, page.getKey(), page.getValue());
+                                break;
+                            }
+                        }
+                    }
+                    if (goal != null) {
+                        GrinderProfile active = profile;
+                        Goal selection = goal;
+                        SwingUtilities.invokeLater(() -> {
+                            if (running && config.enabled() && profile == active) {
+                                panel.showAddGoalDialog(selection);
+                            }
+                        });
+                    }
+                });
     }
 
     @Subscribe
