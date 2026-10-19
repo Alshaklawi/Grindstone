@@ -201,7 +201,7 @@ public final class GoalEditorPanel extends JPanel {
             Goal sample = choices.isEmpty() ? null : choices.values().iterator().next().get();
             if (sample != null && sample.supportsTarget()) {
                 configureTarget(false);
-                JPanel targetField = field(kind == 1 || kind == 4 || kind == 19 || kind == 20 ? "Target experience" : kind == 5 ? "Target completions" : "Target level", target);
+                JPanel targetField = field(kind == 1 || kind == 4 || kind == 19 || kind == 20 ? "Target experience" : kind == 5 ? "Target amount" : "Target level", target);
                 targetField.add(presets, BorderLayout.SOUTH);
                 presets.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
                 body.add(targetField);
@@ -269,7 +269,7 @@ public final class GoalEditorPanel extends JPanel {
             choices.put("Total experience", TotalExperienceGoal::new);
         } else if (kind == 5) {
             for (TrackerEntry entry : TrackerEntry.values()) {
-                choices.put(entry.getDisplayName(), () -> new TrackerGoal(entry, 5000));
+                choices.put(entry.getDisplayName(), () -> new TrackerGoal(entry, entry.getDefaultTarget()));
             }
         } else {
             for (CollectionLogEntry entry : CollectionLogEntry.values()) {

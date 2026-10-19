@@ -184,7 +184,7 @@ public class GrinderProfile {
 
         for (TrackerEntry entry : TrackerEntry.values()) {
             if (!hasTracker(entry)) {
-                goals.add(new TrackerGoal(entry, 5000));
+                goals.add(new TrackerGoal(entry, entry.getDefaultTarget()));
             }
         }
 

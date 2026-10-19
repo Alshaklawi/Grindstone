@@ -4,6 +4,8 @@ import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.collectionlog.CollectionLogPages;
 import net.runelite.api.Client;
 import net.runelite.api.gameval.VarPlayerID;
+import net.runelite.api.gameval.VarbitID;
+import net.runelite.api.gameval.ItemID;
 /**
  * @author Ayman Yassen
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
@@ -96,16 +98,46 @@ public enum TrackerEntry {
     COWBOSS("Cow boss kills", VarPlayerID.TOTAL_COWBOSS_KILLS, GoalCategory.BOSSING),
     COWBOSS_HARDMODE("Cow boss: Hard Mode kills", VarPlayerID.TOTAL_COWBOSS_HARDMODE_KILLS, GoalCategory.BOSSING),
     MAGGOT_KING("Maggot King kills", VarPlayerID.TOTAL_MAGGOT_KING_KILLS, GoalCategory.BOSSING),
-    MAD_ANGEL("Mad Angel kills", VarPlayerID.TOTAL_MAD_ANGEL_KILLS, GoalCategory.BOSSING);
+    MAD_ANGEL("Mad Angel kills", VarPlayerID.TOTAL_MAD_ANGEL_KILLS, GoalCategory.BOSSING),
+    SLAYER_POINTS("Slayer points", VarbitID.SLAYER_POINTS, true, 1000),
+    SLAYER_STREAK("Slayer task streak (normal)", VarbitID.SLAYER_TASKS_COMPLETED, true, 100),
+    SLAYER_WILDERNESS_STREAK("Slayer task streak (Wilderness)", VarbitID.SLAYER_WILDERNESS_TASKS_COMPLETED, true, 100);
     private final String displayName;
     private final int id;
     private final GoalCategory category;
+    private final boolean varbit;
+    private final int defaultTarget;
     private int representativeItem;
     private boolean iconResolved;
     TrackerEntry(String displayName, int id, GoalCategory category) {
         this.displayName = displayName;
         this.id = id;
         this.category = category;
+        this.varbit = false;
+        this.defaultTarget = 5000;
+    }
+    TrackerEntry(String displayName, int id, boolean varbit, int defaultTarget) {
+        this.displayName = displayName;
+        this.id = id;
+        this.category = GoalCategory.SKILLING;
+        this.varbit = varbit;
+        this.defaultTarget = defaultTarget;
+        this.representativeItem = ItemID.SLAYER_HELM;
+    }
+    public boolean isVarbit() {
+        return varbit;
+    }
+    public int getDefaultTarget() {
+        return defaultTarget;
+    }
+    public String getDescription() {
+        if (this == SLAYER_POINTS) {
+            return "Current unspent Slayer reward points, not lifetime points earned. Spending points reduces progress. Open Slayer rewards to refresh the client reading.";
+        }
+        if (this == SLAYER_STREAK || this == SLAYER_WILDERNESS_STREAK) {
+            return "Current " + (this == SLAYER_STREAK ? "normal" : "Wilderness") + " Slayer task streak, tracked separately. Resetting this streak reduces progress; this is not a lifetime task total. Check your Slayer information or complete a task to refresh the client reading.";
+        }
+        return "";
     }
     public int getId() {
         return id;
@@ -120,7 +152,10 @@ public enum TrackerEntry {
         return category == GoalCategory.BOSSING ? Icon.BOSSING : category == GoalCategory.SKILLING ? Icon.SKILLING : Icon.MAIN;
     }
     public int getCount(Client client) {
-        return Math.max(0, client.getVarpValue(id));
+        return readCount(client::getVarpValue, client::getVarbitValue);
+    }
+    int readCount(java.util.function.IntUnaryOperator varps, java.util.function.IntUnaryOperator varbits) {
+        return Math.max(0, (varbit ? varbits : varps).applyAsInt(id));
     }
     public int iconItem(Client client) {
         if (representativeItem > 0 || iconResolved || client == null) {

@@ -17,6 +17,24 @@ import static org.junit.Assert.*;
  * @since 10/18/2026
  */
 public class DefaultGoalsTest {
+    @Test
+    public void slayerDefaultsPreserveIndependentTargetsThroughReload() {
+        GrinderProfile profile = new GrinderProfile(42);
+        for (com.grinder.content.tracker.TrackerEntry entry : new com.grinder.content.tracker.TrackerEntry[]{com.grinder.content.tracker.TrackerEntry.SLAYER_POINTS, com.grinder.content.tracker.TrackerEntry.SLAYER_STREAK, com.grinder.content.tracker.TrackerEntry.SLAYER_WILDERNESS_STREAK}) {
+            Goal goal = profile.findMatchingGoal(new com.grinder.content.goal.impl.TrackerGoal(entry, 1));
+            assertNotNull(goal);
+            assertEquals(entry.getDefaultTarget(), goal.getProgressMaximum());
+            goal.setTarget(entry.getDefaultTarget() + 7);
+        }
+        GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
+        int size = restored.getGoals().size();
+        restored.ensureDefaultGoals(null);
+        assertEquals(size, restored.getGoals().size());
+        for (com.grinder.content.tracker.TrackerEntry entry : new com.grinder.content.tracker.TrackerEntry[]{com.grinder.content.tracker.TrackerEntry.SLAYER_POINTS, com.grinder.content.tracker.TrackerEntry.SLAYER_STREAK, com.grinder.content.tracker.TrackerEntry.SLAYER_WILDERNESS_STREAK}) {
+            assertEquals(entry.getDefaultTarget() + 7, restored.findMatchingGoal(new com.grinder.content.goal.impl.TrackerGoal(entry, 1)).getProgressMaximum());
+        }
+    }
+
     @Test public void defaultsIncludeEveryRegisteredTrackerType() {
         GrinderProfile profile = new GrinderProfile(42);
         Set<Class<?>> represented = profile.getGoals().stream().map(Goal::getClass).collect(Collectors.toSet());

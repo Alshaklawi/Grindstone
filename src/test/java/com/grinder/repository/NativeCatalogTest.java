@@ -17,13 +17,13 @@ import static org.junit.Assert.*;
  */
 public class NativeCatalogTest {
     @Test public void allActivityCountersUseDistinctNamedClientVariables() {
-        HashSet<Integer> variables = new HashSet<>();
+        HashSet<String> variables = new HashSet<>();
         for (TrackerEntry entry : TrackerEntry.values()) {
-            assertTrue(variables.add(entry.getId()));
+            assertTrue(variables.add(entry.isVarbit() + ":" + entry.getId()));
             assertFalse(entry.getDisplayName().isEmpty());
             assertNotNull(entry.getIcon());
         }
-        assertEquals(87, variables.size());
+        assertEquals(90, variables.size());
         assertEquals(VarPlayerID.TOTAL_WINTERTODT_KILLS, TrackerEntry.WINTERTODT.getId());
         assertEquals(VarPlayerID.TOTAL_CORP_KILLS, TrackerEntry.CORPOREAL_BEAST.getId());
     }

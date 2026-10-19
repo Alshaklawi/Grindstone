@@ -7,6 +7,8 @@ Launch with Java 11 using `./gradlew run`. For a Jagex Account, follow [RuneLite
 ## Baseline tracker verification
 
 - Add defaults twice. Each tracker type should appear without duplicates or edited-target resets.
+- Under Activity tracker, add Slayer points, normal Slayer task streak, and Wilderness Slayer task streak. Compare each against Slayer rewards/task information after refreshing it. Targets must be independently editable and survive relog/restart. Add defaults twice to confirm one of each without overwriting targets; default targets are 1,000 points and 100 tasks for each streak.
+- Spend Slayer points and confirm the points goal can decrease. After completing a normal or Wilderness task, verify only the corresponding streak changes. If you naturally reset a streak, verify its goal decreases without changing the other streak. Do not reset a valuable streak solely to test this. Source details should be available on hover, without adding boilerplate under card titles.
 - Compare skill level, XP, total level, total XP, and combat level against the client.
 - Compare a started quest, finished quest, and quest-series count against the quest list.
 - Compare a region diary, all-region diary tier, combat reward points, difficulty task count, and boss task count against the corresponding interfaces.

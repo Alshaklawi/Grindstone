@@ -68,6 +68,16 @@ public class TrackerGoal implements Goal {
     }
 
     @Override
+    public String getDescription() {
+        return tracker.getDescription();
+    }
+
+    @Override
+    public String getCardDescription() {
+        return "";
+    }
+
+    @Override
     public BufferedImage getIcon(Client client) {
         if (activityIcons && itemManager != null) {
             int item = tracker.iconItem(client);

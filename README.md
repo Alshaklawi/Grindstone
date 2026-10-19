@@ -42,7 +42,7 @@ Only a player can confirm behavior in-game. Do not automate game input.
 - Pinned goals appear above categories but still respect search and visibility filters.
 - The header shows update and bank snapshot freshness. Unknown or unexposed storage is not a confirmed zero, and a snapshot is not a live all-storage guarantee.
 - Collection-page choices come from all five native collection-log tabs. The header menu can add all discovered pages without replacing existing goals.
-- Activity choices include 87 named client total counters. Representative collection reward icons are used where a matching page exists, with category icons as fallbacks.
+- Activity choices include 87 named client total counters plus Slayer points and separate normal/Wilderness Slayer streak goals. Slayer goals use the current client balance/streak (not lifetime totals), editable targets, and Slayer helmet icons. Open Slayer rewards or check your Slayer information to refresh readings. Representative collection reward icons are used for other activities where a matching page exists, with category icons as fallbacks.
 - Individual combat-achievement task goals read native task names, descriptions, and completion bits. Defaults include an example of this goal type.
 - Display settings support categorized or flat lists, optional sections and icons, and default detail collapsing. Collapsed goal details retain their progress and counts.
 - Progress uses integer-sized chunks, capped at 20 by default: a target of 100 uses 20 chunks worth 5 each. The cap is configurable.
