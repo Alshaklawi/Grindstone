@@ -1,7 +1,6 @@
 package com.grinder.repository;
 import com.google.gson.JsonObject;
 import com.grinder.content.goal.Goal;
-import com.grinder.content.goal.impl.collectionlog.CollectionLogEntryGoal;
 import com.grinder.content.goal.impl.item.PossessedItemGoal;
 import com.grinder.ui.editor.CompletionGoalChoices;
 import java.util.Collections;
@@ -22,16 +21,14 @@ public class SavedGoalTypesTest {
         assertFalse(json.contains("com.grinder."));
     }
     @Test
-    public void renamedGoalsKeepTheirOriginalSavedIdentifiers() {
+    public void goalsUseStableTagsWithoutClassNameAliases() {
         PossessedItemGoal goal = new PossessedItemGoal(ItemID.COINS, 1_500_000_000L);
         assertEquals("owned-item", SavedGoalTypes.nameOf(goal));
-        assertSame(PossessedItemGoal.class, SavedGoalTypes.resolve("com.grinder.content.goal.impl.item.PossesedItemGoal"));
         assertSame(PossessedItemGoal.class, SavedGoalTypes.resolve(SavedGoalTypes.nameOf(goal)));
-        assertSame(PossessedItemGoal.class, SavedGoalTypes.resolve(PossessedItemGoal.class.getName()));
-        assertSame(CollectionLogEntryGoal.class, SavedGoalTypes.resolve("com.grinder.content.goal.impl.colletion_log.CollectionLogEntryGoal"));
+        assertNull(SavedGoalTypes.resolve(PossessedItemGoal.class.getName()));
     }
     @Test
-    public void currentAndLegacyClassNamesLoadTheSameSelections() {
+    public void stableTagsRestoreTheSameSelections() {
         GrinderProfile profile = TestProfiles.populated(42);
         CompletionGoalChoices.create(null).values().forEach(choices -> choices.values().forEach(factory -> profile.add(factory.get())));
         profile.add(new PossessedItemGoal(ItemID.COINS, 3_000_000_000L));
@@ -39,7 +36,6 @@ public class SavedGoalTypesTest {
         for (int i = 0; i < profile.getGoals().size(); i++) {
             Goal goal = profile.getGoals().get(i);
             assertSame(goal.getClass(), SavedGoalTypes.resolve(SavedGoalTypes.nameOf(goal)));
-            json.getAsJsonArray("goals").get(i).getAsJsonObject().addProperty("class", goal.getClass().getName());
         }
         GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(json);
         assertEquals(profile.getGoals().size(), restored.getGoals().size());

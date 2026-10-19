@@ -40,44 +40,39 @@ final class SavedGoalTypes {
     }
     private static Map<String, Class<? extends Goal>> createTypes() {
         Map<String, Class<? extends Goal>> types = new LinkedHashMap<>();
-        register(types, TrackerGoal.class, "activity", "com.grinder.content.goal.impl.TrackerGoal");
-        register(types, CustomGoal.class, "custom", "com.grinder.content.goal.impl.CustomGoal");
+        register(types, TrackerGoal.class, "activity");
+        register(types, CustomGoal.class, "custom");
         register(types, ChecklistGoal.class, "manual-checklist");
         register(types, LinkedGoal.class, "linked-goal");
-        register(types, SkillLevelGoal.class, "skill-level", "com.grinder.content.goal.impl.level.SkillLevelGoal", "com.grinder.content.goal.impl.SkillLevelGoal");
-        register(types, CombatLevelGoal.class, "combat-level", "com.grinder.content.goal.impl.level.CombatLevelGoal", "com.grinder.content.goal.impl.CombatLevelGoal");
-        register(types, TotalLevelGoal.class, "total-level", "com.grinder.content.goal.impl.level.TotalLevelGoal", "com.grinder.content.goal.impl.TotalLevelGoal");
+        register(types, SkillLevelGoal.class, "skill-level");
+        register(types, CombatLevelGoal.class, "combat-level");
+        register(types, TotalLevelGoal.class, "total-level");
         register(types, BaseLevelGoal.class, "base-level");
         register(types, BaseExperienceGoal.class, "base-xp");
         register(types, SessionExperienceGoal.class, "session-xp");
-        register(types, SkillExperienceGoal.class, "skill-xp", "com.grinder.content.goal.impl.experience.SkillExperienceGoal", "com.grinder.content.goal.impl.SkillExperienceGoal");
-        register(types, TotalExperienceGoal.class, "total-xp", "com.grinder.content.goal.impl.experience.TotalExperienceGoal", "com.grinder.content.goal.impl.TotalExperienceGoal");
-        register(types, CollectionLogEntryGoal.class, "collection-page", "com.grinder.content.goal.impl.colletion_log.CollectionLogEntryGoal");
-        register(types, CollectionLogItemGoal.class, "collection-item", "com.grinder.content.goal.impl.colletion_log.CollectionLogItemGoal");
-        register(types, QuestGoal.class, "quest", "com.grinder.content.goal.impl.quest.QuestGoal");
-        register(types, QuestSeriesGoal.class, "quest-series", "com.grinder.content.goal.impl.quest.QuestSeriesGoal");
-        register(types, AchievementDiaryTierGoal.class, "diary-tier", "com.grinder.content.goal.impl.achievement_diary.AchievementDiaryTierGoal");
-        register(types, AchievementDiaryTierAreaGoal.class, "diary-region", "com.grinder.content.goal.impl.achievement_diary.AchievementDiaryTierAreaGoal");
-        register(types, CombatAchievementTierGoal.class, "combat-tier", "com.grinder.content.goal.impl.combat_achievement.CombatAchievementTierGoal");
-        register(types, CombatAchievementBossGoal.class, "combat-boss", "com.grinder.content.goal.impl.combat_achievement.CombatAchievementBossGoal");
-        register(types, CombatAchievementDifficultyGoal.class, "combat-difficulty", "com.grinder.content.goal.impl.combat_achievement.CombatAchievementDifficultyGoal");
-        register(types, PossessedItemGoal.class, "owned-item", "com.grinder.content.goal.impl.item.PossesedItemGoal");
+        register(types, SkillExperienceGoal.class, "skill-xp");
+        register(types, TotalExperienceGoal.class, "total-xp");
+        register(types, CollectionLogEntryGoal.class, "collection-page");
+        register(types, CollectionLogItemGoal.class, "collection-item");
+        register(types, QuestGoal.class, "quest");
+        register(types, QuestSeriesGoal.class, "quest-series");
+        register(types, AchievementDiaryTierGoal.class, "diary-tier");
+        register(types, AchievementDiaryTierAreaGoal.class, "diary-region");
+        register(types, CombatAchievementTierGoal.class, "combat-tier");
+        register(types, CombatAchievementBossGoal.class, "combat-boss");
+        register(types, CombatAchievementDifficultyGoal.class, "combat-difficulty");
+        register(types, PossessedItemGoal.class, "owned-item");
         register(types, CombatAchievementTaskGoal.class, "combat-task");
         return Collections.unmodifiableMap(types);
     }
-    private static void register(Map<String, Class<? extends Goal>> types, Class<? extends Goal> type, String... aliases) {
-        for (String alias : aliases) {
-            types.put(alias, type);
-        }
-        types.put(type.getName(), type);
+    private static void register(Map<String, Class<? extends Goal>> types, Class<? extends Goal> type, String tag) {
+        types.put(tag, type);
     }
     static Class<? extends Goal> fromTag(JsonObject saved) {
-        Class<? extends Goal> modern = saved.has("type") ? resolve(saved.get("type").getAsString()) : null;
-        Class<? extends Goal> legacy = saved.has("class") ? resolve(saved.get("class").getAsString()) : null;
-        if (saved.has("type") && saved.has("class") && modern != legacy) {
+        if (!saved.has("type") || saved.has("class")) {
             return null;
         }
-        return saved.has("type") ? modern : legacy;
+        return resolve(saved.get("type").getAsString());
     }
     static Class<? extends Goal> resolve(String name) {
         return TYPES.get(name);

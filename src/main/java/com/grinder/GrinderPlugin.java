@@ -76,7 +76,7 @@ import net.runelite.client.util.Text;
  * @since 10/18/2026
  */
 @Slf4j
-@PluginDescriptor( internalName = "grinder", legacyDataDirectory = "grinder", name = "Grindstone", description = "Track collection log progress and personal goals", tags = {"collection", "goals", "tracker"} )
+@PluginDescriptor( internalName = "grinder", name = "Grindstone", description = "Track collection log progress and personal goals", tags = {"collection", "goals", "tracker"} )
 public class GrinderPlugin extends Plugin {
     @Inject
     private Client client;
@@ -125,7 +125,6 @@ public class GrinderPlugin extends Plugin {
         loadGeneration.incrementAndGet();
         sessionProfiles.clear();
         persistence.configure(this::getPluginDirectory);
-        panel.setMigrationHandler(this::installMigratedProfile);
         CombatAchievementData.clearCache();
         combatBossIds.clear();
 
@@ -553,16 +552,6 @@ public class GrinderPlugin extends Plugin {
         panel.setStorageStatus(null);
         panel.load(loaded);
         log.debug("Loaded Grindstone profile with {} goals", loaded.getGoals().size());
-    }
-
-    private void installMigratedProfile(GrinderProfile restored) {
-        if (!hasActivePlayerProfile() || restored.getHash() != profile.getHash()) {
-            return;
-        }
-        saveProfile();
-        loadGeneration.incrementAndGet();
-        activateProfile(restored);
-        saveProfile();
     }
 
     private void onLogout() {

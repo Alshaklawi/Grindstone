@@ -11,7 +11,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
 import javax.inject.Inject;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -48,15 +47,6 @@ public final class ProfileBackupActions {
     }
 
     public void show(Component owner, GrinderProfile active, BooleanSupplier live, Runnable refresh, boolean importing) {
-        choose(owner, active, live, refresh, importing, null);
-    }
-
-    public void migrate(Component owner, GrinderProfile active, BooleanSupplier live, Consumer<GrinderProfile> install) {
-        choose(owner, active, live, () -> {
-        }, true, install);
-    }
-
-    private void choose(Component owner, GrinderProfile active, BooleanSupplier live, Runnable refresh, boolean importing, Consumer<GrinderProfile> migration) {
         if (active == null) {
             JOptionPane.showMessageDialog(owner, "Log in before exporting or restoring a profile.");
             return;
@@ -66,7 +56,7 @@ public final class ProfileBackupActions {
             return;
         }
         int token = generation.get();
-        Filepath.Chooser chooser = new Filepath.Chooser().setAcceptsFiles().addExtensionFilter("Grindstone JSON profile", "json").setDefaultExtension("json").setDialogTitle(migration != null ? "Choose legacy grinder/profiles JSON" : importing ? "Import Grindstone backup" : "Export Grindstone backup");
+        Filepath.Chooser chooser = new Filepath.Chooser().setAcceptsFiles().addExtensionFilter("Grindstone JSON profile", "json").setDefaultExtension("json").setDialogTitle(importing ? "Import Grindstone backup" : "Export Grindstone backup");
         if (importing) {
             chooser.setIsOpen();
         } else {
@@ -87,13 +77,13 @@ public final class ProfileBackupActions {
         if (importing) {
             task = executor.submit(() -> {
                 try {
-                    GrinderProfile restored = migration == null ? repository.importBackup(repository.readText(file, 5_000_000), active.getHash()) : repository.readProfile(file, active.getHash());
+                    GrinderProfile restored = repository.importBackup(repository.readText(file, 5_000_000), active.getHash());
                     SwingUtilities.invokeLater(() -> {
                         if (token != generation.get() || !live.getAsBoolean()) {
                             return;
                         }
-                        String prompt = migration == null ? "Merge " + restored.getGoals().size() + " saved goals? Existing matches and edited targets are kept. Observed progress from other accounts is not copied." : "Replace this account's current goals with " + restored.getGoals().size() + " legacy goals and their exact targets/history?\nThe selected source file is not changed. The current profile is saved before replacement.";
-                        if (JOptionPane.showConfirmDialog(owner, prompt, migration == null ? "Restore missing goals" : "Confirm legacy migration", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
+                        String prompt = "Merge " + restored.getGoals().size() + " saved goals? Existing matches and edited targets are kept. Observed progress from other accounts is not copied.";
+                        if (JOptionPane.showConfirmDialog(owner, prompt, "Restore missing goals", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
                             busy.set(false);
                             return;
                         }
@@ -101,14 +91,9 @@ public final class ProfileBackupActions {
                             if (token != generation.get() || !live.getAsBoolean()) {
                                 return;
                             }
-                            if (migration != null) {
-                                migration.accept(restored);
-                                finish(owner, () -> true, token, "Legacy goals loaded; background saves are queued. The original file was kept. Check the header for save errors.");
-                            } else {
-                                int added = active.mergeBackup(restored);
-                                refresh.run();
-                                finish(owner, live, token, added + " missing goals restored. Existing matches were kept.");
-                            }
+                            int added = active.mergeBackup(restored);
+                            refresh.run();
+                            finish(owner, live, token, added + " missing goals restored. Existing matches were kept.");
                         });
                     });
                 } catch (Exception failure) {

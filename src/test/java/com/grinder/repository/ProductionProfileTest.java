@@ -21,13 +21,12 @@ public class ProductionProfileTest {
     }
 
     @Test
-    public void savedPlayerGoalsAndLegacyExampleMetadataRemainIntact() {
+    public void savedPlayerGoalsAndMetadataRemainIntact() {
         GrinderProfile profile = new GrinderProfile(42);
         CustomGoal goal = new CustomGoal("My routine", "My notes", GoalCategory.OTHER, 3, 10);
         profile.add(goal);
         profile.metadata(goal).setPinned(true);
         JsonObject saved = TestProfiles.REPOSITORY.toJson(profile);
-        saved.getAsJsonArray("goals").get(0).getAsJsonObject().getAsJsonObject("metadata").addProperty("sample", true);
         GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(saved);
         assertEquals(1, restored.getGoals().size());
         assertEquals("My routine", restored.getGoals().get(0).getTitle(null));
