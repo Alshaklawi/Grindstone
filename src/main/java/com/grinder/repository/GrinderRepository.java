@@ -123,7 +123,7 @@ public final class GrinderRepository {
 
         for (Goal goal : profile.getGoals()) {
             JsonObject savedGoal = new JsonObject();
-            savedGoal.addProperty("class", SavedGoalTypes.nameOf(goal));
+            savedGoal.addProperty("type", SavedGoalTypes.nameOf(goal));
             savedGoal.add("data", GSON.toJsonTree(goal));
             savedGoal.add("metadata", GSON.toJsonTree(profile.metadata(goal)));
             savedGoals.add(savedGoal);
@@ -169,9 +169,8 @@ public final class GrinderRepository {
         for (JsonElement element : savedGoals) {
             try {
                 JsonObject savedGoal = element.getAsJsonObject();
-                String className = savedGoal.get("class").getAsString();
                 JsonElement data = savedGoal.get("data");
-                Class<? extends Goal> type = SavedGoalTypes.resolve(className);
+                Class<? extends Goal> type = SavedGoalTypes.fromTag(savedGoal);
                 if (type == null || data == null || !data.isJsonObject()) { continue; }
                 Goal goal;
                 if (type == CollectionLogEntryGoal.class) {
@@ -237,7 +236,7 @@ public final class GrinderRepository {
             for (JsonElement element : json.getAsJsonArray("goals")) {
                 JsonObject saved = element.getAsJsonObject();
                 if (saved.has("metadata") && saved.get("metadata").isJsonObject()) { saved.getAsJsonObject("metadata").add("completions", new JsonArray()); }
-                if (saved.has("class") && SavedGoalTypes.resolve(saved.get("class").getAsString()) == CustomGoal.class) { saved.getAsJsonObject("data").addProperty("current", 0); }
+                if (SavedGoalTypes.fromTag(saved) == CustomGoal.class) { saved.getAsJsonObject("data").addProperty("current", 0); }
             }
         }
         GrinderProfile restored = fromJson(json);

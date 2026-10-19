@@ -14,9 +14,16 @@ import static org.junit.Assert.*;
  * @since 10/18/2026
  */
 public class SavedGoalTypesTest {
+    @Test public void newlySavedProfilesContainOnlyStableTypeTagsNotJavaClassNames() {
+        String json = GrinderRepository.exportBackup(new GrinderProfile(42));
+        assertTrue(json.contains("\"type\""));
+        assertFalse(json.contains("\"class\""));
+        assertFalse(json.contains("com.grinder."));
+    }
     @Test public void renamedGoalsKeepTheirOriginalSavedIdentifiers() {
         PossessedItemGoal goal = new PossessedItemGoal(ItemID.COINS, 1_500_000_000L);
-        assertEquals("com.grinder.content.goal.impl.item.PossesedItemGoal", SavedGoalTypes.nameOf(goal));
+        assertEquals("owned-item", SavedGoalTypes.nameOf(goal));
+        assertSame(PossessedItemGoal.class, SavedGoalTypes.resolve("com.grinder.content.goal.impl.item.PossesedItemGoal"));
         assertSame(PossessedItemGoal.class, SavedGoalTypes.resolve(SavedGoalTypes.nameOf(goal)));
         assertSame(PossessedItemGoal.class, SavedGoalTypes.resolve(PossessedItemGoal.class.getName()));
         assertSame(CollectionLogEntryGoal.class, SavedGoalTypes.resolve("com.grinder.content.goal.impl.colletion_log.CollectionLogEntryGoal"));

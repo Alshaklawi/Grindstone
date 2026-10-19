@@ -69,9 +69,10 @@ public class GoalManagementTest {
         JsonObject json = GrinderRepository.toJson(profile);
         for (com.google.gson.JsonElement element : json.getAsJsonArray("goals")) {
             JsonObject entry = element.getAsJsonObject();
-            String oldClass = entry.get("class").getAsString()
+            String oldClass = SavedGoalTypes.resolve(entry.get("type").getAsString()).getName()
                     .replace(".impl.level.", ".impl.").replace(".impl.experience.", ".impl.");
             entry.addProperty("class", oldClass);
+            entry.remove("type");
         }
         assertEquals(5, GrinderRepository.fromJson(json).getGoals().size());
     }
