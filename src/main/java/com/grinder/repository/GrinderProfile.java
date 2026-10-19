@@ -220,6 +220,7 @@ public class GrinderProfile {
         add(new com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierAreaGoal( com.grinder.content.diary.AchievementDiaryArea.LUMBRIDGE, com.grinder.content.diary.DiaryTier.EASY));
         add(new com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierGoal(com.grinder.content.diary.DiaryTier.EASY));
         add(new com.grinder.content.goal.impl.combatachievement.CombatAchievementTierGoal( com.grinder.content.combatachievement.CombatAchievementTier.EASY));
+        GoalExamples.addLinkedExamples(this);
         for (Goal goal : goals) {
             if (!existingDefaults.contains(goal) && (goal.getTitle(null).startsWith("Example:") || goal.getTitle(null).equals("Combat task 0"))) {
                 metadata(goal).setSample(true);
@@ -358,6 +359,24 @@ public class GrinderProfile {
         metadata.remove(original);
         touch();
         return true;
+    }
+
+    public void validateReferences() {
+        java.util.Map<String, Goal> byId = new java.util.HashMap<>();
+        for (Goal goal : goals) {
+            if (byId.put(metadata(goal).getId(), goal) != null) {
+                throw new IllegalArgumentException("Duplicate goal metadata ID.");
+            }
+        }
+        for (Goal goal : goals) {
+            if (goal instanceof com.grinder.content.goal.impl.LinkedGoal) {
+                for (String source : ((com.grinder.content.goal.impl.LinkedGoal) goal).getSources()) {
+                    if (byId.get(source) instanceof com.grinder.content.goal.impl.LinkedGoal) {
+                        throw new IllegalArgumentException("Linked goals cannot reference other linked goals.");
+                    }
+                }
+            }
+        }
     }
 
     public boolean remove(Goal goal) {

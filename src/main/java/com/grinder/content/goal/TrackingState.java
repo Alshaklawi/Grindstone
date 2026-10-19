@@ -11,7 +11,7 @@ import com.grinder.repository.RecurringGoal;
  */
 public enum TrackingState {
     MANUAL("Manual progress", "Progress is entered by you. Grinder does not perform game actions."),
-    LINKED("Linked tracker readings", "Uses the selected local goals and their captured targets. Missing sources are unavailable, not confirmed zero. Repeat counts cover observed completed periods; prerequisite gates never affect gameplay."),
+    LINKED("Linked tracker readings", "Uses selected local trackers and captured targets. Collection sources count observed unlocks, not confirmed absence; owned items use known storage, not guaranteed all-storage totals. Missing sources are unavailable. Repeat counts cover observed completed periods; prerequisites never gate gameplay."),
     LIVE("Live client read", "Read from the logged-in client. Only data exposed by the client can be tracked."),
     COUNTER("Client-reported counter", "Uses the client's activity total. Some counters require opening the native activity interface or completing that activity to refresh; a client-reported zero is not proof of a fully synchronized server total."),
     WAITING("Waiting for data", "Log in or open the relevant native interface. No confirmed zero is assumed while data is unavailable."),

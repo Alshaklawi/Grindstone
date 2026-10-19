@@ -18,6 +18,54 @@ import static org.junit.Assert.*;
  */
 public class LinkedGoalTest {
     @Test
+    public void everyLinkedModeHasAHiddenExampleWithResolvableSources() {
+        GrinderProfile profile = new GrinderProfile(42);
+        java.util.Set<LinkedGoal.Mode> modes = new java.util.HashSet<>();
+        for (Goal goal : profile.getGoals()) {
+            if (goal instanceof LinkedGoal) {
+                LinkedGoal plan = (LinkedGoal) goal;
+                modes.add(plan.getMode());
+                assertTrue(profile.metadata(plan).isSample());
+                assertTrue(plan.getSources().stream().allMatch(id -> profile.getGoals().stream().anyMatch(source -> profile.metadata(source).getId().equals(id))));
+            }
+        }
+        assertEquals(new java.util.HashSet<>(Arrays.asList(LinkedGoal.Mode.values())), modes);
+        profile.validateReferences();
+    }
+
+    @Test
+    public void collectionSubsetsUseObservedUnlocksOnly() {
+        GrinderProfile profile = empty();
+        com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal first = new com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal(net.runelite.api.gameval.ItemID.DRAGON_PICKAXE, 1);
+        com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal second = new com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal(net.runelite.api.gameval.ItemID.TWISTED_BOW, 1);
+        profile.add(first);
+        profile.add(second);
+        LinkedGoal goal = new LinkedGoal("Selected unlocks", "", LinkedGoal.Mode.COLLECTION_SET, Arrays.asList(profile.metadata(first).getId(), profile.metadata(second).getId()), new long[]{1, 1}, 1);
+        profile.getCollectionLogHistory().record(net.runelite.api.gameval.ItemID.DRAGON_PICKAXE, 1000);
+        goal.update(profile, true);
+        assertEquals(1, goal.getProgressCurrent());
+        assertNotEquals(GoalStatus.COMPLETE, goal.getStatus());
+        profile.getCollectionLogHistory().record(net.runelite.api.gameval.ItemID.TWISTED_BOW, 2000);
+        goal.update(profile, true);
+        assertEquals(GoalStatus.COMPLETE, goal.getStatus());
+    }
+
+    @Test
+    public void rejectsLinkedReferencesThatCouldCreateCycles() {
+        GrinderProfile profile = empty();
+        CustomGoal source = manual(profile, "Source", 0, 1);
+        LinkedGoal first = new LinkedGoal("First", "", LinkedGoal.Mode.CHECKLIST, Collections.singletonList(profile.metadata(source).getId()), new long[]{1}, 1);
+        profile.add(first);
+        LinkedGoal second = new LinkedGoal("Second", "", LinkedGoal.Mode.CHECKLIST, Collections.singletonList(profile.metadata(first).getId()), new long[]{1}, 1);
+        profile.add(second);
+        try {
+            TestProfiles.REPOSITORY.importBackup(TestProfiles.REPOSITORY.exportBackup(profile), 42);
+            fail("Nested linked references must be rejected");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("Linked goals"));
+        }
+    }
+    @Test
     public void checklistsAnyOfAndPrerequisitesUseExplicitTargets() {
         GrinderProfile profile = empty();
         CustomGoal one = manual(profile, "One", 10, 10);

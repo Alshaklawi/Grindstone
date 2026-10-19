@@ -279,6 +279,9 @@ public final class GrinderRepository {
                 }
             }
         }
+        if (strict) {
+            profile.validateReferences();
+        }
         return profile;
     }
 

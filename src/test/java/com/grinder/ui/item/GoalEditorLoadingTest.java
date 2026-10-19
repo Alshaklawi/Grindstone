@@ -36,11 +36,11 @@ public class GoalEditorLoadingTest {
                         java.util.List<com.grinder.ui.editor.LinkedGoalForm.Choice> sources = new java.util.ArrayList<>();
                         for (Goal source : profile.getGoals()) {
                             if (!(source instanceof com.grinder.content.goal.impl.LinkedGoal)) {
-                                sources.add(new com.grinder.ui.editor.LinkedGoalForm.Choice(profile.metadata(source).getId(), source.getTitle(null), source.getProgressMaximum(), source instanceof com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal, false));
+                                sources.add(new com.grinder.ui.editor.LinkedGoalForm.Choice(profile.metadata(source).getId(), source.getTitle(null), source.getProgressMaximum(), source instanceof com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal, profile.metadata(source).recurring().isActive()));
                             }
                         }
                         com.grinder.content.goal.impl.LinkedGoal edited = new com.grinder.ui.editor.LinkedGoalForm(sources, (com.grinder.content.goal.impl.LinkedGoal) original).read();
-                        assertTrue(GrinderProfile.sameSelection(original, edited));
+                        assertTrue(((com.grinder.content.goal.impl.LinkedGoal) original).getMode().toString(), GrinderProfile.sameSelection(original, edited));
                         continue;
                     }
                     form.loadGoal(original);

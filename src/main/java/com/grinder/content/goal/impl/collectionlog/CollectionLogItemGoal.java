@@ -94,7 +94,7 @@ public class CollectionLogItemGoal implements Goal {
 
     @Override
     public GoalStatus getStatus() {
-        return obtained ? GoalStatus.COMPLETE : GoalStatus.NOT_STARTED;
+        return hasObservedItem() ? GoalStatus.COMPLETE : GoalStatus.NOT_STARTED;
     }
 
     @Override
@@ -104,7 +104,7 @@ public class CollectionLogItemGoal implements Goal {
 
     @Override
     public long getProgressCurrent() {
-        return obtained ? 1 : 0;
+        return hasObservedItem() ? 1 : 0;
     }
 
     @Override
@@ -114,7 +114,11 @@ public class CollectionLogItemGoal implements Goal {
 
     @Override
     public String getProgressText() {
-        return obtained ? "Obtained" : "Not obtained";
+        return hasObservedItem() ? "Obtained" : "Not obtained";
+    }
+
+    private boolean hasObservedItem() {
+        return obtained || history != null && history.contains(item);
     }
 
     @Override

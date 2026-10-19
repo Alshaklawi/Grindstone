@@ -36,6 +36,7 @@ public final class LinkedGoal implements Goal {
     private transient long current;
     private transient boolean available;
     private transient String details = "Waiting for source goals.";
+    private transient boolean started;
 
     public LinkedGoal(String title, String description, Mode mode, List<String> sources, long[] targets, int required) {
         this(UUID.randomUUID().toString(), title, description, mode, sources, targets, required);
@@ -71,9 +72,12 @@ public final class LinkedGoal implements Goal {
         } else if (targets.length != sources.size() || required > sources.size()) {
             throw new IllegalArgumentException("Choose a valid number of source goals.");
         }
+        if (mode == Mode.REPEAT_COMPLETIONS && targets.length != 1 || mode == Mode.DEPENDENCY && sources.size() < 2) {
+            throw new IllegalArgumentException("Choose one repeat source, or a main goal plus at least one prerequisite.");
+        }
         long previous = 0;
         for (long target : targets) {
-            if (target < 1 || mode == Mode.MILESTONES && target <= previous) {
+            if (target < 1 || mode == Mode.MILESTONES && target <= previous || mode == Mode.COLLECTION_SET && target != 1) {
                 throw new IllegalArgumentException("Use positive targets; milestones must be strictly increasing.");
             }
             previous = target;
@@ -97,6 +101,7 @@ public final class LinkedGoal implements Goal {
 
     public void update(GrinderProfile profile, boolean loggedIn, Map<String, Goal> sourceIndex) {
         current = 0;
+        started = false;
         available = true;
         StringBuilder text = new StringBuilder();
         int met = 0;
@@ -118,6 +123,7 @@ public final class LinkedGoal implements Goal {
             RecurringGoal recurring = metadata.recurring();
             boolean known = TrackingState.of(source, recurring, loggedIn, profile.getPlayerStorage().hasBankSnapshot()) != TrackingState.WAITING;
             long value = recurring.isActive() ? recurring.getProgress() : source.getProgressCurrent();
+            started |= known && value > 0;
             long threshold = targets[Math.min(i, targets.length - 1)];
             boolean complete = known && value >= threshold;
             if (mode == Mode.ACHIEVED) {
@@ -146,7 +152,7 @@ public final class LinkedGoal implements Goal {
                 met++;
             }
             available &= known;
-            text.append(known ? complete ? "✓ " : "○ " : "? ").append(source.getTitle(null)).append(" · target ").append(threshold).append('\n');
+            text.append(known ? complete ? "[Done] " : "[Pending] " : "[Waiting] ").append(source.getTitle(null)).append(known ? " · observed " + value : " · unavailable").append(" · target ").append(threshold).append('\n');
         }
         if (mode != Mode.MILESTONES && mode != Mode.REPEAT_COMPLETIONS) {
             current = mode == Mode.DEPENDENCY ? prerequisites && met == sources.size() ? 1 : 0 : met;
@@ -169,9 +175,23 @@ public final class LinkedGoal implements Goal {
 
     public LinkedGoal revise(String title, String description, Mode mode, List<String> sources, long[] targets, int required) {
         LinkedGoal result = new LinkedGoal(title, description, mode, sources, targets, required);
-        if (this.mode == mode && this.sources.equals(sources) && Arrays.equals(this.targets, targets) && this.required == required) {
+        boolean same = this.mode == mode && this.required == required && this.sources.size() == sources.size();
+        if (mode == Mode.MILESTONES || mode == Mode.REPEAT_COMPLETIONS) {
+            same &= this.sources.equals(sources) && Arrays.equals(this.targets, targets);
+        } else {
+            if (mode == Mode.DEPENDENCY) {
+                same &= this.sources.get(0).equals(sources.get(0));
+            }
+            for (int i = 0; i < sources.size(); i++) {
+                int original = this.sources.indexOf(sources.get(i));
+                same &= original >= 0 && original < this.targets.length && this.targets[original] == targets[i];
+            }
+        }
+        if (same) {
             result.id = id;
-            result.achieved = achieved.clone();
+            for (int i = 0; i < sources.size(); i++) {
+                result.achieved[i] = achieved[this.sources.indexOf(sources.get(i))];
+            }
             result.completedThrough.putAll(completedThrough);
             result.completedPeriods = completedPeriods;
         }
@@ -249,7 +269,7 @@ public final class LinkedGoal implements Goal {
 
     @Override
     public GoalStatus getStatus() {
-        return available && current >= getProgressMaximum() ? GoalStatus.COMPLETE : current > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED;
+        return available && current >= getProgressMaximum() ? GoalStatus.COMPLETE : current > 0 || started && mode != Mode.DEPENDENCY ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED;
     }
 
     /**

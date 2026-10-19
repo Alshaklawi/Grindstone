@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -56,6 +55,9 @@ public final class LinkedGoalForm extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
         main = new JComboBox<>(choices.toArray(new Choice[0]));
+        javax.swing.DefaultListCellRenderer sourceRenderer = new javax.swing.DefaultListCellRenderer();
+        sourceRenderer.putClientProperty("html.disable", Boolean.TRUE);
+        main.setRenderer(sourceRenderer);
         model = new DefaultTableModel(new Object[]{"Use", "Source goal", "Required reading"}, 0) {
             @Override
             public Class<?> getColumnClass(int column) {
@@ -71,6 +73,9 @@ public final class LinkedGoalForm extends JPanel {
             model.addRow(new Object[]{false, choice.title, Math.max(1, choice.target)});
         }
         table = new JTable(model);
+        javax.swing.table.DefaultTableCellRenderer textRenderer = new javax.swing.table.DefaultTableCellRenderer();
+        textRenderer.putClientProperty("html.disable", Boolean.TRUE);
+        table.setDefaultRenderer(String.class, textRenderer);
         table.setRowHeight(24);
         table.setFont(UiTypography.BODY);
         table.setToolTipText("Select sources and edit their required readings. Targets are captured here; editing the source later does not silently change this plan.");
@@ -186,7 +191,7 @@ public final class LinkedGoalForm extends JPanel {
                 throw new IllegalArgumentException("Choose a source. Completion counts require an existing recurring goal.");
             }
             ids.add(choice.id);
-            targets.add(Math.max(1, choice.target));
+            targets.add(((Number) model.getValueAt(main.getSelectedIndex(), 2)).longValue());
         }
         if (selected != LinkedGoal.Mode.MILESTONES && selected != LinkedGoal.Mode.REPEAT_COMPLETIONS) {
             for (int i = 0; i < choices.size(); i++) {
