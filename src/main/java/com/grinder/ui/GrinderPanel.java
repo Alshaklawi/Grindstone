@@ -338,6 +338,10 @@ public class GrinderPanel extends PluginPanel {
         examples.setToolTipText("Toggle demonstration goals without deleting them. Promote an example from its actions menu to keep it as a real goal.");
         examples.addActionListener(event -> configManager.setConfiguration("grinder", "showSampleGoals", !config.showSampleGoals()));
         moreMenu.add(examples);
+        JMenuItem manage = new JMenuItem("Manage goals / bulk actions...");
+        manage.setToolTipText("Search and select several goals to pin, delete, categorize, change schedules, set deadlines or manage examples together.");
+        manage.addActionListener(event -> showBulkManager());
+        moreMenu.add(manage);
         JMenuItem export = new JMenuItem("Export profile backup...");
         export.setToolTipText("Save a private local JSON backup. No network is used.");
         export.addActionListener(event -> transferBackup(false));
@@ -1832,6 +1836,66 @@ public class GrinderPanel extends PluginPanel {
 
     private boolean hasClientProfile(GrinderProfile active) {
         return client.getGameState() == net.runelite.api.GameState.LOGGED_IN && client.getLocalPlayer() != null && client.getAccountHash() == active.getHash();
+    }
+
+    private void showBulkManager() {
+        GrinderProfile active = profile;
+        if (active == null) {
+            return;
+        }
+        clientThread.invokeLater(() -> {
+            if (profile != active) {
+                return;
+            }
+            long revision = active.revision();
+            List<com.grinder.ui.editor.BulkGoalForm.Row> rows = new ArrayList<>();
+            for (Goal goal : active.getGoals()) {
+                com.grinder.repository.GoalMetadata metadata = active.metadata(goal);
+                rows.add(new com.grinder.ui.editor.BulkGoalForm.Row(goal, safeTitle(goal), safeCategory(goal), metadata.recurring().getSchedule(), metadata.isSample()));
+            }
+            SwingUtilities.invokeLater(() -> {
+                if (profile != active) {
+                    return;
+                }
+                com.grinder.ui.editor.BulkGoalForm form = new com.grinder.ui.editor.BulkGoalForm(rows);
+                while (profile == active && JOptionPane.showConfirmDialog(this, form, "Manage goals", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
+                    try {
+                        List<Goal> selected = form.selectedGoals();
+                        if (selected.isEmpty()) {
+                            throw new IllegalArgumentException("Tick at least one goal first.");
+                        }
+                        com.grinder.repository.BulkGoalAction action = form.getAction();
+                        GoalCategory category = form.getCategory();
+                        com.grinder.repository.RepeatSchedule schedule = form.getSchedule();
+                        long target = action == com.grinder.repository.BulkGoalAction.SCHEDULE ? form.getPeriodTarget() : 1;
+                        long deadlineAt = form.getDeadlineAt();
+                        boolean reminder = form.isReminderEnabled();
+                        String details = action == com.grinder.repository.BulkGoalAction.CATEGORY ? "\nCategory: " + category.getDisplayName() : action == com.grinder.repository.BulkGoalAction.SCHEDULE ? "\nRepeat: " + schedule + " · target " + target + "\nChecklists require all their steps. Active manual progress resets when its period settings change." : action == com.grinder.repository.BulkGoalAction.DEADLINE ? "\n" + (deadlineAt == 0 ? "Remove deadlines" : "Due by end of " + java.time.Instant.ofEpochMilli(deadlineAt - 1).atZone(java.time.ZoneOffset.UTC).toLocalDate() + " UTC") : "";
+                        if (JOptionPane.showConfirmDialog(this, action + " · " + selected.size() + " goals?" + details + (action == com.grinder.repository.BulkGoalAction.DELETE ? "\nDeleting source goals can make linked goals unavailable.\nObserved history is archived." : "") + "\nThe action is validated before changes. One-step undo is available until a later edit or relevant reset.", "Preview bulk action", JOptionPane.OK_CANCEL_OPTION, action == com.grinder.repository.BulkGoalAction.DELETE ? JOptionPane.WARNING_MESSAGE : JOptionPane.QUESTION_MESSAGE) != JOptionPane.OK_OPTION) {
+                            continue;
+                        }
+                        clientThread.invokeLater(() -> {
+                            if (profile != active) {
+                                return;
+                            }
+                            try {
+                                if (active.revision() != revision) {
+                                    throw new IllegalArgumentException("Goals changed while this manager was open. No changes applied; reopen it to review the current goals.");
+                                }
+                                com.grinder.repository.BulkGoalChanges.Change change = com.grinder.repository.BulkGoalChanges.apply(active, selected, action, category, schedule, target, deadlineAt, reminder, System.currentTimeMillis());
+                                recordUndo(active, "bulk " + action, change.undo, change.allowed);
+                                render();
+                            } catch (IllegalArgumentException failure) {
+                                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, failure.getMessage(), "Bulk action not applied", JOptionPane.WARNING_MESSAGE));
+                            }
+                        });
+                        return;
+                    } catch (IllegalArgumentException | java.text.ParseException failure) {
+                        JOptionPane.showMessageDialog(this, failure.getMessage(), "Review selections", JOptionPane.WARNING_MESSAGE);
+                    }
+                }
+            });
+        });
     }
 
     private void editDeadline(GrinderProfile active, Goal goal) {

@@ -1,0 +1,79 @@
+package com.grinder.repository;
+
+import com.grinder.content.goal.Goal;
+import com.grinder.content.goal.GoalCategory;
+import com.grinder.content.goal.impl.CustomGoal;
+import com.grinder.content.goal.impl.level.BaseLevelGoal;
+import java.util.Arrays;
+import java.util.Collections;
+import org.junit.Test;
+import static org.junit.Assert.*;
+
+/**
+ * @author Ayman Yassen
+ * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
+ * @since 10/19/2026
+ */
+public class BulkGoalChangesTest {
+    @Test
+    public void pinAndCategoryChangesCanBeUndoneAsOneOperation() {
+        GrinderProfile profile = new GrinderProfile(42);
+        java.util.List<Goal> selected = profile.getGoals().subList(0, 3);
+        BulkGoalChanges.Change change = apply(profile, selected, BulkGoalAction.PIN);
+        assertTrue(selected.stream().allMatch(goal -> profile.metadata(goal).isPinned()));
+        change.undo.run();
+        assertTrue(selected.stream().noneMatch(goal -> profile.metadata(goal).isPinned()));
+        change = apply(profile, selected, BulkGoalAction.CATEGORY);
+        assertTrue(selected.stream().allMatch(goal -> profile.metadata(goal).getDisplayCategory() == GoalCategory.OTHER));
+        change.undo.run();
+        assertTrue(selected.stream().allMatch(goal -> profile.metadata(goal).getDisplayCategory() == null));
+    }
+
+    @Test
+    public void rejectsUnsupportedScheduleBeforeChangingAnyGoal() {
+        GrinderProfile profile = new GrinderProfile(42);
+        CustomGoal custom = new CustomGoal("One", "", GoalCategory.OTHER, 2, 3);
+        profile.add(custom);
+        Goal unsupported = profile.findMatchingGoal(new BaseLevelGoal());
+        try {
+            apply(profile, Arrays.asList(custom, unsupported), BulkGoalAction.SCHEDULE);
+            fail("Unsupported schedule should reject the whole batch");
+        } catch (IllegalArgumentException expected) {
+            assertEquals(2, custom.getProgressCurrent());
+            assertEquals(RepeatSchedule.NONE, profile.metadata(custom).recurring().getSchedule());
+        }
+    }
+
+    @Test
+    public void deletesAndRestoresOriginalOrderAndMetadata() {
+        GrinderProfile profile = new GrinderProfile(42);
+        java.util.List<Goal> before = new java.util.ArrayList<>(profile.getGoals());
+        java.util.List<Goal> selected = new java.util.ArrayList<>(before.subList(0, 3));
+        profile.metadata(selected.get(0)).setPinned(true);
+        String id = profile.metadata(selected.get(0)).getId();
+        BulkGoalChanges.Change change = apply(profile, selected, BulkGoalAction.DELETE);
+        assertEquals(before.size() - 3, profile.getGoals().size());
+        change.undo.run();
+        assertEquals(before, profile.getGoals());
+        assertEquals(id, profile.metadata(selected.get(0)).getId());
+        assertTrue(profile.metadata(selected.get(0)).isPinned());
+    }
+
+    @Test
+    public void scheduleChangeResetsManualProgressAndUndoRestoresIt() {
+        GrinderProfile profile = new GrinderProfile(42);
+        CustomGoal goal = new CustomGoal("Repeat", "", GoalCategory.OTHER, 2, 3);
+        profile.add(goal);
+        BulkGoalChanges.Change change = apply(profile, Collections.singletonList(goal), BulkGoalAction.SCHEDULE);
+        assertEquals(0, goal.getProgressCurrent());
+        assertEquals(RepeatSchedule.DAILY, profile.metadata(goal).recurring().getSchedule());
+        change.undo.run();
+        assertEquals(2, goal.getProgressCurrent());
+        assertEquals(3, goal.getProgressMaximum());
+        assertEquals(RepeatSchedule.NONE, profile.metadata(goal).recurring().getSchedule());
+    }
+
+    private static BulkGoalChanges.Change apply(GrinderProfile profile, java.util.List<Goal> selected, BulkGoalAction action) {
+        return BulkGoalChanges.apply(profile, new java.util.ArrayList<>(selected), action, GoalCategory.OTHER, RepeatSchedule.DAILY, 5, 0, false, System.currentTimeMillis());
+    }
+}
