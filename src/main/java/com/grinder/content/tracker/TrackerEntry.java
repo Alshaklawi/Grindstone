@@ -97,7 +97,6 @@ public enum TrackerEntry {
     ROYAL_TITAN("Royal Titans kills", VarPlayerID.TOTAL_ROYAL_TITAN_KILLS, GoalCategory.BOSSING),
     YAMA("Yama kills", VarPlayerID.TOTAL_YAMA_KILLS, GoalCategory.BOSSING),
     DOM_LEVELS("Delve levels completed", VarPlayerID.TOTAL_DOM_LEVELS, GoalCategory.BOSSING),
-    GEMSTONE_CRAB("Gemstone Crab kills", VarPlayerID.TOTAL_GEMSTONE_CRAB_KILLS, GoalCategory.SKILLING),
     GRYPHON_BOSS("Gryphon boss kills", VarPlayerID.TOTAL_GRYPHON_BOSS_KILLS, GoalCategory.BOSSING),
     COWBOSS("Cow boss kills", VarPlayerID.TOTAL_COWBOSS_KILLS, GoalCategory.BOSSING),
     COWBOSS_HARDMODE("Cow boss: Hard Mode kills", VarPlayerID.TOTAL_COWBOSS_HARDMODE_KILLS, GoalCategory.BOSSING),
