@@ -8,7 +8,7 @@ import com.grinder.repository.RecurringGoal;
 /**
  * @author Ayman Yassen
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
- * @since 10/18/2026
+ * @since 10/19/2026
  */
 public enum TrackingState {
     MANUAL("Manual progress", "Progress is entered by you. Grinder does not perform game actions."),

@@ -9,7 +9,7 @@ import net.runelite.client.ui.FontManager;
 /**
  * @author Ayman Yassen
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
- * @since 10/18/2026
+ * @since 10/19/2026
  */
 public final class RepeatGoalForm extends JPanel {
     private final JComboBox<RepeatSchedule> schedule = new JComboBox<>(RepeatSchedule.values());
