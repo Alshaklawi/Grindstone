@@ -90,13 +90,14 @@ function format(source) {
 
 function creationDates(source, relative) {
     return source.replace(/(\/\*\*[\s\S]*?\* @since )\d{2}\/\d{2}\/\d{4}([\s\S]*?\*\/\s*(?:@[\w.]+(?:\([^\n]*\))?\s*)*(?:(?:public|protected|private|static|final|abstract|strictfp)\s+)*(?:class|interface|enum)\s+(\w+))/g, (match, prefix, suffix, name) => {
-        const history = cp.execFileSync('git', ['log', '--follow', '--reverse', '--format=%ad', '--date=format:%m/%d/%Y', '-G', '(class|interface|enum)[[:space:]]+' + name + '([^[:alnum:]_]|$)', '--', relative], {cwd: root, encoding: 'utf8'}).trim().split(/\r?\n/).filter(Boolean);
+        const history = cp.execFileSync('git', ['log', '--follow', '--format=%ad', '--date=format:%m/%d/%Y', '-G', '(class|interface|enum)[[:space:]]+' + name + '([^[:alnum:]_]|$)', '--', relative], {cwd: root, encoding: 'utf8'}).trim().split(/\r?\n/).filter(Boolean);
         if (!history.length) { throw new Error('No creation history for ' + relative + ': ' + name); }
-        return prefix + history[0] + suffix;
+        return prefix + history[history.length - 1] + suffix;
     });
 }
 
 let changed = 0;
+const updates = [];
 for (const file of files(path.join(root, 'src'))) {
     const original = fs.readFileSync(file, 'utf8');
     const relative = path.relative(root, file).replace(/\\/g, '/');
@@ -104,9 +105,10 @@ for (const file of files(path.join(root, 'src'))) {
     if (!process.argv.includes('--dates') && format(updated) !== updated) { throw new Error('Formatter is not idempotent: ' + relative); }
     if (updated !== original) {
         changed++;
-        if (!process.argv.includes('--check')) { fs.writeFileSync(file, updated); }
+        updates.push({file, updated});
         process.stdout.write(relative + '\n');
     }
 }
+if (!process.argv.includes('--check')) { for (const update of updates) { fs.writeFileSync(update.file, update.updated); } }
 process.stdout.write(changed + ' Java files ' + (process.argv.includes('--check') ? 'need changes' : 'updated') + '\n');
 if (changed && process.argv.includes('--check')) { process.exitCode = 1; }
