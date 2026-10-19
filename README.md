@@ -75,3 +75,15 @@ Choose your target and review it before saving. Each shortcut can be switched of
 - **Plan ahead.** Add personal deadlines and optional reminders in the sidebar.
 - **Celebrate the finish.** Choose completion popups, local chat messages or optional desktop notifications, then revisit your milestones in **History**.
 - **Manage your milestones together.** Use bulk actions to organize several milestones, and export a profile backup to keep a local copy.
+
+## Track progress beside the game
+
+Open **… → Progress overlay** to follow **Daily routines**, **All routines**, **Milestones**, **Pinned**, or **All tracked** while the sidebar is closed. Progress bars show what is left, completed routines stay checked off, and daily routines show their next reset.
+
+Hold **Alt** and drag the tracker to move it. Adjust its width, entry limit, progress bars and completed routines in **RuneLite settings → Grindstone → Progress overlay**.
+
+Completion popups celebrate newly reached targets with a compact card, a completion badge and a gentle fade. Targets reached together share one notification.
+
+| Daily progress overlay | Completion popup |
+| --- | --- |
+| <img src="docs/images/progress-overlay.png" width="240" alt="Daily routines overlay with progress bars, completed herb runs and a reset countdown"> | <img src="docs/images/completion-popup.png" width="300" alt="Routine completion notification with a checkmark and full progress bar"> |
