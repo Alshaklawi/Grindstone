@@ -36,12 +36,14 @@ import com.grindstone.ui.GrindstonePanel;
 import com.grindstone.ui.util.SkillWidgets;
 import java.awt.image.BufferedImage;
 import java.awt.Rectangle;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Inject;
@@ -68,10 +70,12 @@ import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ClientShutdown;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.task.Schedule;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.ui.overlay.OverlayManager;
@@ -124,10 +128,12 @@ public class GrindstonePlugin extends Plugin {
     private boolean storageProgressDirty;
     private final Map<String, Integer> combatBossIds = new HashMap<>();
     private long lastRecurringRefresh;
+    private JsonObject lastSavedSnapshot;
 
     @Override
     protected void startUp() {
         running = true;
+        lastSavedSnapshot = null;
         completionNotifications.reset();
         overlayManager.add(completionOverlay);
         loadGeneration.incrementAndGet();
@@ -683,32 +689,69 @@ public class GrindstonePlugin extends Plugin {
         panel.unload();
     }
 
-    private void saveProfile() {
+    private CompletableFuture<Void> saveProfile() {
         GrindstoneProfile active = profile;
         if (active == null) {
-            return;
+            return persistence.flush();
         }
+        CompletableFuture<Void> finished = new CompletableFuture<>();
         clientThread.invoke(() -> {
             try {
                 JsonObject snapshot = repository.toJson(active);
+                if (snapshot.equals(lastSavedSnapshot)) {
+                    persistence.flush().whenComplete((ignored, failure) -> completeSave(finished, failure));
+                    return;
+                }
+                lastSavedSnapshot = snapshot;
                 if (running && profile == active) {
                     panel.setStorageStatus("Saving profile…");
                 }
                 persistence.save(snapshot).whenComplete((ignored, failure) -> {
+                    completeSave(finished, failure);
                     if (failure != null) {
                         log.warn("Unable to save Grindstone profile; the previous save was retained", failure);
                     }
                     clientThread.invokeLater(() -> {
+                        if (failure != null && lastSavedSnapshot == snapshot) {
+                            lastSavedSnapshot = null;
+                        }
                         if (running && profile == active) {
                             panel.setStorageStatus(failure == null ? null : "Save failed · previous file retained");
                         }
                     });
                 });
             } catch (RuntimeException failure) {
+                lastSavedSnapshot = null;
+                finished.completeExceptionally(failure);
                 log.warn("Unable to capture Grindstone profile; saved files were not changed", failure);
                 if (running && profile == active) {
                     panel.setStorageStatus("Could not capture profile · saved files kept");
                 }
+            }
+        });
+        return finished;
+    }
+
+    private static void completeSave(CompletableFuture<Void> finished, Throwable failure) {
+        if (failure == null) {
+            finished.complete(null);
+        } else {
+            finished.completeExceptionally(failure);
+        }
+    }
+
+    @Subscribe
+    public void onClientShutdown(ClientShutdown event) {
+        if (config.saveOnShutdown()) {
+            event.waitFor(saveProfile());
+        }
+    }
+
+    @Schedule(period = 5, unit = ChronoUnit.SECONDS)
+    public void autosaveProfile() {
+        clientThread.invokeLater(() -> {
+            if (hasActivePlayerProfile()) {
+                saveProfile();
             }
         });
     }

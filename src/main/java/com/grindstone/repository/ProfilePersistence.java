@@ -51,6 +51,10 @@ public final class ProfilePersistence {
         });
     }
 
+    public CompletableFuture<Void> flush() {
+        return enqueue(() -> null);
+    }
+
     public synchronized <T> CompletableFuture<T> enqueue(Callable<T> operation) {
         CompletableFuture<T> queued = tail.handle((ignored, failure) -> null).thenApplyAsync(ignored -> {
             if (SwingUtilities.isEventDispatchThread()) {
