@@ -79,6 +79,12 @@ public abstract class BaseSkillGoal implements Goal {
         return updateReadings(tracksExperience() ? client::getSkillExperience : client::getRealSkillLevel);
     }
 
+    @Override
+    public final com.grinder.ui.components.GoalComponent build(Client client, com.grinder.config.GrinderConfig config) {
+        refresh(client);
+        return Goal.super.build(client, config);
+    }
+
     public final boolean updateReadings(ToIntFunction<Skill> readings) {
         long minimum = Long.MAX_VALUE;
         int nextReached = 0;

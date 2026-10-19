@@ -50,6 +50,21 @@ public final class SessionExperienceGoal implements Goal {
         progress = 0;
     }
 
+    public void copyReadingsFrom(SessionExperienceGoal source) {
+        if (total != source.total || skill != source.skill) {
+            throw new IllegalArgumentException("Session sources do not match.");
+        }
+        initialized = source.initialized;
+        lastValue = source.lastValue;
+        progress = source.progress;
+    }
+
+    @Override
+    public com.grinder.ui.components.GoalComponent build(Client client, com.grinder.config.GrinderConfig config) {
+        refresh(client);
+        return Goal.super.build(client, config);
+    }
+
     public boolean observeExperience(long value) {
         if (value < 0) {
             throw new IllegalArgumentException("Experience cannot be negative.");

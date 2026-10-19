@@ -37,4 +37,18 @@ public class SessionExperienceGoalTest {
         assertEquals(0, restored.findMatchingGoal(goal).getProgressCurrent());
         assertFalse(RecurringGoal.supports(goal));
     }
+
+    @Test
+    public void editingTheSameSessionTargetKeepsObservedGains() {
+        GrinderProfile profile = new GrinderProfile(42);
+        SessionExperienceGoal source = (SessionExperienceGoal) profile.findMatchingGoal(new SessionExperienceGoal(Skill.WOODCUTTING));
+        source.observeExperience(1_000_000);
+        source.observeExperience(1_001_000);
+        SessionExperienceGoal replacement = new SessionExperienceGoal(Skill.WOODCUTTING);
+        replacement.setTarget(5_000);
+        assertTrue(profile.replaceGoal(source, replacement));
+        assertEquals(1_000, replacement.getProgressCurrent());
+        replacement.observeExperience(1_001_500);
+        assertEquals(1_500, replacement.getProgressCurrent());
+    }
 }

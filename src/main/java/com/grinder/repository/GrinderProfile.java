@@ -348,6 +348,9 @@ public class GrinderProfile {
             archive(original);
         }
         GoalMetadata next = sameGoal(original, replacement) ? old : new GoalMetadata();
+        if (sameGoal(original, replacement) && original instanceof com.grinder.content.goal.impl.experience.SessionExperienceGoal) {
+            ((com.grinder.content.goal.impl.experience.SessionExperienceGoal) replacement).copyReadingsFrom((com.grinder.content.goal.impl.experience.SessionExperienceGoal) original);
+        }
         next.setPinned(old.isPinned());
         attachCollectionData(replacement);
         goals.set(index, replacement);
