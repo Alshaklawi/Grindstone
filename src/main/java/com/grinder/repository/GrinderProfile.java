@@ -162,6 +162,7 @@ public class GrinderProfile {
     }
 
     public void ensureDefaultGoals(ItemManager itemManager) {
+        java.util.Set<Goal> existingDefaults = new java.util.HashSet<>(goals);
         for (CollectionLogEntry entry : CollectionLogEntry.values()) {
             if (!hasCollectionEntry(entry)) {
                 goals.add(new CollectionLogEntryGoal(itemManager, entry));
@@ -219,6 +220,11 @@ public class GrinderProfile {
         add(new com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierAreaGoal( com.grinder.content.diary.AchievementDiaryArea.LUMBRIDGE, com.grinder.content.diary.DiaryTier.EASY));
         add(new com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierGoal(com.grinder.content.diary.DiaryTier.EASY));
         add(new com.grinder.content.goal.impl.combatachievement.CombatAchievementTierGoal( com.grinder.content.combatachievement.CombatAchievementTier.EASY));
+        for (Goal goal : goals) {
+            if (!existingDefaults.contains(goal) && (goal.getTitle(null).startsWith("Example:") || goal.getTitle(null).equals("Combat task 0"))) {
+                metadata(goal).setSample(true);
+            }
+        }
         setItemManager(itemManager);
     }
 

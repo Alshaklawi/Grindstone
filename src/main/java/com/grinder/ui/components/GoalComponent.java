@@ -42,6 +42,12 @@ public class GoalComponent extends JPanel {
     private final JLabel trackingNoteLabel = new JLabel();
     private final JLabel achievementNoteLabel = new JLabel();
     private final JLabel reliabilityLabel = new JLabel();
+    private final JLabel deadlineLabel = new JLabel();
+    public void setDeadlineNote(String text) {
+        deadlineLabel.setText(text);
+        deadlineLabel.setVisible(text != null && !text.isEmpty());
+        deadlineLabel.setToolTipText("Personal UTC deadline. Passing it never deletes progress or changes game state; it is not a game reset timer.");
+    }
     public void setReliability(String label, String detail) {
         reliabilityLabel.setText(label);
         reliabilityLabel.setToolTipText(detail);
@@ -152,6 +158,11 @@ public class GoalComponent extends JPanel {
         reliabilityLabel.setAlignmentX(LEFT_ALIGNMENT);
         reliabilityLabel.setVisible(false);
         headerText.add(reliabilityLabel);
+        deadlineLabel.setFont(UiTypography.META);
+        deadlineLabel.setForeground(ColorScheme.PROGRESS_INPROGRESS_COLOR);
+        deadlineLabel.setAlignmentX(LEFT_ALIGNMENT);
+        deadlineLabel.setVisible(false);
+        headerText.add(deadlineLabel);
         headerText.add(Box.createVerticalStrut(2));
         JPanel headerDetails = new JPanel(new BorderLayout(4, 0));
         headerDetails.setOpaque(false);

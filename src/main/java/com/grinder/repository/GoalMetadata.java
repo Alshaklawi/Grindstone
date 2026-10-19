@@ -14,6 +14,11 @@ public final class GoalMetadata {
     private final String id;
     private boolean pinned;
     private Boolean collapsed;
+    private long deadlineAt;
+    private boolean deadlineReminder;
+    private long lastObservedAt;
+    private boolean sample;
+    private com.grinder.content.goal.GoalCategory displayCategory;
     private RecurringGoal recurring;
     public RecurringGoal recurring() {
         if (recurring == null) {
@@ -33,6 +38,41 @@ public final class GoalMetadata {
     public void setPinned(boolean pinned) {
         this.pinned = pinned;
     }
+    public long getDeadlineAt() {
+        return deadlineAt;
+    }
+    public boolean isDeadlineReminder() {
+        return deadlineReminder;
+    }
+    public void setDeadline(long deadlineAt, boolean reminder) {
+        if (deadlineAt < 0 || deadlineAt > 253_370_764_800_000L) {
+            throw new IllegalArgumentException("Invalid personal deadline.");
+        }
+        this.deadlineAt = deadlineAt;
+        deadlineReminder = deadlineAt != 0 && reminder;
+    }
+    public String deadlineText(long now) {
+        if (deadlineAt == 0) {
+            return "";
+        }
+        String date = java.time.Instant.ofEpochMilli(deadlineAt - 1).atZone(java.time.ZoneOffset.UTC).toLocalDate().toString();
+        return (now >= deadlineAt ? "Past due · " : "Due · ") + date + " UTC";
+    }
+    public long getLastObservedAt() {
+        return lastObservedAt;
+    }
+    public boolean isSample() {
+        return sample;
+    }
+    public void setSample(boolean sample) {
+        this.sample = sample;
+    }
+    public com.grinder.content.goal.GoalCategory getDisplayCategory() {
+        return displayCategory;
+    }
+    public void setDisplayCategory(com.grinder.content.goal.GoalCategory category) {
+        displayCategory = category;
+    }
     private final List<Completion> completions = new ArrayList<>();
     public GoalMetadata() {
         id = UUID.randomUUID().toString();
@@ -41,6 +81,11 @@ public final class GoalMetadata {
         id = source.id;
         pinned = source.pinned;
         collapsed = source.collapsed;
+        deadlineAt = source.deadlineAt;
+        deadlineReminder = source.deadlineReminder;
+        lastObservedAt = source.lastObservedAt;
+        sample = source.sample;
+        displayCategory = source.displayCategory;
         recurring = source.recurring == null ? null : source.recurring.copy();
         completions.addAll(source.completions);
     }
@@ -54,6 +99,9 @@ public final class GoalMetadata {
         return Collections.unmodifiableList(completions);
     }
     public boolean observe(Goal goal, String title, long now) {
+        if (now > 0) {
+            lastObservedAt = Math.max(lastObservedAt, now);
+        }
         long target = goal.getProgressMaximum();
         if (goal.getStatus() != GoalStatus.COMPLETE || target <= 0 || now <= 0 || completions.stream().anyMatch(event -> event.target == target)) {
             return false;
@@ -63,6 +111,10 @@ public final class GoalMetadata {
     }
     public static GoalMetadata validated(GoalMetadata saved) {
         UUID.fromString(saved.id);
+        saved.setDeadline(saved.deadlineAt, saved.deadlineReminder);
+        if (saved.lastObservedAt < 0) {
+            throw new IllegalArgumentException("Invalid last observation.");
+        }
         if (saved.recurring != null) {
             saved.recurring.validate();
         }

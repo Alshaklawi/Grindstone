@@ -198,7 +198,7 @@ public class GrinderPlugin extends Plugin {
     public void onGameTick(net.runelite.api.events.GameTick event) {
         if (hasActivePlayerProfile() && System.currentTimeMillis() - lastRecurringRefresh >= 30_000) {
             lastRecurringRefresh = System.currentTimeMillis();
-            if (profile.getGoals().stream().anyMatch(goal -> profile.metadata(goal).recurring().isActive())) {
+            if (profile.getGoals().stream().anyMatch(goal -> profile.metadata(goal).recurring().isActive() || profile.metadata(goal).getDeadlineAt() > 0)) {
                 panel.refreshAll();
             }
         }

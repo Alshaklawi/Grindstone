@@ -13,6 +13,18 @@ import net.runelite.client.config.Range;
  */
 @ConfigGroup("grinder")
 public interface GrinderConfig extends Config {
+    @ConfigItem(keyName = "showSampleGoals", name = "Show example goals", description = "Show demonstration goals separately marked as examples. Hide them to keep personal goals uncluttered; saved examples are retained.", section = DISPLAY_SECTION, position = 17)
+    default boolean showSampleGoals() {
+        return false;
+    }
+    @ConfigItem(keyName = "showDeadlineReminders", name = "Show deadline reminders", description = "Show opted-in personal deadlines in Grinder's header within 24 hours and while past due. This is not an external notification or game reset.", section = DISPLAY_SECTION, position = 18)
+    default boolean showDeadlineReminders() {
+        return true;
+    }
+    @ConfigItem(keyName = "linkedGoalsEnabled", name = "Linked goals", description = "Show linked checklists, milestone ladders, prerequisites, achievement milestones and repeat-completion goals.", section = GOALS_SECTION, position = 9)
+    default boolean linkedGoalsEnabled() {
+        return true;
+    }
     @ConfigItem(keyName = "groupSkillGoals", name = "Group related skill goals", description = "Keep each skill's level and XP targets together inside its category. Filters, pinning and recurring sections still apply.", section = DISPLAY_SECTION, position = 16)
     default boolean groupSkillGoals() {
         return true;

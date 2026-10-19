@@ -102,6 +102,7 @@ public class GrinderPanel extends PluginPanel {
     private final Client client;
     private final ClientThread clientThread;
     private final GrinderConfig config;
+    @Inject private net.runelite.client.config.ConfigManager configManager;
 
     @Inject
     private net.runelite.client.game.ItemManager itemManager;
@@ -333,6 +334,10 @@ public class GrinderPanel extends PluginPanel {
         routines.add(dailyRoutine);
         routines.add(weeklyRoutine);
         moreMenu.add(routines);
+        JMenuItem examples = new JMenuItem("Show / hide example goals");
+        examples.setToolTipText("Toggle demonstration goals without deleting them. Promote an example from its actions menu to keep it as a real goal.");
+        examples.addActionListener(event -> configManager.setConfiguration("grinder", "showSampleGoals", !config.showSampleGoals()));
+        moreMenu.add(examples);
         JMenuItem export = new JMenuItem("Export profile backup...");
         export.setToolTipText("Save a private local JSON backup. No network is used.");
         export.addActionListener(event -> transferBackup(false));
@@ -625,6 +630,9 @@ public class GrinderPanel extends PluginPanel {
                     currentProfile.observeRecurring(client, System.currentTimeMillis());
                 }
                 for (Goal goal : currentProfile.getGoals()) {
+                    if ((!config.showSampleGoals() && currentProfile.metadata(goal).isSample()) || (!config.linkedGoalsEnabled() && goal instanceof com.grinder.content.goal.impl.LinkedGoal)) {
+                        continue;
+                    }
                     if (goal == null || (!config.collectionLogEnabled() && isCollectionLogGoal(goal)) || (!config.levelGoalsEnabled() && isLevelGoal(goal)) || (!config.experienceGoalsEnabled() && isExperienceGoal(goal)) || (!config.trackerGoalsEnabled() && goal instanceof TrackerGoal) || (!config.questGoalsEnabled() && goal.getCategory() == GoalCategory.QUEST) || (!config.diaryGoalsEnabled() && goal.getCategory() == GoalCategory.ACHIEVEMENT_DIARY) || (!config.combatAchievementGoalsEnabled() && goal.getCategory() == GoalCategory.COMBAT_ACHIEVEMENT) || (!config.ownedItemGoalsEnabled() && goal instanceof com.grinder.content.goal.impl.item.PossessedItemGoal) || (!config.customGoalsEnabled() && goal instanceof com.grinder.content.goal.ManualGoal)) {
                         continue;
                     }
@@ -638,6 +646,7 @@ public class GrinderPanel extends PluginPanel {
                     if (goal instanceof com.grinder.content.goal.impl.ChecklistGoal) {
                         key = java.util.Arrays.asList(key, java.util.Arrays.hashCode(((com.grinder.content.goal.impl.ChecklistGoal) goal).getChecks()));
                     }
+                    key = java.util.Arrays.asList(key, metadata.getDeadlineAt(), metadata.getDeadlineAt() > 0 && System.currentTimeMillis() >= metadata.getDeadlineAt(), metadata.isSample(), metadata.getDisplayCategory());
                     GoalView cached = cardCache.get(goal, key);
                     if (cached != null && tracking != com.grinder.content.goal.TrackingState.WAITING && goal.getProgressMaximum() > 0) {
                         allGoals.add(cached);
@@ -695,7 +704,12 @@ public class GrinderPanel extends PluginPanel {
                         component.setProgress(progressCurrent, progressMaximum, String.format(Locale.ROOT, "%,d / %,d known", progressCurrent, progressMaximum));
                     }
                     String baselineDetail = recurring.getBaselineAt() == 0 ? "" : " Baseline: " + java.time.Instant.ofEpochMilli(recurring.getBaselineAt()) + ".";
-                    component.setReliability(config.showTrackingState() ? tracking.getLabel() : null, tracking.getDetail() + baselineDetail);
+                    if (!repeating && tracking != com.grinder.content.goal.TrackingState.WAITING) {
+                        metadata.observe(goal, title, System.currentTimeMillis());
+                    }
+                    long observedAt = repeating ? recurring.getLastObservedAt() : metadata.getLastObservedAt();
+                    component.setReliability(config.showTrackingState() ? tracking.getLabel() : null, tracking.getDetail() + baselineDetail + (observedAt == 0 ? " No observation recorded." : " Last observation: " + java.time.Instant.ofEpochMilli(observedAt) + "."));
+                    component.setDeadlineNote(metadata.deadlineText(System.currentTimeMillis()));
                     component.setExpansionListener(null);
                     component.setExpanded(!metadata.isCollapsed(config.collapseDetailsByDefault()));
                     component.setExpansionListener(expanded -> clientThread.invokeLater(() -> {
@@ -704,10 +718,17 @@ public class GrinderPanel extends PluginPanel {
                         }
                     }));
                     component.setMaximumProgressChunks(config.maxProgressChunks());
-                    if (!repeating && tracking != com.grinder.content.goal.TrackingState.WAITING) {
-                        metadata.observe(goal, title, System.currentTimeMillis());
-                    }
                     component.setGoalActions(event -> editGoal(currentProfile, goal, title), event -> deleteGoal(currentProfile, goal, title));
+                    component.addGoalAction("Deadline / reminder...", "Set a personal UTC deadline and optional reminder in Grinder's header.", event -> editDeadline(currentProfile, goal));
+                    if (metadata.isSample()) {
+                        component.addGoalAction("Use as a real goal", "Remove the example label so this goal stays visible when examples are hidden.", event -> clientThread.invokeLater(() -> {
+                            if (profile == currentProfile && currentProfile.getGoals().contains(goal)) {
+                                metadata.setSample(false);
+                                currentProfile.touch();
+                                render();
+                            }
+                        }));
+                    }
                     if (goal instanceof CustomGoal) {
                         CustomGoal custom = (CustomGoal) goal;
                         long shownCurrent = progressCurrent;
@@ -758,7 +779,7 @@ public class GrinderPanel extends PluginPanel {
                             }
                         });
                     }
-                    component.setAchievementNote(repeating ? recurring.getSchedule() + " · " + (recurring.getBaselineAt() == 0 ? "Baseline pending" : "This period") : config.showCompletionHistory() && !metadata.getCompletions().isEmpty() && status != GoalStatus.COMPLETE ? "Previously reached · now incomplete" : null);
+                    component.setAchievementNote(metadata.isSample() ? "Example · actions → use as a real goal" : repeating ? recurring.getSchedule() + " · " + (recurring.getBaselineAt() == 0 ? "Baseline pending" : "This period") : config.showCompletionHistory() && !metadata.getCompletions().isEmpty() && status != GoalStatus.COMPLETE ? "Previously reached · now incomplete" : null);
 
                     GoalView view = new GoalView( goal, component, safeTitle(goal), safeCategory(goal), status, goal.hasProgress(), progressCurrent, progressMaximum);
                     cardCache.put(goal, key, view);
@@ -767,13 +788,17 @@ public class GrinderPanel extends PluginPanel {
             }
 
             String updateText = currentProfile == null ? "Not tracking" : "View refreshed " + java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss z", Locale.ROOT).withZone(java.time.ZoneId.systemDefault()).format(java.time.Instant.now()) + "<br>" + HtmlUtils.escape(currentProfile.getPlayerStorage().freshness());
+            long dueCount = currentProfile == null || !config.showDeadlineReminders() ? 0 : currentProfile.getGoals().stream().filter(goal -> {
+                com.grinder.repository.GoalMetadata metadata = currentProfile.metadata(goal);
+                return metadata.isDeadlineReminder() && metadata.getDeadlineAt() > 0 && metadata.getDeadlineAt() - System.currentTimeMillis() <= 86_400_000L && (config.showSampleGoals() || !metadata.isSample()) && (metadata.recurring().isActive() ? metadata.recurring().getStatus() : goal.getStatus()) != GoalStatus.COMPLETE;
+            }).count();
             SwingUtilities.invokeLater(() -> {
                 if (version != renderVersion.get()) {
                     return;
                 }
 
-                updateStatusLabel.setText("<html>" + (storageStatus == null ? updateText : HtmlUtils.escape(storageStatus) + "<br>" + updateText) + "</html>");
-                updateStatusLabel.setVisible(config.showUpdateStatus() || storageStatus != null);
+                updateStatusLabel.setText("<html>" + (storageStatus == null ? "" : HtmlUtils.escape(storageStatus) + "<br>") + (dueCount == 0 ? "" : dueCount + " personal deadline(s) due within 24h / past due<br>") + (config.showUpdateStatus() ? updateText : "") + "</html>");
+                updateStatusLabel.setVisible(config.showUpdateStatus() || storageStatus != null || dueCount > 0);
                 renderPrepared(currentProfile, allGoals);
             });
         });
@@ -1809,6 +1834,41 @@ public class GrinderPanel extends PluginPanel {
         return client.getGameState() == net.runelite.api.GameState.LOGGED_IN && client.getLocalPlayer() != null && client.getAccountHash() == active.getHash();
     }
 
+    private void editDeadline(GrinderProfile active, Goal goal) {
+        if (active == null || profile != active) {
+            return;
+        }
+        clientThread.invokeLater(() -> {
+            if (profile != active || !active.getGoals().contains(goal)) {
+                return;
+            }
+            com.grinder.repository.GoalMetadata metadata = active.metadata(goal);
+            long originalDeadline = metadata.getDeadlineAt();
+            boolean originalReminder = metadata.isDeadlineReminder();
+            SwingUtilities.invokeLater(() -> {
+                com.grinder.ui.editor.DeadlineForm form = new com.grinder.ui.editor.DeadlineForm(originalDeadline, originalReminder);
+                while (profile == active && JOptionPane.showConfirmDialog(this, form, "Personal deadline", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
+                    try {
+                        long deadlineAt = form.getDeadlineAt();
+                        boolean reminder = form.isReminderEnabled();
+                        clientThread.invokeLater(() -> {
+                            if (profile == active && active.getGoals().contains(goal) && active.metadata(goal).getDeadlineAt() == originalDeadline && active.metadata(goal).isDeadlineReminder() == originalReminder) {
+                                java.util.function.Consumer<Goal> restore = active.snapshotEdit(goal);
+                                active.metadata(goal).setDeadline(deadlineAt, reminder);
+                                active.touch();
+                                recordGoalUndo(active, goal, "deadline", () -> restore.accept(goal));
+                                render();
+                            }
+                        });
+                        return;
+                    } catch (IllegalArgumentException failure) {
+                        JOptionPane.showMessageDialog(this, failure.getMessage());
+                    }
+                }
+            });
+        });
+    }
+
     private void editCustomGoal(GrinderProfile active, CustomGoal goal, String title) {
         com.grinder.repository.RepeatSchedule openedSchedule = active.metadata(goal).recurring().getSchedule();
         long openedPeriod = openedSchedule.start(System.currentTimeMillis());
@@ -1965,6 +2025,9 @@ public class GrinderPanel extends PluginPanel {
     }
 
     private GoalCategory safeCategory(Goal goal) {
+        if (profile != null && profile.metadata(goal).getDisplayCategory() != null) {
+            return profile.metadata(goal).getDisplayCategory();
+        }
         GoalCategory category = goal.getCategory();
         return category == null ? GoalCategory.OTHER : category;
     }

@@ -251,6 +251,9 @@ public final class GrinderRepository {
                             log.debug("Skipping invalid goal metadata", exception);
                         }
                     }
+                    if ((!savedGoal.has("metadata") || !savedGoal.getAsJsonObject("metadata").has("sample")) && (goal.getTitle(null).startsWith("Example:") || goal.getTitle(null).equals("Combat task 0"))) {
+                        profile.metadata(goal).setSample(true);
+                    }
                 }
             } catch (RuntimeException exception) {
                 if (strict) {
@@ -304,6 +307,7 @@ public final class GrinderRepository {
                 JsonObject saved = element.getAsJsonObject();
                 if (saved.has("metadata") && saved.get("metadata").isJsonObject()) {
                     JsonObject metadata = saved.getAsJsonObject("metadata");
+                    metadata.addProperty("lastObservedAt", 0);
                     metadata.add("completions", new JsonArray());
                     if (metadata.has("recurring") && metadata.get("recurring").isJsonObject()) {
                         JsonObject recurring = metadata.getAsJsonObject("recurring");
