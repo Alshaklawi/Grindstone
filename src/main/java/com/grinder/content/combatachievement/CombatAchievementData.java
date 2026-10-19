@@ -1,4 +1,5 @@
 package com.grinder.content.combatachievement;
+import lombok.Getter;
 import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -67,27 +68,19 @@ public final class CombatAchievementData {
      * @since 10/19/2026
      */
     public static final class Task {
+        @Getter
         private final int id;
+        @Getter
         private final String name;
+        @Getter
         private final String description;
+        @Getter
         private final CombatAchievementTier tier;
         private Task(int id, String name, String description, CombatAchievementTier tier) {
             this.id = id;
             this.name = name;
             this.description = description;
             this.tier = tier;
-        }
-        public int getId() {
-            return id;
-        }
-        public String getName() {
-            return name;
-        }
-        public String getDescription() {
-            return description;
-        }
-        public CombatAchievementTier getTier() {
-            return tier;
         }
     }
     private static final int[] COMPLETED = {

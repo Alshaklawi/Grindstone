@@ -1,6 +1,7 @@
 
 package com.grinder.content.collectionlog;
 
+import lombok.Getter;
 import java.util.Arrays;
 import net.runelite.api.Client;
 import net.runelite.api.ItemComposition;
@@ -24,10 +25,8 @@ public enum CollectionLogEntry {
     private static final int TITLE_PARAM_ID = 689;
     private static final int ENUM_PARAM_ID = 690;
 
+    @Getter
     private final int struct;
-    public int getStruct() {
-        return struct;
-    }
 
     CollectionLogEntry(final int struct) {
         this.struct = struct;

@@ -1,5 +1,6 @@
 package com.grinder.ui;
 
+import lombok.Getter;
 import com.grinder.GrinderPlugin;
 import lombok.NonNull;
 import net.runelite.client.util.ImageUtil;
@@ -24,6 +25,7 @@ public enum Icon {
 
 
     private final String file;
+    @Getter
     private final BufferedImage image;
 
     Icon(String file) {
@@ -31,9 +33,6 @@ public enum Icon {
         this.image = ImageUtil.loadImageResource(GrinderPlugin.class, file);
     }
 
-    public BufferedImage getImage() {
-        return image;
-    }
 
     public ImageIcon getIcon() {
         return getIcon(UnaryOperator.identity());

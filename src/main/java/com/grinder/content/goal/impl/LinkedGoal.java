@@ -1,5 +1,6 @@
 package com.grinder.content.goal.impl;
 
+import lombok.Getter;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.GoalStatus;
@@ -23,17 +24,21 @@ import net.runelite.api.Client;
  * @since 10/19/2026
  */
 public final class LinkedGoal implements Goal {
+    @Getter
     private String id;
     private String title;
     private String description;
+    @Getter
     private Mode mode;
     private List<String> sources;
     private long[] targets;
+    @Getter
     private int required;
     private boolean[] achieved;
     private Map<RepeatSchedule, Long> completedThrough = new HashMap<>();
     private long completedPeriods;
     private transient long current;
+    @Getter
     private transient boolean available;
     private transient String details = "Waiting for source goals.";
     private transient boolean started;
@@ -209,13 +214,7 @@ public final class LinkedGoal implements Goal {
         completedPeriods = 0;
     }
 
-    public String getId() {
-        return id;
-    }
 
-    public Mode getMode() {
-        return mode;
-    }
 
     public List<String> getSources() {
         return Collections.unmodifiableList(sources);
@@ -225,17 +224,11 @@ public final class LinkedGoal implements Goal {
         return targets.clone();
     }
 
-    public int getRequired() {
-        return required;
-    }
 
     public String getNotes() {
         return description;
     }
 
-    public boolean isAvailable() {
-        return available;
-    }
 
     @Override
     public String getTitle(Client client) {

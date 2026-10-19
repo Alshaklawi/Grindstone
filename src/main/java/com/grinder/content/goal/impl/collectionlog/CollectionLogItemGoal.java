@@ -1,6 +1,7 @@
 
 package com.grinder.content.goal.impl.collectionlog;
 
+import lombok.Getter;
 import com.grinder.config.GrinderConfig;
 import com.grinder.content.collectionlog.CollectionLogHistory;
 import com.grinder.content.goal.Goal;
@@ -22,7 +23,9 @@ import net.runelite.client.game.ItemManager;
 public class CollectionLogItemGoal implements Goal {
     private static final int COLLECTION_LOG_CONTAINER_ID = InventoryID.COLLECTION_TRANSMIT;
 
+    @Getter
     private final int item;
+    @Getter
     private final int amount;
     private transient boolean obtained;
     private transient ItemManager itemManager;
@@ -50,13 +53,7 @@ public class CollectionLogItemGoal implements Goal {
         this.amount = amount;
     }
 
-    public int getItem() {
-        return item;
-    }
 
-    public int getAmount() {
-        return amount;
-    }
 
     public boolean isObtained(Client client) {
         ItemContainer container = client.getItemContainer(COLLECTION_LOG_CONTAINER_ID);

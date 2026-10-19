@@ -1,4 +1,5 @@
 package com.grinder.content.goal.impl.combatachievement;
+import lombok.Getter;
 import com.grinder.content.combatachievement.CombatAchievementData;
 import com.grinder.content.goal.ClientCompletionGoal;
 import com.grinder.content.goal.GoalCategory;
@@ -9,6 +10,7 @@ import net.runelite.api.Client;
  * @since 10/19/2026
  */
 public final class CombatAchievementTaskGoal extends ClientCompletionGoal {
+    @Getter
     private final int task;
     private final String name;
     private final String description;
@@ -18,9 +20,6 @@ public final class CombatAchievementTaskGoal extends ClientCompletionGoal {
         this.name = name;
         this.description = description;
         selectionKey();
-    }
-    public int getTask() {
-        return task;
     }
     @Override public String selectionKey() {
         if (!CombatAchievementData.supportsTask(task) || name == null || name.isEmpty() || name.length() > 300 || description == null || description.length() > 4000) {

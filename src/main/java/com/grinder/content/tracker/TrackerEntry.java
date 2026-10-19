@@ -1,4 +1,5 @@
 package com.grinder.content.tracker;
+import lombok.Getter;
 import com.grinder.ui.Icon;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.collectionlog.CollectionLogPages;
@@ -102,10 +103,15 @@ public enum TrackerEntry {
     SLAYER_POINTS("Slayer points", VarbitID.SLAYER_POINTS, true, 1000),
     SLAYER_STREAK("Slayer task streak (normal)", VarbitID.SLAYER_TASKS_COMPLETED, true, 100),
     SLAYER_WILDERNESS_STREAK("Slayer task streak (Wilderness)", VarbitID.SLAYER_WILDERNESS_TASKS_COMPLETED, true, 100);
+    @Getter
     private final String displayName;
+    @Getter
     private final int id;
+    @Getter
     private final GoalCategory category;
+    @Getter
     private final boolean varbit;
+    @Getter
     private final int defaultTarget;
     private int representativeItem;
     private boolean iconResolved;
@@ -124,12 +130,6 @@ public enum TrackerEntry {
         this.defaultTarget = defaultTarget;
         this.representativeItem = ItemID.SLAYER_HELM;
     }
-    public boolean isVarbit() {
-        return varbit;
-    }
-    public int getDefaultTarget() {
-        return defaultTarget;
-    }
     public String getDescription() {
         if (this == SLAYER_POINTS) {
             return "Current unspent Slayer reward points, not lifetime points earned. Spending points reduces progress. Open Slayer rewards to refresh the client reading.";
@@ -138,15 +138,6 @@ public enum TrackerEntry {
             return "Current " + (this == SLAYER_STREAK ? "normal" : "Wilderness") + " Slayer task streak, tracked separately. Resetting this streak reduces progress; this is not a lifetime task total. Check your Slayer information or complete a task to refresh the client reading.";
         }
         return "";
-    }
-    public int getId() {
-        return id;
-    }
-    public String getDisplayName() {
-        return displayName;
-    }
-    public GoalCategory getCategory() {
-        return category;
     }
     public Icon getIcon() {
         return category == GoalCategory.BOSSING ? Icon.BOSSING : category == GoalCategory.SKILLING ? Icon.SKILLING : Icon.MAIN;

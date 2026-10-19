@@ -1,5 +1,6 @@
 package com.grinder.content.goal.impl.experience;
 
+import lombok.Getter;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.GoalStatus;
@@ -14,7 +15,9 @@ import net.runelite.api.Skill;
  * @since 10/19/2026
  */
 public final class SessionExperienceGoal implements Goal {
+    @Getter
     private Skill skill;
+    @Getter
     private boolean total;
     private long target = 100_000;
     private transient boolean initialized;
@@ -29,13 +32,7 @@ public final class SessionExperienceGoal implements Goal {
         this.skill = Objects.requireNonNull(skill);
     }
 
-    public Skill getSkill() {
-        return skill;
-    }
 
-    public boolean isTotal() {
-        return total;
-    }
 
     public void validate() {
         if (!total && skill == null) {

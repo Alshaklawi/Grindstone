@@ -1,5 +1,6 @@
 package com.grinder.content.goal.impl;
 
+import lombok.Getter;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.GoalStatus;
 import java.util.UUID;
@@ -11,9 +12,12 @@ import net.runelite.api.Client;
  * @since 10/18/2026
  */
 public final class CustomGoal implements com.grinder.content.goal.ManualGoal {
+    @Getter
     private final String id;
     private String title;
+    @Getter
     private String description;
+    @Getter
     private GoalCategory category;
     private long current;
     private long target;
@@ -27,9 +31,6 @@ public final class CustomGoal implements com.grinder.content.goal.ManualGoal {
         update(title, description, category, current, target);
     }
 
-    public String getId() {
-        return id;
-    }
     @Override
     public void resetProgress() {
         current = 0;
@@ -59,15 +60,7 @@ public final class CustomGoal implements com.grinder.content.goal.ManualGoal {
         return title;
     }
 
-    @Override
-    public String getDescription() {
-        return description;
-    }
 
-    @Override
-    public GoalCategory getCategory() {
-        return category;
-    }
 
     @Override
     public boolean hasProgress() {

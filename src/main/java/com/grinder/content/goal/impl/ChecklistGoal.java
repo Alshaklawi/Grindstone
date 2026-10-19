@@ -1,5 +1,6 @@
 package com.grinder.content.goal.impl;
 
+import lombok.Getter;
 import com.grinder.content.goal.ManualGoal;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.GoalStatus;
@@ -16,8 +17,10 @@ import net.runelite.api.Client;
  * @since 10/19/2026
  */
 public final class ChecklistGoal implements ManualGoal {
+    @Getter
     private final String id;
     private final String title;
+    @Getter
     private final String description;
     private final List<String> steps;
     private boolean[] checked;
@@ -50,9 +53,6 @@ public final class ChecklistGoal implements ManualGoal {
         }
     }
 
-    public String getId() {
-        return id;
-    }
 
     public List<String> getSteps() {
         return Collections.unmodifiableList(steps);
@@ -83,10 +83,6 @@ public final class ChecklistGoal implements ManualGoal {
         return title;
     }
 
-    @Override
-    public String getDescription() {
-        return description;
-    }
 
     @Override
     public GoalCategory getCategory() {

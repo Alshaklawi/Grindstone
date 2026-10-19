@@ -1,4 +1,8 @@
 package com.grinder.repository;
+import lombok.Getter;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalStatus;
 import java.util.ArrayList;
@@ -11,13 +15,23 @@ import java.util.UUID;
  * @since 10/18/2026
  */
 public final class GoalMetadata {
+    @Getter
     private final String id;
+    @Getter
+    @Setter
     private boolean pinned;
     private Boolean collapsed;
+    @Getter
     private long deadlineAt;
+    @Getter
     private boolean deadlineReminder;
+    @Getter
     private long lastObservedAt;
+    @Getter
+    @Setter
     private boolean sample;
+    @Getter
+    @Setter
     private com.grinder.content.goal.GoalCategory displayCategory;
     private RecurringGoal recurring;
     public RecurringGoal recurring() {
@@ -32,18 +46,6 @@ public final class GoalMetadata {
     public void setCollapsed(boolean collapsed) {
         this.collapsed = collapsed;
     }
-    public boolean isPinned() {
-        return pinned;
-    }
-    public void setPinned(boolean pinned) {
-        this.pinned = pinned;
-    }
-    public long getDeadlineAt() {
-        return deadlineAt;
-    }
-    public boolean isDeadlineReminder() {
-        return deadlineReminder;
-    }
     public void setDeadline(long deadlineAt, boolean reminder) {
         if (deadlineAt < 0 || deadlineAt > 253_370_764_800_000L) {
             throw new IllegalArgumentException("Invalid personal deadline.");
@@ -57,21 +59,6 @@ public final class GoalMetadata {
         }
         String date = java.time.Instant.ofEpochMilli(deadlineAt - 1).atZone(java.time.ZoneOffset.UTC).toLocalDate().toString();
         return (now >= deadlineAt ? "Past due · " : "Due · ") + date + " UTC";
-    }
-    public long getLastObservedAt() {
-        return lastObservedAt;
-    }
-    public boolean isSample() {
-        return sample;
-    }
-    public void setSample(boolean sample) {
-        this.sample = sample;
-    }
-    public com.grinder.content.goal.GoalCategory getDisplayCategory() {
-        return displayCategory;
-    }
-    public void setDisplayCategory(com.grinder.content.goal.GoalCategory category) {
-        displayCategory = category;
     }
     private final List<Completion> completions = new ArrayList<>();
     public GoalMetadata() {
@@ -91,9 +78,6 @@ public final class GoalMetadata {
     }
     public GoalMetadata copy() {
         return new GoalMetadata(this);
-    }
-    public String getId() {
-        return id;
     }
     public List<Completion> getCompletions() {
         return Collections.unmodifiableList(completions);
@@ -143,23 +127,13 @@ public final class GoalMetadata {
      * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
      * @since 10/18/2026
      */
+    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class Completion {
+        @Getter
         private final String title;
+        @Getter
         private final long target;
+        @Getter
         private final long observedAt;
-        private Completion(String title, long target, long observedAt) {
-            this.title = title;
-            this.target = target;
-            this.observedAt = observedAt;
-        }
-        public String getTitle() {
-            return title;
-        }
-        public long getTarget() {
-            return target;
-        }
-        public long getObservedAt() {
-            return observedAt;
-        }
     }
 }

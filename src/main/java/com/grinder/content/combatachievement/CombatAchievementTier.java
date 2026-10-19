@@ -1,4 +1,5 @@
 package com.grinder.content.combatachievement;
+import lombok.Getter;
 import net.runelite.api.gameval.VarbitID;
 /**
  * @author Ayman Yassen
@@ -13,18 +14,14 @@ public enum CombatAchievementTier {
     MASTER("Master", VarbitID.CA_THRESHOLD_MASTER, 3985),
     GRANDMASTER("Grandmaster", VarbitID.CA_THRESHOLD_GRANDMASTER, 3986);
     private final String name;
+    @Getter
     private final int threshold;
+    @Getter
     private final int taskEnum;
     CombatAchievementTier(String name, int threshold, int taskEnum) {
         this.name = name;
         this.threshold = threshold;
         this.taskEnum = taskEnum;
-    }
-    public int getThreshold() {
-        return threshold;
-    }
-    public int getTaskEnum() {
-        return taskEnum;
     }
     @Override public String toString() {
         return name;

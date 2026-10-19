@@ -1,4 +1,5 @@
 package com.grinder.content.goal.impl.item;
+import lombok.Getter;
 import com.grinder.content.storage.PlayerItemStorage;
 import com.grinder.content.storage.PlayerStorageSource;
 import com.grinder.content.goal.Goal;
@@ -17,7 +18,9 @@ import net.runelite.client.game.ItemManager;
  */
 public final class PossessedItemGoal implements Goal {
     public static final long MAX_TARGET = 1_000_000_000_000L;
+    @Getter
     private final int item;
+    @Getter
     private long amount;
     private transient int normalizedItem;
     private transient long current;
@@ -32,12 +35,6 @@ public final class PossessedItemGoal implements Goal {
     }
     public PossessedItemGoal(int item) {
         this(item, 1);
-    }
-    public int getItem() {
-        return item;
-    }
-    public long getAmount() {
-        return amount;
     }
     public void attach(PlayerItemStorage storage, ItemManager itemManager) {
         this.storage = storage;

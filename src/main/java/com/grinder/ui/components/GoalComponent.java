@@ -1,6 +1,7 @@
 
 package com.grinder.ui.components;
 
+import lombok.Getter;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -34,6 +35,7 @@ public class GoalComponent extends JPanel {
 
     private final JPanel header = new JPanel(new BorderLayout(8, 0));
     private final JPanel headerText = new JPanel();
+    @Getter
     private final JPanel content = new JPanel();
     private final JPanel footer = new JPanel(new BorderLayout(6, 0));
     private final JLabel iconLabel = new JLabel();
@@ -211,9 +213,6 @@ public class GoalComponent extends JPanel {
         refreshLayout();
     }
 
-    public JPanel getContent() {
-        return content;
-    }
 
     public void addDetail(javax.swing.JComponent detail) {
         content.add(detail);

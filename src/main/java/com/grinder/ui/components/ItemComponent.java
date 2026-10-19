@@ -39,6 +39,7 @@ public class ItemComponent extends JPanel {
     private Color borderColor = DEFAULT_BORDER_COLOR;
     private int renderedItemId = -1;
     private String amountText = "";
+    @Getter
     private BufferedImage image;
     private Boolean obtained;
     private boolean hovered;
@@ -83,9 +84,6 @@ public class ItemComponent extends JPanel {
         return item == null ? "" : item.getName();
     }
 
-    public BufferedImage getImage() {
-        return image;
-    }
 
     public void setItem(ItemComposition item) {
         this.item = item;

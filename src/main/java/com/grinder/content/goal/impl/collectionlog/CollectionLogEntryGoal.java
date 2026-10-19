@@ -36,14 +36,10 @@ public class CollectionLogEntryGoal implements Goal {
 
     @Getter
     private final CollectionLogEntry entry;
+    @Getter
     private final int pageStruct;
+    @Getter
     private final String pageName;
-    public int getPageStruct() {
-        return pageStruct;
-    }
-    public String getPageName() {
-        return pageName;
-    }
 
     private transient ItemManager itemManager;
     private transient int iconItem;
@@ -61,6 +57,7 @@ public class CollectionLogEntryGoal implements Goal {
     private transient ItemContainerComponent main;
     private transient long obtained;
     private transient long total;
+    @Getter
     private transient String progressText = "0 / 0 obtained (0%)";
 
     public CollectionLogEntryGoal(ItemManager itemManager, CollectionLogEntry entry) {
@@ -221,10 +218,6 @@ public class CollectionLogEntryGoal implements Goal {
         return total;
     }
 
-    @Override
-    public String getProgressText() {
-        return progressText;
-    }
 
     @Override
     public boolean isAffectedBy(ItemContainer container) {

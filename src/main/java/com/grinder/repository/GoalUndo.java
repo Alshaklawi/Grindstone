@@ -1,5 +1,6 @@
 package com.grinder.repository;
 
+import lombok.Getter;
 import java.util.function.BooleanSupplier;
 
 /**
@@ -12,6 +13,7 @@ public final class GoalUndo {
     private long revision;
     private Runnable action;
     private BooleanSupplier allowed;
+    @Getter
     private String label;
     public void record(GrinderProfile profile, String label, Runnable action, BooleanSupplier allowed) {
         this.profile = profile;
@@ -19,9 +21,6 @@ public final class GoalUndo {
         this.label = label;
         this.action = action;
         this.allowed = allowed;
-    }
-    public String getLabel() {
-        return label;
     }
     public void clear() {
         profile = null;

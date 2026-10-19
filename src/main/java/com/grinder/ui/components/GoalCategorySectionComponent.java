@@ -2,6 +2,7 @@
 package com.grinder.ui.components;
 
 
+import lombok.Getter;
 import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -25,11 +26,13 @@ public final class GoalCategorySectionComponent extends JPanel {
     private static final int HEADER_HEIGHT = 38;
 
     private final JPanel header = new JPanel(new BorderLayout(8, 0));
+    @Getter
     private final JPanel content = new JPanel();
     private final JLabel iconLabel = new JLabel();
     private final JLabel titleLabel = new JLabel();
     private final JLabel countLabel = new JLabel();
     private final JLabel toggleLabel = new JLabel();
+    @Getter
     private boolean expanded = true;
 
     public GoalCategorySectionComponent(String title, Icon icon) {
@@ -101,9 +104,6 @@ public final class GoalCategorySectionComponent extends JPanel {
         setExpanded(true);
     }
 
-    public JPanel getContent() {
-        return content;
-    }
 
     public void setTitle(String title) {
         titleLabel.setText(title);
@@ -117,9 +117,6 @@ public final class GoalCategorySectionComponent extends JPanel {
         countLabel.setText(Integer.toString(Math.max(0, count)));
     }
 
-    public boolean isExpanded() {
-        return expanded;
-    }
 
     public void setExpanded(boolean expanded) {
         this.expanded = expanded;

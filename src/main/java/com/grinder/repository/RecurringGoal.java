@@ -1,5 +1,8 @@
 package com.grinder.repository;
 
+import lombok.Getter;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalStatus;
 import com.grinder.content.goal.impl.TrackerGoal;
@@ -15,13 +18,20 @@ import java.util.List;
  * @since 10/19/2026
  */
 public final class RecurringGoal {
+    @Getter
     private RepeatSchedule schedule = RepeatSchedule.NONE;
+    @Getter
     private long target = 1;
+    @Getter
     private long start;
+    @Getter
     private long baselineAt;
     private long lastValue;
+    @Getter
     private long progress;
+    @Getter
     private long completedAt;
+    @Getter
     private long lastObservedAt;
     private final List<Period> history = new ArrayList<>();
     public RecurringGoal copy() {
@@ -40,27 +50,6 @@ public final class RecurringGoal {
 
     public static boolean supports(Goal goal) {
         return goal instanceof com.grinder.content.goal.ManualGoal || goal instanceof TrackerGoal || goal instanceof SkillExperienceGoal || goal instanceof TotalExperienceGoal;
-    }
-    public RepeatSchedule getSchedule() {
-        return schedule;
-    }
-    public long getTarget() {
-        return target;
-    }
-    public long getProgress() {
-        return progress;
-    }
-    public long getStart() {
-        return start;
-    }
-    public long getBaselineAt() {
-        return baselineAt;
-    }
-    public long getCompletedAt() {
-        return completedAt;
-    }
-    public long getLastObservedAt() {
-        return lastObservedAt;
     }
     public List<Period> getHistory() {
         return Collections.unmodifiableList(history);
@@ -177,53 +166,25 @@ public final class RecurringGoal {
      * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
      * @since 10/19/2026
      */
+    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class Period {
+        @Getter
         private final RepeatSchedule schedule;
+        @Getter
         private final long start;
+        @Getter
         private final long end;
+        @Getter
         private final long progress;
+        @Getter
         private final long target;
+        @Getter
         private final long baselineAt;
+        @Getter
         private final long lastObservedAt;
+        @Getter
         private final long completedAt;
+        @Getter
         private final String outcome;
-        private Period(RepeatSchedule schedule, long start, long end, long progress, long target, long baselineAt, long lastObservedAt, long completedAt, String outcome) {
-            this.schedule = schedule;
-            this.start = start;
-            this.end = end;
-            this.progress = progress;
-            this.target = target;
-            this.baselineAt = baselineAt;
-            this.lastObservedAt = lastObservedAt;
-            this.completedAt = completedAt;
-            this.outcome = outcome;
-        }
-        public RepeatSchedule getSchedule() {
-            return schedule;
-        }
-        public long getStart() {
-            return start;
-        }
-        public long getEnd() {
-            return end;
-        }
-        public long getProgress() {
-            return progress;
-        }
-        public long getTarget() {
-            return target;
-        }
-        public long getBaselineAt() {
-            return baselineAt;
-        }
-        public long getLastObservedAt() {
-            return lastObservedAt;
-        }
-        public long getCompletedAt() {
-            return completedAt;
-        }
-        public String getOutcome() {
-            return outcome;
-        }
     }
 }

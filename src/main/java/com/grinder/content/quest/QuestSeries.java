@@ -1,4 +1,5 @@
 package com.grinder.content.quest;
+import lombok.Getter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -28,13 +29,11 @@ public enum QuestSeries {
     PENGUIN("Penguin", Quest.COLD_WAR),
     MISCELLANIA("Miscellania", Quest.THRONE_OF_MISCELLANIA, Quest.ROYAL_TROUBLE);
     private final String name;
+    @Getter
     private final List<Quest> quests;
     QuestSeries(String name, Quest... quests) {
         this.name = name;
         this.quests = Collections.unmodifiableList(Arrays.asList(quests));
-    }
-    public List<Quest> getQuests() {
-        return quests;
     }
     @Override public String toString() {
         return name;
