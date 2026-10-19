@@ -45,7 +45,7 @@ public final class RoutinePresetForm extends JPanel {
             addRow(new SkillExperienceGoal(Skill.FISHING), 50_000);
             addRow(new TrackerGoal(TrackerEntry.WINTERTODT, 1), 3);
         }
-        String id = UUID.nameUUIDFromBytes(("grinder-routine-" + weekly).getBytes(StandardCharsets.UTF_8)).toString();
+        String id = UUID.nameUUIDFromBytes(("grindstone-routine-" + weekly).getBytes(StandardCharsets.UTF_8)).toString();
         addRow(new CustomGoal(id, "Personal challenge", "Edit this routine goal to describe your own activity.", GoalCategory.OTHER, 0, 1), 1);
         JLabel note = new JLabel("<html>Existing tracker/schedule matches are skipped, not overwritten.<br>Targets count gains per UTC period. You can edit each goal afterward.</html>");
         note.setFont(FontManager.getRunescapeSmallFont());

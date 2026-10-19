@@ -8,8 +8,7 @@ nbactions.xml
 nb-configuration.xml
 nbproject/
 *.class
-grinder/profiles/
-grindstone/profiles/
+**/profiles/
 /bin/
 /out/
 /.tmp/

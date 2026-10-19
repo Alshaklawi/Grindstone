@@ -14,7 +14,7 @@ import net.runelite.client.config.Range;
  */
 @ConfigGroup(GrindstoneConfig.GROUP)
 public interface GrindstoneConfig extends Config {
-    String GROUP = "grinder";
+    String GROUP = "grindstone";
     @ConfigItem(keyName = "showDeadlineReminders", name = "Show deadline reminders", description = "Show opted-in personal deadlines in Grindstone's header within 24 hours and while past due. This is not an external notification or game reset.", section = DISPLAY_SECTION, position = 18)
     default boolean showDeadlineReminders() {
         return true;
