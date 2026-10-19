@@ -33,6 +33,14 @@ Only a player can confirm behavior in-game. Do not automate game input.
 - Personal schedules reset at midnight UTC, Monday UTC, or the first of the month UTC. They do not represent game-specific activity reset rules. Custom progress resets with the period or a schedule change. Changing repeat settings archives the observed current period.
 - Recurring sections show reset countdowns while logged in and can be collapsed or disabled in Display settings. Hidden categories still record recurring progress while Grinder is enabled.
 - Goal history has sortable, read-only period and lifetime tables. It shows targets, observed progress, baselines and completion dates, retaining the latest 500 period records. Offline gaps are marked unobserved, not invented failures; automatic goals capture a fresh baseline at the first observation after a reset and cannot attribute offline gains across that boundary.
+- A tracker can have separate lifetime, daily, weekly and monthly goals at once. Duplicate subject/schedule combinations are skipped; targets are never silently overwritten.
+- Today focuses on recurring goals in next-reset order. Its routine summary excludes unavailable readings from average progress. All goals keeps the categorized or flat layout and existing filters.
+- Custom cards have a completion checkbox for target-1 goals, a +1 control for larger targets, and Set progress. These only update personal tracker data, never game input.
+- History opens an account-wide browser with goal/outcome search, UTC date ranges, schedule filters, period summaries and links back to active goals. Deleted or changed-subject goals keep observed history in an archive (latest 500 archived goals), with no stale navigation link.
+- Recurring routines in the header menu offer editable daily and weekly packs. Preview the selected goals and targets before adding; matches are skipped. Default, preset, routine and bulk collection-page additions support one-step undo.
+- Goal edits and schedule changes show previews. Restart current period archives the observed period and captures a new baseline. The header Undo action restores the latest supported change and expires after later edits, account switches or a relevant period reset.
+- Reliability labels distinguish manual progress, live client reads, client-reported counters, known storage snapshots, observed unlocks and captured-period gains. A zero observed unlock count is not proof of an unobtained item; a known-storage total is not an all-storage guarantee.
+- Unchanged cards are cached. With stable list membership and ordering, only changed cards and overview/countdown labels are updated; filters, regrouping and reordered goals can still require a layout rebuild.
 - Completion history records when Grinder first observed a target completed. Spending items can make a goal incomplete without erasing its previously achieved targets.
 - Use the header options menu to add a beginner, skilling, PvM, questing, or completionist preset. Existing matching goals and edited targets are kept.
 - Export a private JSON backup from the header options menu. Import merges missing goals, never overwrites existing matches, and clears observed progress when transferring a setup to a different account.
@@ -41,3 +49,5 @@ Only a player can confirm behavior in-game. Do not automate game input.
 Follow [the in-game acceptance checklist](IN_GAME_TESTING.md) to verify tracker accuracy, profile isolation, editing, history, presets, and backups. These checks remain pending player confirmation.
 
 Use same-line opening braces, one enum entry per line, and no line-length-based wrapping. Keep commits focused and separate formatting changes from behavior changes.
+
+Keep block contents multiline and indented, including short if statements and methods. Each type's @since is its creation date, not the date of its latest edit. Run `node tools/format-java.cjs --check` to check block formatting, or omit --check to apply it. Use --dates --check to audit creation dates against Git history; it does not replace knowing the creation date of a new uncommitted type.

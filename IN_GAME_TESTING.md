@@ -46,3 +46,18 @@ Record the client version, tracker type, expected result, actual result, and rel
 - Change a schedule or period target, cancel an edit, and set Repeat to None. Changes should archive the previous observed period; cancellation must preserve it; None should restore normal lifetime tracking without deleting history.
 - Sort the history tables and scroll horizontally to inspect baseline, last-observed and completion times. Rows must be read-only, newest first initially, with UTC dates and separate lifetime milestones.
 - Export/import on the same account: keep repeat settings, current baseline and history. Import on another account: keep the repeat setup but clear the original character's progress and period history.
+
+## Dashboard, controls and safe changes
+
+- Add Woodcutting XP lifetime, daily, weekly and monthly goals together, then try adding each again. The four schedules must remain independent; duplicate subject/schedule pairs must be skipped. Save and relog, then export/import on the same account.
+- Switch Today / All goals. Today should contain recurring goals, with next-reset ordering and a known-reading progress overview. Test pins, grouped/flat layouts, filters and no-routine/empty-result states.
+- Add a daily and weekly routine from the header menu. Uncheck an entry and edit a target before confirming. Add the same routine again: it must preserve existing matches and targets. Cancel a preview: nothing should change.
+- Use a custom checkbox, rapidly click +1 on a larger target, then use Set progress. Counts must stay within the target; progress controls and labels must remain visible when details collapse. Undo should restore the latest manual change.
+- Preview and cancel a subject, target or schedule edit. Apply one, then undo. Changing a subject must retain the previous subject's observed history in account history.
+- Restart a recurring period after making progress: verify the archived record, new baseline and reset custom progress. Undo before another edit/reset; after a later edit or reset it must safely expire.
+- Leave Set progress or a custom-goal editor open across a scheduled reset. Saving old-period progress must be rejected with a prompt to reopen the dialog. A recurring custom editor should expose only the effective period target, not two competing target fields.
+- Undo a routine, default/preset pack, bulk collection-log addition and deletion. Only the intended additions or last change should be reverted, not unrelated live progress.
+- In account history, filter by title/outcome, schedule and overlapping UTC dates; try invalid and reversed date ranges. Check summaries, numeric sorting and read-only rows. Go to an active goal, including a completed one. Archived records must not offer a broken live-goal link.
+- Delete a disposable goal with observed history, relog and open History. Its archive should remain. Undoing a deletion should restore the goal without duplicating its archive. Cross-account imports must not transfer archived history.
+- Check reliability labels for manual goals, XP, activity counters, bank-not-loaded items, bank snapshots, collection-log observations and late baselines. Waiting readings must not be presented as confirmed zeros or included in the average.
+- Keep the sidebar open while making progress and while idle countdowns update. Scroll position should stay stable when membership/order is unchanged; only changed cards should update. Test narrow sidebar width, hover, keyboard focus and long titles/descriptions.
