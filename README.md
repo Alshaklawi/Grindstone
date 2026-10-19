@@ -20,6 +20,8 @@ Adjust appearance and notification preferences in **RuneLite settings → Grinds
 
 You can also right-click an item or page entry in the in-game collection log and select **Add goal** to open a preselected goal editor. Disable this shortcut in the collection-log settings if preferred.
 
+Combat Achievement tasks also offer **Add goal** alongside their expand/collapse action. This shortcut can be disabled in the goal settings.
+
 The dashboard separates new, active, completed and waiting goals. Use the counters as quick status filters, or open **Filters** for category, type, schedule, pinned-only and sorting options. Search matches words across goal titles, descriptions and categories; **Clear filters** resets all selections.
 
 Goal pickers have searchable, categorized lists. Activities are grouped into bossing, raids, Slayer, clues, minigames and skilling.

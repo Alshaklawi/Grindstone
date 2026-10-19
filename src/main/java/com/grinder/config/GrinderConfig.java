@@ -38,6 +38,11 @@ public interface GrinderConfig extends Config {
     default boolean combatAchievementGoalsEnabled() {
         return true;
     }
+
+    @ConfigItem(keyName = "combatAchievementGoalMenu", name = "Combat task goal shortcut", description = "Add an Add goal right-click option to Combat Achievement tasks. Opens the selected task in the goal editor without performing game actions.", section = GOALS_SECTION, position = 10)
+    default boolean combatAchievementGoalMenu() {
+        return true;
+    }
     @ConfigItem(keyName = "ownedItemGoalsEnabled", name = "Owned item goals", description = "Show quantities across known personal item storage.", section = GOALS_SECTION, position = 7)
     default boolean ownedItemGoalsEnabled() {
         return true;

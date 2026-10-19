@@ -11,6 +11,7 @@ import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.impl.TrackerGoal;
 import com.grinder.content.goal.impl.collectionlog.CollectionLogEntryGoal;
 import com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal;
+import com.grinder.content.goal.impl.combatachievement.CombatAchievementTaskGoal;
 import com.grinder.content.goal.impl.experience.SessionExperienceGoal;
 import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
 import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
@@ -188,7 +189,14 @@ public class GrinderPlugin extends Plugin {
     @Subscribe
     public void onMenuEntryAdded(MenuEntryAdded event) {
         MenuEntry original = event.getMenuEntry();
-        if (!hasActivePlayerProfile() || !config.collectionLogEnabled() || !config.collectionLogGoalMenu() || original.getParam1() >>> 16 != InterfaceID.COLLECTION || !"Check".equals(original.getOption()) || original.getType() != MenuAction.CC_OP && original.getType() != MenuAction.CC_OP_LOW_PRIORITY) {
+        if (!hasActivePlayerProfile() || original.getType() != MenuAction.CC_OP && original.getType() != MenuAction.CC_OP_LOW_PRIORITY) {
+            return;
+        }
+        if (original.getParam1() >>> 16 == InterfaceID.CA_TASKS) {
+            addCombatAchievementGoalMenu(original);
+            return;
+        }
+        if (!config.collectionLogEnabled() || !config.collectionLogGoalMenu() || original.getParam1() >>> 16 != InterfaceID.COLLECTION || !"Check".equals(original.getOption())) {
             return;
         }
         int itemId = original.getItemId();
@@ -217,15 +225,43 @@ public class GrinderPlugin extends Plugin {
                         }
                     }
                     if (goal != null) {
-                        GrinderProfile active = profile;
-                        Goal selection = goal;
-                        SwingUtilities.invokeLater(() -> {
-                            if (running && config.enabled() && profile == active) {
-                                panel.showAddGoalDialog(selection);
-                            }
-                        });
+                        openGoalEditor(goal);
                     }
                 });
+    }
+
+    private void addCombatAchievementGoalMenu(MenuEntry original) {
+        if (!config.combatAchievementGoalsEnabled() || !config.combatAchievementGoalMenu() || !"Expand".equals(original.getOption()) && !"Collapse".equals(original.getOption())) {
+            return;
+        }
+        String selectedName = Text.removeTags(original.getTarget()).trim();
+        if (selectedName.isEmpty()) {
+            return;
+        }
+        client.getMenu().createMenuEntry(-2)
+                .setOption("Add goal")
+                .setTarget(original.getTarget())
+                .setType(MenuAction.RUNELITE_LOW_PRIORITY)
+                .onClick(entry -> {
+                    if (!hasActivePlayerProfile() || !config.combatAchievementGoalsEnabled() || !config.combatAchievementGoalMenu()) {
+                        return;
+                    }
+                    for (CombatAchievementData.Task task : CombatAchievementData.tasks(client).values()) {
+                        if (Text.removeTags(task.getName()).trim().equalsIgnoreCase(selectedName)) {
+                            openGoalEditor(new CombatAchievementTaskGoal(task.getId(), task.getName(), task.getDescription()));
+                            return;
+                        }
+                    }
+                });
+    }
+
+    private void openGoalEditor(Goal selection) {
+        GrinderProfile active = profile;
+        SwingUtilities.invokeLater(() -> {
+            if (running && config.enabled() && profile == active) {
+                panel.showAddGoalDialog(selection);
+            }
+        });
     }
 
     @Subscribe
