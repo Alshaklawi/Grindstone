@@ -1,6 +1,7 @@
 package com.grinder.content.goal;
 
 import com.grinder.ui.Icon;
+import lombok.Getter;
 
 /**
  * @author Ayman Yassen
@@ -16,7 +17,9 @@ public enum GoalCategory {
     COMBAT_ACHIEVEMENT("Combat Achievements", Icon.COMBAT_ACHIEVEMENT),
     OTHER("Other Goals", Icon.MAIN);
 
+    @Getter
     private final String displayName;
+    @Getter
     private final Icon icon;
 
     GoalCategory(String displayName, Icon icon) {
@@ -24,17 +27,9 @@ public enum GoalCategory {
         this.icon = icon;
     }
 
-    public String getDisplayName() {
-        return displayName;
-    }
-
     @Override
     public String toString() {
         return displayName;
-    }
-
-    public Icon getIcon() {
-        return icon;
     }
 
     public static GoalCategory fromName(String name) {

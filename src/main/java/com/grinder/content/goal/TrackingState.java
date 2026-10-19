@@ -3,6 +3,7 @@ package com.grinder.content.goal;
 import com.grinder.content.goal.impl.TrackerGoal;
 import com.grinder.content.goal.impl.item.PossessedItemGoal;
 import com.grinder.repository.RecurringGoal;
+import lombok.Getter;
 
 /**
  * @author Ayman Yassen
@@ -19,17 +20,13 @@ public enum TrackingState {
     SNAPSHOT("Known storage snapshot", "Last known personal storage contents, not a live all-storage guarantee. Reopen storage to refresh it."),
     OBSERVED_LOG("Observed unlocks", "Only known collection-log observations are counted. Zero observed does not prove an item is unobtained; open your collection log to refresh known unlocks."),
     LATE_BASELINE("Captured-period gains", "The baseline was captured after the period began. Only gains since that observation are counted; offline progress across a reset cannot be attributed exactly.");
+    @Getter
     private final String label;
+    @Getter
     private final String detail;
     TrackingState(String label, String detail) {
         this.label = label;
         this.detail = detail;
-    }
-    public String getLabel() {
-        return label;
-    }
-    public String getDetail() {
-        return detail;
     }
     public String getCardLabel() {
         return this == LATE_BASELINE ? "Partial period" : null;
