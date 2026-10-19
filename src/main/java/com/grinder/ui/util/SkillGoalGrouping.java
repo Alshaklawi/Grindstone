@@ -20,6 +20,10 @@ public final class SkillGoalGrouping {
     }
 
     public static Skill skill(Goal goal) {
+        if (goal instanceof com.grinder.content.goal.impl.experience.SessionExperienceGoal) {
+            com.grinder.content.goal.impl.experience.SessionExperienceGoal session = (com.grinder.content.goal.impl.experience.SessionExperienceGoal) goal;
+            return session.isTotal() ? null : session.getSkill();
+        }
         return goal instanceof SkillLevelGoal ? ((SkillLevelGoal) goal).getSkill() : goal instanceof SkillExperienceGoal ? ((SkillExperienceGoal) goal).getSkill() : null;
     }
 

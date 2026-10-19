@@ -109,7 +109,18 @@ public final class GoalCreationDialog extends JDialog {
 
     private void submit() {
         try {
-            result = form.createGoal();
+            Goal candidate = form.createGoal();
+            if (form.isReviewEnabled()) {
+                JTextArea preview = new JTextArea(form.reviewText(candidate), 12, 38);
+                preview.setFont(com.grinder.ui.util.UiTypography.BODY);
+                preview.setEditable(false);
+                preview.setLineWrap(true);
+                preview.setWrapStyleWord(true);
+                if (javax.swing.JOptionPane.showConfirmDialog(this, new JScrollPane(preview), "Review goal", javax.swing.JOptionPane.OK_CANCEL_OPTION, javax.swing.JOptionPane.PLAIN_MESSAGE) != javax.swing.JOptionPane.OK_OPTION) {
+                    return;
+                }
+            }
+            result = candidate;
             dispose();
         } catch (java.text.ParseException | IllegalArgumentException exception) {
             error.setText(exception instanceof IllegalArgumentException ? exception.getMessage() : "Enter a number within the target's allowed range.");

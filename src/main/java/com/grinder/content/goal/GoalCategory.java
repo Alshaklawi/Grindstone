@@ -28,6 +28,11 @@ public enum GoalCategory {
         return displayName;
     }
 
+    @Override
+    public String toString() {
+        return displayName;
+    }
+
     public Icon getIcon() {
         return icon;
     }

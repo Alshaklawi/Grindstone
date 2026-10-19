@@ -23,9 +23,10 @@ public class SkillGoalGroupingTest {
         Goal experience = new SkillExperienceGoal(Skill.ATTACK);
         Goal defence = new SkillLevelGoal(Skill.DEFENCE);
         Goal base = new BaseLevelGoal();
-        List<List<Goal>> groups = SkillGoalGrouping.group(Arrays.asList(level, defence, base, experience, new BaseLevelGoal()), goal -> goal);
+        Goal session = new com.grinder.content.goal.impl.experience.SessionExperienceGoal(Skill.ATTACK);
+        List<List<Goal>> groups = SkillGoalGrouping.group(Arrays.asList(level, defence, base, experience, new BaseLevelGoal(), session), goal -> goal);
         assertEquals(4, groups.size());
-        assertEquals(Arrays.asList(level, experience), groups.get(0));
+        assertEquals(Arrays.asList(level, experience, session), groups.get(0));
         assertEquals(Arrays.asList(defence), groups.get(1));
         assertEquals(Arrays.asList(base), groups.get(2));
     }

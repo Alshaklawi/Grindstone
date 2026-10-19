@@ -63,6 +63,9 @@ public final class BulkGoalForm extends JPanel {
             model.addRow(new Object[]{false, row.title, row.category.getDisplayName(), row.schedule.toString(), row.sample});
         }
         table = new JTable(model);
+        javax.swing.table.DefaultTableCellRenderer textRenderer = new javax.swing.table.DefaultTableCellRenderer();
+        textRenderer.putClientProperty("html.disable", Boolean.TRUE);
+        table.setDefaultRenderer(String.class, textRenderer);
         table.setRowHeight(24);
         table.getColumnModel().getColumn(0).setMaxWidth(44);
         table.getColumnModel().getColumn(4).setMaxWidth(66);

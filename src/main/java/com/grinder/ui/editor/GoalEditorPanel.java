@@ -64,10 +64,40 @@ public final class GoalEditorPanel extends JPanel {
     private final Map<String, Supplier<Goal>> choices = new LinkedHashMap<>();
     private final ItemManager itemManager;
     private boolean updating;
+    private Map<Goal, com.grinder.repository.RepeatSchedule> existingGoals;
     private final Map<Integer, Map<String, Supplier<Goal>>> completionChoices;
 
     public GoalEditorPanel(ItemManager itemManager, ItemLookup searchService) {
         this(itemManager, searchService, com.grinder.ui.editor.CompletionGoalChoices.create(null));
+    }
+
+    public void setExistingGoals(Map<Goal, com.grinder.repository.RepeatSchedule> existingGoals) {
+        this.existingGoals = new LinkedHashMap<>(existingGoals);
+    }
+
+    public boolean isReviewEnabled() {
+        return existingGoals != null;
+    }
+
+    public String reviewText(Goal goal) {
+        String name = goal.getTitle(null);
+        if ((type.getSelectedIndex() == 7 || type.getSelectedIndex() == 16) && itemPicker.hasSelection()) {
+            name = itemPicker.getSelectedItemName() + " · item " + itemPicker.getSelectedItemId();
+        }
+        StringBuilder text = new StringBuilder(name).append('\n');
+        text.append("Type: ").append(type.getSelectedItem()).append('\n');
+        text.append("Target: ").append(goal.getProgressMaximum() > 0 ? String.format(Locale.ROOT, "%,d", goal.getProgressMaximum()) : "native completion; reading loads after saving").append('\n');
+        text.append("Repeat: ").append(getRepeatSchedule());
+        if (getRepeatSchedule() != com.grinder.repository.RepeatSchedule.NONE) {
+            text.append(" · ").append(String.format(Locale.ROOT, "%,d per period", getRepeatTarget()));
+        }
+        boolean duplicate = existingGoals != null && existingGoals.entrySet().stream().anyMatch(entry -> entry.getValue() == getRepeatSchedule() && com.grinder.repository.GrinderProfile.sameSelection(goal, entry.getKey()));
+        text.append("\n\n").append(duplicate ? "A matching tracker and schedule existed when this editor opened. You will be asked before changing its target; no duplicate is added." : "This adds a new goal. Matching trackers are checked again before saving.");
+        text.append("\n\n").append(goal instanceof com.grinder.content.goal.ManualGoal ? "Manual progress only. Grinder never performs game actions." : "Client progress starts after saving. Some counters, storage and collection logs need their native interface opened. Unavailable readings are not confirmed zero.");
+        if (!goal.getDescription().isEmpty()) {
+            text.append("\n\n").append(goal.getDescription());
+        }
+        return text.toString();
     }
 
     public GoalEditorPanel(ItemManager itemManager, ItemLookup searchService, Map<Integer, Map<String, Supplier<Goal>>> completionChoices) {

@@ -70,7 +70,7 @@ public final class LinkedGoalForm extends JPanel {
             }
         };
         for (Choice choice : choices) {
-            model.addRow(new Object[]{false, choice.title, Math.max(1, choice.target)});
+            model.addRow(new Object[]{false, choice.toString(), Math.max(1, choice.target)});
         }
         table = new JTable(model);
         javax.swing.table.DefaultTableCellRenderer textRenderer = new javax.swing.table.DefaultTableCellRenderer();
@@ -190,12 +190,14 @@ public final class LinkedGoalForm extends JPanel {
             if (choice == null || selected == LinkedGoal.Mode.REPEAT_COMPLETIONS && !choice.recurring) {
                 throw new IllegalArgumentException("Choose a source. Completion counts require an existing recurring goal.");
             }
+            requireLoadedTarget(choice);
             ids.add(choice.id);
             targets.add(((Number) model.getValueAt(main.getSelectedIndex(), 2)).longValue());
         }
         if (selected != LinkedGoal.Mode.MILESTONES && selected != LinkedGoal.Mode.REPEAT_COMPLETIONS) {
             for (int i = 0; i < choices.size(); i++) {
                 if (Boolean.TRUE.equals(model.getValueAt(i, 0)) && !ids.contains(choices.get(i).id)) {
+                    requireLoadedTarget(choices.get(i));
                     if (selected == LinkedGoal.Mode.COLLECTION_SET && !choices.get(i).collectionItem) {
                         throw new IllegalArgumentException("Collection sets can reference only individual collection-item goals.");
                     }
@@ -207,6 +209,12 @@ public final class LinkedGoalForm extends JPanel {
         long[] values = selected == LinkedGoal.Mode.MILESTONES ? Arrays.stream(milestones.getText().split(",")).map(String::trim).mapToLong(Long::parseLong).toArray() : targets.stream().mapToLong(Long::longValue).toArray();
         int count = selected == LinkedGoal.Mode.ANY_OF || selected == LinkedGoal.Mode.REPEAT_COMPLETIONS ? ((Number) required.getValue()).intValue() : 1;
         return original == null ? new LinkedGoal(title.getText(), notes.getText(), selected, ids, values, count) : original.revise(title.getText(), notes.getText(), selected, ids, values, count);
+    }
+
+    private void requireLoadedTarget(Choice choice) {
+        if (choice.target <= 0 && (original == null || !original.getSources().contains(choice.id))) {
+            throw new IllegalArgumentException("The native target for " + choice.title + " is not loaded. Open its native interface and reopen this editor before adding it as a source.");
+        }
     }
 
     /**
@@ -231,7 +239,7 @@ public final class LinkedGoalForm extends JPanel {
 
         @Override
         public String toString() {
-            return title;
+            return target > 0 ? title : title + " · target not loaded";
         }
     }
 }
