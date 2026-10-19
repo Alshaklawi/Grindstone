@@ -138,7 +138,10 @@ public class PossessedItemGoalTest {
         assertTrue(storage.describe(ItemID.COINS).contains("Open your bank"));
     }
     @Test(expected = IllegalArgumentException.class)
-    public void invalidTargetCannotBeSaved() { new PossessedItemGoal(ItemID.COINS, 0); }
-    private void put(PlayerItemStorage storage, int container, int item, int amount)
-    { storage.replace(container, new Item[]{new Item(item, amount)}, id -> id); }
+    public void invalidTargetCannotBeSaved() {
+        new PossessedItemGoal(ItemID.COINS, 0);
+    }
+    private void put(PlayerItemStorage storage, int container, int item, int amount) {
+        storage.replace(container, new Item[]{new Item(item, amount)}, id -> id);
+    }
 }

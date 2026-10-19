@@ -21,15 +21,32 @@ public enum TrackingState {
     LATE_BASELINE("Captured-period gains", "The baseline was captured after the period began. Only gains since that observation are counted; offline progress across a reset cannot be attributed exactly.");
     private final String label;
     private final String detail;
-    TrackingState(String label, String detail) { this.label = label; this.detail = detail; }
-    public String getLabel() { return label; }
-    public String getDetail() { return detail; }
+    TrackingState(String label, String detail) {
+        this.label = label;
+        this.detail = detail;
+    }
+    public String getLabel() {
+        return label;
+    }
+    public String getDetail() {
+        return detail;
+    }
     public static TrackingState of(Goal goal, RecurringGoal recurring, boolean loggedIn, boolean bankLoaded) {
-        if (goal instanceof CustomGoal) { return MANUAL; }
-        if (!loggedIn || recurring.isActive() && recurring.getBaselineAt() == 0 || goal instanceof ClientCompletionGoal && goal.getProgressMaximum() == 0 || goal.getCategory() == GoalCategory.COLLECTION_LOG && goal.getProgressMaximum() == 0) { return WAITING; }
-        if (goal instanceof PossessedItemGoal) { return bankLoaded ? SNAPSHOT : PARTIAL_STORAGE; }
-        if (goal.getCategory() == GoalCategory.COLLECTION_LOG) { return OBSERVED_LOG; }
-        if (recurring.isActive() && recurring.getBaselineAt() > recurring.getStart() + 60_000) { return LATE_BASELINE; }
+        if (goal instanceof CustomGoal) {
+            return MANUAL;
+        }
+        if (!loggedIn || recurring.isActive() && recurring.getBaselineAt() == 0 || goal instanceof ClientCompletionGoal && goal.getProgressMaximum() == 0 || goal.getCategory() == GoalCategory.COLLECTION_LOG && goal.getProgressMaximum() == 0) {
+            return WAITING;
+        }
+        if (goal instanceof PossessedItemGoal) {
+            return bankLoaded ? SNAPSHOT : PARTIAL_STORAGE;
+        }
+        if (goal.getCategory() == GoalCategory.COLLECTION_LOG) {
+            return OBSERVED_LOG;
+        }
+        if (recurring.isActive() && recurring.getBaselineAt() > recurring.getStart() + 60_000) {
+            return LATE_BASELINE;
+        }
         return goal instanceof TrackerGoal ? COUNTER : LIVE;
     }
 }

@@ -17,7 +17,8 @@ import net.runelite.api.Skill;
  * @since 10/18/2026
  */
 public final class GoalTargetModels {
-    private GoalTargetModels() {}
+    private GoalTargetModels() {
+    }
     public static SpinnerNumberModel create(Goal goal) {
         long minimum = goal instanceof CombatLevelGoal ? 3 : 1;
         long maximum = goal instanceof SkillLevelGoal ? 99 : goal instanceof CombatLevelGoal ? 126 : goal instanceof TotalLevelGoal ? Skill.values().length * 99L : goal instanceof SkillExperienceGoal ? 200_000_000L : goal instanceof TotalExperienceGoal ? Skill.values().length * 200_000_000L : goal instanceof PossessedItemGoal ? PossessedItemGoal.MAX_TARGET : Integer.MAX_VALUE;

@@ -33,10 +33,12 @@ public final class CustomGoalForm extends JPanel {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index,
                     boolean selected, boolean focus) {
-                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, selected, focus);
-                if (value instanceof GoalCategory) { label.setText(((GoalCategory) value).getDisplayName()); }
-                return label;
-            }
+                        JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, selected, focus);
+                        if (value instanceof GoalCategory) {
+                            label.setText(((GoalCategory) value).getDisplayName());
+                        }
+                        return label;
+                    }
         });
         current.setEditor(new JSpinner.NumberEditor(current, "#,##0"));
         target.setEditor(new JSpinner.NumberEditor(target, "#,##0"));

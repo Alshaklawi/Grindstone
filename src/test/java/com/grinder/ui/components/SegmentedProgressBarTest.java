@@ -31,7 +31,11 @@ public class SegmentedProgressBarTest {
             bar.setStatus(GoalStatus.IN_PROGRESS);
             BufferedImage image = new BufferedImage(120, 9, BufferedImage.TYPE_INT_ARGB);
             Graphics2D graphics = image.createGraphics();
-            try { bar.paint(graphics); } finally { graphics.dispose(); }
+            try {
+                bar.paint(graphics);
+            } finally {
+                graphics.dispose();
+            }
             assertEquals(bar.getForeground().getRGB(), image.getRGB(55, 4));
             assertEquals(bar.getBackground().getRGB(), image.getRGB(67, 4));
             assertEquals(0, image.getRGB(5, 4));

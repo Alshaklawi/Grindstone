@@ -46,7 +46,11 @@ public class GoalComponent extends JPanel {
     private final JLabel trackingNoteLabel = new JLabel();
     private final JLabel achievementNoteLabel = new JLabel();
     private final JLabel reliabilityLabel = new JLabel();
-    public void setReliability(String label, String detail) { reliabilityLabel.setText(label); reliabilityLabel.setToolTipText(detail); reliabilityLabel.setVisible(label != null && !label.isEmpty()); }
+    public void setReliability(String label, String detail) {
+        reliabilityLabel.setText(label);
+        reliabilityLabel.setToolTipText(detail);
+        reliabilityLabel.setVisible(label != null && !label.isEmpty());
+    }
     private final JLabel progressLabel = new JLabel();
     private final SegmentedProgressBar progressBar = new SegmentedProgressBar();
     private final JLabel statusLabel = new JLabel();
@@ -92,8 +96,12 @@ public class GoalComponent extends JPanel {
     private String progressStatus = "";
     private boolean expanded = true;
     private java.util.function.Consumer<Boolean> expansionListener;
-    public void setExpansionListener(java.util.function.Consumer<Boolean> listener) { expansionListener = listener; }
-    public void setMaximumProgressChunks(int count) { progressBar.setMaximumChunks(count); }
+    public void setExpansionListener(java.util.function.Consumer<Boolean> listener) {
+        expansionListener = listener;
+    }
+    public void setMaximumProgressChunks(int count) {
+        progressBar.setMaximumChunks(count);
+    }
     private boolean iconVisible = true;
     private boolean progressBarVisible = true;
 
@@ -235,7 +243,9 @@ public class GoalComponent extends JPanel {
     }
 
     public void setDescription(String description) {
-        if (description == null || description.trim().isEmpty()) { return; }
+        if (description == null || description.trim().isEmpty()) {
+            return;
+        }
         javax.swing.JTextArea text = new javax.swing.JTextArea(description, 0, 20);
         text.setLineWrap(true);
         text.setWrapStyleWord(true);
@@ -260,8 +270,7 @@ public class GoalComponent extends JPanel {
         if (action != null) {
             editButton.addActionListener(action);
             editButton.setVisible(true);
-        }
-        else {
+        } else {
             editButton.setVisible(false);
         }
 
@@ -287,7 +296,9 @@ public class GoalComponent extends JPanel {
     }
     public void addGoalAction(String title, String tooltip, ActionListener listener) {
         JPopupMenu menu = getComponentPopupMenu();
-        if (menu == null) { return; }
+        if (menu == null) {
+            return;
+        }
         JMenuItem item = new JMenuItem(title);
         item.setToolTipText(tooltip);
         item.addActionListener(listener);
@@ -296,18 +307,18 @@ public class GoalComponent extends JPanel {
 
     public void update(String title, BufferedImage icon, LocalDateTime startDate, LocalDateTime endDate,
                        long current, long maximum, String progressText, String status) {
-        this.title = title == null ? "" : title;
-        this.icon = icon;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.progressCurrent = Math.max(0, current);
-        this.progressMaximum = Math.max(0, maximum);
-        this.progressText = progressText == null ? "" : progressText;
-        this.progressStatus = status == null ? "" : status;
+                           this.title = title == null ? "" : title;
+                           this.icon = icon;
+                           this.startDate = startDate;
+                           this.endDate = endDate;
+                           this.progressCurrent = Math.max(0, current);
+                           this.progressMaximum = Math.max(0, maximum);
+                           this.progressText = progressText == null ? "" : progressText;
+                           this.progressStatus = status == null ? "" : status;
 
-        applyValues();
-        refreshLayout();
-    }
+                           applyValues();
+                           refreshLayout();
+                       }
 
     public void setTitle(String title) {
         String next = title == null ? "" : title;
@@ -419,7 +430,9 @@ public class GoalComponent extends JPanel {
         footer.setVisible(true);
         expandButton.setText(expanded ? "−" : "+");
         expandButton.setToolTipText(expanded ? "Collapse goal details" : "Expand goal details");
-        if (expansionListener != null) { expansionListener.accept(expanded); }
+        if (expansionListener != null) {
+            expansionListener.accept(expanded);
+        }
         revalidate();
         repaint();
     }
@@ -442,8 +455,7 @@ public class GoalComponent extends JPanel {
         if (startDate == null && endDate == null) {
             dateLabel.setText("");
             dateLabel.setVisible(false);
-        }
-        else {
+        } else {
             String start = startDate == null ? "—" : DATE_FORMAT.format(startDate);
             String end = endDate == null ? "—" : DATE_FORMAT.format(endDate);
             dateLabel.setText(start + "  →  " + end);
@@ -480,5 +492,4 @@ public class GoalComponent extends JPanel {
     public Dimension getMaximumSize() {
         return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
     }
-
 }

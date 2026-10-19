@@ -60,8 +60,7 @@ public class CustomGoalTest {
         try {
             goal.update("Changed", "Other notes", GoalCategory.BOSSING, 11, 10);
             fail("Progress above the target must be rejected");
-        }
-        catch (IllegalArgumentException expected) {
+        } catch (IllegalArgumentException expected) {
             assertEquals("Original", goal.getTitle(null));
             assertEquals("Notes", goal.getDescription());
             assertEquals(2, goal.getProgressCurrent());

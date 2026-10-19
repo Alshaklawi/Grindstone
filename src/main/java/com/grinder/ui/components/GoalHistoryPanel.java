@@ -47,21 +47,33 @@ public final class GoalHistoryPanel extends JPanel {
         milestoneRows.forEach(milestones::addRow);
         tabs.addTab("Periods (" + periodRows.size() + ")", table(periods));
         tabs.addTab("Lifetime targets (" + milestoneRows.size() + ")", table(milestones));
-        if (!showPeriods) { tabs.setSelectedIndex(1); }
+        if (!showPeriods) {
+            tabs.setSelectedIndex(1);
+        }
         JLabel note = new JLabel("<html>Times are UTC. Progress starts from the captured baseline, not an assumed offline reset value.<br>Incomplete values are last observed; unobserved gaps are not counted as misses. Latest 500 period records retained.<br>Completion dates are first observed, not historical achievement dates.</html>");
         note.setFont(FontManager.getRunescapeSmallFont());
         add(note, BorderLayout.NORTH);
         add(tabs, BorderLayout.CENTER);
         setPreferredSize(new Dimension(700, 340));
     }
-    private static String date(long value) { return value <= 0 ? "—" : DATE.format(Instant.ofEpochMilli(value)); }
-    private static DefaultTableModel model(String... columns) { return new DefaultTableModel(columns, 0) {
-        @Override public boolean isCellEditable(int row, int column) { return false; }
-        @Override public Class<?> getColumnClass(int column) {
-            for (int row = 0; row < getRowCount(); row++) { if (getValueAt(row, column) instanceof Long) { return Long.class; } }
-            return Object.class;
-        }
-    }; }
+    private static String date(long value) {
+        return value <= 0 ? "—" : DATE.format(Instant.ofEpochMilli(value));
+    }
+    private static DefaultTableModel model(String... columns) {
+        return new DefaultTableModel(columns, 0) {
+            @Override public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+            @Override public Class<?> getColumnClass(int column) {
+                for (int row = 0; row < getRowCount(); row++) {
+                    if (getValueAt(row, column) instanceof Long) {
+                        return Long.class;
+                    }
+                }
+                return Object.class;
+            }
+        };
+    }
     private static JScrollPane table(DefaultTableModel model) {
         JTable table = new JTable(model);
         table.setFont(FontManager.getRunescapeFont());
@@ -69,10 +81,15 @@ public final class GoalHistoryPanel extends JPanel {
         table.setAutoCreateRowSorter(true);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         table.setDefaultRenderer(Long.class, new javax.swing.table.DefaultTableCellRenderer() {
-            @Override protected void setValue(Object value) { setHorizontalAlignment(SwingConstants.RIGHT); setText(value == null ? "—" : String.format(java.util.Locale.ROOT, "%,d", value)); }
+            @Override protected void setValue(Object value) {
+                setHorizontalAlignment(SwingConstants.RIGHT);
+                setText(value == null ? "—" : String.format(java.util.Locale.ROOT, "%,d", value));
+            }
         });
         table.getTableHeader().setReorderingAllowed(false);
-        for (int column = 0; column < model.getColumnCount(); column++) { table.getColumnModel().getColumn(column).setPreferredWidth(model.getColumnClass(column) == Long.class ? 95 : 175); }
+        for (int column = 0; column < model.getColumnCount(); column++) {
+            table.getColumnModel().getColumn(column).setPreferredWidth(model.getColumnClass(column) == Long.class ? 95 : 175);
+        }
         table.setToolTipText("Scroll horizontally for observation dates. Click a heading to sort; rows cannot be edited.");
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createEmptyBorder());

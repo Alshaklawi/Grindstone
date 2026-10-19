@@ -28,7 +28,9 @@ public class CollectionLogItemGoal implements Goal {
     private transient ItemManager itemManager;
     private transient CollectionLogHistory history;
 
-    public void setItemManager(ItemManager itemManager) { this.itemManager = itemManager; }
+    public void setItemManager(ItemManager itemManager) {
+        this.itemManager = itemManager;
+    }
 
     public void setHistory(CollectionLogHistory history) {
         this.history = history;

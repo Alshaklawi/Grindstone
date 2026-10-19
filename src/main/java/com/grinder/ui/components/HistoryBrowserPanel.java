@@ -32,8 +32,12 @@ public final class HistoryBrowserPanel extends JPanel {
     private final JComboBox<String> schedule = new JComboBox<>(new String[]{"All schedules", "Lifetime", "Daily", "Weekly", "Monthly"});
     private final JLabel summary = new JLabel();
     private final DefaultTableModel model = new DefaultTableModel(new String[]{"Goal", "Schedule", "Period start", "Period end", "Progress", "Target", "Outcome", "Baseline", "Last observed", "Completed"}, 0) {
-        @Override public boolean isCellEditable(int row, int column) { return false; }
-        @Override public Class<?> getColumnClass(int column) { return column == 4 || column == 5 ? Long.class : String.class; }
+        @Override public boolean isCellEditable(int row, int column) {
+            return false;
+        }
+        @Override public Class<?> getColumnClass(int column) {
+            return column == 4 || column == 5 ? Long.class : String.class;
+        }
     };
     private final JTable table = new JTable(model);
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'UTC'").withZone(ZoneOffset.UTC);
@@ -42,8 +46,13 @@ public final class HistoryBrowserPanel extends JPanel {
         this.records = new ArrayList<>(records);
         setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
         JPanel filters = new JPanel(new GridLayout(2, 4, 8, 4));
-        for (String label : new String[]{"Search goals / outcomes", "Schedule", "From (yyyy-mm-dd UTC)", "Through (yyyy-mm-dd UTC)"}) { filters.add(new JLabel(label)); }
-        filters.add(search); filters.add(schedule); filters.add(from); filters.add(to);
+        for (String label : new String[]{"Search goals / outcomes", "Schedule", "From (yyyy-mm-dd UTC)", "Through (yyyy-mm-dd UTC)"}) {
+            filters.add(new JLabel(label));
+        }
+        filters.add(search);
+        filters.add(schedule);
+        filters.add(from);
+        filters.add(to);
         search.setToolTipText("Filter goal titles and period outcomes.");
         from.setToolTipText("Optional inclusive UTC date; periods overlapping this range are included.");
         to.setToolTipText("Optional inclusive UTC date. Leave blank for no upper date limit.");
@@ -52,15 +61,24 @@ public final class HistoryBrowserPanel extends JPanel {
         table.setAutoCreateRowSorter(true);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        for (int column = 0; column < model.getColumnCount(); column++) { table.getColumnModel().getColumn(column).setPreferredWidth(column == 0 ? 230 : column == 4 || column == 5 ? 90 : 175); }
+        for (int column = 0; column < model.getColumnCount(); column++) {
+            table.getColumnModel().getColumn(column).setPreferredWidth(column == 0 ? 230 : column == 4 || column == 5 ? 90 : 175);
+        }
         table.setDefaultRenderer(Long.class, new javax.swing.table.DefaultTableCellRenderer() {
-            @Override protected void setValue(Object value) { setHorizontalAlignment(SwingConstants.RIGHT); setText(value == null ? "—" : String.format(java.util.Locale.ROOT, "%,d", value)); }
+            @Override protected void setValue(Object value) {
+                setHorizontalAlignment(SwingConstants.RIGHT);
+                setText(value == null ? "—" : String.format(java.util.Locale.ROOT, "%,d", value));
+            }
         });
         JButton open = new JButton("Go to selected goal");
         open.setEnabled(false);
         open.setToolTipText("Close history and reveal the selected goal in the sidebar.");
         table.getSelectionModel().addListSelectionListener(event -> open.setEnabled(table.getSelectedRow() >= 0 && !shown.get(table.convertRowIndexToModel(table.getSelectedRow())).goalId.isEmpty()));
-        open.addActionListener(event -> { if (table.getSelectedRow() >= 0) { reveal.accept(shown.get(table.convertRowIndexToModel(table.getSelectedRow())).goalId); } });
+        open.addActionListener(event -> {
+            if (table.getSelectedRow() >= 0) {
+                reveal.accept(shown.get(table.convertRowIndexToModel(table.getSelectedRow())).goalId);
+            }
+        });
         JPanel bottom = new JPanel(new BorderLayout(8, 8));
         bottom.add(summary, BorderLayout.CENTER);
         bottom.add(open, BorderLayout.EAST);
@@ -71,35 +89,62 @@ public final class HistoryBrowserPanel extends JPanel {
         add(new JScrollPane(table), BorderLayout.CENTER);
         add(bottom, BorderLayout.SOUTH);
         DocumentListener listener = new DocumentListener() {
-            @Override public void insertUpdate(DocumentEvent event) { filter(); }
-            @Override public void removeUpdate(DocumentEvent event) { filter(); }
-            @Override public void changedUpdate(DocumentEvent event) { filter(); }
+            @Override public void insertUpdate(DocumentEvent event) {
+                filter();
+            }
+            @Override public void removeUpdate(DocumentEvent event) {
+                filter();
+            }
+            @Override public void changedUpdate(DocumentEvent event) {
+                filter();
+            }
         };
-        search.getDocument().addDocumentListener(listener); from.getDocument().addDocumentListener(listener); to.getDocument().addDocumentListener(listener);
+        search.getDocument().addDocumentListener(listener);
+        from.getDocument().addDocumentListener(listener);
+        to.getDocument().addDocumentListener(listener);
         schedule.addActionListener(event -> filter());
         setPreferredSize(new Dimension(900, 460));
         filter();
     }
-    private static String date(long value) { return value <= 0 ? "—" : DATE.format(Instant.ofEpochMilli(value)); }
+    private static String date(long value) {
+        return value <= 0 ? "—" : DATE.format(Instant.ofEpochMilli(value));
+    }
     private void filter() {
         long first;
         long last;
         try {
             first = from.getText().trim().isEmpty() ? 0 : LocalDate.parse(from.getText().trim()).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
             last = to.getText().trim().isEmpty() ? Long.MAX_VALUE : LocalDate.parse(to.getText().trim()).plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
-            if (last <= first) { throw new IllegalArgumentException(); }
-        } catch (RuntimeException exception) { summary.setText("Enter valid UTC dates with the end on or after the start."); return; }
+            if (last <= first) {
+                throw new IllegalArgumentException();
+            }
+        } catch (RuntimeException exception) {
+            summary.setText("Enter valid UTC dates with the end on or after the start.");
+            return;
+        }
         RepeatSchedule repeat = schedule.getSelectedIndex() == 0 ? null : RepeatSchedule.values()[schedule.getSelectedIndex() - 1];
-        table.clearSelection(); shown.clear(); model.setRowCount(0);
-        long complete = 0; long incomplete = 0; long unobserved = 0; long milestones = 0;
+        table.clearSelection();
+        shown.clear();
+        model.setRowCount(0);
+        long complete = 0;
+        long incomplete = 0;
+        long unobserved = 0;
+        long milestones = 0;
         for (HistoryRecord record : records) {
-            if (!record.matches(search.getText(), repeat, first, last)) { continue; }
+            if (!record.matches(search.getText(), repeat, first, last)) {
+                continue;
+            }
             shown.add(record);
             model.addRow(new Object[]{record.title, record.lifetime ? "Lifetime" : record.schedule.toString(), date(record.start), date(record.end), record.progress, record.target, record.outcome, date(record.baseline), date(record.observed), date(record.completed)});
-            if (record.lifetime) { milestones++; }
-            else if (record.completed > 0) { complete++; }
-            else if (record.progress == null) { unobserved++; }
-            else if (record.outcome.startsWith("Incomplete")) { incomplete++; }
+            if (record.lifetime) {
+                milestones++;
+            } else if (record.completed > 0) {
+                complete++;
+            } else if (record.progress == null) {
+                unobserved++;
+            } else if (record.outcome.startsWith("Incomplete")) {
+                incomplete++;
+            }
         }
         summary.setText("<html>" + shown.size() + " records · " + complete + " completed periods · " + incomplete + " incomplete<br>" + unobserved + " unobserved / waiting · " + milestones + " lifetime milestones</html>");
     }

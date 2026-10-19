@@ -50,9 +50,19 @@ public class ProfileBackupTest {
     @Test public void unsupportedGoalTypesAndFutureBackupVersionsAreRejected() {
         com.google.gson.JsonObject json = GrinderRepository.toJson(completedProfile());
         json.addProperty("backupVersion", 2);
-        try { GrinderRepository.importBackup(json.toString(), 42); fail("Future version must be rejected"); } catch (IllegalArgumentException expected) { assertNotNull(expected.getMessage()); }
+        try {
+            GrinderRepository.importBackup(json.toString(), 42);
+            fail("Future version must be rejected");
+        } catch (IllegalArgumentException expected) {
+            assertNotNull(expected.getMessage());
+        }
         json.addProperty("backupVersion", 1);
         json.getAsJsonArray("goals").get(0).getAsJsonObject().addProperty("class", "java.lang.Runtime");
-        try { GrinderRepository.importBackup(json.toString(), 42); fail("Unknown classes must be rejected"); } catch (IllegalArgumentException expected) { assertNotNull(expected.getMessage()); }
+        try {
+            GrinderRepository.importBackup(json.toString(), 42);
+            fail("Unknown classes must be rejected");
+        } catch (IllegalArgumentException expected) {
+            assertNotNull(expected.getMessage());
+        }
     }
 }

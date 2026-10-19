@@ -15,34 +15,65 @@ public final class GoalMetadata {
     private boolean pinned;
     private Boolean collapsed;
     private RecurringGoal recurring;
-    public RecurringGoal recurring() { if (recurring == null) { recurring = new RecurringGoal(); } return recurring; }
-    public boolean isCollapsed(boolean defaultValue) { return collapsed == null ? defaultValue : collapsed; }
-    public void setCollapsed(boolean collapsed) { this.collapsed = collapsed; }
-    public boolean isPinned() { return pinned; }
-    public void setPinned(boolean pinned) { this.pinned = pinned; }
+    public RecurringGoal recurring() {
+        if (recurring == null) {
+            recurring = new RecurringGoal();
+        }
+        return recurring;
+    }
+    public boolean isCollapsed(boolean defaultValue) {
+        return collapsed == null ? defaultValue : collapsed;
+    }
+    public void setCollapsed(boolean collapsed) {
+        this.collapsed = collapsed;
+    }
+    public boolean isPinned() {
+        return pinned;
+    }
+    public void setPinned(boolean pinned) {
+        this.pinned = pinned;
+    }
     private final List<Completion> completions = new ArrayList<>();
-    public GoalMetadata() { id = UUID.randomUUID().toString(); }
-    public String getId() { return id; }
-    public List<Completion> getCompletions() { return Collections.unmodifiableList(completions); }
+    public GoalMetadata() {
+        id = UUID.randomUUID().toString();
+    }
+    public String getId() {
+        return id;
+    }
+    public List<Completion> getCompletions() {
+        return Collections.unmodifiableList(completions);
+    }
     public boolean observe(Goal goal, String title, long now) {
         long target = goal.getProgressMaximum();
-        if (goal.getStatus() != GoalStatus.COMPLETE || target <= 0 || now <= 0 || completions.stream().anyMatch(event -> event.target == target)) { return false; }
+        if (goal.getStatus() != GoalStatus.COMPLETE || target <= 0 || now <= 0 || completions.stream().anyMatch(event -> event.target == target)) {
+            return false;
+        }
         completions.add(new Completion(title, target, now));
         return true;
     }
     public static GoalMetadata validated(GoalMetadata saved) {
         UUID.fromString(saved.id);
-        if (saved.recurring != null) { saved.recurring.validate(); }
-        if (saved.completions == null || saved.completions.size() > 2000) { throw new IllegalArgumentException("Invalid completion history"); }
+        if (saved.recurring != null) {
+            saved.recurring.validate();
+        }
+        if (saved.completions == null || saved.completions.size() > 2000) {
+            throw new IllegalArgumentException("Invalid completion history");
+        }
         for (Completion event : saved.completions) {
-            if (event == null || event.title == null || event.title.length() > 300 || event.target <= 0 || event.observedAt <= 0) { throw new IllegalArgumentException("Invalid completion observation"); }
+            if (event == null || event.title == null || event.title.length() > 300 || event.target <= 0 || event.observedAt <= 0) {
+                throw new IllegalArgumentException("Invalid completion observation");
+            }
         }
         return saved;
     }
     public String historyText() {
-        if (completions.isEmpty()) { return "No completed targets observed yet."; }
+        if (completions.isEmpty()) {
+            return "No completed targets observed yet.";
+        }
         StringBuilder text = new StringBuilder("First observed completed (not the historical achievement date):\n\n");
-        for (Completion event : completions) { text.append(event.title).append(" — target ").append(String.format(java.util.Locale.ROOT, "%,d", event.target)).append(" — ").append(java.time.Instant.ofEpochMilli(event.observedAt)).append('\n'); }
+        for (Completion event : completions) {
+            text.append(event.title).append(" — target ").append(String.format(java.util.Locale.ROOT, "%,d", event.target)).append(" — ").append(java.time.Instant.ofEpochMilli(event.observedAt)).append('\n');
+        }
         return text.toString();
     }
     /**
@@ -54,9 +85,19 @@ public final class GoalMetadata {
         private final String title;
         private final long target;
         private final long observedAt;
-        private Completion(String title, long target, long observedAt) { this.title = title; this.target = target; this.observedAt = observedAt; }
-        public String getTitle() { return title; }
-        public long getTarget() { return target; }
-        public long getObservedAt() { return observedAt; }
+        private Completion(String title, long target, long observedAt) {
+            this.title = title;
+            this.target = target;
+            this.observedAt = observedAt;
+        }
+        public String getTitle() {
+            return title;
+        }
+        public long getTarget() {
+            return target;
+        }
+        public long getObservedAt() {
+            return observedAt;
+        }
     }
 }

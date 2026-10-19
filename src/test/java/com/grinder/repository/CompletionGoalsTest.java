@@ -36,7 +36,9 @@ public class CompletionGoalsTest {
     @Test public void everyNewGoalSurvivesProfileReload() {
         GrinderProfile profile = emptyProfile();
         for (Map<String, Supplier<Goal>> choices : CompletionGoalChoices.create(null).values()) {
-            for (Supplier<Goal> choice : choices.values()) { assertTrue(profile.add(choice.get())); }
+            for (Supplier<Goal> choice : choices.values()) {
+                assertTrue(profile.add(choice.get()));
+            }
         }
         assertTrue(profile.add(new CombatAchievementBossGoal(1, "Test boss")));
         GrinderProfile restored = GrinderRepository.fromJson(GrinderRepository.toJson(profile));
@@ -123,7 +125,8 @@ public class CompletionGoalsTest {
         SwingUtilities.invokeAndWait(() -> {
             Map<Integer, Map<String, Supplier<Goal>>> choices = CompletionGoalChoices.create(null);
             choices.get(13).put("Test boss", () -> new CombatAchievementBossGoal(1, "Test boss"));
-            GoalEditorPanel form = new GoalEditorPanel(null, (query, callback) -> () -> {}, choices);
+            GoalEditorPanel form = new GoalEditorPanel(null, (query, callback) -> () -> {
+            }, choices);
             JComboBox<?> types = (JComboBox<?>) ((javax.swing.JPanel) form.getComponent(0)).getComponent(1);
             try {
                 for (int kind = 9; kind <= 15; kind++) {
@@ -134,9 +137,11 @@ public class CompletionGoalsTest {
                     assertFalse(goal.supportsTarget());
                     assertNotNull(((ClientCompletionGoal) goal).selectionKey());
                 }
+            } catch (java.text.ParseException exception) {
+                throw new AssertionError(exception);
+            } finally {
+                form.stopSearch();
             }
-            catch (java.text.ParseException exception) { throw new AssertionError(exception); }
-            finally { form.stopSearch(); }
         });
     }
     private GrinderProfile emptyProfile() {

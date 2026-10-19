@@ -12,17 +12,33 @@ import net.runelite.api.Client;
  */
 public final class AchievementDiaryTierGoal extends ClientCompletionGoal {
     private final DiaryTier tier;
-    public AchievementDiaryTierGoal(DiaryTier tier)
-    {  this.tier = Objects.requireNonNull(tier); }
-    @Override public String selectionKey() { return "" + ":" + Objects.requireNonNull(tier).name(); }
-    @Override public String getTitle(Client client) { return "All " + tier + " diaries"; }
-    @Override public String getDescription() { return "Complete this diary tier in every region."; }
-    @Override public GoalCategory getCategory() { return GoalCategory.ACHIEVEMENT_DIARY; }
+    public AchievementDiaryTierGoal(DiaryTier tier) {
+        this.tier = Objects.requireNonNull(tier);
+    }
+    @Override public String selectionKey() {
+        return "" + ":" + Objects.requireNonNull(tier).name();
+    }
+    @Override public String getTitle(Client client) {
+        return "All " + tier + " diaries";
+    }
+    @Override public String getDescription() {
+        return "Complete this diary tier in every region.";
+    }
+    @Override public GoalCategory getCategory() {
+        return GoalCategory.ACHIEVEMENT_DIARY;
+    }
     @Override public boolean refresh(Client client) {
-        int done = 0; boolean started = false;
-        for (AchievementDiaryArea area : AchievementDiaryArea.values())
-        { if (area.isComplete(client, tier)) { done++; } started |= area.taskCount(client, tier) > 0; }
+        int done = 0;
+        boolean started = false;
+        for (AchievementDiaryArea area : AchievementDiaryArea.values()) {
+            if (area.isComplete(client, tier)) {
+                done++;
+            }
+            started |= area.taskCount(client, tier) > 0;
+        }
         return update(done, AchievementDiaryArea.values().length, started);
     }
-    @Override public String getProgressText() { return super.getProgressText() + " regions"; }
+    @Override public String getProgressText() {
+        return super.getProgressText() + " regions";
+    }
 }

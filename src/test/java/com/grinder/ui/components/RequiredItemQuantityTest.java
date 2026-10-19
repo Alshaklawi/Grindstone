@@ -23,9 +23,13 @@ public class RequiredItemQuantityTest {
             component.setExpanded(false);
             JLabel progress = label(component, "0 / 1,500,000,000 owned");
             assertNotNull(progress);
-            for (Component current = progress; current != null; current = current.getParent()) { assertTrue(current.isVisible()); }
+            for (Component current = progress; current != null; current = current.getParent()) {
+                assertTrue(current.isVisible());
+            }
             component.setProgressBarVisible(false);
-            for (Component current = quantity; current != null; current = current.getParent()) { assertTrue(current.isVisible()); }
+            for (Component current = quantity; current != null; current = current.getParent()) {
+                assertTrue(current.isVisible());
+            }
             assertTrue(quantity.getToolTipText().contains("not the amount currently owned"));
         });
     }
@@ -41,10 +45,14 @@ public class RequiredItemQuantityTest {
 
     private JLabel label(Container container, String text) {
         for (Component child : container.getComponents()) {
-            if (child instanceof JLabel && text.equals(((JLabel) child).getText())) { return (JLabel) child; }
+            if (child instanceof JLabel && text.equals(((JLabel) child).getText())) {
+                return (JLabel) child;
+            }
             if (child instanceof Container) {
                 JLabel match = label((Container) child, text);
-                if (match != null) { return match; }
+                if (match != null) {
+                    return match;
+                }
             }
         }
         return null;

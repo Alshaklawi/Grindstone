@@ -102,26 +102,49 @@ public enum TrackerEntry {
     private final GoalCategory category;
     private int representativeItem;
     private boolean iconResolved;
-    TrackerEntry(String displayName, int id, GoalCategory category) { this.displayName = displayName; this.id = id; this.category = category; }
-    public int getId() { return id; }
-    public String getDisplayName() { return displayName; }
-    public GoalCategory getCategory() { return category; }
-    public Icon getIcon() { return category == GoalCategory.BOSSING ? Icon.BOSSING : category == GoalCategory.SKILLING ? Icon.SKILLING : Icon.MAIN; }
-    public int getCount(Client client) { return Math.max(0, client.getVarpValue(id)); }
+    TrackerEntry(String displayName, int id, GoalCategory category) {
+        this.displayName = displayName;
+        this.id = id;
+        this.category = category;
+    }
+    public int getId() {
+        return id;
+    }
+    public String getDisplayName() {
+        return displayName;
+    }
+    public GoalCategory getCategory() {
+        return category;
+    }
+    public Icon getIcon() {
+        return category == GoalCategory.BOSSING ? Icon.BOSSING : category == GoalCategory.SKILLING ? Icon.SKILLING : Icon.MAIN;
+    }
+    public int getCount(Client client) {
+        return Math.max(0, client.getVarpValue(id));
+    }
     public int iconItem(Client client) {
-        if (representativeItem > 0 || iconResolved || client == null) { return representativeItem; }
+        if (representativeItem > 0 || iconResolved || client == null) {
+            return representativeItem;
+        }
         java.util.Map<Integer, String> pages = CollectionLogPages.discover(client);
-        if (!pages.isEmpty()) { iconResolved = true; }
+        if (!pages.isEmpty()) {
+            iconResolved = true;
+        }
         String name = normalized(displayName);
         int best = 0;
         for (java.util.Map.Entry<Integer, String> page : pages.entrySet()) {
             String candidate = normalized(page.getValue());
             if (candidate.length() > best && (name.startsWith(candidate) || candidate.startsWith(name))) {
                 int[] items = CollectionLogPages.itemIds(client, page.getKey());
-                if (items.length > 0) { representativeItem = items[0]; best = candidate.length(); }
+                if (items.length > 0) {
+                    representativeItem = items[0];
+                    best = candidate.length();
+                }
             }
         }
         return representativeItem;
     }
-    private static String normalized(String text) { return text.toLowerCase(java.util.Locale.ROOT).replaceFirst("^the ", "").replaceAll("[^a-z0-9]", ""); }
+    private static String normalized(String text) {
+        return text.toLowerCase(java.util.Locale.ROOT).replaceFirst("^the ", "").replaceAll("[^a-z0-9]", "");
+    }
 }

@@ -43,8 +43,13 @@ public class ItemPickerTest {
     public void staleResultsCannotReplaceANewerItemSelection() throws Exception {
         SwingUtilities.invokeAndWait(() -> {
             List<Consumer<ItemSearchService.Response>> callbacks = new ArrayList<>();
-            ItemLookup lookup = (query, callback) -> { callbacks.add(callback); return () -> { }; };
-            ItemPickerPanel picker = new ItemPickerPanel(lookup, item -> { });
+            ItemLookup lookup = (query, callback) -> {
+                callbacks.add(callback);
+                return () -> {
+                };
+            };
+            ItemPickerPanel picker = new ItemPickerPanel(lookup, item -> {
+            });
             IconTextField field = (IconTextField) picker.getComponent(0);
             field.setText("dragon pickaxe");
             picker.search();
@@ -63,9 +68,11 @@ public class ItemPickerTest {
         SwingUtilities.invokeAndWait(() -> {
             ItemLookup lookup = (query, callback) -> {
                 callback.accept(response(ItemID.DRAGON_PICKAXE, "Dragon pickaxe"));
-                return () -> { };
+                return () -> {
+                };
             };
-            ItemPickerPanel picker = new ItemPickerPanel(lookup, item -> { });
+            ItemPickerPanel picker = new ItemPickerPanel(lookup, item -> {
+            });
             IconTextField field = (IconTextField) picker.getComponent(0);
             field.setText("dragon pickaxe");
             picker.search();
@@ -81,7 +88,8 @@ public class ItemPickerTest {
         SwingUtilities.invokeAndWait(() -> {
             ItemLookup lookup = (query, callback) -> {
                 callback.accept(response(ItemID.DRAGON_PICKAXE, "Dragon pickaxe"));
-                return () -> { };
+                return () -> {
+                };
             };
             GoalEditorPanel form = new GoalEditorPanel(null, lookup);
             try {
@@ -113,9 +121,11 @@ public class ItemPickerTest {
                 type.setSelectedItem("Custom goal");
                 assertTrue(descendants(form).stream().anyMatch(component -> component instanceof CustomGoalForm));
                 assertTrue(form.isReady());
+            } catch (java.text.ParseException exception) {
+                throw new AssertionError(exception);
+            } finally {
+                form.stopSearch();
             }
-            catch (java.text.ParseException exception) { throw new AssertionError(exception); }
-            finally { form.stopSearch(); }
         });
     }
 

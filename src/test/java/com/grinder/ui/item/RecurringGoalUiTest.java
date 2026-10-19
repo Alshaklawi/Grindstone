@@ -26,7 +26,8 @@ import static org.junit.Assert.*;
 public class RecurringGoalUiTest {
     @Test public void editorKeepsRepeatSettingsForSupportedTypesOnly() throws Exception {
         SwingUtilities.invokeAndWait(() -> {
-            GoalEditorPanel form = new GoalEditorPanel(null, (query, callback) -> () -> {});
+            GoalEditorPanel form = new GoalEditorPanel(null, (query, callback) -> () -> {
+            });
             try {
                 form.loadGoal(new SkillExperienceGoal(Skill.WOODCUTTING));
                 form.loadRepeat(RepeatSchedule.DAILY, 100_000);
@@ -34,7 +35,9 @@ public class RecurringGoalUiTest {
                 assertEquals(100_000, form.getRepeatTarget());
                 form.loadGoal(new CombatLevelGoal());
                 assertEquals(RepeatSchedule.NONE, form.getRepeatSchedule());
-            } finally { form.stopSearch(); }
+            } finally {
+                form.stopSearch();
+            }
         });
     }
     @Test public void historyUsesReadOnlySnapshotAndSeparatesPeriodsFromLifetimeMilestones() throws Exception {
@@ -68,8 +71,11 @@ public class RecurringGoalUiTest {
     }
     private void findTables(Container parent, java.util.List<JTable> tables) {
         for (Component child : parent.getComponents()) {
-            if (child instanceof JTable) { tables.add((JTable) child); }
-            else if (child instanceof Container) { findTables((Container) child, tables); }
+            if (child instanceof JTable) {
+                tables.add((JTable) child);
+            } else if (child instanceof Container) {
+                findTables((Container) child, tables);
+            }
         }
     }
 }

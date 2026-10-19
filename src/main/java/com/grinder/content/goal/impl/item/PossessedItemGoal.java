@@ -24,42 +24,74 @@ public final class PossessedItemGoal implements Goal {
     private transient PlayerItemStorage storage;
     private transient ItemManager itemManager;
     public PossessedItemGoal(int item, long amount) {
-        if (item <= 0) { throw new IllegalArgumentException("Item ID must be positive"); }
+        if (item <= 0) {
+            throw new IllegalArgumentException("Item ID must be positive");
+        }
         this.item = item;
         setTarget(amount);
     }
-    public PossessedItemGoal(int item) { this(item, 1); }
-    public int getItem() { return item; }
-    public long getAmount() { return amount; }
-    public void attach(PlayerItemStorage storage, ItemManager itemManager)
-    { this.storage = storage; this.itemManager = itemManager; normalizedItem = 0; current = 0; }
-    @Override public boolean supportsTarget() { return true; }
+    public PossessedItemGoal(int item) {
+        this(item, 1);
+    }
+    public int getItem() {
+        return item;
+    }
+    public long getAmount() {
+        return amount;
+    }
+    public void attach(PlayerItemStorage storage, ItemManager itemManager) {
+        this.storage = storage;
+        this.itemManager = itemManager;
+        normalizedItem = 0;
+        current = 0;
+    }
+    @Override public boolean supportsTarget() {
+        return true;
+    }
     @Override public void setTarget(long target) {
-        if (target < 1 || target > MAX_TARGET)
-        { throw new IllegalArgumentException("Quantity must be between 1 and 1,000,000,000,000"); }
+        if (target < 1 || target > MAX_TARGET) {
+            throw new IllegalArgumentException("Quantity must be between 1 and 1,000,000,000,000");
+        }
         amount = target;
     }
     @Override public String getTitle(Client client) {
         net.runelite.api.ItemComposition definition = client == null ? null : client.getItemDefinition(item);
         return (definition == null ? "Item " + item : definition.getName()) + " owned";
     }
-    @Override public BufferedImage getIcon(Client client)
-    { return itemManager == null ? Icon.MAIN.getImage() : itemManager.getImage(item); }
-    @Override public GoalCategory getCategory() { return GoalCategory.OTHER; }
-    @Override public String getDescription()
-    { return storage == null ? "Open your bank and item storage to include their contents." : storage.describe(normalizedItem > 0 ? normalizedItem : item); }
-    @Override public boolean hasProgress() { return true; }
-    @Override public long getProgressCurrent() { return current; }
-    @Override public long getProgressMaximum() { return amount; }
-    @Override public String getProgressText()
-    { return String.format(Locale.ROOT, "%,d / %,d owned", current, amount); }
-    @Override public GoalStatus getStatus()
-    { return current >= amount ? GoalStatus.COMPLETE : current > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED; }
-    @Override public boolean isAffectedBy(ItemContainer container)
-    { return container != null && PlayerStorageSource.fromId(container.getId()) != null; }
+    @Override public BufferedImage getIcon(Client client) {
+        return itemManager == null ? Icon.MAIN.getImage() : itemManager.getImage(item);
+    }
+    @Override public GoalCategory getCategory() {
+        return GoalCategory.OTHER;
+    }
+    @Override public String getDescription() {
+        return storage == null ? "Open your bank and item storage to include their contents." : storage.describe(normalizedItem > 0 ? normalizedItem : item);
+    }
+    @Override public boolean hasProgress() {
+        return true;
+    }
+    @Override public long getProgressCurrent() {
+        return current;
+    }
+    @Override public long getProgressMaximum() {
+        return amount;
+    }
+    @Override public String getProgressText() {
+        return String.format(Locale.ROOT, "%,d / %,d owned", current, amount);
+    }
+    @Override public GoalStatus getStatus() {
+        return current >= amount ? GoalStatus.COMPLETE : current > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED;
+    }
+    @Override public boolean isAffectedBy(ItemContainer container) {
+        return container != null && PlayerStorageSource.fromId(container.getId()) != null;
+    }
     @Override public boolean refresh(Client client) {
-        if (storage == null) { return false; }
-        if (normalizedItem == 0) { normalizedItem = client == null ? item : storage.normalize(client, item); }
+        if (storage == null) {
+            return false;
+        }
+        if (normalizedItem == 0) {
+            normalizedItem = client == null ? item : storage.normalize(client, item);
+        }
         long next = storage.quantity(normalizedItem);
         boolean changed = next != current;
         current = next;

@@ -29,8 +29,12 @@ public enum GoalPreset {
     QUESTING("Questing"),
     COMPLETIONIST("Completionist");
     private final String name;
-    GoalPreset(String name) { this.name = name; }
-    @Override public String toString() { return name; }
+    GoalPreset(String name) {
+        this.name = name;
+    }
+    @Override public String toString() {
+        return name;
+    }
     public List<Goal> createGoals() {
         List<Goal> goals = new ArrayList<>();
         switch (this) {
@@ -46,7 +50,10 @@ public enum GoalPreset {
                 goals.add(new AchievementDiaryTierAreaGoal(AchievementDiaryArea.LUMBRIDGE, DiaryTier.EASY));
                 break;
             case SKILLING:
-                for (Skill skill : Skill.values()) { goals.add(new SkillLevelGoal(skill)); goals.add(new SkillExperienceGoal(skill)); }
+                for (Skill skill : Skill.values()) {
+                    goals.add(new SkillLevelGoal(skill));
+                    goals.add(new SkillExperienceGoal(skill));
+                }
                 break;
             case PVM:
                 goals.add(new CombatLevelGoal());
@@ -63,10 +70,19 @@ public enum GoalPreset {
                 goals.add(new QuestSeriesGoal(QuestSeries.FREMENNIK));
                 break;
             case COMPLETIONIST:
-                for (Skill skill : Skill.values()) { goals.add(new SkillLevelGoal(skill)); }
-                for (QuestSeries series : QuestSeries.values()) { goals.add(new QuestSeriesGoal(series)); }
-                for (DiaryTier tier : DiaryTier.values()) { goals.add(new AchievementDiaryTierGoal(tier)); }
-                for (CombatAchievementTier tier : CombatAchievementTier.values()) { goals.add(new CombatAchievementTierGoal(tier)); goals.add(new CombatAchievementDifficultyGoal(tier)); }
+                for (Skill skill : Skill.values()) {
+                    goals.add(new SkillLevelGoal(skill));
+                }
+                for (QuestSeries series : QuestSeries.values()) {
+                    goals.add(new QuestSeriesGoal(series));
+                }
+                for (DiaryTier tier : DiaryTier.values()) {
+                    goals.add(new AchievementDiaryTierGoal(tier));
+                }
+                for (CombatAchievementTier tier : CombatAchievementTier.values()) {
+                    goals.add(new CombatAchievementTierGoal(tier));
+                    goals.add(new CombatAchievementDifficultyGoal(tier));
+                }
                 break;
             default: throw new IllegalStateException("Unknown preset");
         }

@@ -26,31 +26,74 @@ public final class RecurringGoal {
     private long lastObservedAt;
     private final List<Period> history = new ArrayList<>();
 
-    public static boolean supports(Goal goal) { return goal instanceof CustomGoal || goal instanceof TrackerGoal || goal instanceof SkillExperienceGoal || goal instanceof TotalExperienceGoal; }
-    public RepeatSchedule getSchedule() { return schedule; }
-    public long getTarget() { return target; }
-    public long getProgress() { return progress; }
-    public long getStart() { return start; }
-    public long getBaselineAt() { return baselineAt; }
-    public long getCompletedAt() { return completedAt; }
-    public long getLastObservedAt() { return lastObservedAt; }
-    public List<Period> getHistory() { return Collections.unmodifiableList(history); }
-    public boolean isActive() { return schedule != RepeatSchedule.NONE; }
+    public static boolean supports(Goal goal) {
+        return goal instanceof CustomGoal || goal instanceof TrackerGoal || goal instanceof SkillExperienceGoal || goal instanceof TotalExperienceGoal;
+    }
+    public RepeatSchedule getSchedule() {
+        return schedule;
+    }
+    public long getTarget() {
+        return target;
+    }
+    public long getProgress() {
+        return progress;
+    }
+    public long getStart() {
+        return start;
+    }
+    public long getBaselineAt() {
+        return baselineAt;
+    }
+    public long getCompletedAt() {
+        return completedAt;
+    }
+    public long getLastObservedAt() {
+        return lastObservedAt;
+    }
+    public List<Period> getHistory() {
+        return Collections.unmodifiableList(history);
+    }
+    public boolean isActive() {
+        return schedule != RepeatSchedule.NONE;
+    }
     public void stop(long now, String outcome) {
-        if (isActive() && baselineAt > 0) { archive(now, outcome); }
-        schedule = RepeatSchedule.NONE; start = 0; baselineAt = 0; progress = 0; completedAt = 0; lastObservedAt = 0;
+        if (isActive() && baselineAt > 0) {
+            archive(now, outcome);
+        }
+        schedule = RepeatSchedule.NONE;
+        start = 0;
+        baselineAt = 0;
+        progress = 0;
+        completedAt = 0;
+        lastObservedAt = 0;
     }
     public void restart(long now) {
-        if (!isActive()) { throw new IllegalStateException("Only recurring goals have periods."); }
-        if (baselineAt > 0) { archive(now, "Period restarted · last observed"); }
-        start = 0; baselineAt = 0; progress = 0; completedAt = 0; lastObservedAt = 0;
+        if (!isActive()) {
+            throw new IllegalStateException("Only recurring goals have periods.");
+        }
+        if (baselineAt > 0) {
+            archive(now, "Period restarted · last observed");
+        }
+        start = 0;
+        baselineAt = 0;
+        progress = 0;
+        completedAt = 0;
+        lastObservedAt = 0;
     }
-    public GoalStatus getStatus() { return progress >= target ? GoalStatus.COMPLETE : progress > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED; }
+    public GoalStatus getStatus() {
+        return progress >= target ? GoalStatus.COMPLETE : progress > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED;
+    }
 
     public void configure(RepeatSchedule schedule, long target, long now) {
-        if (schedule == null || target < 1 || target > Integer.MAX_VALUE || now <= 0) { throw new IllegalArgumentException("Choose a repeat schedule and a target from 1 to 2,147,483,647."); }
-        if (this.schedule == schedule && this.target == target) { return; }
-        if (isActive() && baselineAt > 0) { archive(now, "Schedule changed"); }
+        if (schedule == null || target < 1 || target > Integer.MAX_VALUE || now <= 0) {
+            throw new IllegalArgumentException("Choose a repeat schedule and a target from 1 to 2,147,483,647.");
+        }
+        if (this.schedule == schedule && this.target == target) {
+            return;
+        }
+        if (isActive() && baselineAt > 0) {
+            archive(now, "Schedule changed");
+        }
         this.schedule = schedule;
         this.target = target;
         start = 0;
@@ -61,12 +104,16 @@ public final class RecurringGoal {
     }
 
     public void observe(Goal goal, long now) {
-        if (!isActive() || !supports(goal) || now <= 0 || now < lastObservedAt) { return; }
+        if (!isActive() || !supports(goal) || now <= 0 || now < lastObservedAt) {
+            return;
+        }
         long periodStart = schedule.start(now);
         if (baselineAt > 0 && periodStart > start) {
             long previousEnd = schedule.next(start);
             archive(previousEnd, completedAt > 0 ? "Completed" : "Incomplete · last observed");
-            if (periodStart > previousEnd) { append(new Period(schedule, previousEnd, periodStart, 0, target, 0, 0, 0, "Not observed")); }
+            if (periodStart > previousEnd) {
+                append(new Period(schedule, previousEnd, periodStart, 0, target, 0, 0, 0, "Not observed"));
+            }
             baselineAt = 0;
             if (goal instanceof CustomGoal) {
                 CustomGoal custom = (CustomGoal) goal;
@@ -81,20 +128,36 @@ public final class RecurringGoal {
             completedAt = 0;
             lastValue = value;
         }
-        if (goal instanceof CustomGoal) { progress = value; }
-        else if (value >= lastValue) { progress = Math.min(Long.MAX_VALUE - (value - lastValue), progress) + (value - lastValue); }
+        if (goal instanceof CustomGoal) {
+            progress = value;
+        } else if (value >= lastValue) {
+            progress = Math.min(Long.MAX_VALUE - (value - lastValue), progress) + (value - lastValue);
+        }
         lastValue = value;
         lastObservedAt = now;
-        if (progress >= target && completedAt == 0) { completedAt = now; }
+        if (progress >= target && completedAt == 0) {
+            completedAt = now;
+        }
     }
 
-    private void archive(long end, String outcome) { append(new Period(schedule, start, Math.max(start + 1, end), progress, target, baselineAt, lastObservedAt, completedAt, outcome)); }
-    private void append(Period period) { history.add(period); if (history.size() > 500) { history.remove(0); } }
+    private void archive(long end, String outcome) {
+        append(new Period(schedule, start, Math.max(start + 1, end), progress, target, baselineAt, lastObservedAt, completedAt, outcome));
+    }
+    private void append(Period period) {
+        history.add(period);
+        if (history.size() > 500) {
+            history.remove(0);
+        }
+    }
 
     public void validate() {
-        if (schedule == null || target < 1 || target > Integer.MAX_VALUE || start < 0 || baselineAt < 0 || lastValue < 0 || progress < 0 || completedAt < 0 || lastObservedAt < 0 || history == null || history.size() > 500) { throw new IllegalArgumentException("Invalid recurring goal"); }
+        if (schedule == null || target < 1 || target > Integer.MAX_VALUE || start < 0 || baselineAt < 0 || lastValue < 0 || progress < 0 || completedAt < 0 || lastObservedAt < 0 || history == null || history.size() > 500) {
+            throw new IllegalArgumentException("Invalid recurring goal");
+        }
         for (Period period : history) {
-            if (period == null || period.schedule == null || period.start < 0 || period.end <= period.start || period.progress < 0 || period.target < 1 || period.baselineAt < 0 || period.lastObservedAt < 0 || period.completedAt < 0 || period.outcome == null || period.outcome.length() > 100) { throw new IllegalArgumentException("Invalid period history"); }
+            if (period == null || period.schedule == null || period.start < 0 || period.end <= period.start || period.progress < 0 || period.target < 1 || period.baselineAt < 0 || period.lastObservedAt < 0 || period.completedAt < 0 || period.outcome == null || period.outcome.length() > 100) {
+                throw new IllegalArgumentException("Invalid period history");
+            }
         }
     }
 
@@ -113,15 +176,43 @@ public final class RecurringGoal {
         private final long lastObservedAt;
         private final long completedAt;
         private final String outcome;
-        private Period(RepeatSchedule schedule, long start, long end, long progress, long target, long baselineAt, long lastObservedAt, long completedAt, String outcome) { this.schedule = schedule; this.start = start; this.end = end; this.progress = progress; this.target = target; this.baselineAt = baselineAt; this.lastObservedAt = lastObservedAt; this.completedAt = completedAt; this.outcome = outcome; }
-        public RepeatSchedule getSchedule() { return schedule; }
-        public long getStart() { return start; }
-        public long getEnd() { return end; }
-        public long getProgress() { return progress; }
-        public long getTarget() { return target; }
-        public long getBaselineAt() { return baselineAt; }
-        public long getLastObservedAt() { return lastObservedAt; }
-        public long getCompletedAt() { return completedAt; }
-        public String getOutcome() { return outcome; }
+        private Period(RepeatSchedule schedule, long start, long end, long progress, long target, long baselineAt, long lastObservedAt, long completedAt, String outcome) {
+            this.schedule = schedule;
+            this.start = start;
+            this.end = end;
+            this.progress = progress;
+            this.target = target;
+            this.baselineAt = baselineAt;
+            this.lastObservedAt = lastObservedAt;
+            this.completedAt = completedAt;
+            this.outcome = outcome;
+        }
+        public RepeatSchedule getSchedule() {
+            return schedule;
+        }
+        public long getStart() {
+            return start;
+        }
+        public long getEnd() {
+            return end;
+        }
+        public long getProgress() {
+            return progress;
+        }
+        public long getTarget() {
+            return target;
+        }
+        public long getBaselineAt() {
+            return baselineAt;
+        }
+        public long getLastObservedAt() {
+            return lastObservedAt;
+        }
+        public long getCompletedAt() {
+            return completedAt;
+        }
+        public String getOutcome() {
+            return outcome;
+        }
     }
 }

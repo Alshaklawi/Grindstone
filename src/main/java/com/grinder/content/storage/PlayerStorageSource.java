@@ -24,11 +24,22 @@ public enum PlayerStorageSource {
     BOAT_5("Boat 5 cargo", InventoryID.SAILING_BOAT_5_CARGOHOLD);
     private final String name;
     private final int container;
-    PlayerStorageSource(String name, int container) { this.name = name; this.container = container; }
-    public int getContainerId() { return container; }
-    @Override public String toString() { return name; }
+    PlayerStorageSource(String name, int container) {
+        this.name = name;
+        this.container = container;
+    }
+    public int getContainerId() {
+        return container;
+    }
+    @Override public String toString() {
+        return name;
+    }
     public static PlayerStorageSource fromId(int id) {
-        for (PlayerStorageSource source : values()) { if (source.container == id) { return source; } }
+        for (PlayerStorageSource source : values()) {
+            if (source.container == id) {
+                return source;
+            }
+        }
         return null;
     }
 }

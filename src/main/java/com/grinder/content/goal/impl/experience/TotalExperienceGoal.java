@@ -20,11 +20,15 @@ public class TotalExperienceGoal implements Goal {
     private long target;
 
     @Override
-    public boolean supportsTarget() { return true; }
+    public boolean supportsTarget() {
+        return true;
+    }
 
     @Override
     public void setTarget(long target) {
-        if (target < 1 || target > Skill.values().length * 200_000_000L) { throw new IllegalArgumentException("Target exceeds the total XP cap"); }
+        if (target < 1 || target > Skill.values().length * 200_000_000L) {
+            throw new IllegalArgumentException("Target exceeds the total XP cap");
+        }
         this.target = target;
     }
 

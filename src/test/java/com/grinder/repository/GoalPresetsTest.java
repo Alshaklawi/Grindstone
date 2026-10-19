@@ -14,10 +14,14 @@ public class GoalPresetsTest {
         for (GoalPreset preset : GoalPreset.values()) {
             GrinderProfile profile = new GrinderProfile(42);
             profile.replace(Collections.emptyList());
-            for (Goal goal : preset.createGoals()) { assertTrue(profile.add(goal)); }
+            for (Goal goal : preset.createGoals()) {
+                assertTrue(profile.add(goal));
+            }
             int count = profile.getGoals().size();
             assertTrue(count > 0);
-            for (Goal goal : preset.createGoals()) { assertFalse(profile.add(goal)); }
+            for (Goal goal : preset.createGoals()) {
+                assertFalse(profile.add(goal));
+            }
             assertEquals(count, profile.getGoals().size());
             assertEquals(count, GrinderRepository.fromJson(GrinderRepository.toJson(profile)).getGoals().size());
         }

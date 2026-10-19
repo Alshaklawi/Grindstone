@@ -46,9 +46,15 @@ public final class GoalEditorPanel extends JPanel {
             "Owned item quantity", "Combat achievement task"});
     private final CustomGoalForm customForm = new CustomGoalForm();
     private final RepeatGoalForm repeatForm = new RepeatGoalForm();
-    public com.grinder.repository.RepeatSchedule getRepeatSchedule() { return repeatForm.isVisible() ? repeatForm.getSchedule() : com.grinder.repository.RepeatSchedule.NONE; }
-    public long getRepeatTarget() { return repeatForm.getTarget(); }
-    public void loadRepeat(com.grinder.repository.RepeatSchedule schedule, long target) { repeatForm.load(schedule, target); }
+    public com.grinder.repository.RepeatSchedule getRepeatSchedule() {
+        return repeatForm.isVisible() ? repeatForm.getSchedule() : com.grinder.repository.RepeatSchedule.NONE;
+    }
+    public long getRepeatTarget() {
+        return repeatForm.getTarget();
+    }
+    public void loadRepeat(com.grinder.repository.RepeatSchedule schedule, long target) {
+        repeatForm.load(schedule, target);
+    }
     private final ItemPickerPanel itemPicker;
     private final JComboBox<String> subject = new JComboBox<>();
     private final JSpinner target = new JSpinner();
@@ -67,33 +73,36 @@ public final class GoalEditorPanel extends JPanel {
 
     public GoalEditorPanel(ItemManager itemManager, ItemLookup searchService,
             Map<Integer, Map<String, Supplier<Goal>>> completionChoices) {
-        super(new BorderLayout(0, 12));
-        this.completionChoices = completionChoices;
-        this.itemManager = itemManager;
-        itemPicker = new ItemPickerPanel(searchService, selection -> notifyReadiness());
-        setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
-        UiTooltips.set(type, "Choose a goal type. The form will show only the relevant fields.");
-        UiTooltips.set(subject, "Choose the skill, activity or collection-log page to track.");
-        add(field("Goal type", type), BorderLayout.NORTH);
-        body.setOpaque(false);
-        body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
-        add(body, BorderLayout.CENTER);
-        preview.setOpaque(true);
-        preview.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        preview.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        preview.setFont(FontManager.getRunescapeSmallFont());
-        preview.setAlignmentX(LEFT_ALIGNMENT);
-        hint.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-        hint.setFont(FontManager.getRunescapeSmallFont());
-        hint.setAlignmentX(LEFT_ALIGNMENT);
-        presets.setOpaque(false);
-        type.addActionListener(event -> rebuild());
-        subject.addActionListener(event -> {
-            if (!updating) { configureTarget(true); updatePreview(); }
-        });
-        target.addChangeListener(event -> updatePreview());
-        rebuild();
-    }
+                super(new BorderLayout(0, 12));
+                this.completionChoices = completionChoices;
+                this.itemManager = itemManager;
+                itemPicker = new ItemPickerPanel(searchService, selection -> notifyReadiness());
+                setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+                UiTooltips.set(type, "Choose a goal type. The form will show only the relevant fields.");
+                UiTooltips.set(subject, "Choose the skill, activity or collection-log page to track.");
+                add(field("Goal type", type), BorderLayout.NORTH);
+                body.setOpaque(false);
+                body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
+                add(body, BorderLayout.CENTER);
+                preview.setOpaque(true);
+                preview.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+                preview.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+                preview.setFont(FontManager.getRunescapeSmallFont());
+                preview.setAlignmentX(LEFT_ALIGNMENT);
+                hint.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+                hint.setFont(FontManager.getRunescapeSmallFont());
+                hint.setAlignmentX(LEFT_ALIGNMENT);
+                presets.setOpaque(false);
+                type.addActionListener(event -> rebuild());
+                subject.addActionListener(event -> {
+                    if (!updating) {
+                        configureTarget(true);
+                        updatePreview();
+                    }
+                });
+                target.addChangeListener(event -> updatePreview());
+                rebuild();
+            }
 
     private JPanel field(String title, JComponent control) {
         JPanel wrapper = new JPanel(new BorderLayout(0, 5));
@@ -116,8 +125,7 @@ public final class GoalEditorPanel extends JPanel {
             customForm.setAlignmentX(LEFT_ALIGNMENT);
             body.add(customForm);
             setHint("Write your own goal. You control its progress and can edit its details later.");
-        }
-        else if (kind == 7 || kind == 16) {
+        } else if (kind == 7 || kind == 16) {
             itemPicker.setAlignmentX(LEFT_ALIGNMENT);
             body.add(itemPicker);
             itemPicker.resumeSearch();
@@ -141,8 +149,7 @@ public final class GoalEditorPanel extends JPanel {
             setHint(kind == 16
                     ? "Counts the selected item across known personal storage, including coins in supported coffers. Open your bank and other storage to load them. This is item quantity, not bank value. Shared storage and unexposed locations are excluded."
                     : "Tracks collection-log unlocks and first-seen dates, not inventory or bank quantities. Choose an item that belongs to the collection log.");
-        }
-        else {
+        } else {
             populateChoices(kind);
             updating = true;
             subject.setModel(new DefaultComboBoxModel<>(choices.keySet().toArray(new String[0])));
@@ -171,7 +178,10 @@ public final class GoalEditorPanel extends JPanel {
                     : "Uses real levels. Temporary boosts do not advance level goals.");
         }
         repeatForm.setVisible(kind == 1 || kind == 4 || kind == 5 || kind == 8);
-        if (repeatForm.isVisible()) { repeatForm.setAlignmentX(LEFT_ALIGNMENT); body.add(repeatForm); }
+        if (repeatForm.isVisible()) {
+            repeatForm.setAlignmentX(LEFT_ALIGNMENT);
+            body.add(repeatForm);
+        }
         body.add(Box.createVerticalStrut(10));
         body.add(hint);
         notifyReadiness();
@@ -194,16 +204,17 @@ public final class GoalEditorPanel extends JPanel {
                 choices.put(skill.getName(), kind == 0
                         ? () -> new SkillLevelGoal(skill) : () -> new SkillExperienceGoal(skill));
             }
-        }
-        else if (kind == 2) { choices.put("Combat level", CombatLevelGoal::new); }
-        else if (kind == 3) { choices.put("Total level", TotalLevelGoal::new); }
-        else if (kind == 4) { choices.put("Total experience", TotalExperienceGoal::new); }
-        else if (kind == 5) {
+        } else if (kind == 2) {
+            choices.put("Combat level", CombatLevelGoal::new);
+        } else if (kind == 3) {
+            choices.put("Total level", TotalLevelGoal::new);
+        } else if (kind == 4) {
+            choices.put("Total experience", TotalExperienceGoal::new);
+        } else if (kind == 5) {
             for (TrackerEntry entry : TrackerEntry.values()) {
                 choices.put(entry.getDisplayName(), () -> new TrackerGoal(entry, 5000));
             }
-        }
-        else {
+        } else {
             for (CollectionLogEntry entry : CollectionLogEntry.values()) {
                 String name = entry.name().replace('_', ' ').toLowerCase(Locale.ROOT);
                 choices.put(Character.toUpperCase(name.charAt(0)) + name.substring(1),
@@ -214,15 +225,19 @@ public final class GoalEditorPanel extends JPanel {
 
     private void configureTarget(boolean preserve) {
         Supplier<Goal> factory = choices.get(subject.getSelectedItem());
-        if (factory == null) { return; }
+        if (factory == null) {
+            return;
+        }
         Goal goal = factory.get();
-        if (!goal.supportsTarget()) { return; }
+        if (!goal.supportsTarget()) {
+            return;
+        }
         long previous = target.getValue() instanceof Number ? ((Number) target.getValue()).longValue() : 0;
         SpinnerNumberModel model = GoalTargetModels.create(goal);
         if (preserve && previous >= ((Number) model.getMinimum()).longValue()
                 && previous <= ((Number) model.getMaximum()).longValue()) {
-            model.setValue(previous);
-        }
+                    model.setValue(previous);
+                }
         target.setModel(model);
         target.setEditor(new JSpinner.NumberEditor(target, "#,##0"));
         GoalTargetModels.describe(target);
@@ -244,10 +259,17 @@ public final class GoalEditorPanel extends JPanel {
     }
 
     private void updatePreview() {
-        if (choices.isEmpty()) { preview.setText("No choices available"); return; }
-        if (type.getSelectedIndex() == 7 || type.getSelectedIndex() == 8) { return; }
+        if (choices.isEmpty()) {
+            preview.setText("No choices available");
+            return;
+        }
+        if (type.getSelectedIndex() == 7 || type.getSelectedIndex() == 8) {
+            return;
+        }
         String name = (String) subject.getSelectedItem();
-        if (name == null) { return; }
+        if (name == null) {
+            return;
+        }
         Goal sample = choices.get(name).get();
         UiTooltips.set(subject, sample.getDescription().isEmpty()
                 ? "Choose the goal to track on your character." : sample.getDescription());
@@ -265,12 +287,20 @@ public final class GoalEditorPanel extends JPanel {
                 : type.getSelectedIndex() == 8 || !choices.isEmpty();
     }
 
-    private void notifyReadiness() { firePropertyChange("ready", !isReady(), isReady()); }
+    private void notifyReadiness() {
+        firePropertyChange("ready", !isReady(), isReady());
+    }
 
     public Goal createGoal() throws java.text.ParseException {
-        if (repeatForm.isVisible()) { repeatForm.commit(); }
-        if (type.getSelectedIndex() == 8) { return customForm.read(); }
-        if (type.getSelectedIndex() == 7) { return new CollectionLogItemGoal(itemPicker.getSelectedItemId(), 1); }
+        if (repeatForm.isVisible()) {
+            repeatForm.commit();
+        }
+        if (type.getSelectedIndex() == 8) {
+            return customForm.read();
+        }
+        if (type.getSelectedIndex() == 7) {
+            return new CollectionLogItemGoal(itemPicker.getSelectedItemId(), 1);
+        }
         if (type.getSelectedIndex() == 16) {
             target.commitEdit();
             return new com.grinder.content.goal.impl.item.PossessedItemGoal(
@@ -284,7 +314,9 @@ public final class GoalEditorPanel extends JPanel {
         return goal;
     }
 
-    public void stopSearch() { itemPicker.stopSearch(); }
+    public void stopSearch() {
+        itemPicker.stopSearch();
+    }
     public void loadGoal(Goal goal) {
         if (goal instanceof com.grinder.content.goal.impl.item.PossessedItemGoal) {
             type.setSelectedIndex(16);
@@ -303,12 +335,16 @@ public final class GoalEditorPanel extends JPanel {
             return;
         }
         for (int kind = 0; kind < type.getItemCount(); kind++) {
-            if (kind == 7 || kind == 8 || kind == 16) { continue; }
+            if (kind == 7 || kind == 8 || kind == 16) {
+                continue;
+            }
             type.setSelectedIndex(kind);
             for (Map.Entry<String, Supplier<Goal>> choice : choices.entrySet()) {
                 if (com.grinder.repository.GrinderProfile.sameSelection(goal, choice.getValue().get())) {
                     subject.setSelectedItem(choice.getKey());
-                    if (goal.supportsTarget()) { target.setValue(goal.getProgressMaximum()); }
+                    if (goal.supportsTarget()) {
+                        target.setValue(goal.getProgressMaximum());
+                    }
                     return;
                 }
             }
@@ -321,8 +357,4 @@ public final class GoalEditorPanel extends JPanel {
         Dimension size = super.getPreferredSize();
         return new Dimension(380, size.height);
     }
-
-
-
-
 }

@@ -28,7 +28,9 @@ public final class CustomGoal implements Goal {
         update(title, description, category, current, target);
     }
 
-    public String getId() { return id; }
+    public String getId() {
+        return id;
+    }
 
     public void update(String title, String description, GoalCategory category, long current, long target) {
         String name = title == null ? "" : title.trim();
@@ -50,28 +52,44 @@ public final class CustomGoal implements Goal {
     }
 
     @Override
-    public String getTitle(Client client) { return title; }
+    public String getTitle(Client client) {
+        return title;
+    }
 
     @Override
-    public String getDescription() { return description; }
+    public String getDescription() {
+        return description;
+    }
 
     @Override
-    public GoalCategory getCategory() { return category; }
+    public GoalCategory getCategory() {
+        return category;
+    }
 
     @Override
-    public boolean hasProgress() { return true; }
+    public boolean hasProgress() {
+        return true;
+    }
 
     @Override
-    public long getProgressCurrent() { return current; }
+    public long getProgressCurrent() {
+        return current;
+    }
 
     @Override
-    public long getProgressMaximum() { return target; }
+    public long getProgressMaximum() {
+        return target;
+    }
 
     @Override
-    public boolean supportsTarget() { return true; }
+    public boolean supportsTarget() {
+        return true;
+    }
 
     @Override
-    public void setTarget(long target) { update(title, description, category, current, target); }
+    public void setTarget(long target) {
+        update(title, description, category, current, target);
+    }
 
     @Override
     public GoalStatus getStatus() {

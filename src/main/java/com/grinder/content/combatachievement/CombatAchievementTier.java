@@ -15,9 +15,18 @@ public enum CombatAchievementTier {
     private final String name;
     private final int threshold;
     private final int taskEnum;
-    CombatAchievementTier(String name, int threshold, int taskEnum)
-    { this.name = name; this.threshold = threshold; this.taskEnum = taskEnum; }
-    public int getThreshold() { return threshold; }
-    public int getTaskEnum() { return taskEnum; }
-    @Override public String toString() { return name; }
+    CombatAchievementTier(String name, int threshold, int taskEnum) {
+        this.name = name;
+        this.threshold = threshold;
+        this.taskEnum = taskEnum;
+    }
+    public int getThreshold() {
+        return threshold;
+    }
+    public int getTaskEnum() {
+        return taskEnum;
+    }
+    @Override public String toString() {
+        return name;
+    }
 }

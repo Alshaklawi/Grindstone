@@ -77,7 +77,9 @@ public final class GoalCreationDialog extends JDialog {
         getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"), "cancel");
         getRootPane().getActionMap().put("cancel", new AbstractAction() {
             @Override
-            public void actionPerformed(ActionEvent event) { dispose(); }
+            public void actionPerformed(ActionEvent event) {
+                dispose();
+            }
         });
         form.addPropertyChangeListener("ready", event -> updateReady());
         form.addPropertyChangeListener("formLayout", event -> {
@@ -111,8 +113,7 @@ public final class GoalCreationDialog extends JDialog {
         try {
             result = form.createGoal();
             dispose();
-        }
-        catch (java.text.ParseException | IllegalArgumentException exception) {
+        } catch (java.text.ParseException | IllegalArgumentException exception) {
             error.setText(exception instanceof IllegalArgumentException ? exception.getMessage()
                     : "Enter a number within the target's allowed range.");
             error.setVisible(true);
@@ -133,7 +134,9 @@ public final class GoalCreationDialog extends JDialog {
         GoalCreationDialog dialog = new GoalCreationDialog(owner, form);
         dialog.setTitle(title);
         dialog.add.setText(action);
-        if (!"Add goal".equals(action)) { dialog.heading.setText("Update your tracker"); }
+        if (!"Add goal".equals(action)) {
+            dialog.heading.setText("Update your tracker");
+        }
         dialog.add.setToolTipText("Save the selected goal to the current player profile.");
         dialog.setVisible(true);
         return dialog.result;

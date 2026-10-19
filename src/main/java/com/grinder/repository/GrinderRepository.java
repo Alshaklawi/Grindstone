@@ -47,7 +47,9 @@ public final class GrinderRepository {
 
     private GrinderRepository() {
     }
-    public static GoalMetadata copyMetadata(GoalMetadata metadata) { return GoalMetadata.validated(GSON.fromJson(GSON.toJsonTree(metadata), GoalMetadata.class)); }
+    public static GoalMetadata copyMetadata(GoalMetadata metadata) {
+        return GoalMetadata.validated(GSON.fromJson(GSON.toJsonTree(metadata), GoalMetadata.class));
+    }
 
     public static synchronized void load() throws IOException {
         Files.createDirectories(DIRECTORY);
@@ -173,18 +175,24 @@ public final class GrinderRepository {
                 JsonObject savedGoal = element.getAsJsonObject();
                 JsonElement data = savedGoal.get("data");
                 Class<? extends Goal> type = SavedGoalTypes.fromTag(savedGoal);
-                if (type == null || data == null || !data.isJsonObject()) { continue; }
+                if (type == null || data == null || !data.isJsonObject()) {
+                    continue;
+                }
                 Goal goal;
                 if (type == CollectionLogEntryGoal.class) {
                     JsonObject page = data.getAsJsonObject();
                     if (page.has("pageStruct")) {
                         goal = new CollectionLogEntryGoal(null, page.get("pageStruct").getAsInt(), page.get("pageName").getAsString());
                     } else {
-                    JsonElement entryElement = data.getAsJsonObject().get("entry");
-                    if (entryElement == null || entryElement.isJsonNull()) { continue; }
-                    CollectionLogEntry entry = GSON.fromJson(entryElement, CollectionLogEntry.class);
-                    if (entry == null) { continue; }
-                    goal = new CollectionLogEntryGoal(null, entry);
+                        JsonElement entryElement = data.getAsJsonObject().get("entry");
+                        if (entryElement == null || entryElement.isJsonNull()) {
+                            continue;
+                        }
+                        CollectionLogEntry entry = GSON.fromJson(entryElement, CollectionLogEntry.class);
+                        if (entry == null) {
+                            continue;
+                        }
+                        goal = new CollectionLogEntryGoal(null, entry);
                     }
                 } else if (type == CustomGoal.class) {
                     CustomGoal saved = GSON.fromJson(data, CustomGoal.class);
@@ -203,15 +211,18 @@ public final class GrinderRepository {
                     if (goal instanceof SkillLevelGoal && ((SkillLevelGoal) goal).getSkill() == null
                             || goal instanceof SkillExperienceGoal && ((SkillExperienceGoal) goal).getSkill() == null
                             || goal instanceof TrackerGoal && ((TrackerGoal) goal).getTracker() == null) {
-                        continue;
-                    }
+                                continue;
+                            }
                     if (goal.supportsTarget()) {
                         goal.setTarget(goal.getProgressMaximum());
                     }
                     goals.add(goal);
                     if (savedGoal.has("metadata")) {
-                        try { profile.restoreMetadata(goal, GSON.fromJson(savedGoal.get("metadata"), GoalMetadata.class)); }
-                        catch (RuntimeException exception) { log.debug("Skipping invalid goal metadata", exception); }
+                        try {
+                            profile.restoreMetadata(goal, GSON.fromJson(savedGoal.get("metadata"), GoalMetadata.class));
+                        } catch (RuntimeException exception) {
+                            log.debug("Skipping invalid goal metadata", exception);
+                        }
                     }
                 }
             } catch (RuntimeException exception) {
@@ -221,10 +232,15 @@ public final class GrinderRepository {
 
         profile.replace(goals);
         if (json.has("archivedHistory") && json.get("archivedHistory").isJsonArray()) {
-            if (json.getAsJsonArray("archivedHistory").size() > 500) { throw new IllegalArgumentException("Too many archived goal histories"); }
+            if (json.getAsJsonArray("archivedHistory").size() > 500) {
+                throw new IllegalArgumentException("Too many archived goal histories");
+            }
             for (JsonElement saved : json.getAsJsonArray("archivedHistory")) {
-                try { profile.restoreArchive(GSON.fromJson(saved, GrinderProfile.ArchivedHistory.class)); }
-                catch (RuntimeException exception) { log.debug("Skipping invalid archived goal history", exception); }
+                try {
+                    profile.restoreArchive(GSON.fromJson(saved, GrinderProfile.ArchivedHistory.class));
+                } catch (RuntimeException exception) {
+                    log.debug("Skipping invalid archived goal history", exception);
+                }
             }
         }
         return profile;
@@ -239,10 +255,16 @@ public final class GrinderRepository {
         return GSON.toJson(snapshot);
     }
     public static GrinderProfile importBackup(String text, long targetHash) {
-        if (text == null || text.length() > 5_000_000) { throw new IllegalArgumentException("Backup must be smaller than 5 MB."); }
+        if (text == null || text.length() > 5_000_000) {
+            throw new IllegalArgumentException("Backup must be smaller than 5 MB.");
+        }
         JsonObject json = new JsonParser().parse(text).getAsJsonObject();
-        if (!json.has("hash") || !json.has("goals") || !json.get("goals").isJsonArray() || json.getAsJsonArray("goals").size() > 5000) { throw new IllegalArgumentException("Not a valid Grinder profile backup."); }
-        if (json.has("backupVersion") && json.get("backupVersion").getAsInt() != 1) { throw new IllegalArgumentException("Unsupported backup version."); }
+        if (!json.has("hash") || !json.has("goals") || !json.get("goals").isJsonArray() || json.getAsJsonArray("goals").size() > 5000) {
+            throw new IllegalArgumentException("Not a valid Grinder profile backup.");
+        }
+        if (json.has("backupVersion") && json.get("backupVersion").getAsInt() != 1) {
+            throw new IllegalArgumentException("Unsupported backup version.");
+        }
         boolean sameAccount = json.get("hash").getAsLong() == targetHash;
         json.addProperty("hash", targetHash);
         if (!sameAccount) {
@@ -255,15 +277,21 @@ public final class GrinderRepository {
                     metadata.add("completions", new JsonArray());
                     if (metadata.has("recurring") && metadata.get("recurring").isJsonObject()) {
                         JsonObject recurring = metadata.getAsJsonObject("recurring");
-                        for (String key : new String[]{"start", "baselineAt", "lastValue", "progress", "completedAt", "lastObservedAt"}) { recurring.addProperty(key, 0); }
+                        for (String key : new String[]{"start", "baselineAt", "lastValue", "progress", "completedAt", "lastObservedAt"}) {
+                            recurring.addProperty(key, 0);
+                        }
                         recurring.add("history", new JsonArray());
                     }
                 }
-                if (SavedGoalTypes.fromTag(saved) == CustomGoal.class) { saved.getAsJsonObject("data").addProperty("current", 0); }
+                if (SavedGoalTypes.fromTag(saved) == CustomGoal.class) {
+                    saved.getAsJsonObject("data").addProperty("current", 0);
+                }
             }
         }
         GrinderProfile restored = fromJson(json);
-        if (restored.getGoals().size() != json.getAsJsonArray("goals").size()) { throw new IllegalArgumentException("Backup contains invalid or unsupported goals. No goals were imported."); }
+        if (restored.getGoals().size() != json.getAsJsonArray("goals").size()) {
+            throw new IllegalArgumentException("Backup contains invalid or unsupported goals. No goals were imported.");
+        }
         return restored;
     }
 }

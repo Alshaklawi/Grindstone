@@ -43,5 +43,4 @@ public enum Icon {
         BufferedImage img = func.apply(getImage());
         return new ImageIcon(img);
     }
-
 }

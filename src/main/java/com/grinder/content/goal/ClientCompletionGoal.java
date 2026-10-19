@@ -17,19 +17,34 @@ public abstract class ClientCompletionGoal implements Goal {
         current = Math.max(0, current);
         maximum = Math.max(0, maximum);
         boolean changed = this.current != current || this.maximum != maximum || this.started != started;
-        this.current = current; this.maximum = maximum; this.started = started;
+        this.current = current;
+        this.maximum = maximum;
+        this.started = started;
         initialized = true;
         return changed;
     }
-    @Override public boolean hasProgress() { return maximum > 0; }
-    @Override public long getProgressCurrent() { return current; }
-    @Override public long getProgressMaximum() { return maximum; }
-    @Override public GoalStatus getStatus()
-    { return maximum > 0 && current >= maximum ? GoalStatus.COMPLETE : started || current > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED; }
-    @Override public BufferedImage getIcon(Client client) { return getCategory().getIcon().getImage(); }
-    @Override public boolean isAffectedBy(ItemContainer container) { return false; }
+    @Override public boolean hasProgress() {
+        return maximum > 0;
+    }
+    @Override public long getProgressCurrent() {
+        return current;
+    }
+    @Override public long getProgressMaximum() {
+        return maximum;
+    }
+    @Override public GoalStatus getStatus() {
+        return maximum > 0 && current >= maximum ? GoalStatus.COMPLETE : started || current > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED;
+    }
+    @Override public BufferedImage getIcon(Client client) {
+        return getCategory().getIcon().getImage();
+    }
+    @Override public boolean isAffectedBy(ItemContainer container) {
+        return false;
+    }
     @Override public com.grinder.ui.components.GoalComponent build(Client client, com.grinder.config.GrinderConfig config) {
-        if (!initialized) { refresh(client); }
+        if (!initialized) {
+            refresh(client);
+        }
         return Goal.super.build(client, config);
     }
 }

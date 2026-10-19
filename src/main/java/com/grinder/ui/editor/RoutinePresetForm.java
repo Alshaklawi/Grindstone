@@ -56,7 +56,15 @@ public final class RoutinePresetForm extends JPanel {
     }
     public List<Goal> selectedGoals() throws java.text.ParseException {
         List<Goal> selected = new ArrayList<>();
-        for (Row row : rows) { if (row.enabled.isSelected()) { row.target.commitEdit(); if (row.goal instanceof CustomGoal) { row.goal.setTarget(((Number) row.target.getValue()).longValue()); } selected.add(row.goal); } }
+        for (Row row : rows) {
+            if (row.enabled.isSelected()) {
+                row.target.commitEdit();
+                if (row.goal instanceof CustomGoal) {
+                    row.goal.setTarget(((Number) row.target.getValue()).longValue());
+                }
+                selected.add(row.goal);
+            }
+        }
         return selected;
     }
     public GoalMetadata metadata(Goal goal, long now) {

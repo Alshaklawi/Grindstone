@@ -20,13 +20,26 @@ public final class GoalUndo {
         this.action = action;
         this.allowed = allowed;
     }
-    public String getLabel() { return label; }
-    public void clear() { profile = null; action = null; allowed = null; label = null; }
+    public String getLabel() {
+        return label;
+    }
+    public void clear() {
+        profile = null;
+        action = null;
+        allowed = null;
+        label = null;
+    }
     public boolean undo(GrinderProfile active) {
         boolean valid = active != null && active == profile && active.revision() == revision && action != null && allowed.getAsBoolean();
         Runnable saved = action;
         clear();
-        if (valid) { try { saved.run(); } catch (IllegalStateException exception) { return false; } }
+        if (valid) {
+            try {
+                saved.run();
+            } catch (IllegalStateException exception) {
+                return false;
+            }
+        }
         return valid;
     }
 }

@@ -30,7 +30,11 @@ public class GoalReplacementTest {
         edited.setTarget(75);
         assertTrue(profile.replaceGoal(attack, edited));
         assertEquals(id, profile.metadata(edited).getId());
-        try { profile.replaceGoal(edited, new SkillLevelGoal(Skill.DEFENCE)); fail("Duplicate must be rejected"); }
-        catch (IllegalArgumentException expected) { assertTrue(profile.getGoals().contains(edited)); }
+        try {
+            profile.replaceGoal(edited, new SkillLevelGoal(Skill.DEFENCE));
+            fail("Duplicate must be rejected");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(profile.getGoals().contains(edited));
+        }
     }
 }

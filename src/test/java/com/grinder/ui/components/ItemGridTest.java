@@ -35,7 +35,9 @@ public class ItemGridTest {
             int redPixels = 0;
             for (int y = 0; y < 40; y++) {
                 for (int x = 0; x < 40; x++) {
-                    if (result.getRGB(x, y) == Color.RED.getRGB()) { redPixels++; }
+                    if (result.getRGB(x, y) == Color.RED.getRGB()) {
+                        redPixels++;
+                    }
                 }
             }
             assertEquals(36 * 32, redPixels);
@@ -95,7 +97,9 @@ public class ItemGridTest {
 
     private static ItemContainerComponent filledContainer(int count) {
         List<ItemComponent> items = new ArrayList<>();
-        for (int i = 0; i < count; i++) { items.add(new ItemComponent(null, null)); }
+        for (int i = 0; i < count; i++) {
+            items.add(new ItemComponent(null, null));
+        }
         ItemContainerComponent container = new ItemContainerComponent();
         container.set(items);
         return container;

@@ -38,7 +38,8 @@ public final class ItemPickerPanel extends JPanel {
     private final Timer debounce = new Timer(220, event -> search());
     private final Consumer<ItemSearchService.Result> onSelection;
     private ItemSearchService.Result selected;
-    private Runnable cancelSearch = () -> { };
+    private Runnable cancelSearch = () -> {
+    };
     private boolean updating;
     private int queryVersion;
 
@@ -60,19 +61,21 @@ public final class ItemPickerPanel extends JPanel {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index,
                     boolean selected, boolean focus) {
-                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, selected, focus);
-                if (value instanceof ItemSearchService.Result) {
-                    ItemSearchService.Result item = (ItemSearchService.Result) value;
-                    label.setText("<html>" + HtmlUtils.escape(item.name) + "<br><small>Item ID: " + item.id + "</small></html>");
-                    label.setIcon(item.image == null ? null : new ImageIcon(item.image));
-                    label.setToolTipText(item.name + " (ID " + item.id + ")");
-                    label.setBorder(BorderFactory.createEmptyBorder(3, 6, 3, 6));
-                }
-                return label;
-            }
+                        JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, selected, focus);
+                        if (value instanceof ItemSearchService.Result) {
+                            ItemSearchService.Result item = (ItemSearchService.Result) value;
+                            label.setText("<html>" + HtmlUtils.escape(item.name) + "<br><small>Item ID: " + item.id + "</small></html>");
+                            label.setIcon(item.image == null ? null : new ImageIcon(item.image));
+                            label.setToolTipText(item.name + " (ID " + item.id + ")");
+                            label.setBorder(BorderFactory.createEmptyBorder(3, 6, 3, 6));
+                        }
+                        return label;
+                    }
         });
         results.addListSelectionListener(event -> {
-            if (!event.getValueIsAdjusting() && !updating) { select(results.getSelectedValue()); }
+            if (!event.getValueIsAdjusting() && !updating) {
+                select(results.getSelectedValue());
+            }
         });
         JScrollPane list = new JScrollPane(results);
         list.setPreferredSize(new Dimension(350, 174));
@@ -93,11 +96,17 @@ public final class ItemPickerPanel extends JPanel {
         add(info, BorderLayout.SOUTH);
         search.getDocument().addDocumentListener(new DocumentListener() {
             @Override
-            public void insertUpdate(DocumentEvent event) { queryChanged(); }
+            public void insertUpdate(DocumentEvent event) {
+                queryChanged();
+            }
             @Override
-            public void removeUpdate(DocumentEvent event) { queryChanged(); }
+            public void removeUpdate(DocumentEvent event) {
+                queryChanged();
+            }
             @Override
-            public void changedUpdate(DocumentEvent event) { queryChanged(); }
+            public void changedUpdate(DocumentEvent event) {
+                queryChanged();
+            }
         });
     }
 
@@ -120,21 +129,28 @@ public final class ItemPickerPanel extends JPanel {
             return;
         }
         cancelSearch = service.search(text, response -> {
-            if (version != queryVersion) { return; }
+            if (version != queryVersion) {
+                return;
+            }
             int selectedId = selected == null ? -1 : selected.id;
             updating = true;
             try {
                 model.clear();
                 for (ItemSearchService.Result item : response.results) {
                     model.addElement(item);
-                    if (item.id == selectedId) { results.setSelectedValue(item, true); }
-                    if (item.image != null) { item.image.onLoaded(results::repaint); }
+                    if (item.id == selectedId) {
+                        results.setSelectedValue(item, true);
+                    }
+                    if (item.image != null) {
+                        item.image.onLoaded(results::repaint);
+                    }
                 }
                 if (response.complete && response.results.size() == 1) {
                     results.setSelectedIndex(0);
                 }
+            } finally {
+                updating = false;
             }
-            finally { updating = false; }
             setStatus(response.message);
             select(results.getSelectedValue());
         });
@@ -148,18 +164,24 @@ public final class ItemPickerPanel extends JPanel {
         if (item != null && item.image != null) {
             preview.setIcon(new ImageIcon(item.image));
             item.image.onLoaded(() -> javax.swing.SwingUtilities.invokeLater(() -> {
-                if (selected == item) { preview.repaint(); }
+                if (selected == item) {
+                    preview.repaint();
+                }
             }));
         }
         onSelection.accept(item);
     }
 
     public int getSelectedItemId() {
-        if (selected == null) { throw new IllegalArgumentException("Search for an item and select its name and icon first."); }
+        if (selected == null) {
+            throw new IllegalArgumentException("Search for an item and select its name and icon first.");
+        }
         return selected.id;
     }
 
-    public boolean hasSelection() { return selected != null; }
+    public boolean hasSelection() {
+        return selected != null;
+    }
     public void loadItem(int id) {
         search.setText(Integer.toString(id));
         search();
@@ -172,7 +194,9 @@ public final class ItemPickerPanel extends JPanel {
     }
 
     public void resumeSearch() {
-        if (!search.getText().trim().isEmpty() && selected == null) { debounce.restart(); }
+        if (!search.getText().trim().isEmpty() && selected == null) {
+            debounce.restart();
+        }
     }
 
     private void setStatus(String message) {
@@ -185,5 +209,4 @@ public final class ItemPickerPanel extends JPanel {
         stopSearch();
         super.removeNotify();
     }
-
 }

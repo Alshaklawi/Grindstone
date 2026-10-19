@@ -19,11 +19,15 @@ public class TotalLevelGoal implements Goal {
     private int target;
 
     @Override
-    public boolean supportsTarget() { return true; }
+    public boolean supportsTarget() {
+        return true;
+    }
 
     @Override
     public void setTarget(long target) {
-        if (target < 1 || target > Skill.values().length * MAX_LEVEL_PER_SKILL) { throw new IllegalArgumentException("Target exceeds the total level cap"); }
+        if (target < 1 || target > Skill.values().length * MAX_LEVEL_PER_SKILL) {
+            throw new IllegalArgumentException("Target exceeds the total level cap");
+        }
         this.target = (int) target;
     }
 

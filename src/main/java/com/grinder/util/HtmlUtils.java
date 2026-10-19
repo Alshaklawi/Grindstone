@@ -5,7 +5,8 @@ package com.grinder.util;
  * @since 10/18/2026
  */
 public final class HtmlUtils {
-    private HtmlUtils() {}
+    private HtmlUtils() {
+    }
     public static String escape(String text) {
         return text == null ? "" : text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }

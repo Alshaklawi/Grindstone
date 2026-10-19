@@ -10,6 +10,10 @@ public enum DiaryTier {
     HARD("Hard"),
     ELITE("Elite");
     private final String name;
-    DiaryTier(String name) { this.name = name; }
-    @Override public String toString() { return name; }
+    DiaryTier(String name) {
+        this.name = name;
+    }
+    @Override public String toString() {
+        return name;
+    }
 }

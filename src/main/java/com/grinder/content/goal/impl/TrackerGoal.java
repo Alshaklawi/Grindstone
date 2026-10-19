@@ -15,7 +15,6 @@ import net.runelite.api.Client;
  * @since 10/18/2026
  */
 public class TrackerGoal implements Goal {
-
     @Getter
     private final TrackerEntry tracker;
 
@@ -25,7 +24,9 @@ public class TrackerGoal implements Goal {
     private transient long current;
     private transient net.runelite.client.game.ItemManager itemManager;
     private transient boolean activityIcons = true;
-    public void setItemManager(net.runelite.client.game.ItemManager itemManager) { this.itemManager = itemManager; }
+    public void setItemManager(net.runelite.client.game.ItemManager itemManager) {
+        this.itemManager = itemManager;
+    }
 
     public TrackerGoal(final TrackerEntry entry, final int count) {
         if (entry == null) {
@@ -49,11 +50,15 @@ public class TrackerGoal implements Goal {
     }
 
     @Override
-    public boolean supportsTarget() { return true; }
+    public boolean supportsTarget() {
+        return true;
+    }
 
     @Override
     public void setTarget(long target) {
-        if (target < 1 || target > Integer.MAX_VALUE) { throw new IllegalArgumentException("Choose a positive target count"); }
+        if (target < 1 || target > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("Choose a positive target count");
+        }
         setCount((int) target);
     }
 
@@ -64,7 +69,12 @@ public class TrackerGoal implements Goal {
 
     @Override
     public BufferedImage getIcon(Client client) {
-        if (activityIcons && itemManager != null) { int item = tracker.iconItem(client); if (item > 0) { return itemManager.getImage(item); } }
+        if (activityIcons && itemManager != null) {
+            int item = tracker.iconItem(client);
+            if (item > 0) {
+                return itemManager.getImage(item);
+            }
+        }
         return tracker.getIcon().getImage();
     }
 

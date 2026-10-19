@@ -15,7 +15,9 @@ import static org.junit.Assert.*;
  * @since 10/19/2026
  */
 public class RecurringGoalTest {
-    private long time(String value) { return Instant.parse(value).toEpochMilli(); }
+    private long time(String value) {
+        return Instant.parse(value).toEpochMilli();
+    }
     @Test public void usesUtcCalendarBoundaries() {
         long now = time("2026-10-21T12:00:00Z");
         assertEquals(time("2026-10-21T00:00:00Z"), RepeatSchedule.DAILY.start(now));
@@ -58,7 +60,9 @@ public class RecurringGoalTest {
     @Test public void automaticCountersCountGainsNotExistingTotals() {
         long[] value = {1_000_000};
         SkillExperienceGoal goal = new SkillExperienceGoal(Skill.ATTACK) {
-            @Override public long getProgressCurrent() { return value[0]; }
+            @Override public long getProgressCurrent() {
+                return value[0];
+            }
         };
         RecurringGoal recurring = new RecurringGoal();
         long now = time("2026-10-19T10:00:00Z");
@@ -112,7 +116,9 @@ public class RecurringGoalTest {
         RecurringGoal recurring = new RecurringGoal();
         long now = time("2026-10-19T10:00:00Z");
         recurring.configure(RepeatSchedule.DAILY, 5, now);
-        for (int index = 0; index < 510; index++) { recurring.observe(goal, now + index * 86_400_000L); }
+        for (int index = 0; index < 510; index++) {
+            recurring.observe(goal, now + index * 86_400_000L);
+        }
         assertEquals(500, recurring.getHistory().size());
         long baseline = recurring.getBaselineAt();
         recurring.observe(goal, now);

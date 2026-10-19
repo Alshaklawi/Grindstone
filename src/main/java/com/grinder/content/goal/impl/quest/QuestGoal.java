@@ -12,15 +12,25 @@ import net.runelite.api.QuestState;
  */
 public final class QuestGoal extends ClientCompletionGoal {
     private final Quest quest;
-    public QuestGoal(Quest quest) { this.quest = Objects.requireNonNull(quest); }
-    @Override public String selectionKey() { return Objects.requireNonNull(quest).name(); }
-    @Override public String getTitle(Client client) { return quest.getName(); }
-    @Override public GoalCategory getCategory() { return GoalCategory.QUEST; }
+    public QuestGoal(Quest quest) {
+        this.quest = Objects.requireNonNull(quest);
+    }
+    @Override public String selectionKey() {
+        return Objects.requireNonNull(quest).name();
+    }
+    @Override public String getTitle(Client client) {
+        return quest.getName();
+    }
+    @Override public GoalCategory getCategory() {
+        return GoalCategory.QUEST;
+    }
     @Override public boolean refresh(Client client) {
         return refreshState(quest.getState(client));
     }
     public boolean refreshState(QuestState state) {
         return update(state == QuestState.FINISHED ? 1 : 0, 1, state == QuestState.IN_PROGRESS);
     }
-    @Override public String getProgressText() { return getStatus().toString().replace('_', ' '); }
+    @Override public String getProgressText() {
+        return getStatus().toString().replace('_', ' ');
+    }
 }

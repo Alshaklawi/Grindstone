@@ -34,12 +34,18 @@ public class RoutineWorkflowTest {
                 for (boolean weekly : new boolean[]{false, true}) {
                     RoutinePresetForm form = new RoutinePresetForm(weekly);
                     assertEquals(4, form.selectedGoals().size());
-                    for (Goal goal : form.selectedGoals()) { assertTrue(profile.add(goal, form.metadata(goal, 1000))); }
+                    for (Goal goal : form.selectedGoals()) {
+                        assertTrue(profile.add(goal, form.metadata(goal, 1000)));
+                    }
                     RoutinePresetForm duplicate = new RoutinePresetForm(weekly);
-                    for (Goal goal : duplicate.selectedGoals()) { assertFalse(profile.add(goal, duplicate.metadata(goal, 1000))); }
+                    for (Goal goal : duplicate.selectedGoals()) {
+                        assertFalse(profile.add(goal, duplicate.metadata(goal, 1000)));
+                    }
                 }
                 assertEquals(8, profile.getGoals().size());
-            } catch (java.text.ParseException exception) { throw new AssertionError(exception); }
+            } catch (java.text.ParseException exception) {
+                throw new AssertionError(exception);
+            }
         });
     }
     @Test public void cacheReusesOnlyMatchingCardsAndReleasesRemovedGoals() {
@@ -70,16 +76,25 @@ public class RoutineWorkflowTest {
     @Test public void manualControlsUseCheckboxesAndDisableIncrementAtTarget() throws Exception {
         SwingUtilities.invokeAndWait(() -> {
             GoalComponent component = new GoalComponent();
-            component.setManualActions(1, 1, () -> fail("No increment"), () -> {}, () -> {});
+            component.setManualActions(1, 1, () -> fail("No increment"), () -> {
+            }, () -> {
+            });
             assertTrue(hasControl(component, javax.swing.JCheckBox.class, "Completed", true));
-            component.setManualActions(5, 5, () -> {}, () -> {}, () -> {});
+            component.setManualActions(5, 5, () -> {
+            }, () -> {
+            }, () -> {
+            });
             assertTrue(hasControl(component, javax.swing.JButton.class, "+1", false));
         });
     }
     private boolean hasControl(java.awt.Container parent, Class<?> type, String label, boolean enabled) {
         for (java.awt.Component child : parent.getComponents()) {
-            if (type.isInstance(child) && child instanceof javax.swing.AbstractButton && ((javax.swing.AbstractButton) child).getText().equals(label) && child.isEnabled() == enabled) { return true; }
-            if (child instanceof java.awt.Container && hasControl((java.awt.Container) child, type, label, enabled)) { return true; }
+            if (type.isInstance(child) && child instanceof javax.swing.AbstractButton && ((javax.swing.AbstractButton) child).getText().equals(label) && child.isEnabled() == enabled) {
+                return true;
+            }
+            if (child instanceof java.awt.Container && hasControl((java.awt.Container) child, type, label, enabled)) {
+                return true;
+            }
         }
         return false;
     }

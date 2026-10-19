@@ -22,16 +22,25 @@ public enum AchievementDiaryArea {
     private final String name;
     private final int[] counts;
     private final int[] completed;
-    AchievementDiaryArea(String name, int[] counts, int[] completed)
-    { this.name = name; this.counts = counts; this.completed = completed; }
-    public int taskCount(Client client, DiaryTier tier) { return taskCount(client::getVarbitValue, tier); }
-    public int taskCount(java.util.function.IntUnaryOperator values, DiaryTier tier)
-    { return Math.max(0, values.applyAsInt(counts[tier.ordinal()])); }
-    public boolean isComplete(Client client, DiaryTier tier)
-    { return isComplete(client::getVarbitValue, tier); }
+    AchievementDiaryArea(String name, int[] counts, int[] completed) {
+        this.name = name;
+        this.counts = counts;
+        this.completed = completed;
+    }
+    public int taskCount(Client client, DiaryTier tier) {
+        return taskCount(client::getVarbitValue, tier);
+    }
+    public int taskCount(java.util.function.IntUnaryOperator values, DiaryTier tier) {
+        return Math.max(0, values.applyAsInt(counts[tier.ordinal()]));
+    }
+    public boolean isComplete(Client client, DiaryTier tier) {
+        return isComplete(client::getVarbitValue, tier);
+    }
     public boolean isComplete(java.util.function.IntUnaryOperator values, DiaryTier tier) {
         int index = tier.ordinal();
         return completed[index] >= 0 ? values.applyAsInt(completed[index]) > 0 : taskCount(values, tier) >= new int[]{10, 19, 10}[index];
     }
-    @Override public String toString() { return name; }
+    @Override public String toString() {
+        return name;
+    }
 }

@@ -17,7 +17,8 @@ public final class CollectionLogPages {
     private static final int TAB_PAGES_PARAM = 683;
     private static final int PAGE_TITLE_PARAM = 689;
     private static final int PAGE_ITEMS_PARAM = 690;
-    private CollectionLogPages() {}
+    private CollectionLogPages() {
+    }
     public static int canonicalItemId(int item) {
         switch (item) {
             case ItemID.TOL_TEA: return ItemID.TOL_TEA_DUMMY;
@@ -37,16 +38,26 @@ public final class CollectionLogPages {
     }
     public static Map<Integer, String> discover(Client client) {
         Map<Integer, String> pages = new LinkedHashMap<>();
-        if (client == null) { return pages; }
+        if (client == null) {
+            return pages;
+        }
         for (int id : TAB_STRUCTS) {
             StructComposition tab = client.getStructComposition(id);
-            if (tab == null) { continue; }
+            if (tab == null) {
+                continue;
+            }
             EnumComposition entries = client.getEnum(tab.getIntValue(TAB_PAGES_PARAM));
-            if (entries == null || entries.getIntVals() == null) { continue; }
+            if (entries == null || entries.getIntVals() == null) {
+                continue;
+            }
             for (int page : entries.getIntVals()) {
-                if (page <= 0) { continue; }
+                if (page <= 0) {
+                    continue;
+                }
                 String name = title(client, page, "");
-                if (!name.isEmpty()) { pages.put(page, name); }
+                if (!name.isEmpty()) {
+                    pages.put(page, name);
+                }
             }
         }
         return Collections.unmodifiableMap(pages);
@@ -58,13 +69,17 @@ public final class CollectionLogPages {
     }
     public static int[] itemIds(Client client, int page) {
         StructComposition struct = client == null ? null : client.getStructComposition(page);
-        if (struct == null) { return new int[0]; }
+        if (struct == null) {
+            return new int[0];
+        }
         int enumId = struct.getIntValue(PAGE_ITEMS_PARAM);
         EnumComposition items = enumId <= 0 ? null : client.getEnum(enumId);
         return items == null || items.getIntVals() == null ? new int[0] : java.util.Arrays.stream(items.getIntVals()).filter(id -> id > 0).map(CollectionLogPages::canonicalItemId).distinct().toArray();
     }
     public static ItemComposition[] items(Client client, int page) {
-        if (client == null) { return new ItemComposition[0]; }
+        if (client == null) {
+            return new ItemComposition[0];
+        }
         return java.util.Arrays.stream(itemIds(client, page)).mapToObj(client::getItemDefinition).filter(java.util.Objects::nonNull).toArray(ItemComposition[]::new);
     }
 }

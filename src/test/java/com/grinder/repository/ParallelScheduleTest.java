@@ -13,7 +13,11 @@ import static org.junit.Assert.*;
  * @since 10/19/2026
  */
 public class ParallelScheduleTest {
-    private GrinderProfile profile() { GrinderProfile profile = new GrinderProfile(42); profile.replace(Collections.emptyList()); return profile; }
+    private GrinderProfile profile() {
+        GrinderProfile profile = new GrinderProfile(42);
+        profile.replace(Collections.emptyList());
+        return profile;
+    }
     private Goal add(GrinderProfile profile, RepeatSchedule schedule) {
         Goal goal = new SkillExperienceGoal(Skill.WOODCUTTING);
         GoalMetadata metadata = new GoalMetadata();
@@ -23,9 +27,13 @@ public class ParallelScheduleTest {
     }
     @Test public void sameSubjectCanHaveLifetimeDailyWeeklyAndMonthlyTargets() {
         GrinderProfile profile = profile();
-        for (RepeatSchedule schedule : RepeatSchedule.values()) { add(profile, schedule); }
+        for (RepeatSchedule schedule : RepeatSchedule.values()) {
+            add(profile, schedule);
+        }
         assertEquals(4, profile.getGoals().size());
-        for (RepeatSchedule schedule : RepeatSchedule.values()) { assertNotNull(profile.findMatchingGoal(new SkillExperienceGoal(Skill.WOODCUTTING), schedule)); }
+        for (RepeatSchedule schedule : RepeatSchedule.values()) {
+            assertNotNull(profile.findMatchingGoal(new SkillExperienceGoal(Skill.WOODCUTTING), schedule));
+        }
         GoalMetadata duplicate = new GoalMetadata();
         duplicate.recurring().configure(RepeatSchedule.DAILY, 200, 1_000);
         assertFalse(profile.add(new SkillExperienceGoal(Skill.WOODCUTTING), duplicate));
@@ -37,6 +45,11 @@ public class ParallelScheduleTest {
         GrinderProfile profile = profile();
         Goal daily = add(profile, RepeatSchedule.DAILY);
         add(profile, RepeatSchedule.WEEKLY);
-        try { profile.replaceGoal(daily, new SkillExperienceGoal(Skill.WOODCUTTING), RepeatSchedule.WEEKLY); fail("Duplicate schedule"); } catch (IllegalArgumentException expected) { assertEquals(2, profile.getGoals().size()); }
+        try {
+            profile.replaceGoal(daily, new SkillExperienceGoal(Skill.WOODCUTTING), RepeatSchedule.WEEKLY);
+            fail("Duplicate schedule");
+        } catch (IllegalArgumentException expected) {
+            assertEquals(2, profile.getGoals().size());
+        }
     }
 }

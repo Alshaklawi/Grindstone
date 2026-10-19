@@ -25,7 +25,9 @@ public enum CollectionLogEntry {
     private static final int ENUM_PARAM_ID = 690;
 
     private final int struct;
-    public int getStruct() { return struct; }
+    public int getStruct() {
+        return struct;
+    }
 
     CollectionLogEntry(final int struct) {
         this.struct = struct;

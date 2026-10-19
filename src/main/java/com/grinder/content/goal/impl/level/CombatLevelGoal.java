@@ -18,11 +18,15 @@ public class CombatLevelGoal implements Goal {
     private int target;
 
     @Override
-    public boolean supportsTarget() { return true; }
+    public boolean supportsTarget() {
+        return true;
+    }
 
     @Override
     public void setTarget(long target) {
-        if (target < 3 || target > MAX_COMBAT_LEVEL) { throw new IllegalArgumentException("Choose combat level from 3 to 126"); }
+        if (target < 3 || target > MAX_COMBAT_LEVEL) {
+            throw new IllegalArgumentException("Choose combat level from 3 to 126");
+        }
         this.target = (int) target;
     }
     private transient int current;

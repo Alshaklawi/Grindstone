@@ -53,7 +53,9 @@ public class ItemContainerComponent extends JPanel {
     public void configure(int itemsPerRow, int maxRows) {
         int nextColumns = Math.max(1, Math.min(4, itemsPerRow));
         int nextRows = Math.max(1, Math.min(10, maxRows));
-        if (this.itemsPerRow == nextColumns && this.maxRows == nextRows) { return; }
+        if (this.itemsPerRow == nextColumns && this.maxRows == nextRows) {
+            return;
+        }
         this.itemsPerRow = nextColumns;
         this.maxRows = nextRows;
         refresh();
@@ -63,29 +65,39 @@ public class ItemContainerComponent extends JPanel {
         List<ItemComponent> next = new ArrayList<>();
         if (components != null) {
             for (ItemComponent component : components) {
-                if (component != null && !next.contains(component)) { next.add(component); }
+                if (component != null && !next.contains(component)) {
+                    next.add(component);
+                }
             }
         }
-        if (items.equals(next)) { return; }
+        if (items.equals(next)) {
+            return;
+        }
         items.clear();
         items.addAll(next);
         refresh();
     }
 
     public void add(ItemComponent component) {
-        if (component == null || items.contains(component)) { return; }
+        if (component == null || items.contains(component)) {
+            return;
+        }
         items.add(component);
         refresh();
     }
 
     public void clear() {
-        if (items.isEmpty()) { return; }
+        if (items.isEmpty()) {
+            return;
+        }
         items.clear();
         expanded = false;
         refresh();
     }
 
-    public List<ItemComponent> getItems() { return Collections.unmodifiableList(items); }
+    public List<ItemComponent> getItems() {
+        return Collections.unmodifiableList(items);
+    }
 
     public void setEmptyMessage(String message) {
         emptyLabel.setText(message);
@@ -103,8 +115,7 @@ public class ItemContainerComponent extends JPanel {
         if (items.isEmpty()) {
             columns = nextColumns;
             grid.setLayout(new BorderLayout());
-        }
-        else if (columns != nextColumns || !(grid.getLayout() instanceof GridLayout)) {
+        } else if (columns != nextColumns || !(grid.getLayout() instanceof GridLayout)) {
             columns = nextColumns;
             grid.setLayout(new GridLayout(0, columns, GAP, GAP));
         }
@@ -112,8 +123,11 @@ public class ItemContainerComponent extends JPanel {
         List<ItemComponent> next = new ArrayList<>(items.subList(0, count));
         if (!visibleItems.equals(next) || items.isEmpty() && grid.getComponentCount() == 0) {
             grid.removeAll();
-            if (next.isEmpty()) { grid.add(emptyLabel); }
-            else { next.forEach(grid::add); }
+            if (next.isEmpty()) {
+                grid.add(emptyLabel);
+            } else {
+                next.forEach(grid::add);
+            }
             visibleItems = next;
         }
         boolean overflow = items.size() > columns * maxRows;
@@ -127,7 +141,9 @@ public class ItemContainerComponent extends JPanel {
 
     @Override
     public void doLayout() {
-        if (columnsForWidth() != columns) { refresh(); }
+        if (columnsForWidth() != columns) {
+            refresh();
+        }
         super.doLayout();
     }
 
@@ -138,13 +154,19 @@ public class ItemContainerComponent extends JPanel {
         int rows = count == 0 ? 0 : (count + cols - 1) / cols;
         int height = rows == 0 ? emptyLabel.getPreferredSize().height
                 : rows * ItemComponent.CELL_SIZE + Math.max(0, rows - 1) * GAP;
-        if (items.size() > cols * maxRows) { height += 6 + showMore.getPreferredSize().height; }
+        if (items.size() > cols * maxRows) {
+            height += 6 + showMore.getPreferredSize().height;
+        }
         return new Dimension(cols * ItemComponent.CELL_SIZE + Math.max(0, cols - 1) * GAP, height);
     }
 
     @Override
-    public Dimension getMinimumSize() { return new Dimension(ItemComponent.CELL_SIZE, getPreferredSize().height); }
+    public Dimension getMinimumSize() {
+        return new Dimension(ItemComponent.CELL_SIZE, getPreferredSize().height);
+    }
 
     @Override
-    public Dimension getMaximumSize() { return new Dimension(Integer.MAX_VALUE, getPreferredSize().height); }
+    public Dimension getMaximumSize() {
+        return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
+    }
 }

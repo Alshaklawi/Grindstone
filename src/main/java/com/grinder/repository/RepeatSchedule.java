@@ -19,8 +19,12 @@ public enum RepeatSchedule {
 
     public long start(long now) {
         LocalDate date = Instant.ofEpochMilli(now).atZone(ZoneOffset.UTC).toLocalDate();
-        if (this == WEEKLY) { date = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)); }
-        if (this == MONTHLY) { date = date.withDayOfMonth(1); }
+        if (this == WEEKLY) {
+            date = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        }
+        if (this == MONTHLY) {
+            date = date.withDayOfMonth(1);
+        }
         return date.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
     }
 
@@ -31,5 +35,7 @@ public enum RepeatSchedule {
     }
 
     @Override
-    public String toString() { return name().charAt(0) + name().substring(1).toLowerCase(java.util.Locale.ROOT); }
+    public String toString() {
+        return name().charAt(0) + name().substring(1).toLowerCase(java.util.Locale.ROOT);
+    }
 }

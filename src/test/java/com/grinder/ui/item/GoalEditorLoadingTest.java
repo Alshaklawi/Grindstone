@@ -25,7 +25,8 @@ public class GoalEditorLoadingTest {
             ItemLookup lookup = (query, callback) -> {
                 int id = Integer.parseInt(query);
                 callback.accept(new ItemSearchService.Response(Collections.singletonList(new ItemSearchService.Result(id, "Item " + id, null)), "Found", true));
-                return () -> {};
+                return () -> {
+                };
             };
             GoalEditorPanel form = new GoalEditorPanel(null, lookup, choices);
             try {
@@ -34,11 +35,18 @@ public class GoalEditorLoadingTest {
                     assertTrue(form.isReady());
                     Goal edited = form.createGoal();
                     assertEquals(original.getClass(), edited.getClass());
-                    if (!(original instanceof CustomGoal)) { assertTrue(GrinderProfile.sameSelection(original, edited)); }
-                    if (original.supportsTarget()) { assertEquals(original.getProgressMaximum(), edited.getProgressMaximum()); }
+                    if (!(original instanceof CustomGoal)) {
+                        assertTrue(GrinderProfile.sameSelection(original, edited));
+                    }
+                    if (original.supportsTarget()) {
+                        assertEquals(original.getProgressMaximum(), edited.getProgressMaximum());
+                    }
                 }
-            } catch (java.text.ParseException exception) { throw new AssertionError(exception); }
-            finally { form.stopSearch(); }
+            } catch (java.text.ParseException exception) {
+                throw new AssertionError(exception);
+            } finally {
+                form.stopSearch();
+            }
         });
     }
 }

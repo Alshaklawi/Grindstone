@@ -34,5 +34,7 @@ public class CombatAchievementTaskGoalTest {
         assertEquals(31, restored.getTask());
         assertEquals("Keep these requirements", restored.getDescription());
     }
-    @Test(expected = IllegalArgumentException.class) public void invalidNativeTaskIndexIsRejected() { new CombatAchievementTaskGoal(-1, "Bad", ""); }
+    @Test(expected = IllegalArgumentException.class) public void invalidNativeTaskIndexIsRejected() {
+        new CombatAchievementTaskGoal(-1, "Bad", "");
+    }
 }

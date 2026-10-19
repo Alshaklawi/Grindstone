@@ -27,7 +27,8 @@ import java.util.Map;
  */
 final class SavedGoalTypes {
     private static final Map<String, Class<? extends Goal>> TYPES = createTypes();
-    private SavedGoalTypes() {}
+    private SavedGoalTypes() {
+    }
     private static Map<String, Class<? extends Goal>> createTypes() {
         Map<String, Class<? extends Goal>> types = new LinkedHashMap<>();
         register(types, TrackerGoal.class, "activity", "com.grinder.content.goal.impl.TrackerGoal");
@@ -51,20 +52,30 @@ final class SavedGoalTypes {
         return Collections.unmodifiableMap(types);
     }
     private static void register(Map<String, Class<? extends Goal>> types, Class<? extends Goal> type, String... aliases) {
-        for (String alias : aliases) { types.put(alias, type); }
+        for (String alias : aliases) {
+            types.put(alias, type);
+        }
         types.put(type.getName(), type);
     }
     static Class<? extends Goal> fromTag(com.google.gson.JsonObject saved) {
         Class<? extends Goal> modern = saved.has("type") ? resolve(saved.get("type").getAsString()) : null;
         Class<? extends Goal> legacy = saved.has("class") ? resolve(saved.get("class").getAsString()) : null;
-        if (saved.has("type") && saved.has("class") && modern != legacy) { return null; }
+        if (saved.has("type") && saved.has("class") && modern != legacy) {
+            return null;
+        }
         return saved.has("type") ? modern : legacy;
     }
-    static Class<? extends Goal> resolve(String name) { return TYPES.get(name); }
-    static java.util.Set<Class<? extends Goal>> registeredTypes() { return Collections.unmodifiableSet(new java.util.HashSet<>(TYPES.values())); }
+    static Class<? extends Goal> resolve(String name) {
+        return TYPES.get(name);
+    }
+    static java.util.Set<Class<? extends Goal>> registeredTypes() {
+        return Collections.unmodifiableSet(new java.util.HashSet<>(TYPES.values()));
+    }
     static String nameOf(Goal goal) {
         for (Map.Entry<String, Class<? extends Goal>> entry : TYPES.entrySet()) {
-            if (entry.getValue() == goal.getClass()) { return entry.getKey(); }
+            if (entry.getValue() == goal.getClass()) {
+                return entry.getKey();
+            }
         }
         throw new IllegalArgumentException("Unsupported goal type: " + goal.getClass().getName());
     }

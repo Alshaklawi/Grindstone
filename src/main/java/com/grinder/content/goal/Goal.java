@@ -76,8 +76,7 @@ public interface Goal {
 
         if (hasProgress()) {
             component.setProgress(getProgressCurrent(), getProgressMaximum(), getProgressText());
-        }
-        else {
+        } else {
             component.setProgressStatus(getStatus().name());
         }
 

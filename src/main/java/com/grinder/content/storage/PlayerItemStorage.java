@@ -23,48 +23,73 @@ import net.runelite.api.gameval.VarPlayerID;
 public final class PlayerItemStorage {
     private final java.time.Clock clock;
     private final Map<PlayerStorageSource, java.time.Instant> lastSeen = new EnumMap<>(PlayerStorageSource.class);
-    public PlayerItemStorage() { this(java.time.Clock.systemUTC()); }
-    public PlayerItemStorage(java.time.Clock clock) { this.clock = java.util.Objects.requireNonNull(clock); }
+    public PlayerItemStorage() {
+        this(java.time.Clock.systemUTC());
+    }
+    public PlayerItemStorage(java.time.Clock clock) {
+        this.clock = java.util.Objects.requireNonNull(clock);
+    }
     private final Map<PlayerStorageSource, Map<Integer, Long>> containers = new EnumMap<>(PlayerStorageSource.class);
     private final Map<String, Map<Integer, Long>> variables = new LinkedHashMap<>();
     private final Map<Integer, Integer> normalized = new HashMap<>();
     private static final int[] RUNE_TYPES = {VarbitID.RUNE_POUCH_TYPE_1, VarbitID.RUNE_POUCH_TYPE_2, VarbitID.RUNE_POUCH_TYPE_3, VarbitID.RUNE_POUCH_TYPE_4, VarbitID.RUNE_POUCH_TYPE_5, VarbitID.RUNE_POUCH_TYPE_6};
     private static final int[] RUNE_QUANTITIES = {VarbitID.RUNE_POUCH_QUANTITY_1, VarbitID.RUNE_POUCH_QUANTITY_2, VarbitID.RUNE_POUCH_QUANTITY_3, VarbitID.RUNE_POUCH_QUANTITY_4, VarbitID.RUNE_POUCH_QUANTITY_5, VarbitID.RUNE_POUCH_QUANTITY_6};
-    public void reset()
-    { containers.clear(); variables.clear(); normalized.clear(); lastSeen.clear(); }
+    public void reset() {
+        containers.clear();
+        variables.clear();
+        normalized.clear();
+        lastSeen.clear();
+    }
     public void captureLoaded(Client client) {
-        for (PlayerStorageSource source : PlayerStorageSource.values())
-        { observe(client, client.getItemContainer(source.getContainerId())); }
+        for (PlayerStorageSource source : PlayerStorageSource.values()) {
+            observe(client, client.getItemContainer(source.getContainerId()));
+        }
         refreshVariables(client);
     }
     public boolean observe(Client client, ItemContainer container) {
-        if (container == null || PlayerStorageSource.fromId(container.getId()) == null) { return false; }
+        if (container == null || PlayerStorageSource.fromId(container.getId()) == null) {
+            return false;
+        }
         replace(container.getId(), container.getItems(), id -> normalize(client, id));
         return true;
     }
     public void replace(int containerId, Item[] items, IntUnaryOperator normalize) {
         PlayerStorageSource source = PlayerStorageSource.fromId(containerId);
-        if (source == null || items == null) { return; }
+        if (source == null || items == null) {
+            return;
+        }
         Map<Integer, Long> counts = new HashMap<>();
         for (Item item : items) {
-            if (item == null || item.getId() <= 0 || item.getQuantity() <= 0) { continue; }
+            if (item == null || item.getId() <= 0 || item.getQuantity() <= 0) {
+                continue;
+            }
             int id = normalize.applyAsInt(item.getId());
-            if (id > 0) { counts.merge(id, (long) item.getQuantity(), Long::sum); }
+            if (id > 0) {
+                counts.merge(id, (long) item.getQuantity(), Long::sum);
+            }
         }
         containers.put(source, counts);
         lastSeen.put(source, clock.instant());
     }
-    public Map<PlayerStorageSource, java.time.Instant> lastSeen() { return java.util.Collections.unmodifiableMap(new EnumMap<>(lastSeen)); }
+    public Map<PlayerStorageSource, java.time.Instant> lastSeen() {
+        return java.util.Collections.unmodifiableMap(new EnumMap<>(lastSeen));
+    }
     public String freshness() {
         java.time.Instant seen = lastSeen.get(PlayerStorageSource.BANK);
         return seen == null ? "Bank not loaded this login" : "Bank snapshot: " + java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss z", Locale.ROOT).withZone(java.time.ZoneId.systemDefault()).format(seen);
     }
-    public boolean hasBankSnapshot() { return containers.containsKey(PlayerStorageSource.BANK); }
+    public boolean hasBankSnapshot() {
+        return containers.containsKey(PlayerStorageSource.BANK);
+    }
     public int normalize(Client client, int id) {
         return normalized.computeIfAbsent(id, key -> {
             ItemComposition definition = client.getItemDefinition(key);
-            if (definition == null) { return key; }
-            if (definition.getPlaceholderTemplateId() != -1) { return -1; }
+            if (definition == null) {
+                return key;
+            }
+            if (definition.getPlaceholderTemplateId() != -1) {
+                return -1;
+            }
             return definition.getNote() != -1 ? definition.getLinkedNoteId() : key;
         });
     }
@@ -85,7 +110,9 @@ public final class PlayerItemStorage {
                 int quantity = varbits.applyAsInt(RUNE_QUANTITIES[slot]);
                 if (type > 0 && quantity > 0) {
                     int rune = mapping.applyAsInt(type);
-                    if (rune > 0) { runes.merge(rune, (long) quantity, Long::sum); }
+                    if (rune > 0) {
+                        runes.merge(rune, (long) quantity, Long::sum);
+                    }
                 }
             }
         }
@@ -100,23 +127,30 @@ public final class PlayerItemStorage {
     }
     private void setCoins(String source, long quantity) {
         Map<Integer, Long> coins = new HashMap<>();
-        if (quantity > 0) { coins.put(ItemID.COINS, quantity); }
+        if (quantity > 0) {
+            coins.put(ItemID.COINS, quantity);
+        }
         variables.put(source, coins);
     }
     public Map<String, Long> breakdown(int item) {
         Map<String, Long> result = new LinkedHashMap<>();
         containers.forEach((source, counts) -> {
             long quantity = counts.getOrDefault(item, 0L);
-            if (quantity > 0) { result.put(source.toString(), quantity); }
+            if (quantity > 0) {
+                result.put(source.toString(), quantity);
+            }
         });
         variables.forEach((source, counts) -> {
             long quantity = counts.getOrDefault(item, 0L);
-            if (quantity > 0) { result.put(source, quantity); }
+            if (quantity > 0) {
+                result.put(source, quantity);
+            }
         });
         return result;
     }
-    public long quantity(int item)
-    { return breakdown(item).values().stream().mapToLong(Long::longValue).sum(); }
+    public long quantity(int item) {
+        return breakdown(item).values().stream().mapToLong(Long::longValue).sum();
+    }
     public String describe(int item) {
         String amounts = breakdown(item).entrySet().stream()
                 .map(entry -> entry.getKey() + ": " + String.format(Locale.ROOT, "%,d", entry.getValue()))

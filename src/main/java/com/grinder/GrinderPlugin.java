@@ -185,21 +185,29 @@ public class GrinderPlugin extends Plugin {
     public void onGameTick(net.runelite.api.events.GameTick event) {
         if (hasActivePlayerProfile() && System.currentTimeMillis() - lastRecurringRefresh >= 30_000) {
             lastRecurringRefresh = System.currentTimeMillis();
-            if (profile.getGoals().stream().anyMatch(goal -> profile.metadata(goal).recurring().isActive())) { panel.refreshAll(); }
+            if (profile.getGoals().stream().anyMatch(goal -> profile.metadata(goal).recurring().isActive())) {
+                panel.refreshAll();
+            }
         }
-        if ((!completionProgressDirty && !storageProgressDirty) || !hasActivePlayerProfile()) { return; }
+        if ((!completionProgressDirty && !storageProgressDirty) || !hasActivePlayerProfile()) {
+            return;
+        }
         boolean variablesChanged = completionProgressDirty;
         boolean storageChanged = storageProgressDirty;
         completionProgressDirty = false;
         storageProgressDirty = false;
-        if (variablesChanged || storageChanged) { profile.getPlayerStorage().refreshVariables(client); }
+        if (variablesChanged || storageChanged) {
+            profile.getPlayerStorage().refreshVariables(client);
+        }
         boolean changed = storageChanged;
         for (Goal goal : profile.getGoals()) {
             if ((variablesChanged && goal instanceof ClientCompletionGoal) || goal instanceof PossessedItemGoal) {
                 changed |= goal.refresh(client);
             }
         }
-        if (changed) { panel.refreshAll(); }
+        if (changed) {
+            panel.refreshAll();
+        }
     }
 
     @Subscribe
@@ -277,7 +285,9 @@ public class GrinderPlugin extends Plugin {
     private void onLogout() {
         completionProgressDirty = false;
         storageProgressDirty = false;
-        if (profile != null) { profile.getPlayerStorage().reset(); }
+        if (profile != null) {
+            profile.getPlayerStorage().reset();
+        }
         if (config.saveOnLogout()) {
             saveProfile();
         }

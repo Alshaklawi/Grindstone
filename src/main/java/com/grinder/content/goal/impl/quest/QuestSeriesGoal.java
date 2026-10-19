@@ -14,21 +14,37 @@ import net.runelite.api.QuestState;
  */
 public final class QuestSeriesGoal extends ClientCompletionGoal {
     private final QuestSeries series;
-    public QuestSeriesGoal(QuestSeries series) { this.series = Objects.requireNonNull(series); }
-    @Override public String selectionKey() { return Objects.requireNonNull(series).name(); }
-    @Override public String getTitle(Client client) { return series + " quest series"; }
-    @Override public String getDescription() { return series.getQuests().stream().map(Quest::getName).collect(Collectors.joining(", ")); }
-    @Override public GoalCategory getCategory() { return GoalCategory.QUEST; }
-    @Override public boolean refresh(Client client)
-    { return refreshStates(quest -> quest.getState(client)); }
+    public QuestSeriesGoal(QuestSeries series) {
+        this.series = Objects.requireNonNull(series);
+    }
+    @Override public String selectionKey() {
+        return Objects.requireNonNull(series).name();
+    }
+    @Override public String getTitle(Client client) {
+        return series + " quest series";
+    }
+    @Override public String getDescription() {
+        return series.getQuests().stream().map(Quest::getName).collect(Collectors.joining(", "));
+    }
+    @Override public GoalCategory getCategory() {
+        return GoalCategory.QUEST;
+    }
+    @Override public boolean refresh(Client client) {
+        return refreshStates(quest -> quest.getState(client));
+    }
     public boolean refreshStates(java.util.function.Function<Quest, QuestState> states) {
-        int done = 0; boolean started = false;
+        int done = 0;
+        boolean started = false;
         for (Quest quest : series.getQuests()) {
             QuestState state = states.apply(quest);
-            if (state == QuestState.FINISHED) { done++; }
+            if (state == QuestState.FINISHED) {
+                done++;
+            }
             started |= state != QuestState.NOT_STARTED;
         }
         return update(done, series.getQuests().size(), started);
     }
-    @Override public String getProgressText() { return super.getProgressText() + " quests"; }
+    @Override public String getProgressText() {
+        return super.getProgressText() + " quests";
+    }
 }

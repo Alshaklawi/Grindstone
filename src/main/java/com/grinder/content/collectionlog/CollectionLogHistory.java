@@ -20,7 +20,9 @@ public final class CollectionLogHistory {
     private final Map<Integer, Long> firstSeen = new HashMap<>();
 
     public void observe(ItemContainer container) {
-        if (container == null || container.getId() != InventoryID.COLLECTION_TRANSMIT) { return; }
+        if (container == null || container.getId() != InventoryID.COLLECTION_TRANSMIT) {
+            return;
+        }
         long now = System.currentTimeMillis();
         for (Item item : container.getItems()) {
             if (item != null && item.getId() > 0 && item.getQuantity() > 0) {
@@ -30,15 +32,23 @@ public final class CollectionLogHistory {
     }
 
     public void record(int itemId, long epochMillis) {
-        if (itemId <= 0 || epochMillis <= 0) { return; }
+        if (itemId <= 0 || epochMillis <= 0) {
+            return;
+        }
         firstSeen.merge(CollectionLogPages.canonicalItemId(itemId), epochMillis, Math::min);
     }
 
-    public boolean contains(int itemId) { return firstSeen.containsKey(CollectionLogPages.canonicalItemId(itemId)); }
+    public boolean contains(int itemId) {
+        return firstSeen.containsKey(CollectionLogPages.canonicalItemId(itemId));
+    }
 
-    public Long firstSeenAt(int itemId) { return firstSeen.get(CollectionLogPages.canonicalItemId(itemId)); }
+    public Long firstSeenAt(int itemId) {
+        return firstSeen.get(CollectionLogPages.canonicalItemId(itemId));
+    }
 
-    public Map<Integer, Long> snapshot() { return Collections.unmodifiableMap(new HashMap<>(firstSeen)); }
+    public Map<Integer, Long> snapshot() {
+        return Collections.unmodifiableMap(new HashMap<>(firstSeen));
+    }
 
     public String firstSeenText(int itemId) {
         Long time = firstSeenAt(itemId);

@@ -19,11 +19,15 @@ public class SkillLevelGoal implements Goal {
     private int target;
 
     @Override
-    public boolean supportsTarget() { return true; }
+    public boolean supportsTarget() {
+        return true;
+    }
 
     @Override
     public void setTarget(long target) {
-        if (target < 1 || target > MAX_LEVEL) { throw new IllegalArgumentException("Choose a level from 1 to 99"); }
+        if (target < 1 || target > MAX_LEVEL) {
+            throw new IllegalArgumentException("Choose a level from 1 to 99");
+        }
         this.target = (int) target;
     }
 

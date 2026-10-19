@@ -21,11 +21,15 @@ public class SkillExperienceGoal implements Goal {
     private long target;
 
     @Override
-    public boolean supportsTarget() { return true; }
+    public boolean supportsTarget() {
+        return true;
+    }
 
     @Override
     public void setTarget(long target) {
-        if (target < 1 || target > 200_000_000L) { throw new IllegalArgumentException("Choose XP from 1 to 200,000,000"); }
+        if (target < 1 || target > 200_000_000L) {
+            throw new IllegalArgumentException("Choose XP from 1 to 200,000,000");
+        }
         this.target = target;
     }
 
@@ -99,5 +103,4 @@ public class SkillExperienceGoal implements Goal {
         refresh(client);
         return Goal.super.build(client, config);
     }
-
 }

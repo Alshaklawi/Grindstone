@@ -17,9 +17,16 @@ public final class SegmentedProgressBar extends JProgressBar {
     private long target = 100;
     private long current;
     private boolean explicitProgress;
-    public void setMaximumChunks(int maximumChunks) { this.maximumChunks = Math.max(1, Math.min(20, maximumChunks)); repaint(); }
-    public long getChunkSize() { return target <= 0 ? 1 : 1 + (target - 1) / maximumChunks; }
-    public int getChunkCount() { return target <= 0 ? 1 : (int) (1 + (target - 1) / getChunkSize()); }
+    public void setMaximumChunks(int maximumChunks) {
+        this.maximumChunks = Math.max(1, Math.min(20, maximumChunks));
+        repaint();
+    }
+    public long getChunkSize() {
+        return target <= 0 ? 1 : 1 + (target - 1) / maximumChunks;
+    }
+    public int getChunkCount() {
+        return target <= 0 ? 1 : (int) (1 + (target - 1) / getChunkSize());
+    }
     public void setProgress(long current, long target) {
         this.current = Math.max(0, current);
         this.target = Math.max(0, target);
@@ -51,7 +58,9 @@ public final class SegmentedProgressBar extends JProgressBar {
         Insets insets = getInsets();
         int width = getWidth() - insets.left - insets.right;
         int height = getHeight() - insets.top - insets.bottom;
-        if (width <= 0 || height <= 0) { return; }
+        if (width <= 0 || height <= 0) {
+            return;
+        }
         int count = getChunkCount();
         int gap = width >= 24 ? 2 : 1;
         double ratio = Math.max(0, Math.min(1, getPercentComplete()));

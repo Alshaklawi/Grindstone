@@ -43,22 +43,38 @@ public class GrinderProfile {
     private final transient java.util.Map<Goal, GoalMetadata> metadata = new java.util.IdentityHashMap<>();
     private transient long revision;
     private final java.util.Map<String, ArchivedHistory> archivedHistory = new java.util.LinkedHashMap<>();
-    public java.util.Collection<ArchivedHistory> archivedHistory() { return Collections.unmodifiableCollection(archivedHistory.values()); }
+    public java.util.Collection<ArchivedHistory> archivedHistory() {
+        return Collections.unmodifiableCollection(archivedHistory.values());
+    }
     public void restoreArchive(ArchivedHistory history) {
-        if (history == null || history.title == null || history.title.length() > 300) { throw new IllegalArgumentException("Invalid archived history"); }
+        if (history == null || history.title == null || history.title.length() > 300) {
+            throw new IllegalArgumentException("Invalid archived history");
+        }
         GoalMetadata.validated(history.metadata);
-        if (goals.stream().noneMatch(goal -> metadata(goal).getId().equals(history.metadata.getId()))) { archivedHistory.putIfAbsent(history.metadata.getId(), history); }
-        while (archivedHistory.size() > 500) { archivedHistory.remove(archivedHistory.keySet().iterator().next()); }
+        if (goals.stream().noneMatch(goal -> metadata(goal).getId().equals(history.metadata.getId()))) {
+            archivedHistory.putIfAbsent(history.metadata.getId(), history);
+        }
+        while (archivedHistory.size() > 500) {
+            archivedHistory.remove(archivedHistory.keySet().iterator().next());
+        }
     }
     private void archive(Goal goal) {
         GoalMetadata saved = GrinderRepository.copyMetadata(metadata(goal));
-        if (saved.getCompletions().isEmpty() && saved.recurring().getHistory().isEmpty() && saved.recurring().getBaselineAt() == 0) { return; }
+        if (saved.getCompletions().isEmpty() && saved.recurring().getHistory().isEmpty() && saved.recurring().getBaselineAt() == 0) {
+            return;
+        }
         saved.recurring().stop(System.currentTimeMillis(), "Goal archived · last observed");
         archivedHistory.put(saved.getId(), new ArchivedHistory(goal.getTitle(null), saved));
-        while (archivedHistory.size() > 500) { archivedHistory.remove(archivedHistory.keySet().iterator().next()); }
+        while (archivedHistory.size() > 500) {
+            archivedHistory.remove(archivedHistory.keySet().iterator().next());
+        }
     }
-    public long revision() { return revision; }
-    public void touch() { revision++; }
+    public long revision() {
+        return revision;
+    }
+    public void touch() {
+        revision++;
+    }
     public java.util.function.Consumer<Goal> snapshotEdit(Goal original) {
         GoalMetadata saved = GrinderRepository.copyMetadata(metadata(original));
         RepeatSchedule previousSchedule = saved.recurring().getSchedule();
@@ -67,25 +83,41 @@ public class GrinderProfile {
         CustomGoal custom = original instanceof CustomGoal ? (CustomGoal) original : null;
         CustomGoal manual = custom == null ? null : new CustomGoal(custom.getId(), custom.getTitle(null), custom.getDescription(), custom.getCategory(), custom.getProgressCurrent(), target);
         return replacement -> {
-            if (previousSchedule != RepeatSchedule.NONE && previousSchedule.start(System.currentTimeMillis()) != undoWindow) { throw new IllegalStateException("The previous period has reset."); }
+            if (previousSchedule != RepeatSchedule.NONE && previousSchedule.start(System.currentTimeMillis()) != undoWindow) {
+                throw new IllegalStateException("The previous period has reset.");
+            }
             int index = goals.indexOf(replacement);
-            if (index < 0) { throw new IllegalStateException("The edited goal no longer exists."); }
-            if (custom != null) { custom.update(manual.getTitle(null), manual.getDescription(), manual.getCategory(), manual.getProgressCurrent(), manual.getProgressMaximum()); }
-            else if (original.supportsTarget()) { original.setTarget(target); }
+            if (index < 0) {
+                throw new IllegalStateException("The edited goal no longer exists.");
+            }
+            if (custom != null) {
+                custom.update(manual.getTitle(null), manual.getDescription(), manual.getCategory(), manual.getProgressCurrent(), manual.getProgressMaximum());
+            } else if (original.supportsTarget()) {
+                original.setTarget(target);
+            }
             goals.set(index, original);
-            if (original != replacement) { metadata.remove(replacement); }
+            if (original != replacement) {
+                metadata.remove(replacement);
+            }
             metadata.put(original, saved);
             archivedHistory.remove(saved.getId());
             attachCollectionData(original);
             touch();
         };
     }
-    public GoalMetadata metadata(Goal goal) { return metadata.computeIfAbsent(goal, ignored -> new GoalMetadata()); }
-    public void restoreMetadata(Goal goal, GoalMetadata saved) { metadata.put(goal, GoalMetadata.validated(saved)); }
+    public GoalMetadata metadata(Goal goal) {
+        return metadata.computeIfAbsent(goal, ignored -> new GoalMetadata());
+    }
+    public void restoreMetadata(Goal goal, GoalMetadata saved) {
+        metadata.put(goal, GoalMetadata.validated(saved));
+    }
     public void observeRecurring(net.runelite.api.Client client, long now) {
         for (Goal goal : goals) {
             RecurringGoal recurring = metadata(goal).recurring();
-            if (recurring.isActive() && RecurringGoal.supports(goal)) { goal.refresh(client); recurring.observe(goal, now); }
+            if (recurring.isActive() && RecurringGoal.supports(goal)) {
+                goal.refresh(client);
+                recurring.observe(goal, now);
+            }
         }
     }
     private final List<Item> items = new ArrayList<>();
@@ -93,7 +125,9 @@ public class GrinderProfile {
     private transient ItemManager itemManager;
     private final transient com.grinder.content.storage.PlayerItemStorage playerStorage = new com.grinder.content.storage.PlayerItemStorage();
 
-    public com.grinder.content.storage.PlayerItemStorage getPlayerStorage() { return playerStorage; }
+    public com.grinder.content.storage.PlayerItemStorage getPlayerStorage() {
+        return playerStorage;
+    }
 
     public GrinderProfile(long hash) {
         this(hash, null);
@@ -171,7 +205,9 @@ public class GrinderProfile {
     }
 
     private void attachCollectionData(Goal goal) {
-        if (goal instanceof TrackerGoal) { ((TrackerGoal) goal).setItemManager(itemManager); }
+        if (goal instanceof TrackerGoal) {
+            ((TrackerGoal) goal).setItemManager(itemManager);
+        }
         if (goal instanceof com.grinder.content.goal.impl.item.PossessedItemGoal) {
             ((com.grinder.content.goal.impl.item.PossessedItemGoal) goal).attach(playerStorage, itemManager);
         }
@@ -212,7 +248,9 @@ public class GrinderProfile {
     }
 
     private static boolean sameGoal(Goal left, Goal right) {
-        if (left.getClass() != right.getClass()) { return false; }
+        if (left.getClass() != right.getClass()) {
+            return false;
+        }
         if (left instanceof CombatAchievementBossGoal) {
             return ((CombatAchievementBossGoal) left).matches((CombatAchievementBossGoal) right);
         }
@@ -244,17 +282,29 @@ public class GrinderProfile {
         }
         return true;
     }
-    public static boolean sameSelection(Goal left, Goal right) { return sameGoal(left, right); }
+    public static boolean sameSelection(Goal left, Goal right) {
+        return sameGoal(left, right);
+    }
     public boolean replaceGoal(Goal original, Goal replacement) {
         return replaceGoal(original, replacement, metadata(original).recurring().getSchedule());
     }
     public boolean replaceGoal(Goal original, Goal replacement, RepeatSchedule schedule) {
-        if (original == replacement) { return goals.contains(original); }
+        if (original == replacement) {
+            return goals.contains(original);
+        }
         int index = goals.indexOf(original);
-        if (index < 0) { return false; }
-        for (Goal goal : goals) { if (goal != original && sameGoal(goal, replacement) && metadata(goal).recurring().getSchedule() == schedule) { throw new IllegalArgumentException("That tracker and schedule are already tracked. Edit the existing goal instead."); } }
+        if (index < 0) {
+            return false;
+        }
+        for (Goal goal : goals) {
+            if (goal != original && sameGoal(goal, replacement) && metadata(goal).recurring().getSchedule() == schedule) {
+                throw new IllegalArgumentException("That tracker and schedule are already tracked. Edit the existing goal instead.");
+            }
+        }
         GoalMetadata old = metadata(original);
-        if (!sameGoal(original, replacement)) { archive(original); }
+        if (!sameGoal(original, replacement)) {
+            archive(original);
+        }
         GoalMetadata next = sameGoal(original, replacement) ? old : new GoalMetadata();
         next.setPinned(old.isPinned());
         attachCollectionData(replacement);
@@ -266,15 +316,25 @@ public class GrinderProfile {
     }
 
     public boolean remove(Goal goal) {
-        if (goals.contains(goal)) { archive(goal); }
+        if (goals.contains(goal)) {
+            archive(goal);
+        }
         boolean removed = goals.remove(goal);
-        if (removed) { touch(); }
+        if (removed) {
+            touch();
+        }
         return removed;
     }
     public int mergeBackup(GrinderProfile backup) {
-        if (backup.hash != hash) { throw new IllegalArgumentException("Backup must be mapped to this account before merging."); }
+        if (backup.hash != hash) {
+            throw new IllegalArgumentException("Backup must be mapped to this account before merging.");
+        }
         int added = 0;
-        for (Goal goal : backup.getGoals()) { if (add(goal, backup.metadata(goal))) { added++; } }
+        for (Goal goal : backup.getGoals()) {
+            if (add(goal, backup.metadata(goal))) {
+                added++;
+            }
+        }
         backup.collectionLogHistory.snapshot().forEach(collectionLogHistory::record);
         backup.archivedHistory().forEach(this::restoreArchive);
         setItemManager(itemManager);
@@ -340,8 +400,15 @@ public class GrinderProfile {
     public static final class ArchivedHistory {
         private final String title;
         private final GoalMetadata metadata;
-        private ArchivedHistory(String title, GoalMetadata metadata) { this.title = title; this.metadata = metadata; }
-        public String getTitle() { return title; }
-        public GoalMetadata getMetadata() { return metadata; }
+        private ArchivedHistory(String title, GoalMetadata metadata) {
+            this.title = title;
+            this.metadata = metadata;
+        }
+        public String getTitle() {
+            return title;
+        }
+        public GoalMetadata getMetadata() {
+            return metadata;
+        }
     }
 }

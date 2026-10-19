@@ -50,7 +50,9 @@ public class TypographyTest {
         List<Component> result = new ArrayList<>();
         for (Component child : container.getComponents()) {
             result.add(child);
-            if (child instanceof Container) { result.addAll(children((Container) child)); }
+            if (child instanceof Container) {
+                result.addAll(children((Container) child));
+            }
         }
         return result;
     }

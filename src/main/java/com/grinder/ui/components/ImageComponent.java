@@ -68,8 +68,7 @@ public class ImageComponent extends JComponent {
             int x = (getWidth() - imageWidth) / 2;
             int y = (getHeight() - imageHeight) / 2;
             g.drawImage(image, x, y, imageWidth, imageHeight, this);
-        }
-        finally {
+        } finally {
             g.dispose();
         }
     }

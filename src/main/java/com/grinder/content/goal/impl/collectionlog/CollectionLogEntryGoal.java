@@ -38,14 +38,20 @@ public class CollectionLogEntryGoal implements Goal {
     private final CollectionLogEntry entry;
     private final int pageStruct;
     private final String pageName;
-    public int getPageStruct() { return pageStruct; }
-    public String getPageName() { return pageName; }
+    public int getPageStruct() {
+        return pageStruct;
+    }
+    public String getPageName() {
+        return pageName;
+    }
 
     private transient ItemManager itemManager;
     private transient int iconItem;
     private transient CollectionLogHistory history;
 
-    public void setHistory(CollectionLogHistory history) { this.history = history; }
+    public void setHistory(CollectionLogHistory history) {
+        this.history = history;
+    }
 
     private boolean isKnownObtained(ItemContainer container, ItemComposition item) {
         return history != null && history.contains(item.getId()) || container != null && container.contains(item.getId());
@@ -65,7 +71,9 @@ public class CollectionLogEntryGoal implements Goal {
         initializeTransientState();
     }
     public CollectionLogEntryGoal(ItemManager itemManager, int pageStruct, String pageName) {
-        if (pageStruct <= 0 || pageName == null || pageName.trim().isEmpty() || pageName.length() > 200) { throw new IllegalArgumentException("Invalid collection-log page"); }
+        if (pageStruct <= 0 || pageName == null || pageName.trim().isEmpty() || pageName.length() > 200) {
+            throw new IllegalArgumentException("Invalid collection-log page");
+        }
         this.itemManager = itemManager;
         this.pageStruct = pageStruct;
         this.pageName = pageName;
@@ -143,8 +151,7 @@ public class CollectionLogEntryGoal implements Goal {
             if (component == null) {
                 component = new ItemComponent(itemManager, item);
                 itemComponents.put(item.getId(), component);
-            }
-            else {
+            } else {
                 component.setItem(item);
             }
 
@@ -175,8 +182,15 @@ public class CollectionLogEntryGoal implements Goal {
     @Override
     public BufferedImage getIcon(Client client) {
         if (itemManager != null && client != null) {
-            if (iconItem <= 0) { int[] items = CollectionLogPages.itemIds(client, pageStruct); if (items.length > 0) { iconItem = items[0]; } }
-            if (iconItem > 0) { return itemManager.getImage(iconItem); }
+            if (iconItem <= 0) {
+                int[] items = CollectionLogPages.itemIds(client, pageStruct);
+                if (items.length > 0) {
+                    iconItem = items[0];
+                }
+            }
+            if (iconItem > 0) {
+                return itemManager.getImage(iconItem);
+            }
         }
         return Icon.COLLECTION_LOG.getImage();
     }
@@ -248,5 +262,4 @@ public class CollectionLogEntryGoal implements Goal {
         long percentage = total == 0 ? 0 : obtained * 100 / total;
         progressText = obtained + " / " + total + " obtained (" + percentage + "%)";
     }
-
 }

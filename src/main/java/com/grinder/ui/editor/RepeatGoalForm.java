@@ -34,8 +34,17 @@ public final class RepeatGoalForm extends JPanel {
         schedule.addActionListener(event -> target.setEnabled(getSchedule() != RepeatSchedule.NONE));
         target.setEnabled(false);
     }
-    public void load(RepeatSchedule repeat, long target) { schedule.setSelectedItem(repeat); this.target.setValue(target); }
-    public RepeatSchedule getSchedule() { return (RepeatSchedule) schedule.getSelectedItem(); }
-    public long getTarget() { return ((Number) target.getValue()).longValue(); }
-    public void commit() throws java.text.ParseException { target.commitEdit(); }
+    public void load(RepeatSchedule repeat, long target) {
+        schedule.setSelectedItem(repeat);
+        this.target.setValue(target);
+    }
+    public RepeatSchedule getSchedule() {
+        return (RepeatSchedule) schedule.getSelectedItem();
+    }
+    public long getTarget() {
+        return ((Number) target.getValue()).longValue();
+    }
+    public void commit() throws java.text.ParseException {
+        target.commitEdit();
+    }
 }

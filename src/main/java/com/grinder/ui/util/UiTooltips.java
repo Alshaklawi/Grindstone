@@ -9,7 +9,8 @@ import javax.swing.JComponent;
  * @since 10/18/2026
  */
 public final class UiTooltips {
-    private UiTooltips() { }
+    private UiTooltips() {
+    }
 
     public static void set(JComponent component, String text) {
         String previous = component.getToolTipText();

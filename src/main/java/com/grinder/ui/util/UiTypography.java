@@ -14,5 +14,6 @@ public final class UiTypography {
     public static final Font BODY = FontManager.getRunescapeFont();
     public static final Font META = FontManager.getRunescapeSmallFont();
 
-    private UiTypography() {}
+    private UiTypography() {
+    }
 }

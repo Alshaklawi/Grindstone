@@ -49,36 +49,44 @@ public class ItemComponent extends JPanel {
 
     public ItemComponent(ItemManager itemManager, ItemComposition item, BufferedImage image,
                          int amount, String tooltip, Color borderColor) {
-        this.itemManager = itemManager;
-        setOpaque(false);
-        setPreferredSize(new Dimension(CELL_SIZE, CELL_SIZE));
-        setMinimumSize(new Dimension(CELL_SIZE, CELL_SIZE));
-        setMaximumSize(new Dimension(Integer.MAX_VALUE, CELL_SIZE));
-        setItem(item);
-        if (image != null) { setImage(image); }
-        setAmount(amount);
-        setBorderColor(borderColor);
-        setTooltip(tooltip);
-        addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent event) {
-                hovered = true;
-                repaint();
-            }
+                             this.itemManager = itemManager;
+                             setOpaque(false);
+                             setPreferredSize(new Dimension(CELL_SIZE, CELL_SIZE));
+                             setMinimumSize(new Dimension(CELL_SIZE, CELL_SIZE));
+                             setMaximumSize(new Dimension(Integer.MAX_VALUE, CELL_SIZE));
+                             setItem(item);
+                             if (image != null) {
+                                 setImage(image);
+                             }
+                             setAmount(amount);
+                             setBorderColor(borderColor);
+                             setTooltip(tooltip);
+                             addMouseListener(new MouseAdapter() {
+                                 @Override
+                                 public void mouseEntered(MouseEvent event) {
+                                     hovered = true;
+                                     repaint();
+                                 }
 
-            @Override
-            public void mouseExited(MouseEvent event) {
-                hovered = false;
-                repaint();
-            }
-        });
+                                 @Override
+                                 public void mouseExited(MouseEvent event) {
+                                     hovered = false;
+                                     repaint();
+                                 }
+                             });
+                         }
+
+    public int getItemId() {
+        return item == null ? -1 : item.getId();
     }
 
-    public int getItemId() { return item == null ? -1 : item.getId(); }
+    public String getItemName() {
+        return item == null ? "" : item.getName();
+    }
 
-    public String getItemName() { return item == null ? "" : item.getName(); }
-
-    public BufferedImage getImage() { return image; }
+    public BufferedImage getImage() {
+        return image;
+    }
 
     public void setItem(ItemComposition item) {
         this.item = item;
@@ -92,7 +100,9 @@ public class ItemComponent extends JPanel {
     }
 
     public void setImage(BufferedImage image) {
-        if (this.image == image) { return; }
+        if (this.image == image) {
+            return;
+        }
         this.image = image;
         if (image instanceof AsyncBufferedImage) {
             ((AsyncBufferedImage) image).onLoaded(() -> SwingUtilities.invokeLater(this::repaint));
@@ -101,7 +111,9 @@ public class ItemComponent extends JPanel {
     }
 
     public void setObtained(boolean obtained) {
-        if (this.obtained != null && this.obtained == obtained) { return; }
+        if (this.obtained != null && this.obtained == obtained) {
+            return;
+        }
         this.obtained = obtained;
         getAccessibleContext().setAccessibleDescription(obtained ? "Obtained collection-log item" : "Missing collection-log item");
         repaint();
@@ -109,17 +121,23 @@ public class ItemComponent extends JPanel {
 
     public void setAmount(int amount) {
         int next = Math.max(1, amount);
-        if (this.amount == next) { return; }
+        if (this.amount == next) {
+            return;
+        }
         this.amount = next;
         amountText = formatAmount(next);
         repaint();
     }
 
-    public void setTooltip(String tooltip) { setToolTipText(tooltip); }
+    public void setTooltip(String tooltip) {
+        setToolTipText(tooltip);
+    }
 
     public void setBorderColor(Color borderColor) {
         Color next = borderColor == null ? DEFAULT_BORDER_COLOR : borderColor;
-        if (next.equals(this.borderColor)) { return; }
+        if (next.equals(this.borderColor)) {
+            return;
+        }
         this.borderColor = next;
         repaint();
     }
@@ -159,15 +177,18 @@ public class ItemComponent extends JPanel {
                 g.setColor(Color.YELLOW);
                 g.drawString(amountText, 3, 12);
             }
-        }
-        finally {
+        } finally {
             g.dispose();
         }
     }
 
     private static String formatAmount(int amount) {
-        if (amount >= 1_000_000) { return (amount / 1_000_000) + "M"; }
-        if (amount >= 100_000) { return (amount / 1_000) + "K"; }
+        if (amount >= 1_000_000) {
+            return (amount / 1_000_000) + "M";
+        }
+        if (amount >= 100_000) {
+            return (amount / 1_000) + "K";
+        }
         return Integer.toString(amount);
     }
 }
