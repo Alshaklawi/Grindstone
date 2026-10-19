@@ -5,6 +5,8 @@ import com.google.inject.Provides;
 import com.grindstone.config.GrindstoneConfig;
 import com.grindstone.content.collectionlog.CollectionLogPages;
 import com.grindstone.content.combatachievement.CombatAchievementData;
+import com.grindstone.content.diary.AchievementDiaryArea;
+import com.grindstone.content.diary.DiaryTier;
 import com.grindstone.content.goal.BaseSkillGoal;
 import com.grindstone.content.goal.ClientCompletionGoal;
 import com.grindstone.content.goal.Goal;
@@ -23,6 +25,8 @@ import com.grindstone.content.goal.impl.level.CombatLevelGoal;
 import com.grindstone.content.goal.impl.level.BaseLevelGoal;
 import com.grindstone.content.goal.impl.level.SkillLevelGoal;
 import com.grindstone.content.goal.impl.level.TotalLevelGoal;
+import com.grindstone.content.goal.impl.quest.QuestGoal;
+import com.grindstone.content.goal.impl.achievementdiary.AchievementDiaryTierAreaGoal;
 import com.grindstone.notification.GoalCompletionNotifications;
 import com.grindstone.notification.GoalCompletionOverlay;
 import com.grindstone.repository.GrindstoneProfile;
@@ -49,6 +53,7 @@ import net.runelite.api.ItemContainer;
 import net.runelite.api.MenuAction;
 import net.runelite.api.MenuEntry;
 import net.runelite.api.Point;
+import net.runelite.api.Quest;
 import net.runelite.api.Skill;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
@@ -216,6 +221,14 @@ public class GrindstonePlugin extends Plugin {
         if (original.getType() != MenuAction.CC_OP && original.getType() != MenuAction.CC_OP_LOW_PRIORITY) {
             return;
         }
+        if (original.getParam1() >>> 16 == InterfaceID.QUESTLIST) {
+            addQuestGoalMenu(original);
+            return;
+        }
+        if (original.getParam1() >>> 16 == InterfaceID.AREA_TASK) {
+            addDiaryGoalMenu(original);
+            return;
+        }
         if (original.getParam1() >>> 16 == InterfaceID.STATS) {
             if (config.skillGoalMenu() && original.getIdentifier() == 1) {
                 Skill skill = SkillWidgets.skillFor(original.getParam1());
@@ -262,6 +275,60 @@ public class GrindstonePlugin extends Plugin {
                         openGoalEditor(goal);
                     }
                 });
+    }
+
+    private String goalMenuName(MenuEntry original) {
+        String name = Text.removeTags(original.getTarget()).trim();
+        if (name.isEmpty() && original.getWidget() != null) {
+            name = Text.removeTags(original.getWidget().getText()).trim();
+        }
+        return name;
+    }
+
+    private void addQuestGoalMenu(MenuEntry original) {
+        if (!config.questGoalsEnabled() || !config.questGoalMenu() || original.getIdentifier() != 1) {
+            return;
+        }
+        String name = goalMenuName(original);
+        for (Quest quest : Quest.values()) {
+            if (!quest.getName().equalsIgnoreCase(name)) {
+                continue;
+            }
+            client.getMenu().createMenuEntry(-2)
+                    .setOption("Add goal")
+                    .setTarget(quest.getName())
+                    .setType(MenuAction.RUNELITE_LOW_PRIORITY)
+                    .onClick(entry -> {
+                        if (hasActivePlayerProfile() && config.questGoalsEnabled() && config.questGoalMenu()) {
+                            openGoalEditor(new QuestGoal(quest));
+                        }
+                    });
+            return;
+        }
+    }
+
+    private void addDiaryGoalMenu(MenuEntry original) {
+        if (!config.diaryGoalsEnabled() || !config.diaryGoalMenu() || original.getIdentifier() != 1) {
+            return;
+        }
+        String name = goalMenuName(original).replaceFirst("(?i)\\s+diary$", "");
+        for (AchievementDiaryArea area : AchievementDiaryArea.values()) {
+            if (!area.toString().equalsIgnoreCase(name)) {
+                continue;
+            }
+            for (DiaryTier tier : DiaryTier.values()) {
+                client.getMenu().createMenuEntry(-2)
+                        .setOption("Add " + tier + " diary goal")
+                        .setTarget(area.toString())
+                        .setType(MenuAction.RUNELITE_LOW_PRIORITY)
+                        .onClick(entry -> {
+                            if (hasActivePlayerProfile() && config.diaryGoalsEnabled() && config.diaryGoalMenu()) {
+                                openGoalEditor(new AchievementDiaryTierAreaGoal(area, tier));
+                            }
+                        });
+            }
+            return;
+        }
     }
 
     private void addCombatAchievementGoalMenu(MenuEntry original) {

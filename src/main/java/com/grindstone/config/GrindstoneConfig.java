@@ -59,6 +59,16 @@ public interface GrindstoneConfig extends Config {
     default boolean combatLevelGoalMenu() {
         return true;
     }
+
+    @ConfigItem(keyName = "questGoalMenu", name = "Quest goal shortcuts", description = "Right-click a quest in the quest list to open its goal in Grindstone. No game actions are performed.", section = GOALS_SECTION, position = 14)
+    default boolean questGoalMenu() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "diaryGoalMenu", name = "Diary goal shortcuts", description = "Right-click an achievement diary region to choose an Easy, Medium, Hard or Elite diary goal. No game actions are performed.", section = GOALS_SECTION, position = 15)
+    default boolean diaryGoalMenu() {
+        return true;
+    }
     @ConfigItem(keyName = "ownedItemGoalsEnabled", name = "Owned item goals", description = "Show quantities across known personal item storage.", section = GOALS_SECTION, position = 7)
     default boolean ownedItemGoalsEnabled() {
         return true;
