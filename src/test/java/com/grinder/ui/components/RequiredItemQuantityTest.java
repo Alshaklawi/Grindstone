@@ -21,6 +21,9 @@ public class RequiredItemQuantityTest {
             JLabel quantity = label(component, "Required: 1,500,000,000");
             assertNotNull(quantity);
             component.setExpanded(false);
+            JLabel progress = label(component, "0 / 1,500,000,000 owned");
+            assertNotNull(progress);
+            for (Component current = progress; current != null; current = current.getParent()) { assertTrue(current.isVisible()); }
             component.setProgressBarVisible(false);
             for (Component current = quantity; current != null; current = current.getParent()) { assertTrue(current.isVisible()); }
             assertTrue(quantity.getToolTipText().contains("not the amount currently owned"));

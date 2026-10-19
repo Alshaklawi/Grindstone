@@ -13,6 +13,9 @@ import java.util.UUID;
 public final class GoalMetadata {
     private final String id;
     private boolean pinned;
+    private Boolean collapsed;
+    public boolean isCollapsed(boolean defaultValue) { return collapsed == null ? defaultValue : collapsed; }
+    public void setCollapsed(boolean collapsed) { this.collapsed = collapsed; }
     public boolean isPinned() { return pinned; }
     public void setPinned(boolean pinned) { this.pinned = pinned; }
     private final List<Completion> completions = new ArrayList<>();

@@ -536,6 +536,10 @@ public class GrinderPanel extends PluginPanel {
                     component.setGoalStatus(goal.getStatus());
                     String title = safeTitle(goal);
                     com.grinder.repository.GoalMetadata metadata = currentProfile.metadata(goal);
+                    component.setExpansionListener(null);
+                    component.setExpanded(!metadata.isCollapsed(config.collapseDetailsByDefault()));
+                    component.setExpansionListener(expanded -> clientThread.invokeLater(() -> { if (profile == currentProfile && currentProfile.getGoals().contains(goal)) { currentProfile.metadata(goal).setCollapsed(!expanded); } }));
+                    component.setMaximumProgressChunks(config.maxProgressChunks());
                     metadata.observe(goal, title, System.currentTimeMillis());
                     component.setGoalActions(event -> editGoal(currentProfile, goal, title),
                             event -> deleteGoal(currentProfile, goal, title));
@@ -645,7 +649,8 @@ public class GrinderPanel extends PluginPanel {
         }
 
         int percentage = goals.isEmpty() ? 0 : (int) Math.round(ratios * 100 / goals.size());
-        overallProgress.setValue(percentage * 100);
+        overallProgress.setMaximumChunks(config.maxProgressChunks());
+        overallProgress.setProgress(percentage, 100);
         overallProgress.setStatus(!goals.isEmpty() && completed == goals.size() ? GoalStatus.COMPLETE
                 : active > 0 || completed > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED);
         summaryLabel.setText(completed + " / " + goals.size() + " complete  •  " + percentage + "%");

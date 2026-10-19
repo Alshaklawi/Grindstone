@@ -13,6 +13,11 @@ import net.runelite.client.config.Range;
  */
 @ConfigGroup("grinder")
 public interface GrinderConfig extends Config {
+    @Range(min = 1, max = 20)
+    @ConfigItem(keyName = "maxProgressChunks", name = "Maximum progress chunks", description = "At most 20 chunks. For a target of 100 and 20 chunks, each chunk represents 5.", section = DISPLAY_SECTION, position = 4)
+    default int maxProgressChunks() { return 20; }
+    @ConfigItem(keyName = "collapseDetailsByDefault", name = "Start details collapsed", description = "Default for goals you have not expanded or collapsed manually. Progress remains visible.", section = DISPLAY_SECTION, position = 5)
+    default boolean collapseDetailsByDefault() { return false; }
 	String GENERAL_SECTION = "general";
 	String GOALS_SECTION = "goals";
 	String COLLECTION_LOG_SECTION = "collectionLog";

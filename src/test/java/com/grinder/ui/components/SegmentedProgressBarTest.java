@@ -27,14 +27,28 @@ public class SegmentedProgressBarTest {
         SwingUtilities.invokeAndWait(() -> {
             SegmentedProgressBar bar = new SegmentedProgressBar();
             bar.setSize(120, 9);
-            bar.setValue(5000);
+            bar.setProgress(50, 100);
             bar.setStatus(GoalStatus.IN_PROGRESS);
             BufferedImage image = new BufferedImage(120, 9, BufferedImage.TYPE_INT_ARGB);
             Graphics2D graphics = image.createGraphics();
             try { bar.paint(graphics); } finally { graphics.dispose(); }
             assertEquals(bar.getForeground().getRGB(), image.getRGB(55, 4));
-            assertEquals(bar.getBackground().getRGB(), image.getRGB(65, 4));
-            assertEquals(0, image.getRGB(8, 4));
+            assertEquals(bar.getBackground().getRGB(), image.getRGB(67, 4));
+            assertEquals(0, image.getRGB(5, 4));
         });
+    }
+    @Test public void chunksRepresentWholeTargetUnitsAndNeverExceedTwenty() {
+        SegmentedProgressBar bar = new SegmentedProgressBar();
+        for (long target : new long[]{1, 5, 19, 20, 21, 23, 100, 1_500_000_000L, Long.MAX_VALUE}) {
+            bar.setProgress(0, target);
+            assertTrue(bar.getChunkCount() >= 1 && bar.getChunkCount() <= 20);
+            assertTrue(bar.getChunkSize() >= 1);
+        }
+        bar.setProgress(0, 100);
+        assertEquals(20, bar.getChunkCount());
+        assertEquals(5, bar.getChunkSize());
+        bar.setProgress(0, 7);
+        assertEquals(7, bar.getChunkCount());
+        assertEquals(1, bar.getChunkSize());
     }
 }

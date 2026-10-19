@@ -61,6 +61,9 @@ public class GoalComponent extends JPanel {
     private String progressText = "";
     private String progressStatus = "";
     private boolean expanded = true;
+    private java.util.function.Consumer<Boolean> expansionListener;
+    public void setExpansionListener(java.util.function.Consumer<Boolean> listener) { expansionListener = listener; }
+    public void setMaximumProgressChunks(int count) { progressBar.setMaximumChunks(count); }
     private boolean iconVisible = true;
     private boolean progressBarVisible = true;
 
@@ -373,9 +376,10 @@ public class GoalComponent extends JPanel {
 
         this.expanded = expanded;
         content.setVisible(expanded);
-        footer.setVisible(expanded);
+        footer.setVisible(true);
         expandButton.setText(expanded ? "−" : "+");
         expandButton.setToolTipText(expanded ? "Collapse goal details" : "Expand goal details");
+        if (expansionListener != null) { expansionListener.accept(expanded); }
         revalidate();
         repaint();
     }
@@ -389,7 +393,7 @@ public class GoalComponent extends JPanel {
         updateDates();
         updateProgress();
         content.setVisible(expanded);
-        footer.setVisible(expanded);
+        footer.setVisible(true);
         expandButton.setText(expanded ? "−" : "+");
         progressBar.setVisible(progressBarVisible);
     }
@@ -412,8 +416,7 @@ public class GoalComponent extends JPanel {
 
     private void updateProgress() {
         expandButton.setVisible(content.getComponentCount() > 0);
-        int value = progressMaximum <= 0 ? 0 : (int) Math.min(10_000, progressCurrent * 10_000.0 / progressMaximum);
-        progressBar.setValue(value);
+        progressBar.setProgress(progressCurrent, progressMaximum);
         setGoalStatus(progressMaximum > 0 && progressCurrent >= progressMaximum ? GoalStatus.COMPLETE
                 : progressCurrent > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED);
         progressLabel.setText(progressText);
