@@ -125,8 +125,6 @@ public class CollectionLogEntryGoal implements Goal {
 
         current.setTitle(getTitle(client));
         current.setIcon(config != null && !config.showActivityIcons() ? Icon.COLLECTION_LOG.getImage() : getIcon(client));
-        current.setStartDate(getStart());
-        current.setEndDate(getEnd());
 
         main.configure(config == null ? 4 : config.itemsPerRow(), config == null ? 5 : config.maxItemRows());
 

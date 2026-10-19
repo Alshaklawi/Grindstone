@@ -7,8 +7,6 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.image.BufferedImage;
 import java.awt.event.ActionListener;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -33,7 +31,6 @@ public class GoalComponent extends JPanel {
     private static final Color CARD_COLOR = ColorScheme.DARKER_GRAY_COLOR;
     private static final Color TEXT_COLOR = ColorScheme.TEXT_COLOR;
     private static final Color MUTED_COLOR = ColorScheme.LIGHT_GRAY_COLOR;
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private final JPanel header = new JPanel(new BorderLayout(8, 0));
     private final JPanel headerText = new JPanel();
@@ -41,7 +38,6 @@ public class GoalComponent extends JPanel {
     private final JPanel footer = new JPanel(new BorderLayout(6, 0));
     private final JLabel iconLabel = new JLabel();
     private final JLabel titleLabel = new JLabel();
-    private final JLabel dateLabel = new JLabel();
     private final JLabel requiredQuantityLabel = new JLabel();
     private final JLabel trackingNoteLabel = new JLabel();
     private final JLabel achievementNoteLabel = new JLabel();
@@ -88,8 +84,6 @@ public class GoalComponent extends JPanel {
 
     private String title = "";
     private BufferedImage icon;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
     private long progressCurrent;
     private long progressMaximum;
     private String progressText = "";
@@ -121,8 +115,6 @@ public class GoalComponent extends JPanel {
         titleLabel.setVerticalAlignment(SwingConstants.CENTER);
         titleLabel.setAlignmentX(LEFT_ALIGNMENT);
 
-        dateLabel.setForeground(MUTED_COLOR);
-        dateLabel.setFont(UiTypography.META);
         requiredQuantityLabel.setFont(UiTypography.BODY);
         requiredQuantityLabel.setForeground(TEXT_COLOR);
         requiredQuantityLabel.setAlignmentX(LEFT_ALIGNMENT);
@@ -164,7 +156,6 @@ public class GoalComponent extends JPanel {
         JPanel headerDetails = new JPanel(new BorderLayout(4, 0));
         headerDetails.setOpaque(false);
         headerDetails.setAlignmentX(LEFT_ALIGNMENT);
-        headerDetails.add(dateLabel, BorderLayout.CENTER);
         headerDetails.add(headerActions, BorderLayout.EAST);
         headerText.add(headerDetails);
 
@@ -298,20 +289,6 @@ public class GoalComponent extends JPanel {
         menu.add(item);
     }
 
-    public void update(String title, BufferedImage icon, LocalDateTime startDate, LocalDateTime endDate, long current, long maximum, String progressText, String status) {
-        this.title = title == null ? "" : title;
-        this.icon = icon;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.progressCurrent = Math.max(0, current);
-        this.progressMaximum = Math.max(0, maximum);
-        this.progressText = progressText == null ? "" : progressText;
-        this.progressStatus = status == null ? "" : status;
-
-        applyValues();
-        refreshLayout();
-    }
-
     public void setTitle(String title) {
         String next = title == null ? "" : title;
 
@@ -341,24 +318,6 @@ public class GoalComponent extends JPanel {
         iconLabel.setVisible(iconVisible && icon != null);
         revalidate();
         repaint();
-    }
-
-    public void setStartDate(LocalDateTime startDate) {
-        if (Objects.equals(this.startDate, startDate)) {
-            return;
-        }
-
-        this.startDate = startDate;
-        updateDates();
-    }
-
-    public void setEndDate(LocalDateTime endDate) {
-        if (Objects.equals(this.endDate, endDate)) {
-            return;
-        }
-
-        this.endDate = endDate;
-        updateDates();
     }
 
     public void setProgress(long current, long maximum, String text) {
@@ -434,27 +393,11 @@ public class GoalComponent extends JPanel {
         iconLabel.setToolTipText(title);
         iconLabel.setIcon(icon == null ? null : new ImageIcon(icon));
         iconLabel.setVisible(iconVisible && icon != null);
-        updateDates();
         updateProgress();
         content.setVisible(expanded);
         footer.setVisible(true);
         expandButton.setText(expanded ? "−" : "+");
         progressBar.setVisible(progressBarVisible);
-    }
-
-    private void updateDates() {
-        if (startDate == null && endDate == null) {
-            dateLabel.setText("");
-            dateLabel.setVisible(false);
-        } else {
-            String start = startDate == null ? "—" : DATE_FORMAT.format(startDate);
-            String end = endDate == null ? "—" : DATE_FORMAT.format(endDate);
-            dateLabel.setText(start + "  →  " + end);
-            dateLabel.setToolTipText("Start date → completion date. A dash means the date is unknown.");
-            dateLabel.setVisible(true);
-        }
-        revalidate();
-        repaint();
     }
 
     private void updateProgress() {

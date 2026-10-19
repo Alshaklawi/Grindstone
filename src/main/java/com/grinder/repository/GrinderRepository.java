@@ -10,13 +10,9 @@ import com.grinder.content.collectionlog.CollectionLogEntry;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.impl.TrackerGoal;
 import com.grinder.content.goal.impl.CustomGoal;
-import com.grinder.content.goal.impl.level.CombatLevelGoal;
 import com.grinder.content.goal.impl.level.SkillLevelGoal;
-import com.grinder.content.goal.impl.level.TotalLevelGoal;
 import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
-import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
 import com.grinder.content.goal.impl.collectionlog.CollectionLogEntryGoal;
-import com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal;
 import net.runelite.client.util.Filepath;
 
 import java.io.IOException;

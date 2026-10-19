@@ -4,7 +4,6 @@ package com.grinder.content.goal;
 import com.grinder.config.GrinderConfig;
 import com.grinder.ui.components.GoalComponent;
 import java.awt.image.BufferedImage;
-import java.time.LocalDateTime;
 import net.runelite.api.Client;
 import net.runelite.api.ItemContainer;
 
@@ -32,14 +31,6 @@ public interface Goal {
 
     default BufferedImage getIcon(Client client) {
         return com.grinder.ui.Icon.MAIN.getImage();
-    }
-
-    default LocalDateTime getStart() {
-        return null;
-    }
-
-    default LocalDateTime getEnd() {
-        return null;
     }
 
     default GoalStatus getStatus() {
@@ -71,8 +62,6 @@ public interface Goal {
         component.setTitle(getTitle(client));
         component.setDescription(getDescription());
         component.setIcon(getIcon(client));
-        component.setStartDate(getStart());
-        component.setEndDate(getEnd());
 
         if (hasProgress()) {
             component.setProgress(getProgressCurrent(), getProgressMaximum(), getProgressText());
