@@ -29,6 +29,10 @@ Only a player can confirm behavior in-game. Do not automate game input.
 - Individual combat-achievement task goals read native task names, descriptions, and completion bits. Defaults include an example of this goal type.
 - Display settings support categorized or flat lists, optional sections and icons, and default detail collapsing. Collapsed goal details retain their progress and counts.
 - Progress uses integer-sized chunks, capped at 20 by default: a target of 100 uses 20 chunks worth 5 each. The cap is configurable.
+- XP, activity and custom goals support daily, weekly and monthly repeat schedules, chosen in the editor or goal actions. Each has a separate period target; automatic goals count gains rather than existing totals.
+- Personal schedules reset at midnight UTC, Monday UTC, or the first of the month UTC. They do not represent game-specific activity reset rules. Custom progress resets with the period or a schedule change. Changing repeat settings archives the observed current period.
+- Recurring sections show reset countdowns while logged in and can be collapsed or disabled in Display settings. Hidden categories still record recurring progress while Grinder is enabled.
+- Goal history has sortable, read-only period and lifetime tables. It shows targets, observed progress, baselines and completion dates, retaining the latest 500 period records. Offline gaps are marked unobserved, not invented failures; automatic goals capture a fresh baseline at the first observation after a reset and cannot attribute offline gains across that boundary.
 - Completion history records when Grinder first observed a target completed. Spending items can make a goal incomplete without erasing its previously achieved targets.
 - Use the header options menu to add a beginner, skilling, PvM, questing, or completionist preset. Existing matching goals and edited targets are kept.
 - Export a private JSON backup from the header options menu. Import merges missing goals, never overwrites existing matches, and clears observed progress when transferring a setup to a different account.

@@ -34,3 +34,15 @@ Launch with Java 11 using `./gradlew run`. For a Jagex Account, follow [RuneLite
 - Cancel file selection, reject an overwrite, import invalid JSON or an unsupported backup version, and switch profiles during an import. No current-profile data should be lost or applied to the wrong account.
 
 Record the client version, tracker type, expected result, actual result, and relevant debug log if anything differs.
+
+## Recurring goals and history
+
+- Edit an XP or activity goal, choose Daily and set a small period target. Existing XP or kills must not count; only gains after the captured baseline should advance the recurring bar. The lifetime target must remain unchanged.
+- Add a custom recurring goal, advance it through Edit, and open Goal history. Current progress and first-observed completion must appear in the Periods tab, without creating a lifetime milestone for that recurring period.
+- Check Daily, Weekly and Monthly section countdowns against UTC. Weekly resets on Monday and monthly on the first. Collapse sections and individual entries, then turn Group recurring goals off; search, status filters, pins and progress must remain consistent.
+- Hide a recurring goal's category, make progress, then show it again. Progress must still have been recorded while Grinder was enabled.
+- Leave a small goal across a UTC boundary while logged in. Allow up to 30 seconds for the idle refresh. Custom progress should reset, automatic goals should capture a new baseline, and the previous period should appear in history.
+- Relog within the same period: keep the baseline and progress. Relog after a reset: capture a new baseline and do not count offline gains across the boundary. A multi-period absence must show an unobserved gap, not a fabricated run of missed goals.
+- Change a schedule or period target, cancel an edit, and set Repeat to None. Changes should archive the previous observed period; cancellation must preserve it; None should restore normal lifetime tracking without deleting history.
+- Sort the history tables and scroll horizontally to inspect baseline, last-observed and completion times. Rows must be read-only, newest first initially, with UTC dates and separate lifetime milestones.
+- Export/import on the same account: keep repeat settings, current baseline and history. Import on another account: keep the repeat setup but clear the original character's progress and period history.
