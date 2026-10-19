@@ -9,15 +9,21 @@
 
 Keep every Old School RuneScape grind in sight. Grindstone brings your skills, boss kills, collection log and personal goals together in one RuneLite sidebar, with progress bars, item previews and completion alerts.
 
-## See your progress
+## A clearer view of your next goal
 
-| Your goals at a glance | Find your next milestone |
-| --- | --- |
-| ![Grindstone dashboard showing skill progress and recurring goals](docs/images/dashboard.png) | ![Choose a goal from searchable skills and target presets](docs/images/add-goal.png) |
+Keep your priorities close and your progress easy to follow. Pin the grinds you care about, see what is already complete, and choose your next target without leaving RuneLite.
 
-| Chase your missing unlocks | Set your target |
+| Your priorities, at a glance | Milestones worth finishing |
 | --- | --- |
-| ![Collection-log goal with item icons and obtained progress](docs/images/collection-log.png) | ![Review a skill target and repeat schedule before saving](docs/images/review-goal.png) |
+| <img src="docs/images/dashboard.png" width="242" alt="Grindstone sidebar with pinned Slayer and Vorkath goals and completion counters"> | <img src="docs/images/milestones.png" width="242" alt="Completed Ranged and Recipe for Disaster goals in the Grindstone sidebar"> |
+| Keep your next skill and boss targets pinned at the top. | See finished goals in green and revisit your progress in History. |
+
+| Chase your missing collection slots | Make a little progress every day |
+| --- | --- |
+| <img src="docs/images/collection-log.png" width="242" alt="Zulrah collection-log goal with native item icons and obtained-item highlights"> | <img src="docs/images/routines.png" width="242" alt="Daily checklist with completed steps, period progress and a UTC reset countdown"> |
+| See the items you have unlocked and the ones you are still chasing. | Check off your daily plans and see when the next period begins. |
+
+*Screenshots show example goals and progress.*
 
 ## Make every grind count
 
@@ -39,6 +45,8 @@ Want to work toward the whole log? Use **Add all collection-log pages** from the
 1. Enable **Grindstone** in RuneLite, log in and open its sidebar.
 2. Select **+ Add goal**, choose a goal and set your target.
 3. Review, save and play. Supported goals update as you make progress.
+
+<img src="docs/images/add-goal.png" width="464" alt="Add goal dialog with six focus groups, searchable skills, target presets and a Slayer level 99 target">
 
 Start with your own goals or choose a preset pack from the **…** menu. Customize your sidebar, goal types and alerts in **RuneLite settings → Grindstone**.
 
