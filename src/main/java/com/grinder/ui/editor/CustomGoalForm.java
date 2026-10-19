@@ -20,6 +20,13 @@ public final class CustomGoalForm extends JPanel {
     private final JComboBox<GoalCategory> category = new JComboBox<>(GoalCategory.values());
     private final JSpinner current = new JSpinner(new SpinnerNumberModel(0L, 0L, (long) Integer.MAX_VALUE, 1L));
     private final JSpinner target = new JSpinner(new SpinnerNumberModel(1L, 1L, (long) Integer.MAX_VALUE, 1L));
+    private JLabel targetLabel;
+
+    public void setRecurring(boolean recurring) {
+        target.setVisible(!recurring);
+        targetLabel.setVisible(!recurring);
+        revalidate();
+    }
 
     public CustomGoalForm() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -50,10 +57,10 @@ public final class CustomGoalForm extends JPanel {
         addField("Description (optional, up to 2,000 characters)", notes);
         addField("Category", category);
         addField("Current progress", current);
-        addField("Target (use 1 for a simple checklist goal)", target);
+        targetLabel = addField("Target (use 1 for a simple checklist goal)", target);
     }
 
-    private void addField(String text, JComponent field) {
+    private JLabel addField(String text, JComponent field) {
         JLabel label = new JLabel(text);
         label.setLabelFor(field);
         label.setToolTipText(field.getToolTipText());
@@ -63,6 +70,7 @@ public final class CustomGoalForm extends JPanel {
         add(Box.createVerticalStrut(4));
         add(field);
         add(Box.createVerticalStrut(8));
+        return label;
     }
 
     public void load(CustomGoal goal) {
@@ -74,8 +82,14 @@ public final class CustomGoalForm extends JPanel {
     }
 
     public CustomGoal read() throws ParseException {
+        return read(0);
+    }
+
+    public CustomGoal read(long periodTarget) throws ParseException {
         current.commitEdit();
-        target.commitEdit();
-        return new CustomGoal(title.getText(), description.getText(), (GoalCategory) category.getSelectedItem(), ((Number) current.getValue()).longValue(), ((Number) target.getValue()).longValue());
+        if (periodTarget == 0) {
+            target.commitEdit();
+        }
+        return new CustomGoal(title.getText(), description.getText(), (GoalCategory) category.getSelectedItem(), ((Number) current.getValue()).longValue(), periodTarget > 0 ? periodTarget : ((Number) target.getValue()).longValue());
     }
 }

@@ -95,6 +95,10 @@ public final class GoalEditorPanel extends JPanel {
             }
         });
         target.addChangeListener(event -> updatePreview());
+        repeatForm.addScheduleListener(() -> {
+            customForm.setRecurring(type.getSelectedIndex() == 8 && repeatForm.getSchedule() != com.grinder.repository.RepeatSchedule.NONE);
+            firePropertyChange("formLayout", false, true);
+        });
         rebuild();
     }
 
@@ -116,6 +120,7 @@ public final class GoalEditorPanel extends JPanel {
         choices.clear();
         int kind = type.getSelectedIndex();
         if (kind == 8) {
+            customForm.setRecurring(repeatForm.getSchedule() != com.grinder.repository.RepeatSchedule.NONE);
             customForm.setAlignmentX(LEFT_ALIGNMENT);
             body.add(customForm);
             setHint("Write your own goal. You control its progress and can edit its details later.");
@@ -276,7 +281,7 @@ public final class GoalEditorPanel extends JPanel {
             repeatForm.commit();
         }
         if (type.getSelectedIndex() == 8) {
-            return customForm.read();
+            return customForm.read(getRepeatSchedule() == com.grinder.repository.RepeatSchedule.NONE ? 0 : getRepeatTarget());
         }
         if (type.getSelectedIndex() == 7) {
             return new CollectionLogItemGoal(itemPicker.getSelectedItemId(), 1);

@@ -26,6 +26,23 @@ import static org.junit.Assert.*;
  * @since 10/19/2026
  */
 public class RoutineWorkflowTest {
+    @Test public void recurringCustomEditorUsesOnlyThePeriodTarget() throws Exception {
+        SwingUtilities.invokeAndWait(() -> {
+            com.grinder.ui.editor.GoalEditorPanel form = new com.grinder.ui.editor.GoalEditorPanel(null, (query, callback) -> () -> {
+            });
+            try {
+                form.loadGoal(new CustomGoal("Routine", "", GoalCategory.OTHER, 0, 5));
+                form.loadRepeat(RepeatSchedule.DAILY, 100);
+                assertEquals(100, form.createGoal().getProgressMaximum());
+                form.loadRepeat(RepeatSchedule.NONE, 100);
+                assertEquals(5, form.createGoal().getProgressMaximum());
+            } catch (java.text.ParseException exception) {
+                throw new AssertionError(exception);
+            } finally {
+                form.stopSearch();
+            }
+        });
+    }
     @Test public void routinePreviewsProduceIndependentSchedulesAndSkipDuplicates() throws Exception {
         SwingUtilities.invokeAndWait(() -> {
             GrinderProfile profile = new GrinderProfile(42);

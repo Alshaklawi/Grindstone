@@ -12,6 +12,21 @@ import static org.junit.Assert.*;
  * @since 10/19/2026
  */
 public class HistoryBrowserTest {
+    @Test public void changingSubjectsArchivesHistoryAndUndoRestoresItsOriginalIdentity() {
+        GrinderProfile profile = new GrinderProfile(42);
+        CustomGoal original = new CustomGoal("Original", "", GoalCategory.OTHER, 1, 1);
+        profile.replace(Collections.singletonList(original));
+        profile.metadata(original).observe(original, "Original", 1000);
+        java.util.function.Consumer<com.grinder.content.goal.Goal> restore = profile.snapshotEdit(original);
+        CustomGoal replacement = new CustomGoal("Replacement", "", GoalCategory.OTHER, 0, 1);
+        profile.replaceGoal(original, replacement);
+        assertEquals(1, profile.archivedHistory().size());
+        assertTrue(profile.metadata(replacement).getCompletions().isEmpty());
+        restore.accept(replacement);
+        assertTrue(profile.archivedHistory().isEmpty());
+        assertEquals(1, profile.metadata(original).getCompletions().size());
+        assertSame(original, profile.getGoals().get(0));
+    }
     @Test public void filtersBySearchScheduleAndOverlappingDateRange() {
         HistoryRecord record = new HistoryRecord("id", "Woodcutting XP", RepeatSchedule.DAILY, 100, 200, 50L, 100, "Incomplete", 110, 190, 0, false);
         assertTrue(record.matches("wood", RepeatSchedule.DAILY, 150, 170));

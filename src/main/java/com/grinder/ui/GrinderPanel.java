@@ -616,6 +616,7 @@ public class GrinderPanel extends PluginPanel {
                         continue;
                     }
                     GoalComponent component = goal.build(client, config);
+                    tracking = com.grinder.content.goal.TrackingState.of(goal, recurring, client.getGameState() == net.runelite.api.GameState.LOGGED_IN && client.getLocalPlayer() != null && client.getAccountHash() == currentProfile.getHash(), currentProfile.getPlayerStorage().hasBankSnapshot());
                     GoalStatus status = repeating ? recurring.getStatus() : goal.getStatus();
                     long progressCurrent = repeating ? recurring.getProgress() : goal.getProgressCurrent();
                     long progressMaximum = repeating ? recurring.getTarget() : goal.getProgressMaximum();
@@ -1652,24 +1653,33 @@ public class GrinderPanel extends PluginPanel {
     }
 
     private void editCustomGoal(GrinderProfile active, CustomGoal goal, String title) {
+        com.grinder.repository.RepeatSchedule openedSchedule = active.metadata(goal).recurring().getSchedule();
+        long openedPeriod = openedSchedule.start(System.currentTimeMillis());
         CustomGoalForm form = new CustomGoalForm();
         form.load(goal);
         com.grinder.ui.editor.RepeatGoalForm repeat = new com.grinder.ui.editor.RepeatGoalForm();
         repeat.load(active.metadata(goal).recurring().getSchedule(), active.metadata(goal).recurring().getTarget());
+        form.setRecurring(repeat.getSchedule() != com.grinder.repository.RepeatSchedule.NONE);
+        repeat.addScheduleListener(() -> form.setRecurring(repeat.getSchedule() != com.grinder.repository.RepeatSchedule.NONE));
         JPanel editor = new JPanel(new BorderLayout(0, 8));
         editor.add(form, BorderLayout.CENTER);
         editor.add(repeat, BorderLayout.SOUTH);
         while (JOptionPane.showConfirmDialog(this, editor, "Edit " + title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
             try {
-                CustomGoal draft = form.read();
                 repeat.commit();
                 com.grinder.repository.RepeatSchedule schedule = repeat.getSchedule();
                 long periodTarget = repeat.getTarget();
+                CustomGoal draft = form.read(schedule == com.grinder.repository.RepeatSchedule.NONE ? 0 : periodTarget);
                 if (!confirmEdit(title, goal, draft, active.metadata(goal).recurring().getSchedule(), schedule, active.metadata(goal).recurring().getTarget(), periodTarget)) {
                     return;
                 }
                 clientThread.invokeLater(() -> {
                     if (profile == active && active.getGoals().contains(goal)) {
+                        if (openedSchedule != com.grinder.repository.RepeatSchedule.NONE && openedSchedule.start(System.currentTimeMillis()) != openedPeriod) {
+                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, "The period reset while you were editing. Reopen the editor to avoid applying the previous period's progress."));
+                            render();
+                            return;
+                        }
                         Goal collision = active.findMatchingGoal(goal, schedule);
                         if (collision != null && collision != goal) {
                             SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, "That personal goal already has this schedule."));
@@ -1740,12 +1750,20 @@ public class GrinderPanel extends PluginPanel {
     }
 
     private void promptManualProgress(GrinderProfile active, CustomGoal goal, long current, long target) {
+        com.grinder.repository.RepeatSchedule schedule = active.metadata(goal).recurring().getSchedule();
+        long window = schedule.start(System.currentTimeMillis());
         javax.swing.JSpinner value = new javax.swing.JSpinner(new javax.swing.SpinnerNumberModel(current, 0L, target, 1L));
         value.setEditor(new javax.swing.JSpinner.NumberEditor(value, "#,##0"));
         while (JOptionPane.showConfirmDialog(this, value, "Set progress (0–" + String.format(Locale.ROOT, "%,d", target) + ")", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
             try {
                 value.commitEdit();
-                changeManualProgress(active, goal, ((Number) value.getValue()).longValue());
+                long requested = ((Number) value.getValue()).longValue();
+                changeManualProgress(active, goal, previous -> {
+                    if (schedule != com.grinder.repository.RepeatSchedule.NONE && schedule.start(System.currentTimeMillis()) != window) {
+                        throw new IllegalStateException("The period reset while this dialog was open. Reopen Set progress for the new period.");
+                    }
+                    return requested;
+                });
                 return;
             } catch (java.text.ParseException exception) {
                 JOptionPane.showMessageDialog(this, "Enter a whole number within the target.");
@@ -1753,9 +1771,6 @@ public class GrinderPanel extends PluginPanel {
         }
     }
 
-    private void changeManualProgress(GrinderProfile active, CustomGoal goal, long value) {
-        changeManualProgress(active, goal, current -> value);
-    }
     private void changeManualProgress(GrinderProfile active, CustomGoal goal, java.util.function.LongUnaryOperator change) {
         clientThread.invokeLater(() -> {
             if (profile != active || !active.getGoals().contains(goal)) {
@@ -1766,8 +1781,16 @@ public class GrinderPanel extends PluginPanel {
             if (recurring.isActive()) {
                 recurring.observe(goal, now);
             }
+            long requested;
+            try {
+                requested = change.applyAsLong(goal.getProgressCurrent());
+            } catch (IllegalStateException exception) {
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, exception.getMessage()));
+                render();
+                return;
+            }
             java.util.function.Consumer<Goal> restore = active.snapshotEdit(goal);
-            goal.update(goal.getTitle(null), goal.getDescription(), goal.getCategory(), Math.min(change.applyAsLong(goal.getProgressCurrent()), goal.getProgressMaximum()), goal.getProgressMaximum());
+            goal.update(goal.getTitle(null), goal.getDescription(), goal.getCategory(), Math.min(requested, goal.getProgressMaximum()), goal.getProgressMaximum());
             if (recurring.isActive()) {
                 recurring.observe(goal, now);
             } else {

@@ -47,4 +47,7 @@ public final class RepeatGoalForm extends JPanel {
     public void commit() throws java.text.ParseException {
         target.commitEdit();
     }
+    public void addScheduleListener(Runnable listener) {
+        schedule.addActionListener(event -> listener.run());
+    }
 }

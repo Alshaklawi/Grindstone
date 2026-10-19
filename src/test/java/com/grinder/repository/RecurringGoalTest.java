@@ -15,6 +15,24 @@ import static org.junit.Assert.*;
  * @since 10/19/2026
  */
 public class RecurringGoalTest {
+    @Test public void restartingArchivesObservedProgressWithoutChangingTheSchedule() {
+        CustomGoal goal = new CustomGoal("Daily", "", GoalCategory.OTHER, 2, 5);
+        RecurringGoal recurring = new RecurringGoal();
+        long now = time("2026-10-19T10:00:00Z");
+        recurring.configure(RepeatSchedule.DAILY, 5, now);
+        recurring.observe(goal, now);
+        recurring.restart(now + 1000);
+        assertEquals(RepeatSchedule.DAILY, recurring.getSchedule());
+        assertEquals(5, recurring.getTarget());
+        assertEquals(0, recurring.getBaselineAt());
+        assertEquals(1, recurring.getHistory().size());
+        assertEquals(2, recurring.getHistory().get(0).getProgress());
+        assertEquals("Period restarted · last observed", recurring.getHistory().get(0).getOutcome());
+        goal.update("Daily", "", GoalCategory.OTHER, 0, 5);
+        recurring.observe(goal, now + 2000);
+        assertEquals(0, recurring.getProgress());
+        assertEquals(now + 2000, recurring.getBaselineAt());
+    }
     private long time(String value) {
         return Instant.parse(value).toEpochMilli();
     }
