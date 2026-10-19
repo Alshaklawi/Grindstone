@@ -1,5 +1,7 @@
 package com.grinder.repository;
 
+import com.grinder.content.goal.GoalCategory;
+import com.grinder.content.goal.impl.CustomGoal;
 import net.runelite.http.api.RuneLiteAPI;
 
 /**
@@ -15,11 +17,7 @@ public final class TestProfiles {
 
     public static GrinderProfile populated(long hash) {
         GrinderProfile profile = new GrinderProfile(hash);
-        populate(profile);
+        profile.add(new CustomGoal("Saved goal", "Player notes", GoalCategory.OTHER, 3, 10));
         return profile;
-    }
-
-    public static void populate(GrinderProfile profile) {
-        new GoalFixtures(profile).populate();
     }
 }
