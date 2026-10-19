@@ -243,7 +243,7 @@ public interface GrindstoneConfig extends Config {
 
     @ConfigItem(keyName = "showObtainedItems", name = "Show obtained items", description = "Include items you already have in collection-log grids.", section = COLLECTION_LOG_SECTION, position = 1)
     default boolean showObtainedItems() {
-        return true;
+        return false;
     }
 
     @ConfigItem(keyName = "showItemTooltips", name = "Show item tooltips", description = "Show an item name when you hover its icon.", section = COLLECTION_LOG_SECTION, position = 2)
