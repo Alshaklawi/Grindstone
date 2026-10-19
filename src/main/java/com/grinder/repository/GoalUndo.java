@@ -26,7 +26,7 @@ public final class GoalUndo {
         boolean valid = active != null && active == profile && active.revision() == revision && action != null && allowed.getAsBoolean();
         Runnable saved = action;
         clear();
-        if (valid) { saved.run(); }
+        if (valid) { try { saved.run(); } catch (IllegalStateException exception) { return false; } }
         return valid;
     }
 }

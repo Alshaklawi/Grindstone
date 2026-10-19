@@ -36,6 +36,15 @@ public final class RecurringGoal {
     public long getLastObservedAt() { return lastObservedAt; }
     public List<Period> getHistory() { return Collections.unmodifiableList(history); }
     public boolean isActive() { return schedule != RepeatSchedule.NONE; }
+    public void stop(long now, String outcome) {
+        if (isActive() && baselineAt > 0) { archive(now, outcome); }
+        schedule = RepeatSchedule.NONE; start = 0; baselineAt = 0; progress = 0; completedAt = 0; lastObservedAt = 0;
+    }
+    public void restart(long now) {
+        if (!isActive()) { throw new IllegalStateException("Only recurring goals have periods."); }
+        if (baselineAt > 0) { archive(now, "Period restarted · last observed"); }
+        start = 0; baselineAt = 0; progress = 0; completedAt = 0; lastObservedAt = 0;
+    }
     public GoalStatus getStatus() { return progress >= target ? GoalStatus.COMPLETE : progress > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED; }
 
     public void configure(RepeatSchedule schedule, long target, long now) {

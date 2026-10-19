@@ -131,6 +131,7 @@ public final class GrinderRepository {
         }
 
         json.add("goals", savedGoals);
+        json.add("archivedHistory", GSON.toJsonTree(profile.archivedHistory()));
         JsonObject observed = new JsonObject();
         profile.getCollectionLogHistory().snapshot().forEach((id, time) -> observed.addProperty(id.toString(), time));
         json.add("collectionLogFirstSeen", observed);
@@ -219,6 +220,13 @@ public final class GrinderRepository {
         }
 
         profile.replace(goals);
+        if (json.has("archivedHistory") && json.get("archivedHistory").isJsonArray()) {
+            if (json.getAsJsonArray("archivedHistory").size() > 500) { throw new IllegalArgumentException("Too many archived goal histories"); }
+            for (JsonElement saved : json.getAsJsonArray("archivedHistory")) {
+                try { profile.restoreArchive(GSON.fromJson(saved, GrinderProfile.ArchivedHistory.class)); }
+                catch (RuntimeException exception) { log.debug("Skipping invalid archived goal history", exception); }
+            }
+        }
         return profile;
     }
 
@@ -238,6 +246,7 @@ public final class GrinderRepository {
         boolean sameAccount = json.get("hash").getAsLong() == targetHash;
         json.addProperty("hash", targetHash);
         if (!sameAccount) {
+            json.remove("archivedHistory");
             json.remove("collectionLogFirstSeen");
             for (JsonElement element : json.getAsJsonArray("goals")) {
                 JsonObject saved = element.getAsJsonObject();

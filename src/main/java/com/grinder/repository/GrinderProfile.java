@@ -42,14 +42,32 @@ public class GrinderProfile {
     private final List<Goal> goals = new ArrayList<>();
     private final transient java.util.Map<Goal, GoalMetadata> metadata = new java.util.IdentityHashMap<>();
     private transient long revision;
+    private final java.util.Map<String, ArchivedHistory> archivedHistory = new java.util.LinkedHashMap<>();
+    public java.util.Collection<ArchivedHistory> archivedHistory() { return Collections.unmodifiableCollection(archivedHistory.values()); }
+    public void restoreArchive(ArchivedHistory history) {
+        if (history == null || history.title == null || history.title.length() > 300) { throw new IllegalArgumentException("Invalid archived history"); }
+        GoalMetadata.validated(history.metadata);
+        if (goals.stream().noneMatch(goal -> metadata(goal).getId().equals(history.metadata.getId()))) { archivedHistory.putIfAbsent(history.metadata.getId(), history); }
+        while (archivedHistory.size() > 500) { archivedHistory.remove(archivedHistory.keySet().iterator().next()); }
+    }
+    private void archive(Goal goal) {
+        GoalMetadata saved = GrinderRepository.copyMetadata(metadata(goal));
+        if (saved.getCompletions().isEmpty() && saved.recurring().getHistory().isEmpty() && saved.recurring().getBaselineAt() == 0) { return; }
+        saved.recurring().stop(System.currentTimeMillis(), "Goal archived · last observed");
+        archivedHistory.put(saved.getId(), new ArchivedHistory(goal.getTitle(null), saved));
+        while (archivedHistory.size() > 500) { archivedHistory.remove(archivedHistory.keySet().iterator().next()); }
+    }
     public long revision() { return revision; }
     public void touch() { revision++; }
     public java.util.function.Consumer<Goal> snapshotEdit(Goal original) {
         GoalMetadata saved = GrinderRepository.copyMetadata(metadata(original));
+        RepeatSchedule previousSchedule = saved.recurring().getSchedule();
+        long undoWindow = previousSchedule.start(System.currentTimeMillis());
         long target = original.getProgressMaximum();
         CustomGoal custom = original instanceof CustomGoal ? (CustomGoal) original : null;
         CustomGoal manual = custom == null ? null : new CustomGoal(custom.getId(), custom.getTitle(null), custom.getDescription(), custom.getCategory(), custom.getProgressCurrent(), target);
         return replacement -> {
+            if (previousSchedule != RepeatSchedule.NONE && previousSchedule.start(System.currentTimeMillis()) != undoWindow) { throw new IllegalStateException("The previous period has reset."); }
             int index = goals.indexOf(replacement);
             if (index < 0) { throw new IllegalStateException("The edited goal no longer exists."); }
             if (custom != null) { custom.update(manual.getTitle(null), manual.getDescription(), manual.getCategory(), manual.getProgressCurrent(), manual.getProgressMaximum()); }
@@ -57,6 +75,7 @@ public class GrinderProfile {
             goals.set(index, original);
             if (original != replacement) { metadata.remove(replacement); }
             metadata.put(original, saved);
+            archivedHistory.remove(saved.getId());
             attachCollectionData(original);
             touch();
         };
@@ -120,7 +139,7 @@ public class GrinderProfile {
             goals.add(new TotalLevelGoal());
         }
 
-        if (goals.stream().noneMatch(goal -> goal instanceof TotalExperienceGoal)) {
+        if (goals.stream().noneMatch(goal -> goal instanceof TotalExperienceGoal && metadata(goal).recurring().getSchedule() == RepeatSchedule.NONE)) {
             goals.add(new TotalExperienceGoal());
         }
 
@@ -179,6 +198,7 @@ public class GrinderProfile {
         }
         attachCollectionData(goal);
         metadata.put(goal, details);
+        archivedHistory.remove(details.getId());
         touch();
         return goals.add(goal);
     }
@@ -234,6 +254,7 @@ public class GrinderProfile {
         if (index < 0) { return false; }
         for (Goal goal : goals) { if (goal != original && sameGoal(goal, replacement) && metadata(goal).recurring().getSchedule() == schedule) { throw new IllegalArgumentException("That tracker and schedule are already tracked. Edit the existing goal instead."); } }
         GoalMetadata old = metadata(original);
+        if (!sameGoal(original, replacement)) { archive(original); }
         GoalMetadata next = sameGoal(original, replacement) ? old : new GoalMetadata();
         next.setPinned(old.isPinned());
         attachCollectionData(replacement);
@@ -245,6 +266,7 @@ public class GrinderProfile {
     }
 
     public boolean remove(Goal goal) {
+        if (goals.contains(goal)) { archive(goal); }
         boolean removed = goals.remove(goal);
         if (removed) { touch(); }
         return removed;
@@ -254,6 +276,7 @@ public class GrinderProfile {
         int added = 0;
         for (Goal goal : backup.getGoals()) { if (add(goal, backup.metadata(goal))) { added++; } }
         backup.collectionLogHistory.snapshot().forEach(collectionLogHistory::record);
+        backup.archivedHistory().forEach(this::restoreArchive);
         setItemManager(itemManager);
         return added;
     }
@@ -275,7 +298,7 @@ public class GrinderProfile {
 
     private boolean hasTracker(TrackerEntry entry) {
         return goals.stream().anyMatch(goal -> goal instanceof TrackerGoal
-                && ((TrackerGoal) goal).getTracker() == entry);
+                && ((TrackerGoal) goal).getTracker() == entry && metadata(goal).recurring().getSchedule() == RepeatSchedule.NONE);
     }
 
     private boolean hasSkillGoal(Skill skill) {
@@ -285,7 +308,7 @@ public class GrinderProfile {
 
     private boolean hasExperienceGoal(Skill skill) {
         return goals.stream().anyMatch(goal -> goal instanceof SkillExperienceGoal
-                && ((SkillExperienceGoal) goal).getSkill() == skill);
+                && ((SkillExperienceGoal) goal).getSkill() == skill && metadata(goal).recurring().getSchedule() == RepeatSchedule.NONE);
     }
 
     private void addDefaultCollectionItem(int itemId) {
@@ -308,5 +331,17 @@ public class GrinderProfile {
                 items.add(item);
             }
         }
+    }
+    /**
+     * @author Ayman Yassen
+     * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
+     * @since 10/18/2026
+     */
+    public static final class ArchivedHistory {
+        private final String title;
+        private final GoalMetadata metadata;
+        private ArchivedHistory(String title, GoalMetadata metadata) { this.title = title; this.metadata = metadata; }
+        public String getTitle() { return title; }
+        public GoalMetadata getMetadata() { return metadata; }
     }
 }
