@@ -48,6 +48,11 @@ public interface GrinderConfig extends Config {
     default boolean bossGoalMenu() {
         return true;
     }
+
+    @ConfigItem(keyName = "skillGoalMenu", name = "Skills tab goal shortcuts", description = "Add level and XP goal shortcuts to skills. Right-click Total level for total and base level/XP goals. Opens the goal editor without changing game stats.", section = GOALS_SECTION, position = 12)
+    default boolean skillGoalMenu() {
+        return true;
+    }
     @ConfigItem(keyName = "ownedItemGoalsEnabled", name = "Owned item goals", description = "Show quantities across known personal item storage.", section = GOALS_SECTION, position = 7)
     default boolean ownedItemGoalsEnabled() {
         return true;

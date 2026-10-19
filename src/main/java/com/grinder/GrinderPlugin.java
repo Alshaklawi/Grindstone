@@ -15,10 +15,12 @@ import com.grinder.content.goal.impl.combatachievement.CombatAchievementTaskGoal
 import com.grinder.content.goal.impl.combatachievement.CombatAchievementBossGoal;
 import com.grinder.content.tracker.TrackerEntry;
 import com.grinder.content.goal.impl.experience.SessionExperienceGoal;
+import com.grinder.content.goal.impl.experience.BaseExperienceGoal;
 import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
 import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
 import com.grinder.content.goal.impl.item.PossessedItemGoal;
 import com.grinder.content.goal.impl.level.CombatLevelGoal;
+import com.grinder.content.goal.impl.level.BaseLevelGoal;
 import com.grinder.content.goal.impl.level.SkillLevelGoal;
 import com.grinder.content.goal.impl.level.TotalLevelGoal;
 import com.grinder.notification.GoalCompletionNotifications;
@@ -27,10 +29,12 @@ import com.grinder.repository.GrinderProfile;
 import com.grinder.repository.GrinderRepository;
 import com.grinder.repository.ProfilePersistence;
 import com.grinder.ui.GrinderPanel;
+import com.grinder.ui.util.SkillWidgets;
 import java.awt.image.BufferedImage;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.function.Supplier;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Inject;
@@ -41,14 +45,18 @@ import net.runelite.api.GameState;
 import net.runelite.api.ItemContainer;
 import net.runelite.api.MenuAction;
 import net.runelite.api.MenuEntry;
+import net.runelite.api.Point;
+import net.runelite.api.Skill;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.events.MenuEntryAdded;
+import net.runelite.api.events.MenuOpened;
 import net.runelite.api.events.StatChanged;
 import net.runelite.api.events.VarbitChanged;
 import net.runelite.api.gameval.InventoryID;
 import net.runelite.api.gameval.InterfaceID;
+import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -206,6 +214,16 @@ public class GrinderPlugin extends Plugin {
         if (original.getType() != MenuAction.CC_OP && original.getType() != MenuAction.CC_OP_LOW_PRIORITY) {
             return;
         }
+        if (original.getParam1() >>> 16 == InterfaceID.STATS) {
+            if (config.skillGoalMenu() && original.getIdentifier() == 1) {
+                Skill skill = SkillWidgets.skillFor(original.getParam1());
+                if (skill != null) {
+                    addSkillGoalOption("Add level goal", skill.getName(), () -> new SkillLevelGoal(skill), false);
+                    addSkillGoalOption("Add XP goal", skill.getName(), () -> new SkillExperienceGoal(skill), true);
+                }
+            }
+            return;
+        }
         if (original.getParam1() >>> 16 == InterfaceID.CA_BOSSES) {
             addBossAchievementMenu(original);
             return;
@@ -280,6 +298,37 @@ public class GrinderPlugin extends Plugin {
                 panel.showAddGoalDialog(selection);
             }
         });
+    }
+
+    @Subscribe
+    public void onMenuOpened(MenuOpened event) {
+        if (!hasActivePlayerProfile() || !config.skillGoalMenu()) {
+            return;
+        }
+        Widget total = client.getWidget(InterfaceID.Stats.TOTAL);
+        Point mouse = client.getMouseCanvasPosition();
+        if (total == null || total.isHidden() || !total.getBounds().contains(mouse.getX(), mouse.getY())) {
+            return;
+        }
+        addSkillGoalOption("Add total level goal", "All skills", TotalLevelGoal::new, false);
+        addSkillGoalOption("Add total XP goal", "All skills", TotalExperienceGoal::new, true);
+        addSkillGoalOption("Add base level goal", "All skills", BaseLevelGoal::new, false);
+        addSkillGoalOption("Add base XP goal", "All skills", BaseExperienceGoal::new, true);
+    }
+
+    private void addSkillGoalOption(String label, String target, Supplier<Goal> factory, boolean experience) {
+        if (experience ? !config.experienceGoalsEnabled() : !config.levelGoalsEnabled()) {
+            return;
+        }
+        client.getMenu().createMenuEntry(-1)
+                .setOption(label)
+                .setTarget(target)
+                .setType(MenuAction.RUNELITE_LOW_PRIORITY)
+                .onClick(entry -> {
+                    if (hasActivePlayerProfile() && config.skillGoalMenu() && (experience ? config.experienceGoalsEnabled() : config.levelGoalsEnabled())) {
+                        openGoalEditor(factory.get());
+                    }
+                });
     }
 
     private void addBossTrackerMenu(MenuEntry original) {
