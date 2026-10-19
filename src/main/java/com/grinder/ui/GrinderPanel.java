@@ -199,7 +199,7 @@ public class GrinderPanel extends PluginPanel {
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.setBackground(HEADER_COLOR);
         header.setOpaque(true);
-        header.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        header.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
 
         JLabel titleLabel = new JLabel("Grinder Goals");
         titleLabel.setForeground(TEXT_COLOR);
@@ -369,6 +369,7 @@ public class GrinderPanel extends PluginPanel {
         controlsPanel.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
 
         searchField.setIcon(IconTextField.Icon.SEARCH);
+        searchField.setFont(UiTypography.BODY);
         UiTooltips.set(searchField, "Search goal titles and descriptions. Use the clear icon to clear the search.");
         searchField.setBackground(ColorScheme.DARKER_GRAY_COLOR);
         searchField.setHoverBackgroundColor(ColorScheme.DARKER_GRAY_HOVER_COLOR);
@@ -465,11 +466,14 @@ public class GrinderPanel extends PluginPanel {
     }
 
     private void styleComboBox(JComboBox<String> comboBox) {
+        comboBox.setFont(UiTypography.BODY);
         comboBox.setFocusable(true);
         comboBox.setMaximumRowCount(12);
     }
 
     private void styleButton(JButton button) {
+        button.setFont(UiTypography.BODY);
+        button.setMargin(new java.awt.Insets(4, 7, 4, 7));
         button.setRolloverEnabled(true);
         button.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
     }
@@ -607,6 +611,7 @@ public class GrinderPanel extends PluginPanel {
                     component.setGoalStatus(status);
                     component.putClientProperty("grinder.repeat", repeating ? recurring.getSchedule() : com.grinder.repository.RepeatSchedule.NONE);
                     component.putClientProperty("grinder.id", metadata.getId());
+                    component.putClientProperty("grinder.ready", tracking != com.grinder.content.goal.TrackingState.WAITING);
                     if (repeating) { component.setProgress(progressCurrent, progressMaximum, String.format(Locale.ROOT, "%,d / %,d this period", progressCurrent, progressMaximum)); }
                     if (tracking == com.grinder.content.goal.TrackingState.WAITING) { component.setProgress(0, 0, "Waiting for client data"); }
                     else if (tracking == com.grinder.content.goal.TrackingState.OBSERVED_LOG) { component.setProgress(progressCurrent, progressMaximum, String.format(Locale.ROOT, "%,d / %,d observed", progressCurrent, progressMaximum)); }
@@ -640,7 +645,7 @@ public class GrinderPanel extends PluginPanel {
                     })); }
                     if (com.grinder.repository.RecurringGoal.supports(goal)) { component.addGoalAction("Repeat schedule...", "Make this a daily, weekly or monthly goal, or return to lifetime tracking.", event -> editRepeat(currentProfile, goal, repeatSchedule, repeatTarget)); }
                     if (repeating) { component.addGoalAction("Restart current period...", "Archive observed progress and capture a fresh baseline. Game progress is never reset.", event -> restartPeriod(currentProfile, goal)); }
-                    component.setAchievementNote(repeating ? recurring.getSchedule() + " · " + (recurring.getBaselineAt() == 0 ? "Waiting for login baseline" : "Since " + java.time.format.DateTimeFormatter.ofPattern("MMM d HH:mm 'UTC'", Locale.ROOT).withZone(java.time.ZoneOffset.UTC).format(java.time.Instant.ofEpochMilli(recurring.getBaselineAt()))) : config.showCompletionHistory() && !metadata.getCompletions().isEmpty() && status != GoalStatus.COMPLETE ? "Previously reached a target · currently incomplete" : null);
+                    component.setAchievementNote(repeating ? recurring.getSchedule() + " · " + (recurring.getBaselineAt() == 0 ? "Baseline pending" : "This period") : config.showCompletionHistory() && !metadata.getCompletions().isEmpty() && status != GoalStatus.COMPLETE ? "Previously reached · now incomplete" : null);
 
                     GoalView view = new GoalView(
                             goal,
@@ -776,12 +781,14 @@ public class GrinderPanel extends PluginPanel {
         for (GoalView view : goals) { if (view.component.getClientProperty("grinder.repeat") != com.grinder.repository.RepeatSchedule.NONE) { recurring.add(view); } }
         if (recurring.isEmpty()) { if (routineOverview != null) { main.remove(routineOverview); main.remove(routineGap); } return; }
         long completed = recurring.stream().filter(view -> isComplete(view.status)).count();
-        double ratio = recurring.stream().mapToDouble(GrinderPanel::getProgressRatio).average().orElse(0);
+        long waiting = recurring.stream().filter(view -> !Boolean.TRUE.equals(view.component.getClientProperty("grinder.ready"))).count();
+        double ratio = recurring.stream().filter(view -> Boolean.TRUE.equals(view.component.getClientProperty("grinder.ready"))).mapToDouble(GrinderPanel::getProgressRatio).average().orElse(0);
         if (routineOverview != null) {
             routineTitle.setText("Your routine · " + completed + "/" + recurring.size() + " reached");
             routineProgress.setProgress(Math.round(ratio * 100), 100);
+            routineProgress.setVisible(waiting < recurring.size());
             long next = recurring.stream().mapToLong(this::nextReset).min().orElse(0);
-            routineDue.setText("<html>Next reset: " + java.time.format.DateTimeFormatter.ofPattern("EEE HH:mm 'UTC'", Locale.ROOT).withZone(java.time.ZoneOffset.UTC).format(java.time.Instant.ofEpochMilli(next)) + "<br>" + Math.round(ratio * 100) + "% average progress this period</html>");
+            routineDue.setText("<html>Next reset: " + java.time.format.DateTimeFormatter.ofPattern("EEE HH:mm 'UTC'", Locale.ROOT).withZone(java.time.ZoneOffset.UTC).format(java.time.Instant.ofEpochMilli(next)) + "<br>" + (waiting == recurring.size() ? "Waiting for readings" : Math.round(ratio * 100) + "% of known progress") + (waiting > 0 ? " · " + waiting + " waiting" : "") + "</html>");
             if (routineOverview.getParent() != main) { main.add(routineOverview, 0); main.add(routineGap, 1); }
             return;
         }
@@ -799,13 +806,14 @@ public class GrinderPanel extends PluginPanel {
         overview.add(Box.createVerticalStrut(6));
         SegmentedProgressBar progress = new SegmentedProgressBar();
         routineProgress = progress;
+        progress.setVisible(waiting < recurring.size());
         progress.setProgress(Math.round(ratio * 100), 100);
         progress.setToolTipText("Average goal completion, not a sum of different units. Includes all visible recurring goals, independent of search filters.");
         progress.setMaximumSize(new Dimension(Integer.MAX_VALUE, 8));
         progress.setAlignmentX(LEFT_ALIGNMENT);
         overview.add(progress);
         long next = recurring.stream().mapToLong(this::nextReset).min().orElse(0);
-        JLabel due = new JLabel("<html>Next reset: " + java.time.format.DateTimeFormatter.ofPattern("EEE HH:mm 'UTC'", Locale.ROOT).withZone(java.time.ZoneOffset.UTC).format(java.time.Instant.ofEpochMilli(next)) + "<br>" + Math.round(ratio * 100) + "% average progress this period</html>");
+        JLabel due = new JLabel("<html>Next reset: " + java.time.format.DateTimeFormatter.ofPattern("EEE HH:mm 'UTC'", Locale.ROOT).withZone(java.time.ZoneOffset.UTC).format(java.time.Instant.ofEpochMilli(next)) + "<br>" + (waiting == recurring.size() ? "Waiting for readings" : Math.round(ratio * 100) + "% of known progress") + (waiting > 0 ? " · " + waiting + " waiting" : "") + "</html>");
         routineDue = due;
         due.setFont(UiTypography.META);
         due.setAlignmentX(LEFT_ALIGNMENT);
@@ -823,6 +831,7 @@ public class GrinderPanel extends PluginPanel {
         int active = 0;
         int notStarted = 0;
         double ratios = 0;
+        int known = 0;
 
         for (GoalView view : goals) {
             if (isComplete(view.status)) {
@@ -832,16 +841,17 @@ public class GrinderPanel extends PluginPanel {
                 active++;
             }
             else { notStarted++; }
-            ratios += getProgressRatio(view);
+            if (Boolean.TRUE.equals(view.component.getClientProperty("grinder.ready"))) { ratios += getProgressRatio(view); known++; }
         }
 
-        int percentage = goals.isEmpty() ? 0 : (int) Math.round(ratios * 100 / goals.size());
+        int percentage = known == 0 ? 0 : (int) Math.round(ratios * 100 / known);
+        overallProgress.setVisible(known > 0);
         overallProgress.setMaximumChunks(config.maxProgressChunks());
         overallProgress.setProgress(percentage, 100);
         overallProgress.setStatus(!goals.isEmpty() && completed == goals.size() ? GoalStatus.COMPLETE
                 : active > 0 || completed > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED);
-        summaryLabel.setText(completed + " / " + goals.size() + " complete  •  " + percentage + "%");
-        summaryLabel.setToolTipText("Average progress across your goals; each goal has equal weight");
+        summaryLabel.setText(completed + " / " + goals.size() + " reached" + (known < goals.size() ? " · " + (goals.size() - known) + " waiting" : " · " + percentage + "%"));
+        summaryLabel.setToolTipText("Average across known readings; waiting-for-data goals are excluded. Each known goal has equal weight.");
         overallProgress.setToolTipText(percentage + "% average progress. Each goal has equal weight; yellow is active and green is complete.");
         newGoalsButton.setText("New " + notStarted);
         activeGoalsButton.setText("Active " + active);

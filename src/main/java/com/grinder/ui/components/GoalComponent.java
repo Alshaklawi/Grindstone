@@ -50,7 +50,7 @@ public class GoalComponent extends JPanel {
     private final JLabel progressLabel = new JLabel();
     private final SegmentedProgressBar progressBar = new SegmentedProgressBar();
     private final JLabel statusLabel = new JLabel();
-    private final JPanel manualControls = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+    private final JPanel manualControls = new JPanel(new java.awt.GridLayout(1, 2, 6, 0));
     public void setManualActions(long current, long target, Runnable increment, Runnable toggle, Runnable setProgress) {
         manualControls.removeAll();
         manualControls.setOpaque(false);
@@ -64,6 +64,7 @@ public class GoalComponent extends JPanel {
         } else {
             JButton plus = new JButton("+1");
             plus.setFont(UiTypography.BODY);
+            plus.setMargin(new java.awt.Insets(4, 5, 4, 5));
             plus.setEnabled(current < target);
             plus.setToolTipText("Add one to this personal goal's progress. Undo is available in the header.");
             plus.addActionListener(event -> increment.run());
@@ -71,6 +72,7 @@ public class GoalComponent extends JPanel {
         }
         JButton set = new JButton("Set progress");
         set.setFont(UiTypography.BODY);
+        set.setMargin(new java.awt.Insets(4, 5, 4, 5));
         set.setToolTipText("Enter manual progress without opening the full goal editor.");
         set.addActionListener(event -> setProgress.run());
         manualControls.add(set);

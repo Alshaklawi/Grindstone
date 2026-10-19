@@ -26,7 +26,7 @@ public enum TrackingState {
     public String getDetail() { return detail; }
     public static TrackingState of(Goal goal, RecurringGoal recurring, boolean loggedIn, boolean bankLoaded) {
         if (goal instanceof CustomGoal) { return MANUAL; }
-        if (!loggedIn || recurring.isActive() && recurring.getBaselineAt() == 0 || goal instanceof ClientCompletionGoal && goal.getProgressMaximum() == 0) { return WAITING; }
+        if (!loggedIn || recurring.isActive() && recurring.getBaselineAt() == 0 || goal instanceof ClientCompletionGoal && goal.getProgressMaximum() == 0 || goal.getCategory() == GoalCategory.COLLECTION_LOG && goal.getProgressMaximum() == 0) { return WAITING; }
         if (goal instanceof PossessedItemGoal) { return bankLoaded ? SNAPSHOT : PARTIAL_STORAGE; }
         if (goal.getCategory() == GoalCategory.COLLECTION_LOG) { return OBSERVED_LOG; }
         if (recurring.isActive() && recurring.getBaselineAt() > recurring.getStart() + 60_000) { return LATE_BASELINE; }
