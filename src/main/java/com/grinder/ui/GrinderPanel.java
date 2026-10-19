@@ -1095,7 +1095,7 @@ public class GrinderPanel extends PluginPanel {
         long periodTarget = form.getRepeatTarget();
         clientThread.invokeLater(() -> {
             if (profile != active) { return; }
-            Goal existing = active.findMatchingGoal(candidate);
+            Goal existing = active.findMatchingGoal(candidate, schedule);
             if (existing != null) {
                 String title = safeTitle(existing);
                 long oldTarget = existing.getProgressMaximum();
@@ -1124,8 +1124,8 @@ public class GrinderPanel extends PluginPanel {
             }
             else {
                 candidate.refresh(client);
-                active.add(candidate);
                 configureRepeat(active, candidate, schedule, periodTarget);
+                active.add(candidate, active.metadata(candidate));
                 SwingUtilities.invokeLater(() -> {
                     if (profile != active) { return; }
                     collapsedCategories.put(candidate.getCategory(), false);
@@ -1157,7 +1157,7 @@ public class GrinderPanel extends PluginPanel {
                 clientThread.invokeLater(() -> {
                     if (profile != active) { return; }
                     try {
-                        if (active.replaceGoal(goal, replacement)) { replacement.refresh(client); configureRepeat(active, replacement, selectedSchedule, selectedTarget); render(); }
+                        if (active.replaceGoal(goal, replacement, selectedSchedule)) { replacement.refresh(client); configureRepeat(active, replacement, selectedSchedule, selectedTarget); render(); }
                     } catch (IllegalArgumentException exception) {
                         SwingUtilities.invokeLater(() -> { if (profile == active) { JOptionPane.showMessageDialog(this, exception.getMessage()); } });
                     }
@@ -1228,7 +1228,7 @@ public class GrinderPanel extends PluginPanel {
         if (goal == null || active == null) { return; }
         clientThread.invokeLater(() -> {
             if (profile == active) {
-                active.add(goal);
+                active.add(goal, active.metadata(goal));
                 render();
             }
         });

@@ -148,16 +148,26 @@ public class GrinderProfile {
     }
 
     public boolean add(Goal goal) {
+        return add(goal, new GoalMetadata());
+    }
+
+    public boolean add(Goal goal, GoalMetadata details) {
         Objects.requireNonNull(goal, "goal");
-        if (findMatchingGoal(goal) != null) {
+        GoalMetadata.validated(details);
+        if (findMatchingGoal(goal, details.recurring().getSchedule()) != null) {
             return false;
         }
         attachCollectionData(goal);
+        metadata.put(goal, details);
         return goals.add(goal);
     }
 
     public Goal findMatchingGoal(Goal candidate) {
-        return goals.stream().filter(goal -> sameGoal(goal, candidate)).findFirst().orElse(null);
+        return findMatchingGoal(candidate, RepeatSchedule.NONE);
+    }
+
+    public Goal findMatchingGoal(Goal candidate, RepeatSchedule schedule) {
+        return goals.stream().filter(goal -> sameGoal(goal, candidate) && metadata(goal).recurring().getSchedule() == schedule).findFirst().orElse(null);
     }
 
     private static boolean sameGoal(Goal left, Goal right) {
@@ -195,10 +205,13 @@ public class GrinderProfile {
     }
     public static boolean sameSelection(Goal left, Goal right) { return sameGoal(left, right); }
     public boolean replaceGoal(Goal original, Goal replacement) {
+        return replaceGoal(original, replacement, metadata(original).recurring().getSchedule());
+    }
+    public boolean replaceGoal(Goal original, Goal replacement, RepeatSchedule schedule) {
         if (original == replacement) { return goals.contains(original); }
         int index = goals.indexOf(original);
         if (index < 0) { return false; }
-        for (Goal goal : goals) { if (goal != original && sameGoal(goal, replacement)) { throw new IllegalArgumentException("That goal is already tracked. Edit the existing goal instead."); } }
+        for (Goal goal : goals) { if (goal != original && sameGoal(goal, replacement) && metadata(goal).recurring().getSchedule() == schedule) { throw new IllegalArgumentException("That tracker and schedule are already tracked. Edit the existing goal instead."); } }
         GoalMetadata old = metadata(original);
         GoalMetadata next = sameGoal(original, replacement) ? old : new GoalMetadata();
         next.setPinned(old.isPinned());
@@ -215,7 +228,7 @@ public class GrinderProfile {
     public int mergeBackup(GrinderProfile backup) {
         if (backup.hash != hash) { throw new IllegalArgumentException("Backup must be mapped to this account before merging."); }
         int added = 0;
-        for (Goal goal : backup.getGoals()) { if (add(goal)) { restoreMetadata(goal, backup.metadata(goal)); added++; } }
+        for (Goal goal : backup.getGoals()) { if (add(goal, backup.metadata(goal))) { added++; } }
         backup.collectionLogHistory.snapshot().forEach(collectionLogHistory::record);
         setItemManager(itemManager);
         return added;
