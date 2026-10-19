@@ -29,6 +29,10 @@ public interface Goal {
         return "";
     }
 
+    default String getCardDescription() {
+        return getDescription();
+    }
+
     default BufferedImage getIcon(Client client) {
         return com.grinder.ui.Icon.MAIN.getImage();
     }
@@ -60,7 +64,7 @@ public interface Goal {
     default GoalComponent build(Client client) {
         GoalComponent component = new GoalComponent();
         component.setTitle(getTitle(client));
-        component.setDescription(getDescription());
+        component.setDescription(getCardDescription());
         component.setIcon(getIcon(client));
 
         if (hasProgress()) {

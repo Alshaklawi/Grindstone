@@ -67,6 +67,9 @@ public final class PossessedItemGoal implements Goal {
     @Override public String getDescription() {
         return storage == null ? "Open your bank and item storage to include their contents." : storage.describe(normalizedItem > 0 ? normalizedItem : item);
     }
+    @Override public String getCardDescription() {
+        return "";
+    }
     @Override public boolean hasProgress() {
         return true;
     }

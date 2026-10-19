@@ -714,16 +714,17 @@ public class GrinderPanel extends PluginPanel {
                     if (tracking == com.grinder.content.goal.TrackingState.WAITING) {
                         component.setProgress(0, 0, "Waiting for client data");
                     } else if (tracking == com.grinder.content.goal.TrackingState.OBSERVED_LOG) {
-                        component.setProgress(progressCurrent, progressMaximum, String.format(Locale.ROOT, "%,d / %,d observed", progressCurrent, progressMaximum));
+                        component.setProgress(progressCurrent, progressMaximum, String.format(Locale.ROOT, "%,d / %,d", progressCurrent, progressMaximum));
                     } else if (tracking == com.grinder.content.goal.TrackingState.PARTIAL_STORAGE || tracking == com.grinder.content.goal.TrackingState.SNAPSHOT) {
-                        component.setProgress(progressCurrent, progressMaximum, String.format(Locale.ROOT, "%,d / %,d known", progressCurrent, progressMaximum));
+                        component.setProgress(progressCurrent, progressMaximum, String.format(Locale.ROOT, "%,d / %,d", progressCurrent, progressMaximum));
                     }
                     String baselineDetail = recurring.getBaselineAt() == 0 ? "" : " Baseline: " + java.time.Instant.ofEpochMilli(recurring.getBaselineAt()) + ".";
                     if (!repeating && tracking != com.grinder.content.goal.TrackingState.WAITING) {
                         metadata.observe(goal, title, System.currentTimeMillis());
                     }
                     long observedAt = repeating ? recurring.getLastObservedAt() : metadata.getLastObservedAt();
-                    component.setReliability(config.showTrackingState() ? tracking.getLabel() : null, tracking.getDetail() + baselineDetail + (observedAt == 0 ? " No observation recorded." : " Last observation: " + java.time.Instant.ofEpochMilli(observedAt) + "."));
+                    String sourceDetail = goal.getCardDescription().isEmpty() ? goal.getDescription() : "";
+                    component.setReliability(config.showTrackingState() ? tracking.getCardLabel() : null, tracking.getDetail() + baselineDetail + (observedAt == 0 ? "" : " Last reading: " + java.time.Instant.ofEpochMilli(observedAt) + ".") + (sourceDetail.isEmpty() ? "" : " " + sourceDetail));
                     component.setDeadlineNote(metadata.deadlineText(System.currentTimeMillis()));
                     component.putClientProperty("grinder.deadline", metadata.getDeadlineAt());
                     component.setExpansionListener(null);
@@ -803,7 +804,7 @@ public class GrinderPanel extends PluginPanel {
                 }
             }
 
-            String updateText = currentProfile == null ? "Not tracking" : "View refreshed " + java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss z", Locale.ROOT).withZone(java.time.ZoneId.systemDefault()).format(java.time.Instant.now()) + "<br>" + HtmlUtils.escape(currentProfile.getPlayerStorage().freshness());
+            String updateText = currentProfile == null ? "" : HtmlUtils.escape(currentProfile.getPlayerStorage().snapshotLabel());
             long dueCount = currentProfile == null || !config.showDeadlineReminders() ? 0 : currentProfile.getGoals().stream().filter(goal -> {
                 com.grinder.repository.GoalMetadata metadata = currentProfile.metadata(goal);
                 return metadata.isDeadlineReminder() && metadata.getDeadlineAt() > 0 && metadata.getDeadlineAt() - System.currentTimeMillis() <= 86_400_000L && (config.showSampleGoals() || !metadata.isSample()) && (metadata.recurring().isActive() ? metadata.recurring().getStatus() : goal.getStatus()) != GoalStatus.COMPLETE;
@@ -814,7 +815,8 @@ public class GrinderPanel extends PluginPanel {
                 }
 
                 updateStatusLabel.setText("<html>" + (storageStatus == null ? "" : HtmlUtils.escape(storageStatus) + "<br>") + (dueCount == 0 ? "" : dueCount + " personal deadline(s) due within 24h / past due<br>") + (config.showUpdateStatus() ? updateText : "") + "</html>");
-                updateStatusLabel.setVisible(config.showUpdateStatus() || storageStatus != null || dueCount > 0);
+                updateStatusLabel.setVisible(config.showUpdateStatus() && currentProfile != null || storageStatus != null || dueCount > 0);
+                updateStatusLabel.setToolTipText("Last bank snapshot. Open your bank to refresh it; other storage may be incomplete.");
                 renderPrepared(currentProfile, allGoals);
             });
         });
@@ -1058,7 +1060,7 @@ public class GrinderPanel extends PluginPanel {
         overallProgress.setStatus(!goals.isEmpty() && completed == goals.size() ? GoalStatus.COMPLETE : active > 0 || completed > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED);
         summaryLabel.setText(completed + " / " + goals.size() + " reached" + (known < goals.size() ? " · " + (goals.size() - known) + " waiting" : " · " + percentage + "%"));
         summaryLabel.setToolTipText("Average across known readings; waiting-for-data goals are excluded. Each known goal has equal weight.");
-        overallProgress.setToolTipText(percentage + "% average progress. Each goal has equal weight; yellow is active and green is complete.");
+        overallProgress.setToolTipText("Average completion of goals with available readings.");
         newGoalsButton.setText("New " + notStarted);
         activeGoalsButton.setText("Active " + active);
         completeGoalsButton.setText("Done " + completed);

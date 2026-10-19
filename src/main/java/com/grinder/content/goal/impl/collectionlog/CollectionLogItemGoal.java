@@ -84,7 +84,7 @@ public class CollectionLogItemGoal implements Goal {
 
     @Override
     public String getDescription() {
-        return history == null ? "" : history.firstSeenText(item);
+        return history == null || !history.contains(item) ? "" : history.firstSeenText(item);
     }
 
     @Override

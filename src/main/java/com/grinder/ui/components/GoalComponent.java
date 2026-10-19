@@ -52,6 +52,9 @@ public class GoalComponent extends JPanel {
         reliabilityLabel.setText(label);
         reliabilityLabel.setToolTipText(detail);
         reliabilityLabel.setVisible(label != null && !label.isEmpty());
+        String tooltip = detail == null || detail.isEmpty() ? title : "<html><div style='width: 260px'>" + com.grinder.util.HtmlUtils.escape(title) + "<br>" + com.grinder.util.HtmlUtils.escape(detail) + "</div></html>";
+        titleLabel.setToolTipText(tooltip);
+        iconLabel.setToolTipText(tooltip);
     }
     private final JLabel progressLabel = new JLabel();
     private final SegmentedProgressBar progressBar = new SegmentedProgressBar();
@@ -241,7 +244,7 @@ public class GoalComponent extends JPanel {
         GoalStatus state = status == null ? GoalStatus.NOT_STARTED : status;
         statusLabel.setText(state == GoalStatus.COMPLETE ? "Complete" : state == GoalStatus.IN_PROGRESS ? "In progress" : "Not started");
         statusLabel.setForeground(SegmentedProgressBar.colorFor(state));
-        statusLabel.setToolTipText(state == GoalStatus.COMPLETE ? "This goal has reached its target." : state == GoalStatus.IN_PROGRESS ? "Progress has started and the target has not been reached." : "No progress has been recorded toward this goal yet.");
+        statusLabel.setToolTipText(null);
         progressBar.setStatus(state);
     }
 
@@ -253,7 +256,6 @@ public class GoalComponent extends JPanel {
         text.setLineWrap(true);
         text.setWrapStyleWord(true);
         text.setEditable(false);
-        text.setToolTipText(description.startsWith("First seen:") ? "When Grinder first observed this unlock on this character, not the historical drop date." : "Additional goal details. Custom descriptions can be edited from the goal actions menu.");
         text.setOpaque(false);
         text.setForeground(MUTED_COLOR);
         text.setFont(UiTypography.BODY);
@@ -422,8 +424,8 @@ public class GoalComponent extends JPanel {
         progressBar.setProgress(progressCurrent, progressMaximum);
         setGoalStatus(progressMaximum > 0 && progressCurrent >= progressMaximum ? GoalStatus.COMPLETE : progressCurrent > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED);
         progressLabel.setText(progressText);
-        progressLabel.setToolTipText(progressText);
-        progressBar.setToolTipText(progressMaximum > 0 ? String.format(java.util.Locale.ROOT, "%,d of %,d (%.1f%%). Yellow: in progress; green: complete.", progressCurrent, progressMaximum, Math.min(100, progressCurrent * 100.0 / progressMaximum)) : "No numeric target is available for this goal.");
+        progressLabel.setToolTipText(null);
+        progressBar.setToolTipText(null);
         progressBar.setVisible(progressBarVisible);
         revalidate();
         repaint();

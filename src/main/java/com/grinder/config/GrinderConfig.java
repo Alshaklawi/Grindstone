@@ -53,7 +53,7 @@ public interface GrinderConfig extends Config {
     default boolean categorizedGoals() {
         return true;
     }
-    @ConfigItem(keyName = "showUpdateStatus", name = "Show updates in header", description = "Show the client refresh time and bank snapshot status in the top header.", section = DISPLAY_SECTION, position = 7)
+    @ConfigItem(keyName = "showUpdateStatus", name = "Show last snapshot", description = "Show the last observed bank snapshot time in the top header.", section = DISPLAY_SECTION, position = 7)
     default boolean showUpdateStatus() {
         return true;
     }
@@ -77,7 +77,7 @@ public interface GrinderConfig extends Config {
     default boolean showTodayOverview() {
         return true;
     }
-    @ConfigItem(keyName = "showTrackingState", name = "Show tracking reliability", description = "Distinguish manual, client-read, snapshot, partial-storage and captured-baseline progress. Unavailable data is never presented as a confirmed zero.", section = DISPLAY_SECTION, position = 13)
+    @ConfigItem(keyName = "showTrackingState", name = "Show period warnings", description = "Flag partially observed recurring periods. Other source details are available on title hover.", section = DISPLAY_SECTION, position = 13)
     default boolean showTrackingState() {
         return true;
     }

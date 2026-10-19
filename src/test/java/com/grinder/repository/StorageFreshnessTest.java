@@ -18,11 +18,15 @@ public class StorageFreshnessTest {
         Instant now = Instant.parse("2026-10-18T12:00:00Z");
         PlayerItemStorage storage = new PlayerItemStorage(Clock.fixed(now, ZoneOffset.UTC));
         assertTrue(storage.freshness().contains("not loaded"));
+        assertEquals("Last snapshot: —", storage.snapshotLabel());
         storage.replace(InventoryID.BANK, new Item[0], id -> id);
         assertEquals(now, storage.lastSeen().get(PlayerStorageSource.BANK));
         assertTrue(storage.freshness().contains("snapshot"));
+        assertTrue(storage.snapshotLabel().startsWith("Last snapshot: "));
+        assertFalse(storage.snapshotLabel().contains("—"));
         storage.reset();
         assertTrue(storage.lastSeen().isEmpty());
+        assertEquals("Last snapshot: —", storage.snapshotLabel());
         assertTrue(storage.freshness().contains("not loaded"));
     }
 }

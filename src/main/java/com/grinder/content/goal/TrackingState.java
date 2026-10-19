@@ -31,6 +31,9 @@ public enum TrackingState {
     public String getDetail() {
         return detail;
     }
+    public String getCardLabel() {
+        return this == LATE_BASELINE ? "Partial period" : null;
+    }
     public static TrackingState of(Goal goal, RecurringGoal recurring, boolean loggedIn, boolean bankLoaded) {
         if (goal instanceof com.grinder.content.goal.impl.LinkedGoal) {
             return ((com.grinder.content.goal.impl.LinkedGoal) goal).isAvailable() ? LINKED : WAITING;

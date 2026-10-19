@@ -106,6 +106,11 @@ public final class SessionExperienceGoal implements Goal {
     }
 
     @Override
+    public String getCardDescription() {
+        return "";
+    }
+
+    @Override
     public GoalCategory getCategory() {
         return GoalCategory.SKILLING;
     }
