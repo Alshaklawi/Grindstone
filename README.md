@@ -23,6 +23,21 @@ Only a player can confirm behavior in-game. Do not automate game input.
 
 ## Goal workflows
 
+### Expanded goal types and management
+
+- **Base level / base experience:** Add goal → choose the base type. Every client skill must meet the target; the bar is the lowest skill reading, not an average. Base levels exclude boosts. Cards identify the lowest skill and count how many skills meet the target. These are lifetime goals, not period-gain counters.
+- **Session experience:** track one skill or total observed XP gains since the first reading this login. Relogging/reconnecting resets the session; restarting one goal captures a fresh baseline. Editing its target keeps its gains. Session readings are not exported or restored.
+- **Personal checklist / routine:** enter one step per line, then check steps on the card. Optional daily, weekly and monthly schedules require every step, archive observed progress and reset all checks at the UTC boundary. Checklists support guarded undo; cross-account imports clear checks.
+- **Linked goal:** use the header's `+ Linked goal` button. Choose an all-of checklist, any-of count, milestone ladder, selected collection items, spending-safe achievement, completed recurring periods, or a main goal with prerequisites. Search existing source trackers and review captured thresholds before saving. Add missing source trackers first. Linked goals cannot reference other linked goals, preventing cycles.
+- Collection subsets accept individual collection-item trackers and count observed unlocks. Owned-item sources retain their known-storage limitations. Milestone ladders use increasing thresholds on one source. Any-of goals finish after enough selected sources meet their thresholds. Prerequisites only gate the personal tracker; they never affect gameplay.
+- Spending-safe achievements remember thresholds Grinder observes reached, including relevant recorded lifetime completions. Spending items later does not erase that observation. They cannot invent a historical balance. Repeat-completion goals count distinct observed completed UTC periods, not repeated clicks or unobserved historical activity; retained period history can seed the count. Missing sources remain unavailable until restored or replaced.
+- Add-goal reviews identify existing subject/schedule matches and explain reading availability. Default and preset previews list new goals and matches that will be kept. Confirming a preview never authorizes overwriting another account's profile.
+- Header menu → **Manage goals / bulk actions** provides searchable selection for pinning, unpinning, deletion, display categories, schedules, deadlines and example flags. Hidden selections remain selected; the count shows this. Unsupported or colliding schedule selections reject the whole operation. Undo restores the batch until a later edit or relevant period reset. Display-category changes do not change a tracker's underlying data source.
+- Goal actions → **Deadline / reminder** sets an end-of-day UTC deadline. Reminders are optional, appear only in Grinder's header within 24 hours / while past due, and do not reset or delete progress. Global reminder visibility is configurable.
+- Demonstrations are marked as examples and hidden by default. Toggle them from the header menu or Display settings. Each linked mode has an example. Choose **Use as a real goal** or the bulk equivalent to keep an example visible; restoring defaults preserves promoted examples.
+- Related skill-level and XP targets share a visual group inside categorized lists, while retaining independent actions, history and progress. Turn **Group related skill goals** off to restore individual cards. Flat lists, pins and recurring sections keep their own layout rules.
+- Progress-source tooltips include observation information and source limitations. Names in the new source selectors and management tables are plain text, not executable HTML.
+
 - Use a goal's actions menu to edit its subject and target, pin/unpin it, or inspect completion history.
 - Pinned goals appear above categories but still respect search and visibility filters.
 - The header shows update and bank snapshot freshness. Unknown or unexposed storage is not a confirmed zero, and a snapshot is not a live all-storage guarantee.
