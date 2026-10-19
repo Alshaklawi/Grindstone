@@ -123,6 +123,42 @@ public interface GrindstoneConfig extends Config {
     String COLLECTION_LOG_SECTION = "collectionLog";
     String DISPLAY_SECTION = "display";
     String NOTIFICATIONS_SECTION = "notifications";
+    String OVERLAY_SECTION = "progressOverlay";
+
+    @ConfigSection(name = "Progress overlay", description = "Track milestones and routines beside the game. Hold Alt to move the overlay.", position = 5)
+    String overlaySection = OVERLAY_SECTION;
+
+    @ConfigItem(keyName = "progressOverlayEnabled", name = "Show progress overlay", description = "Show a movable progress tracker in the game view, even when the sidebar is closed.", section = OVERLAY_SECTION, position = 0)
+    default boolean progressOverlayEnabled() {
+        return false;
+    }
+
+    @ConfigItem(keyName = "progressOverlayView", name = "Track", description = "Choose daily routines, all routines, milestones, pinned entries or everything.", section = OVERLAY_SECTION, position = 1)
+    default ProgressOverlayView progressOverlayView() {
+        return ProgressOverlayView.DAILY;
+    }
+
+    @Range(min = 1, max = 20)
+    @ConfigItem(keyName = "progressOverlayRows", name = "Maximum entries", description = "Show up to this many entries. Smaller game windows use fewer rows; additional entries stay in the sidebar.", section = OVERLAY_SECTION, position = 2)
+    default int progressOverlayRows() {
+        return 8;
+    }
+
+    @ConfigItem(keyName = "progressOverlayCompletedRoutines", name = "Keep completed routines", description = "Keep completed routines checked off until their next reset. Finished one-time milestones stay hidden.", section = OVERLAY_SECTION, position = 3)
+    default boolean progressOverlayCompletedRoutines() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "progressOverlayBars", name = "Progress bars", description = "Show a small progress bar below each entry. Turn off for a shorter tracker.", section = OVERLAY_SECTION, position = 4)
+    default boolean progressOverlayBars() {
+        return true;
+    }
+
+    @Range(min = 180, max = 360)
+    @ConfigItem(keyName = "progressOverlayWidth", name = "Width", description = "Width of the progress overlay in pixels.", section = OVERLAY_SECTION, position = 5)
+    default int progressOverlayWidth() {
+        return 240;
+    }
 
     @ConfigSection(name = "Notifications", description = "Celebrate newly reached personal milestones without repeating alerts on login or refresh.", position = 4)
     String notificationsSection = NOTIFICATIONS_SECTION;

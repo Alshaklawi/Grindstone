@@ -29,6 +29,7 @@ import com.grindstone.content.goal.impl.quest.QuestGoal;
 import com.grindstone.content.goal.impl.achievementdiary.AchievementDiaryTierAreaGoal;
 import com.grindstone.notification.GoalCompletionNotifications;
 import com.grindstone.notification.GoalCompletionOverlay;
+import com.grindstone.overlay.GrindstoneProgressOverlay;
 import com.grindstone.repository.GrindstoneProfile;
 import com.grindstone.repository.GrindstoneRepository;
 import com.grindstone.repository.ProfilePersistence;
@@ -116,6 +117,8 @@ public class GrindstonePlugin extends Plugin {
     @Inject
     private GoalCompletionOverlay completionOverlay;
     @Inject
+    private GrindstoneProgressOverlay progressOverlay;
+    @Inject
     private OverlayManager overlayManager;
 
     private NavigationButton navigationButton;
@@ -136,6 +139,7 @@ public class GrindstonePlugin extends Plugin {
         lastSavedSnapshot = null;
         completionNotifications.reset();
         overlayManager.add(completionOverlay);
+        overlayManager.add(progressOverlay);
         loadGeneration.incrementAndGet();
         sessionProfiles.clear();
         persistence.configure(this::getPluginDirectory);
@@ -162,6 +166,8 @@ public class GrindstonePlugin extends Plugin {
     protected void shutDown() {
         running = false;
         overlayManager.remove(completionOverlay);
+        overlayManager.remove(progressOverlay);
+        progressOverlay.clear();
         completionNotifications.reset();
         loadGeneration.incrementAndGet();
         loadingHash = 0;
@@ -180,9 +186,13 @@ public class GrindstonePlugin extends Plugin {
     @Subscribe
     public void onGameStateChanged(GameStateChanged event) {
         GameState state = event.getGameState();
+        if (state != GameState.LOGGED_IN) {
+            progressOverlay.clear();
+        }
 
         if (state == GameState.LOGGED_IN && config.enabled()) {
             loadProfile();
+            panel.render();
         } else if (state == GameState.LOGIN_SCREEN || state == GameState.CONNECTION_LOST) {
             onLogout();
         }
@@ -193,7 +203,13 @@ public class GrindstonePlugin extends Plugin {
         if (!GrindstoneConfig.GROUP.equals(event.getGroup())) {
             return;
         }
+        clientThread.invokeLater(() -> applyConfigChange(event.getKey()));
+    }
 
+    private void applyConfigChange(String key) {
+        if (!running) {
+            return;
+        }
         if (!config.enabled()) {
             completionNotifications.reset();
             saveProfile();
@@ -207,7 +223,7 @@ public class GrindstonePlugin extends Plugin {
 
         setNavigationVisible(true);
 
-        if (client.getGameState() == GameState.LOGGED_IN && (profile == null || "enabled".equals(event.getKey()))) {
+        if (client.getGameState() == GameState.LOGGED_IN && (profile == null || "enabled".equals(key))) {
             loadProfile();
         } else {
             panel.render();

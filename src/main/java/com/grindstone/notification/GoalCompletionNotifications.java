@@ -53,6 +53,7 @@ public final class GoalCompletionNotifications {
         }
         Set<String> ids = new HashSet<>();
         List<String> completed = new ArrayList<>();
+        int routineCompletions = 0;
         for (Goal goal : active.getGoals()) {
             GoalMetadata metadata = active.metadata(goal);
             RecurringGoal recurring = metadata.recurring();
@@ -74,6 +75,9 @@ public final class GoalCompletionNotifications {
                     title = title.substring(0, 97) + "...";
                 }
                 completed.add((repeating ? recurring.getSchedule() + ": " : "") + title);
+                if (repeating) {
+                    routineCompletions++;
+                }
             }
         }
         transitions.retain(ids);
@@ -81,9 +85,10 @@ public final class GoalCompletionNotifications {
             return;
         }
         if (config.completionPopup()) {
-            overlay.show(completed);
+            overlay.show(completed, routineCompletions == completed.size());
         }
-        String message = completed.size() == 1 ? "Milestone complete: " + completed.get(0) : completed.size() + " milestones complete: " + String.join(", ", completed.subList(0, Math.min(3, completed.size()))) + (completed.size() > 3 ? " and " + (completed.size() - 3) + " more" : "");
+        boolean routinesOnly = routineCompletions == completed.size();
+        String message = completed.size() == 1 ? (routinesOnly ? "Routine complete: " : "Milestone complete: ") + completed.get(0) : completed.size() + (routinesOnly ? " routines complete: " : " targets reached: ") + String.join(", ", completed.subList(0, Math.min(3, completed.size()))) + (completed.size() > 3 ? " and " + (completed.size() - 3) + " more" : "");
         if (config.completionChat()) {
             chat.queue(QueuedMessage.builder().type(ChatMessageType.CONSOLE).value("[Grindstone] " + message).build());
         }

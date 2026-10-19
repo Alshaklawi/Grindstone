@@ -1,6 +1,7 @@
 package com.grindstone.ui;
 
 import com.grindstone.config.GrindstoneConfig;
+import com.grindstone.config.ProgressOverlayView;
 import com.grindstone.content.collectionlog.CollectionLogPages;
 import com.grindstone.content.goal.BaseSkillGoal;
 import com.grindstone.content.goal.Goal;
@@ -25,6 +26,8 @@ import com.grindstone.content.goal.impl.level.CombatLevelGoal;
 import com.grindstone.content.goal.impl.level.SkillLevelGoal;
 import com.grindstone.content.goal.impl.level.TotalLevelGoal;
 import com.grindstone.notification.GoalCompletionNotifications;
+import com.grindstone.overlay.GrindstoneProgressOverlay;
+import com.grindstone.overlay.ProgressOverlayEntry;
 import com.grindstone.repository.BulkGoalAction;
 import com.grindstone.repository.BulkGoalChanges;
 import com.grindstone.repository.GoalMetadata;
@@ -102,6 +105,7 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -110,6 +114,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTextArea;
@@ -121,9 +126,12 @@ import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.client.callback.ClientThread;
+import net.runelite.client.config.ConfigManager;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
@@ -137,6 +145,10 @@ import net.runelite.client.util.ImageUtil;
  * @since 10/18/2026
  */
 public class GrindstonePanel extends PluginPanel {
+    @Inject
+    private GrindstoneProgressOverlay progressOverlay;
+    @Inject
+    private ConfigManager configManager;
     @Inject
     private GoalCompletionNotifications completionNotifications;
     @Inject
@@ -396,6 +408,7 @@ public class GrindstonePanel extends PluginPanel {
         routines.add(dailyRoutine);
         routines.add(weeklyRoutine);
         moreMenu.add(routines);
+        moreMenu.add(createProgressOverlayMenu());
         JMenuItem manage = new JMenuItem("Manage milestones & routines...");
         manage.setToolTipText("Search and select milestones to pin, delete, categorize, change schedules or set deadlines.");
         manage.addActionListener(event -> showBulkManager());
@@ -590,6 +603,48 @@ public class GrindstonePanel extends PluginPanel {
         controlsPanel.add(actionRow);
     }
 
+    private JMenu createProgressOverlayMenu() {
+        JMenu menu = new JMenu("Progress overlay");
+        fillProgressOverlayMenu(menu);
+        menu.addMenuListener(new MenuListener() {
+            @Override
+            public void menuSelected(MenuEvent event) {
+                fillProgressOverlayMenu(menu);
+            }
+
+            @Override
+            public void menuDeselected(MenuEvent event) {
+            }
+
+            @Override
+            public void menuCanceled(MenuEvent event) {
+            }
+        });
+        return menu;
+    }
+
+    private void fillProgressOverlayMenu(JMenu menu) {
+        menu.removeAll();
+        JCheckBoxMenuItem enabled = new JCheckBoxMenuItem("Show in game", config.progressOverlayEnabled());
+        enabled.setToolTipText("Hold Alt to move the tracker. More options are in Grindstone settings.");
+        enabled.addActionListener(event -> {
+            boolean selected = enabled.isSelected();
+            clientThread.invokeLater(() -> configManager.setConfiguration(GrindstoneConfig.GROUP, "progressOverlayEnabled", selected));
+        });
+        menu.add(enabled);
+        menu.addSeparator();
+        ButtonGroup views = new ButtonGroup();
+        for (ProgressOverlayView view : ProgressOverlayView.values()) {
+            JRadioButtonMenuItem option = new JRadioButtonMenuItem(view.getTitle(), config.progressOverlayView() == view);
+            option.addActionListener(event -> clientThread.invokeLater(() -> {
+                configManager.setConfiguration(GrindstoneConfig.GROUP, "progressOverlayView", view);
+                configManager.setConfiguration(GrindstoneConfig.GROUP, "progressOverlayEnabled", true);
+            }));
+            views.add(option);
+            menu.add(option);
+        }
+    }
+
     private JLabel createControlLabel(String text) {
         JLabel label = new JLabel(text);
         label.setForeground(MUTED_COLOR);
@@ -696,6 +751,9 @@ public class GrindstonePanel extends PluginPanel {
     }
 
     public void unload() {
+        if (progressOverlay != null) {
+            progressOverlay.clear();
+        }
         cardCache.clear();
         pendingReveal = null;
         backupActions.cancel();
@@ -718,10 +776,13 @@ public class GrindstonePanel extends PluginPanel {
             int version = renderVersion.incrementAndGet();
             GrindstoneProfile currentProfile = profile;
             List<Supplier<GoalView>> preparedViews = new ArrayList<>();
+            List<ProgressOverlayEntry> overlayEntries = new ArrayList<>();
+            boolean loggedIn = currentProfile != null && client.getGameState() == GameState.LOGGED_IN && client.getLocalPlayer() != null && currentProfile.getHash() == client.getAccountHash();
+            boolean captureOverlay = loggedIn && config.progressOverlayEnabled();
 
             if (currentProfile != null && config.enabled()) {
                 cardCache.retain(currentProfile.getGoals());
-                if (client.getGameState() == GameState.LOGGED_IN && client.getLocalPlayer() != null && currentProfile.getHash() == client.getAccountHash()) {
+                if (loggedIn) {
                     currentProfile.observeRecurring(client, System.currentTimeMillis());
                     completionNotifications.observe(currentProfile);
                 }
@@ -745,6 +806,9 @@ public class GrindstonePanel extends PluginPanel {
                     key = Arrays.asList(key, metadata.getDeadlineAt(), metadata.getDeadlineAt() > 0 && System.currentTimeMillis() >= metadata.getDeadlineAt(), metadata.getDisplayCategory());
                     GoalView cached = cardCache.get(goal, key);
                     if (cached != null && tracking != TrackingState.WAITING && goal.getProgressMaximum() > 0) {
+                        if (captureOverlay) {
+                            overlayEntries.add(new ProgressOverlayEntry(title, repeating ? recurring.getSchedule() : RepeatSchedule.NONE, repeating ? recurring.getProgress() : goal.getProgressCurrent(), repeating ? recurring.getTarget() : goal.getProgressMaximum(), isComplete(repeating ? recurring.getStatus() : goal.getStatus()), true, metadata.isPinned()));
+                        }
                         preparedViews.add(() -> cached);
                         continue;
                     }
@@ -770,6 +834,9 @@ public class GrindstonePanel extends PluginPanel {
                     long shownCurrent = progressCurrent;
                     long shownMaximum = progressMaximum;
                     GoalStatus shownStatus = status;
+                    if (captureOverlay) {
+                        overlayEntries.add(new ProgressOverlayEntry(title, repeating ? recurring.getSchedule() : RepeatSchedule.NONE, shownCurrent, shownMaximum, isComplete(shownStatus), tracking != TrackingState.WAITING, metadata.isPinned()));
+                    }
                     List<String> steps = goal instanceof ChecklistGoal ? new ArrayList<>(((ChecklistGoal) goal).getSteps()) : new ArrayList<>();
                     boolean[] checks = goal instanceof ChecklistGoal ? ((ChecklistGoal) goal).getChecks().clone() : new boolean[0];
                     List<?> cacheKey = key;
@@ -903,6 +970,13 @@ public class GrindstonePanel extends PluginPanel {
                 }
             }
 
+            if (progressOverlay != null) {
+                if (captureOverlay) {
+                    progressOverlay.update(overlayEntries, client.getCanvasHeight());
+                } else {
+                    progressOverlay.clear();
+                }
+            }
             String updateText = currentProfile == null ? "" : HtmlUtils.escape(currentProfile.getPlayerStorage().snapshotLabel());
             long dueCount = currentProfile == null || !config.showDeadlineReminders() ? 0 : currentProfile.getGoals().stream().filter(goal -> {
                 GoalMetadata metadata = currentProfile.metadata(goal);
