@@ -119,6 +119,20 @@ public class GrinderProfile {
                 recurring.observe(goal, now);
             }
         }
+        updateLinkedGoals(client != null && client.getGameState() == net.runelite.api.GameState.LOGGED_IN && client.getLocalPlayer() != null && client.getAccountHash() == hash);
+    }
+    public void updateLinkedGoals(boolean loggedIn) {
+        java.util.Map<String, Goal> sources = new java.util.HashMap<>();
+        for (Goal goal : goals) {
+            if (!(goal instanceof com.grinder.content.goal.impl.LinkedGoal)) {
+                sources.put(metadata(goal).getId(), goal);
+            }
+        }
+        for (Goal goal : goals) {
+            if (goal instanceof com.grinder.content.goal.impl.LinkedGoal) {
+                ((com.grinder.content.goal.impl.LinkedGoal) goal).update(this, loggedIn, sources);
+            }
+        }
     }
     private final List<Item> items = new ArrayList<>();
     private final CollectionLogHistory collectionLogHistory = new CollectionLogHistory();
@@ -180,6 +194,9 @@ public class GrinderProfile {
         addDefaultCollectionItem(ItemID.DRAGON_PICKAXE);
         add(new com.grinder.content.goal.impl.level.BaseLevelGoal());
         add(new com.grinder.content.goal.impl.experience.BaseExperienceGoal());
+        Goal sampleSource = findMatchingGoal(new SkillLevelGoal(Skill.ATTACK));
+        String linkedExampleId = java.util.UUID.nameUUIDFromBytes("grinder-default-linked-goal".getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString();
+        add(new com.grinder.content.goal.impl.LinkedGoal(linkedExampleId, "Example: Attack milestones", "A ladder example. Edit its source and milestones, or delete it.", com.grinder.content.goal.impl.LinkedGoal.Mode.MILESTONES, java.util.Collections.singletonList(metadata(sampleSource).getId()), new long[]{50, 75, 99}, 1));
         addDefaultCollectionItem(ItemID.TWISTED_BOW);
         addDefaultCollectionItem(ItemID.JAR_OF_SPIRITS);
         add(new PossessedItemGoal(ItemID.COINS, 1_500_000_000L));
@@ -265,6 +282,9 @@ public class GrinderProfile {
         if (left instanceof CustomGoal) {
             return ((CustomGoal) left).getId().equals(((CustomGoal) right).getId());
         }
+        if (left instanceof com.grinder.content.goal.impl.LinkedGoal) {
+            return ((com.grinder.content.goal.impl.LinkedGoal) left).getId().equals(((com.grinder.content.goal.impl.LinkedGoal) right).getId());
+        }
         if (left instanceof SkillLevelGoal) {
             return ((SkillLevelGoal) left).getSkill() == ((SkillLevelGoal) right).getSkill();
         }
@@ -330,7 +350,15 @@ public class GrinderProfile {
             throw new IllegalArgumentException("Backup must be mapped to this account before merging.");
         }
         int added = 0;
+        java.util.Map<String, String> mapping = new java.util.HashMap<>();
         for (Goal goal : backup.getGoals()) {
+            Goal existing = findMatchingGoal(goal, backup.metadata(goal).recurring().getSchedule());
+            mapping.put(backup.metadata(goal).getId(), existing == null ? backup.metadata(goal).getId() : metadata(existing).getId());
+        }
+        for (Goal goal : backup.getGoals()) {
+            if (goal instanceof com.grinder.content.goal.impl.LinkedGoal && findMatchingGoal(goal) == null) {
+                ((com.grinder.content.goal.impl.LinkedGoal) goal).remapSources(mapping);
+            }
             if (add(goal, backup.metadata(goal))) {
                 added++;
             }

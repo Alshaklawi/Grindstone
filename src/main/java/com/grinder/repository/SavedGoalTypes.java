@@ -33,6 +33,7 @@ final class SavedGoalTypes {
         Map<String, Class<? extends Goal>> types = new LinkedHashMap<>();
         register(types, TrackerGoal.class, "activity", "com.grinder.content.goal.impl.TrackerGoal");
         register(types, CustomGoal.class, "custom", "com.grinder.content.goal.impl.CustomGoal");
+        register(types, com.grinder.content.goal.impl.LinkedGoal.class, "linked-goal");
         register(types, SkillLevelGoal.class, "skill-level", "com.grinder.content.goal.impl.level.SkillLevelGoal", "com.grinder.content.goal.impl.SkillLevelGoal");
         register(types, CombatLevelGoal.class, "combat-level", "com.grinder.content.goal.impl.level.CombatLevelGoal", "com.grinder.content.goal.impl.CombatLevelGoal");
         register(types, TotalLevelGoal.class, "total-level", "com.grinder.content.goal.impl.level.TotalLevelGoal", "com.grinder.content.goal.impl.TotalLevelGoal");

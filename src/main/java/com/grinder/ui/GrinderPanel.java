@@ -276,7 +276,7 @@ public class GrinderPanel extends PluginPanel {
         header.add(Box.createVerticalStrut(8));
         header.add(counters);
 
-        JPanel goalActions = new JPanel(new GridLayout(1, 1));
+        JPanel goalActions = new JPanel(new GridLayout(1, 2, 6, 0));
         goalActions.setOpaque(false);
         goalActions.setAlignmentX(LEFT_ALIGNMENT);
         goalActions.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
@@ -304,6 +304,11 @@ public class GrinderPanel extends PluginPanel {
             }
         });
         goalActions.add(addGoal);
+        JButton addLinked = new JButton("+ Linked goal");
+        styleButton(addLinked);
+        addLinked.setToolTipText("Create a checklist, any-of goal, milestone ladder, collection subset, recorded achievement, repeat count or prerequisite goal from existing trackers.");
+        addLinked.addActionListener(event -> editLinkedGoal(profile, null));
+        goalActions.add(addLinked);
         JMenuItem restoreDefaults = new JMenuItem("Add missing default goals");
         restoreDefaults.setToolTipText("Restore missing starter goals without replacing existing goals or edited targets.");
         restoreDefaults.addActionListener(event -> defaults.doClick());
@@ -1634,6 +1639,10 @@ public class GrinderPanel extends PluginPanel {
         if (profile != active) {
             return;
         }
+        if (goal instanceof com.grinder.content.goal.impl.LinkedGoal) {
+            editLinkedGoal(active, (com.grinder.content.goal.impl.LinkedGoal) goal);
+            return;
+        }
         if (goal instanceof CustomGoal) {
             editCustomGoal(active, (CustomGoal) goal, title);
             return;
@@ -1689,6 +1698,63 @@ public class GrinderPanel extends PluginPanel {
                 });
             });
         });
+    }
+
+    private void editLinkedGoal(GrinderProfile active, com.grinder.content.goal.impl.LinkedGoal original) {
+        if (active == null || profile != active) {
+            return;
+        }
+        clientThread.invokeLater(() -> {
+            if (profile != active || original != null && !active.getGoals().contains(original)) {
+                return;
+            }
+            List<com.grinder.ui.editor.LinkedGoalForm.Choice> sources = new ArrayList<>();
+            for (Goal goal : active.getGoals()) {
+                if (!(goal instanceof com.grinder.content.goal.impl.LinkedGoal)) {
+                    com.grinder.repository.GoalMetadata metadata = active.metadata(goal);
+                    boolean recurring = metadata.recurring().isActive();
+                    sources.add(new com.grinder.ui.editor.LinkedGoalForm.Choice(metadata.getId(), safeTitle(goal) + (recurring ? " · " + metadata.recurring().getSchedule() : ""), recurring ? metadata.recurring().getTarget() : goal.getProgressMaximum(), goal instanceof CollectionLogItemGoal, recurring));
+                }
+            }
+            SwingUtilities.invokeLater(() -> {
+                if (profile != active) {
+                    return;
+                }
+                com.grinder.ui.editor.LinkedGoalForm form = new com.grinder.ui.editor.LinkedGoalForm(sources, original);
+                JScrollPane scroll = new JScrollPane(form);
+                scroll.setPreferredSize(new Dimension(520, 570));
+                while (JOptionPane.showConfirmDialog(this, scroll, original == null ? "Add linked goal" : "Edit linked goal", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
+                    try {
+                        com.grinder.content.goal.impl.LinkedGoal candidate = form.read();
+                        if (JOptionPane.showConfirmDialog(this, candidate.getTitle(null) + "\n" + candidate.getMode() + " · " + candidate.getSources().size() + " source(s)\nTargets: " + java.util.Arrays.toString(candidate.getTargets()) + "\nMissing sources remain unavailable; this never performs game actions.", "Preview linked goal", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
+                            continue;
+                        }
+                        clientThread.invokeLater(() -> {
+                            if (profile != active || original != null && !active.getGoals().contains(original)) {
+                                return;
+                            }
+                            if (original == null) {
+                                active.add(candidate);
+                                recordUndo(active, "add linked goal", () -> active.remove(candidate), () -> active.getGoals().contains(candidate));
+                            } else {
+                                java.util.function.Consumer<Goal> restore = active.snapshotEdit(original);
+                                active.replaceGoal(original, candidate);
+                                recordGoalUndo(active, candidate, "edit linked goal", () -> restore.accept(candidate));
+                            }
+                            active.updateLinkedGoals(hasClientProfile(active));
+                            render();
+                        });
+                        return;
+                    } catch (IllegalArgumentException | java.text.ParseException failure) {
+                        JOptionPane.showMessageDialog(this, failure.getMessage(), "Check linked goal", JOptionPane.WARNING_MESSAGE);
+                    }
+                }
+            });
+        });
+    }
+
+    private boolean hasClientProfile(GrinderProfile active) {
+        return client.getGameState() == net.runelite.api.GameState.LOGGED_IN && client.getLocalPlayer() != null && client.getAccountHash() == active.getHash();
     }
 
     private void editCustomGoal(GrinderProfile active, CustomGoal goal, String title) {

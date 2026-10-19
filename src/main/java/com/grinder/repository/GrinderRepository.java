@@ -222,6 +222,9 @@ public final class GrinderRepository {
                 }
 
                 if (goal != null) {
+                    if (goal instanceof com.grinder.content.goal.impl.LinkedGoal) {
+                        ((com.grinder.content.goal.impl.LinkedGoal) goal).validate();
+                    }
                     if (goal instanceof com.grinder.content.goal.ClientCompletionGoal) {
                         ((com.grinder.content.goal.ClientCompletionGoal) goal).selectionKey();
                     }
@@ -306,6 +309,18 @@ public final class GrinderRepository {
                 }
                 if (SavedGoalTypes.fromTag(saved) == CustomGoal.class) {
                     saved.getAsJsonObject("data").addProperty("current", 0);
+                }
+                if (SavedGoalTypes.fromTag(saved) == com.grinder.content.goal.impl.LinkedGoal.class) {
+                    JsonObject data = saved.getAsJsonObject("data");
+                    if (data.has("achieved")) {
+                        JsonArray cleared = new JsonArray();
+                        for (JsonElement ignored : data.getAsJsonArray("achieved")) {
+                            cleared.add(false);
+                        }
+                        data.add("achieved", cleared);
+                    }
+                    data.add("completedThrough", new JsonObject());
+                    data.addProperty("completedPeriods", 0);
                 }
             }
         }

@@ -12,6 +12,7 @@ import com.grinder.repository.RecurringGoal;
  */
 public enum TrackingState {
     MANUAL("Manual progress", "Progress is entered by you. Grinder does not perform game actions."),
+    LINKED("Linked tracker readings", "Uses the selected local goals and their captured targets. Missing sources are unavailable, not confirmed zero. Repeat counts cover observed completed periods; prerequisite gates never affect gameplay."),
     LIVE("Live client read", "Read from the logged-in client. Only data exposed by the client can be tracked."),
     COUNTER("Client-reported counter", "Uses the client's activity total. Some counters require opening the native activity interface or completing that activity to refresh; a client-reported zero is not proof of a fully synchronized server total."),
     WAITING("Waiting for data", "Log in or open the relevant native interface. No confirmed zero is assumed while data is unavailable."),
@@ -32,6 +33,9 @@ public enum TrackingState {
         return detail;
     }
     public static TrackingState of(Goal goal, RecurringGoal recurring, boolean loggedIn, boolean bankLoaded) {
+        if (goal instanceof com.grinder.content.goal.impl.LinkedGoal) {
+            return ((com.grinder.content.goal.impl.LinkedGoal) goal).isAvailable() ? LINKED : WAITING;
+        }
         if (goal instanceof CustomGoal) {
             return MANUAL;
         }
