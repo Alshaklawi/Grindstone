@@ -137,8 +137,10 @@ import net.runelite.client.ui.components.IconTextField;
  * @since 10/18/2026
  */
 public class GrinderPanel extends PluginPanel {
-    @Inject private GoalCompletionNotifications completionNotifications;
-    @Inject private ProfileBackupActions backupActions;
+    @Inject
+    private GoalCompletionNotifications completionNotifications;
+    @Inject
+    private ProfileBackupActions backupActions;
     private static final String ALL_CATEGORIES = "All categories";
     private static final String ALL_STATUSES = "All statuses";
     private static final String NOT_STARTED = "Not started";
@@ -169,7 +171,8 @@ public class GrinderPanel extends PluginPanel {
     private final Client client;
     private final ClientThread clientThread;
     private final GrinderConfig config;
-    @Inject private ConfigManager configManager;
+    @Inject
+    private ConfigManager configManager;
 
     @Inject
     private ItemManager itemManager;

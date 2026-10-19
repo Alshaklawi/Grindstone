@@ -7,12 +7,14 @@ import static org.junit.Assert.*;
  * @since 10/18/2026
  */
 public class FormattingUtilsTest {
-    @Test public void htmlTextIsEscapedAndNullSafe() {
+    @Test
+    public void htmlTextIsEscapedAndNullSafe() {
         assertEquals("&lt;goal&gt; &amp; progress", HtmlUtils.escape("<goal> & progress"));
         assertEquals("", HtmlUtils.escape(null));
         assertEquals("Dragon pickaxe", HtmlUtils.escape("Dragon pickaxe"));
     }
-    @Test public void sharedNumberFormattingPreservesExistingDisplayConventions() {
+    @Test
+    public void sharedNumberFormattingPreservesExistingDisplayConventions() {
         assertEquals("999", NumberFormats.experience(999));
         assertEquals("1.0K", NumberFormats.experience(1000));
         assertEquals("13.0M", NumberFormats.experience(13_034_431));

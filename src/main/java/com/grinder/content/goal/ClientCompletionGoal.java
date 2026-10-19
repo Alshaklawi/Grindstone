@@ -25,25 +25,32 @@ public abstract class ClientCompletionGoal implements Goal {
         initialized = true;
         return changed;
     }
-    @Override public boolean hasProgress() {
+    @Override
+    public boolean hasProgress() {
         return maximum > 0;
     }
-    @Override public long getProgressCurrent() {
+    @Override
+    public long getProgressCurrent() {
         return current;
     }
-    @Override public long getProgressMaximum() {
+    @Override
+    public long getProgressMaximum() {
         return maximum;
     }
-    @Override public GoalStatus getStatus() {
+    @Override
+    public GoalStatus getStatus() {
         return maximum > 0 && current >= maximum ? GoalStatus.COMPLETE : started || current > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED;
     }
-    @Override public BufferedImage getIcon(Client client) {
+    @Override
+    public BufferedImage getIcon(Client client) {
         return getCategory().getIcon().getImage();
     }
-    @Override public boolean isAffectedBy(ItemContainer container) {
+    @Override
+    public boolean isAffectedBy(ItemContainer container) {
         return false;
     }
-    @Override public GoalComponent build(Client client, GrinderConfig config) {
+    @Override
+    public GoalComponent build(Client client, GrinderConfig config) {
         if (!initialized) {
             refresh(client);
         }

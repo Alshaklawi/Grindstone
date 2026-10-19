@@ -27,7 +27,8 @@ import static org.junit.Assert.*;
  * @since 10/19/2026
  */
 public class RecurringGoalUiTest {
-    @Test public void editorKeepsRepeatSettingsForSupportedTypesOnly() throws Exception {
+    @Test
+    public void editorKeepsRepeatSettingsForSupportedTypesOnly() throws Exception {
         SwingUtilities.invokeAndWait(() -> {
             GoalEditorPanel form = new GoalEditorPanel(null, (query, callback) -> () -> {
             });
@@ -43,7 +44,8 @@ public class RecurringGoalUiTest {
             }
         });
     }
-    @Test public void historyUsesReadOnlySnapshotAndSeparatesPeriodsFromLifetimeMilestones() throws Exception {
+    @Test
+    public void historyUsesReadOnlySnapshotAndSeparatesPeriodsFromLifetimeMilestones() throws Exception {
         CustomGoal goal = new CustomGoal("Routine", "", GoalCategory.OTHER, 0, 5);
         GoalMetadata metadata = new GoalMetadata();
         long now = Instant.parse("2026-10-19T10:00:00Z").toEpochMilli();

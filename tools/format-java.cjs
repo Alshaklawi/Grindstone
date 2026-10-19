@@ -72,6 +72,21 @@ function format(source) {
         token.splitStatement = token.value === ';' && token.parent && parentheses === token.parent.parentheses;
     }
     if (stack.length) { throw new Error('Unmatched opening brace'); }
+    for (let index = 0; index < parts.length; index++) {
+        const annotation = parts[index];
+        if (annotation.value !== '@' || annotation.parenBefore !== (annotation.parent ? annotation.parent.parentheses : 0) || !parts[index + 1] || parts[index + 1].value === 'interface') { continue; }
+        let end = index + 1;
+        while (parts[end + 1] && parts[end + 1].value === '.' && parts[end + 2]) { end += 2; }
+        if (parts[end + 1] && parts[end + 1].value === '(') {
+            let nesting = 0;
+            do {
+                end++;
+                if (parts[end].value === '(') { nesting++; }
+                if (parts[end].value === ')') { nesting--; }
+            } while (nesting > 0 && end + 1 < parts.length);
+        }
+        parts[end].annotationEnd = true;
+    }
     let output = parts.length ? source.slice(0, parts[0].start) + parts[0].value : source;
     for (let index = 1; index < parts.length; index++) {
         const previous = parts[index - 1];
@@ -79,7 +94,9 @@ function format(source) {
         let gap = source.slice(previous.end, token.start).replace(/\t/g, '    ');
         if (gap.includes('\n')) { gap = gap.replace(/[ \t]*$/, ' '.repeat(Math.max(0, token.lineIndent))); }
         const newline = indentation => '\n' + ' '.repeat(Math.max(0, indentation));
-        if (previous.block) {
+        if (previous.annotationEnd && !token.comment) {
+            gap = newline(previous.lineIndent);
+        } else if (previous.block) {
             gap = newline(token.closes === previous ? previous.indent : previous.indent + 4);
         } else if (token.closes && token.closes.block) {
             gap = newline(token.closes.indent);
@@ -111,19 +128,24 @@ function creationDates(source, relative) {
     });
 }
 
-let changed = 0;
-const updates = [];
-for (const file of files(path.join(root, 'src'))) {
-    const original = fs.readFileSync(file, 'utf8');
-    const relative = path.relative(root, file).replace(/\\/g, '/');
-    const updated = process.argv.includes('--dates') ? creationDates(original, relative) : format(original);
-    if (!process.argv.includes('--dates') && format(updated) !== updated) { throw new Error('Formatter is not idempotent: ' + relative); }
-    if (updated !== original) {
-        changed++;
-        updates.push({file, updated});
-        process.stdout.write(relative + '\n');
+function run() {
+    let changed = 0;
+    const updates = [];
+    for (const file of files(path.join(root, 'src'))) {
+        const original = fs.readFileSync(file, 'utf8');
+        const relative = path.relative(root, file).replace(/\\/g, '/');
+        const updated = process.argv.includes('--dates') ? creationDates(original, relative) : format(original);
+        if (!process.argv.includes('--dates') && format(updated) !== updated) { throw new Error('Formatter is not idempotent: ' + relative); }
+        if (updated !== original) {
+            changed++;
+            updates.push({file, updated});
+            process.stdout.write(relative + '\n');
+        }
     }
+    if (!process.argv.includes('--check')) { for (const update of updates) { fs.writeFileSync(update.file, update.updated); } }
+    process.stdout.write(changed + ' Java files ' + (process.argv.includes('--check') ? 'need changes' : 'updated') + '\n');
+    if (changed && process.argv.includes('--check')) { process.exitCode = 1; }
 }
-if (!process.argv.includes('--check')) { for (const update of updates) { fs.writeFileSync(update.file, update.updated); } }
-process.stdout.write(changed + ' Java files ' + (process.argv.includes('--check') ? 'need changes' : 'updated') + '\n');
-if (changed && process.argv.includes('--check')) { process.exitCode = 1; }
+
+module.exports = {format};
+if (require.main === module) { run(); }

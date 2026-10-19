@@ -66,10 +66,12 @@ public final class GoalHistoryPanel extends JPanel {
     }
     private static DefaultTableModel model(String... columns) {
         return new DefaultTableModel(columns, 0) {
-            @Override public boolean isCellEditable(int row, int column) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
                 return false;
             }
-            @Override public Class<?> getColumnClass(int column) {
+            @Override
+            public Class<?> getColumnClass(int column) {
                 for (int row = 0; row < getRowCount(); row++) {
                     if (getValueAt(row, column) instanceof Long) {
                         return Long.class;
@@ -86,7 +88,8 @@ public final class GoalHistoryPanel extends JPanel {
         table.setAutoCreateRowSorter(true);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         table.setDefaultRenderer(Long.class, new DefaultTableCellRenderer() {
-            @Override protected void setValue(Object value) {
+            @Override
+            protected void setValue(Object value) {
                 setHorizontalAlignment(SwingConstants.RIGHT);
                 setText(value == null ? "—" : String.format(Locale.ROOT, "%,d", value));
             }

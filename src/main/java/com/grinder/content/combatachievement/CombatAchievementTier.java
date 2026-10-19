@@ -23,7 +23,8 @@ public enum CombatAchievementTier {
         this.threshold = threshold;
         this.taskEnum = taskEnum;
     }
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return name;
     }
 }

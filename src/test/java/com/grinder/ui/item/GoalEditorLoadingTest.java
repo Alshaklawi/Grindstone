@@ -25,7 +25,8 @@ import static org.junit.Assert.*;
  * @since 10/18/2026
  */
 public class GoalEditorLoadingTest {
-    @Test public void everyDefaultTrackerCanBeLoadedWithoutChangingItsSubjectOrTarget() throws Exception {
+    @Test
+    public void everyDefaultTrackerCanBeLoadedWithoutChangingItsSubjectOrTarget() throws Exception {
         SwingUtilities.invokeAndWait(() -> {
             Map<Integer, Map<String, Supplier<Goal>>> choices = CompletionGoalChoices.create(null);
             choices.get(13).put("Barrows", () -> new CombatAchievementBossGoal(1, "Barrows"));

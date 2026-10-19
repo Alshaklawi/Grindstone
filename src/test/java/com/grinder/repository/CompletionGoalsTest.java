@@ -36,7 +36,8 @@ import static org.junit.Assert.*;
  * @since 10/18/2026
  */
 public class CompletionGoalsTest {
-    @Test public void everyNewGoalSurvivesProfileReload() {
+    @Test
+    public void everyNewGoalSurvivesProfileReload() {
         GrinderProfile profile = emptyProfile();
         for (Map<String, Supplier<Goal>> choices : CompletionGoalChoices.create(null).values()) {
             for (Supplier<Goal> choice : choices.values()) {
@@ -54,7 +55,8 @@ public class CompletionGoalsTest {
             assertEquals(before.getTitle(null), after.getTitle(null));
         }
     }
-    @Test public void completionSelectionsDeduplicateWithoutMergingDifferentGoals() {
+    @Test
+    public void completionSelectionsDeduplicateWithoutMergingDifferentGoals() {
         GrinderProfile profile = emptyProfile();
         assertTrue(profile.add(new QuestGoal(Quest.COOKS_ASSISTANT)));
         assertFalse(profile.add(new QuestGoal(Quest.COOKS_ASSISTANT)));
@@ -66,7 +68,8 @@ public class CompletionGoalsTest {
         assertFalse(profile.add(new CombatAchievementBossGoal(1, "Renamed one")));
         assertTrue(profile.add(new CombatAchievementBossGoal(2, "Two")));
     }
-    @Test public void questStatusesIncludeStartedWithoutPretendingItIsComplete() {
+    @Test
+    public void questStatusesIncludeStartedWithoutPretendingItIsComplete() {
         QuestGoal goal = new QuestGoal(Quest.COOKS_ASSISTANT);
         goal.refreshState(QuestState.NOT_STARTED);
         assertEquals(GoalStatus.NOT_STARTED, goal.getStatus());
@@ -79,7 +82,8 @@ public class CompletionGoalsTest {
         goal.refreshState(QuestState.NOT_STARTED);
         assertEquals(GoalStatus.NOT_STARTED, goal.getStatus());
     }
-    @Test public void questSeriesCountsFinishedQuestsAndHandlesStartedFirstQuest() {
+    @Test
+    public void questSeriesCountsFinishedQuestsAndHandlesStartedFirstQuest() {
         QuestSeriesGoal goal = new QuestSeriesGoal(QuestSeries.ELF);
         goal.refreshStates(q -> q == Quest.PLAGUE_CITY ? QuestState.IN_PROGRESS : QuestState.NOT_STARTED);
         assertEquals(GoalStatus.IN_PROGRESS, goal.getStatus());
@@ -90,7 +94,8 @@ public class CompletionGoalsTest {
         assertEquals(QuestSeries.ELF.getQuests().size(), goal.getProgressMaximum());
         assertEquals(GoalStatus.COMPLETE, goal.getStatus());
     }
-    @Test public void combatTierUsesPointsAndLiveThresholdNotTierTaskCount() {
+    @Test
+    public void combatTierUsesPointsAndLiveThresholdNotTierTaskCount() {
         CombatAchievementTierGoal goal = new CombatAchievementTierGoal(CombatAchievementTier.EASY);
         goal.refreshValues(id -> id == VarbitID.CA_POINTS ? 32 : 35);
         assertEquals(32, goal.getProgressCurrent());
@@ -102,7 +107,8 @@ public class CompletionGoalsTest {
         assertFalse(goal.hasProgress());
         assertEquals(GoalStatus.NOT_STARTED, goal.getStatus());
     }
-    @Test public void combatTaskBitsHandleSignBitBoundariesAndNewestVarp() {
+    @Test
+    public void combatTaskBitsHandleSignBitBoundariesAndNewestVarp() {
         assertTrue(CombatAchievementData.isComplete(id -> id == VarPlayerID.CA_TASK_COMPLETED_0 ? Integer.MIN_VALUE : 0, 31));
         assertFalse(CombatAchievementData.isComplete(id -> id == VarPlayerID.CA_TASK_COMPLETED_0 ? Integer.MIN_VALUE : 0, 32));
         assertTrue(CombatAchievementData.isComplete(id -> id == VarPlayerID.CA_TASK_COMPLETED_1 ? 1 : 0, 32));
@@ -110,21 +116,24 @@ public class CompletionGoalsTest {
         assertFalse(CombatAchievementData.isComplete(id -> -1, -1));
         assertFalse(CombatAchievementData.isComplete(id -> -1, 672));
     }
-    @Test public void diaryFlagsAndLegacyKaramjaTaskCountsAreDistinct() {
+    @Test
+    public void diaryFlagsAndLegacyKaramjaTaskCountsAreDistinct() {
         assertTrue(AchievementDiaryArea.VARROCK.isComplete(id -> id == VarbitID.VARROCK_DIARY_EASY_COMPLETE ? 1 : 0, DiaryTier.EASY));
         assertFalse(AchievementDiaryArea.VARROCK.isComplete(id -> id == VarbitID.VARROCK_EASY_COUNT ? 10 : 0, DiaryTier.EASY));
         assertFalse(AchievementDiaryArea.KARAMJA.isComplete(id -> id == VarbitID.KARAMJA_MED_COUNT ? 18 : 0, DiaryTier.MEDIUM));
         assertTrue(AchievementDiaryArea.KARAMJA.isComplete(id -> id == VarbitID.KARAMJA_MED_COUNT ? 19 : 0, DiaryTier.MEDIUM));
         assertEquals(12, AchievementDiaryArea.values().length);
     }
-    @Test public void invalidCompletionSelectionIsSkippedRatherThanBreakingProfile() {
+    @Test
+    public void invalidCompletionSelectionIsSkippedRatherThanBreakingProfile() {
         GrinderProfile profile = emptyProfile();
         profile.add(new QuestGoal(Quest.COOKS_ASSISTANT));
         JsonObject json = TestProfiles.REPOSITORY.toJson(profile);
         json.getAsJsonArray("goals").get(0).getAsJsonObject().getAsJsonObject("data").remove("quest");
         assertTrue(TestProfiles.REPOSITORY.fromJson(json).getGoals().isEmpty());
     }
-    @Test public void pickerCreatesEveryNewGoalTypeWithoutTargetSpinnerErrors() throws Exception {
+    @Test
+    public void pickerCreatesEveryNewGoalTypeWithoutTargetSpinnerErrors() throws Exception {
         SwingUtilities.invokeAndWait(() -> {
             Map<Integer, Map<String, Supplier<Goal>>> choices = CompletionGoalChoices.create(null);
             choices.get(13).put("Test boss", () -> new CombatAchievementBossGoal(1, "Test boss"));

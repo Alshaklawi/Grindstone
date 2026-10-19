@@ -5,6 +5,7 @@
 - Use same-line opening braces for classes, methods, constructors, and control flow.
 - Always put block contents on separate indented lines. Never compress an if, loop, method, constructor or other block into one line.
 - Put each enum constant on its own line.
+- Put each declaration annotation on its own line above the field, method, constructor, class, or enum. Do not combine annotations with declarations or with other annotations.
 - Never wrap lines solely because of their length.
 - Use explicit imports instead of fully qualified type names in code. Keep qualified names only when required to resolve a naming conflict.
 - Keep the requested author, Discord, and since header on every class; do not add other source comments.

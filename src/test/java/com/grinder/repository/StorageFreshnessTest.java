@@ -14,7 +14,8 @@ import static org.junit.Assert.*;
  * @since 10/18/2026
  */
 public class StorageFreshnessTest {
-    @Test public void freshnessDistinguishesUnknownEmptyAndObservedBank() {
+    @Test
+    public void freshnessDistinguishesUnknownEmptyAndObservedBank() {
         Instant now = Instant.parse("2026-10-18T12:00:00Z");
         PlayerItemStorage storage = new PlayerItemStorage(Clock.fixed(now, ZoneOffset.UTC));
         assertTrue(storage.freshness().contains("not loaded"));

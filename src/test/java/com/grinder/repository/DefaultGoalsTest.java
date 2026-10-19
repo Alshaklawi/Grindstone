@@ -38,7 +38,8 @@ public class DefaultGoalsTest {
         }
     }
 
-    @Test public void defaultsIncludeEveryRegisteredTrackerType() {
+    @Test
+    public void defaultsIncludeEveryRegisteredTrackerType() {
         GrinderProfile profile = new GrinderProfile(42);
         Set<Class<?>> represented = profile.getGoals().stream().map(Goal::getClass).collect(Collectors.toSet());
         assertEquals(SavedGoalTypes.registeredTypes(), represented);
@@ -46,7 +47,8 @@ public class DefaultGoalsTest {
         assertTrue(profile.getGoals().stream().anyMatch(goal -> goal instanceof PossessedItemGoal && goal.getProgressMaximum() == 1));
     }
 
-    @Test public void restoringDefaultsPreservesEditedExamplesAndDoesNotDuplicateThem() {
+    @Test
+    public void restoringDefaultsPreservesEditedExamplesAndDoesNotDuplicateThem() {
         GrinderProfile profile = new GrinderProfile(42);
         CustomGoal custom = (CustomGoal) profile.getGoals().stream().filter(goal -> goal instanceof CustomGoal).findFirst().get();
         custom.update("My own routine", "Keep these edits", GoalCategory.OTHER, 2, 20);
@@ -62,7 +64,8 @@ public class DefaultGoalsTest {
         assertEquals(3_000_000_000L, coins.getAmount());
     }
 
-    @Test public void namedBossExampleDeduplicatesAgainstClientResolvedBossGoals() {
+    @Test
+    public void namedBossExampleDeduplicatesAgainstClientResolvedBossGoals() {
         GrinderProfile profile = new GrinderProfile(42);
         CombatAchievementBossGoal barrows = new CombatAchievementBossGoal("Barrows");
         assertFalse(profile.add(barrows));
@@ -73,7 +76,8 @@ public class DefaultGoalsTest {
         assertEquals(size, profile.getGoals().size());
     }
 
-    @Test public void everyDefaultTypeSurvivesSavingAndReloadingWithoutExtraExamples() {
+    @Test
+    public void everyDefaultTypeSurvivesSavingAndReloadingWithoutExtraExamples() {
         GrinderProfile profile = new GrinderProfile(42);
         GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
         int size = profile.getGoals().size();

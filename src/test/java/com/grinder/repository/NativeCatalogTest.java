@@ -18,7 +18,8 @@ import static org.junit.Assert.*;
  * @since 10/19/2026
  */
 public class NativeCatalogTest {
-    @Test public void allActivityCountersUseDistinctNamedClientVariables() {
+    @Test
+    public void allActivityCountersUseDistinctNamedClientVariables() {
         HashSet<String> variables = new HashSet<>();
         for (TrackerEntry entry : TrackerEntry.values()) {
             assertTrue(variables.add(entry.isVarbit() + ":" + entry.getId()));
@@ -29,7 +30,8 @@ public class NativeCatalogTest {
         assertEquals(VarPlayerID.TOTAL_WINTERTODT_KILLS, TrackerEntry.WINTERTODT.getId());
         assertEquals(VarPlayerID.TOTAL_CORP_KILLS, TrackerEntry.CORPOREAL_BEAST.getId());
     }
-    @Test public void dynamicCollectionPagesHaveIndependentIdentityAndSurviveReload() {
+    @Test
+    public void dynamicCollectionPagesHaveIndependentIdentityAndSurviveReload() {
         GrinderProfile profile = new GrinderProfile(42);
         profile.replace(Collections.emptyList());
         assertTrue(profile.add(new CollectionLogEntryGoal(null, 10_000, "Test page A")));
@@ -39,7 +41,8 @@ public class NativeCatalogTest {
         assertEquals(2, restored.getGoals().size());
         assertEquals(10_001, ((CollectionLogEntryGoal) restored.getGoals().get(1)).getPageStruct());
     }
-    @Test public void legacyEnumPagesStillLoadWithoutStructFields() {
+    @Test
+    public void legacyEnumPagesStillLoadWithoutStructFields() {
         GrinderProfile profile = new GrinderProfile(42);
         profile.replace(Collections.singletonList(new CollectionLogEntryGoal(null, CollectionLogEntry.CHAMBERS_OF_XERIC)));
         JsonObject json = TestProfiles.REPOSITORY.toJson(profile);
@@ -48,7 +51,8 @@ public class NativeCatalogTest {
         data.remove("pageName");
         assertEquals(507, ((CollectionLogEntryGoal) TestProfiles.REPOSITORY.fromJson(json).getGoals().get(0)).getPageStruct());
     }
-    @Test public void collectionLogAliasesRetainEarliestUnlockObservation() {
+    @Test
+    public void collectionLogAliasesRetainEarliestUnlockObservation() {
         CollectionLogHistory history = new CollectionLogHistory();
         history.record(ItemID.COAL_BAG, 1000);
         history.record(ItemID.COAL_BAG_DUMMY, 2000);

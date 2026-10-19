@@ -14,13 +14,15 @@ import static org.junit.Assert.*;
  * @since 10/18/2026
  */
 public class SavedGoalTypesTest {
-    @Test public void newlySavedProfilesContainOnlyStableTypeTagsNotJavaClassNames() {
+    @Test
+    public void newlySavedProfilesContainOnlyStableTypeTagsNotJavaClassNames() {
         String json = TestProfiles.REPOSITORY.exportBackup(new GrinderProfile(42));
         assertTrue(json.contains("\"type\""));
         assertFalse(json.contains("\"class\""));
         assertFalse(json.contains("com.grinder."));
     }
-    @Test public void renamedGoalsKeepTheirOriginalSavedIdentifiers() {
+    @Test
+    public void renamedGoalsKeepTheirOriginalSavedIdentifiers() {
         PossessedItemGoal goal = new PossessedItemGoal(ItemID.COINS, 1_500_000_000L);
         assertEquals("owned-item", SavedGoalTypes.nameOf(goal));
         assertSame(PossessedItemGoal.class, SavedGoalTypes.resolve("com.grinder.content.goal.impl.item.PossesedItemGoal"));
@@ -28,7 +30,8 @@ public class SavedGoalTypesTest {
         assertSame(PossessedItemGoal.class, SavedGoalTypes.resolve(PossessedItemGoal.class.getName()));
         assertSame(CollectionLogEntryGoal.class, SavedGoalTypes.resolve("com.grinder.content.goal.impl.colletion_log.CollectionLogEntryGoal"));
     }
-    @Test public void currentAndLegacyClassNamesLoadTheSameSelections() {
+    @Test
+    public void currentAndLegacyClassNamesLoadTheSameSelections() {
         GrinderProfile profile = new GrinderProfile(42);
         CompletionGoalChoices.create(null).values().forEach(choices -> choices.values().forEach(factory -> profile.add(factory.get())));
         profile.add(new PossessedItemGoal(ItemID.COINS, 3_000_000_000L));
@@ -44,7 +47,8 @@ public class SavedGoalTypesTest {
             assertEquals(profile.getGoals().get(i).getClass(), restored.getGoals().get(i).getClass());
         }
     }
-    @Test public void arbitraryClassNamesRemainBlocked() {
+    @Test
+    public void arbitraryClassNamesRemainBlocked() {
         assertNull(SavedGoalTypes.resolve("java.lang.Runtime"));
         assertNull(SavedGoalTypes.resolve("com.example.ExamplePlugin"));
         GrinderProfile profile = new GrinderProfile(42);

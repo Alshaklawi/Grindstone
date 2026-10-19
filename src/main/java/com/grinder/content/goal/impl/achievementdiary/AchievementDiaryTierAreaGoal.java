@@ -17,22 +17,28 @@ public final class AchievementDiaryTierAreaGoal extends ClientCompletionGoal {
         this.area = Objects.requireNonNull(area);
         this.tier = Objects.requireNonNull(tier);
     }
-    @Override public String selectionKey() {
+    @Override
+    public String selectionKey() {
         return Objects.requireNonNull(area).name() + ":" + Objects.requireNonNull(tier).name();
     }
-    @Override public String getTitle(Client client) {
+    @Override
+    public String getTitle(Client client) {
         return area + " — " + tier + " diary";
     }
-    @Override public String getDescription() {
+    @Override
+    public String getDescription() {
         return "Complete all tasks in this diary tier. Claiming its reward is not required.";
     }
-    @Override public GoalCategory getCategory() {
+    @Override
+    public GoalCategory getCategory() {
         return GoalCategory.ACHIEVEMENT_DIARY;
     }
-    @Override public boolean refresh(Client client) {
+    @Override
+    public boolean refresh(Client client) {
         return update(area.isComplete(client, tier) ? 1 : 0, 1, area.taskCount(client, tier) > 0);
     }
-    @Override public String getProgressText() {
+    @Override
+    public String getProgressText() {
         return getProgressCurrent() == 1 ? "Diary tier complete" : "Diary tier incomplete";
     }
 }

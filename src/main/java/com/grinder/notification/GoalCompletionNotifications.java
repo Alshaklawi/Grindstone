@@ -28,11 +28,16 @@ import net.runelite.client.util.Text;
 @Singleton
 public final class GoalCompletionNotifications {
     private final CompletionTransitions transitions = new CompletionTransitions();
-    @Inject private GrinderConfig config;
-    @Inject private Client client;
-    @Inject private GoalCompletionOverlay overlay;
-    @Inject private ChatMessageManager chat;
-    @Inject private Notifier notifier;
+    @Inject
+    private GrinderConfig config;
+    @Inject
+    private Client client;
+    @Inject
+    private GoalCompletionOverlay overlay;
+    @Inject
+    private ChatMessageManager chat;
+    @Inject
+    private Notifier notifier;
     private GrinderProfile profile;
 
     public synchronized void reset() {

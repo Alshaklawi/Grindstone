@@ -16,26 +16,32 @@ public final class CombatAchievementTierGoal extends ClientCompletionGoal {
     public CombatAchievementTierGoal(CombatAchievementTier tier) {
         this.tier = Objects.requireNonNull(tier);
     }
-    @Override public String selectionKey() {
+    @Override
+    public String selectionKey() {
         return Objects.requireNonNull(tier).name();
     }
-    @Override public String getTitle(Client client) {
+    @Override
+    public String getTitle(Client client) {
         return tier + " combat achievement tier";
     }
-    @Override public String getDescription() {
+    @Override
+    public String getDescription() {
         return "Reach the reward tier using points earned from tasks of any difficulty.";
     }
-    @Override public GoalCategory getCategory() {
+    @Override
+    public GoalCategory getCategory() {
         return GoalCategory.COMBAT_ACHIEVEMENT;
     }
-    @Override public boolean refresh(Client client) {
+    @Override
+    public boolean refresh(Client client) {
         return refreshValues(client::getVarbitValue);
     }
     public boolean refreshValues(IntUnaryOperator values) {
         int points = values.applyAsInt(VarbitID.CA_POINTS);
         return update(points, values.applyAsInt(tier.getThreshold()), points > 0);
     }
-    @Override public String getProgressText() {
+    @Override
+    public String getProgressText() {
         return hasProgress() ? super.getProgressText() + " points" : "Waiting for client tier threshold";
     }
 }

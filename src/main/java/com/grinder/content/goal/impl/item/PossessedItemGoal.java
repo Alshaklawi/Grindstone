@@ -44,50 +44,64 @@ public final class PossessedItemGoal implements Goal {
         normalizedItem = 0;
         current = 0;
     }
-    @Override public boolean supportsTarget() {
+    @Override
+    public boolean supportsTarget() {
         return true;
     }
-    @Override public void setTarget(long target) {
+    @Override
+    public void setTarget(long target) {
         if (target < 1 || target > MAX_TARGET) {
             throw new IllegalArgumentException("Quantity must be between 1 and 1,000,000,000,000");
         }
         amount = target;
     }
-    @Override public String getTitle(Client client) {
+    @Override
+    public String getTitle(Client client) {
         ItemComposition definition = client == null ? null : client.getItemDefinition(item);
         return (definition == null ? "Item " + item : definition.getName()) + " owned";
     }
-    @Override public BufferedImage getIcon(Client client) {
+    @Override
+    public BufferedImage getIcon(Client client) {
         return itemManager == null ? Icon.MAIN.getImage() : itemManager.getImage(item);
     }
-    @Override public GoalCategory getCategory() {
+    @Override
+    public GoalCategory getCategory() {
         return GoalCategory.OTHER;
     }
-    @Override public String getDescription() {
+    @Override
+    public String getDescription() {
         return storage == null ? "Open your bank and item storage to include their contents." : storage.describe(normalizedItem > 0 ? normalizedItem : item);
     }
-    @Override public String getCardDescription() {
+    @Override
+    public String getCardDescription() {
         return "";
     }
-    @Override public boolean hasProgress() {
+    @Override
+    public boolean hasProgress() {
         return true;
     }
-    @Override public long getProgressCurrent() {
+    @Override
+    public long getProgressCurrent() {
         return current;
     }
-    @Override public long getProgressMaximum() {
+    @Override
+    public long getProgressMaximum() {
         return amount;
     }
-    @Override public String getProgressText() {
+    @Override
+    public String getProgressText() {
         return String.format(Locale.ROOT, "%,d / %,d owned", current, amount);
     }
-    @Override public GoalStatus getStatus() {
+    @Override
+    public GoalStatus getStatus() {
         return current >= amount ? GoalStatus.COMPLETE : current > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED;
     }
-    @Override public boolean isAffectedBy(ItemContainer container) {
+    @Override
+    public boolean isAffectedBy(ItemContainer container) {
         return container != null && PlayerStorageSource.fromId(container.getId()) != null;
     }
-    @Override public boolean refresh(Client client) {
+    @Override
+    public boolean refresh(Client client) {
         if (storage == null) {
             return false;
         }
@@ -99,7 +113,8 @@ public final class PossessedItemGoal implements Goal {
         current = next;
         return changed;
     }
-    @Override public GoalComponent build(Client client) {
+    @Override
+    public GoalComponent build(Client client) {
         refresh(client);
         GoalComponent component = Goal.super.build(client);
         component.setRequiredQuantity(amount);

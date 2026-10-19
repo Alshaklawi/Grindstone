@@ -22,7 +22,8 @@ public class ProfileBackupTest {
         profile.getCollectionLogHistory().record(ItemID.TWISTED_BOW, 1000);
         return profile;
     }
-    @Test public void sameAccountBackupPreservesPinsHistoryAndManualProgress() {
+    @Test
+    public void sameAccountBackupPreservesPinsHistoryAndManualProgress() {
         GrinderProfile original = completedProfile();
         GrinderProfile restored = TestProfiles.REPOSITORY.importBackup(TestProfiles.REPOSITORY.exportBackup(original), 42);
         assertEquals(10, restored.getGoals().get(0).getProgressCurrent());
@@ -30,7 +31,8 @@ public class ProfileBackupTest {
         assertEquals(1, restored.metadata(restored.getGoals().get(0)).getCompletions().size());
         assertTrue(restored.getCollectionLogHistory().contains(ItemID.TWISTED_BOW));
     }
-    @Test public void transferringSetupDoesNotTransferAnotherCharactersProgress() {
+    @Test
+    public void transferringSetupDoesNotTransferAnotherCharactersProgress() {
         GrinderProfile restored = TestProfiles.REPOSITORY.importBackup(TestProfiles.REPOSITORY.exportBackup(completedProfile()), 99);
         assertEquals(99, restored.getHash());
         assertEquals(0, restored.getGoals().get(0).getProgressCurrent());
@@ -38,7 +40,8 @@ public class ProfileBackupTest {
         assertTrue(restored.metadata(restored.getGoals().get(0)).getCompletions().isEmpty());
         assertFalse(restored.getCollectionLogHistory().contains(ItemID.TWISTED_BOW));
     }
-    @Test public void mergingRecoversMissingGoalsWithoutResettingEditedTargets() {
+    @Test
+    public void mergingRecoversMissingGoalsWithoutResettingEditedTargets() {
         GrinderProfile original = completedProfile();
         String backup = TestProfiles.REPOSITORY.exportBackup(original);
         CustomGoal current = (CustomGoal) original.getGoals().get(0);
@@ -49,7 +52,8 @@ public class ProfileBackupTest {
         assertEquals(1, original.mergeBackup(TestProfiles.REPOSITORY.importBackup(backup, 42)));
         assertTrue(original.metadata(original.getGoals().get(0)).isPinned());
     }
-    @Test public void unsupportedGoalTypesAndFutureBackupVersionsAreRejected() {
+    @Test
+    public void unsupportedGoalTypesAndFutureBackupVersionsAreRejected() {
         JsonObject json = TestProfiles.REPOSITORY.toJson(completedProfile());
         json.addProperty("backupVersion", 2);
         try {

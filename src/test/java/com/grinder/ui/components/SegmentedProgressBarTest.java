@@ -40,7 +40,8 @@ public class SegmentedProgressBarTest {
             assertEquals(0, image.getRGB(5, 4));
         });
     }
-    @Test public void chunksRepresentWholeTargetUnitsAndNeverExceedTwenty() {
+    @Test
+    public void chunksRepresentWholeTargetUnitsAndNeverExceedTwenty() {
         SegmentedProgressBar bar = new SegmentedProgressBar();
         for (long target : new long[]{1, 5, 19, 20, 21, 23, 100, 1_500_000_000L, Long.MAX_VALUE}) {
             bar.setProgress(0, target);

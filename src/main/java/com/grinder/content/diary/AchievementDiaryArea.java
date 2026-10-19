@@ -41,7 +41,8 @@ public enum AchievementDiaryArea {
         int index = tier.ordinal();
         return completed[index] >= 0 ? values.applyAsInt(completed[index]) > 0 : taskCount(values, tier) >= new int[]{10, 19, 10}[index];
     }
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return name;
     }
 }

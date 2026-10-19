@@ -32,7 +32,8 @@ public enum GoalPreset {
     GoalPreset(String name) {
         this.name = name;
     }
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return name;
     }
     public List<Goal> createGoals() {

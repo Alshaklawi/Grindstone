@@ -15,19 +15,24 @@ public final class AchievementDiaryTierGoal extends ClientCompletionGoal {
     public AchievementDiaryTierGoal(DiaryTier tier) {
         this.tier = Objects.requireNonNull(tier);
     }
-    @Override public String selectionKey() {
+    @Override
+    public String selectionKey() {
         return "" + ":" + Objects.requireNonNull(tier).name();
     }
-    @Override public String getTitle(Client client) {
+    @Override
+    public String getTitle(Client client) {
         return "All " + tier + " diaries";
     }
-    @Override public String getDescription() {
+    @Override
+    public String getDescription() {
         return "Complete this diary tier in every region.";
     }
-    @Override public GoalCategory getCategory() {
+    @Override
+    public GoalCategory getCategory() {
         return GoalCategory.ACHIEVEMENT_DIARY;
     }
-    @Override public boolean refresh(Client client) {
+    @Override
+    public boolean refresh(Client client) {
         int done = 0;
         boolean started = false;
         for (AchievementDiaryArea area : AchievementDiaryArea.values()) {
@@ -38,7 +43,8 @@ public final class AchievementDiaryTierGoal extends ClientCompletionGoal {
         }
         return update(done, AchievementDiaryArea.values().length, started);
     }
-    @Override public String getProgressText() {
+    @Override
+    public String getProgressText() {
         return super.getProgressText() + " regions";
     }
 }

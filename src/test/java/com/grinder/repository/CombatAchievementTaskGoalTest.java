@@ -10,7 +10,8 @@ import static org.junit.Assert.*;
  * @since 10/19/2026
  */
 public class CombatAchievementTaskGoalTest {
-    @Test public void individualTasksUseBinaryCompletionAndIndependentIdentity() {
+    @Test
+    public void individualTasksUseBinaryCompletionAndIndependentIdentity() {
         CombatAchievementTaskGoal task = new CombatAchievementTaskGoal(0, "Test task", "Test requirements");
         task.observeCompletion(false);
         assertEquals(GoalStatus.NOT_STARTED, task.getStatus());
@@ -24,7 +25,8 @@ public class CombatAchievementTaskGoalTest {
         assertFalse(profile.add(new CombatAchievementTaskGoal(0, "Renamed task", "")));
         assertTrue(profile.add(new CombatAchievementTaskGoal(1, "Other task", "")));
     }
-    @Test public void taskSelectionsAndRequirementsPersistWithoutClassNames() {
+    @Test
+    public void taskSelectionsAndRequirementsPersistWithoutClassNames() {
         GrinderProfile profile = new GrinderProfile(42);
         profile.replace(Collections.singletonList(new CombatAchievementTaskGoal(31, "Test task", "Keep these requirements")));
         String backup = TestProfiles.REPOSITORY.exportBackup(profile);
@@ -34,7 +36,8 @@ public class CombatAchievementTaskGoalTest {
         assertEquals(31, restored.getTask());
         assertEquals("Keep these requirements", restored.getDescription());
     }
-    @Test(expected = IllegalArgumentException.class) public void invalidNativeTaskIndexIsRejected() {
+    @Test(expected = IllegalArgumentException.class)
+    public void invalidNativeTaskIndexIsRejected() {
         new CombatAchievementTaskGoal(-1, "Bad", "");
     }
 }

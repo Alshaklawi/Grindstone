@@ -34,10 +34,12 @@ public final class HistoryBrowserPanel extends JPanel {
     private final JComboBox<String> schedule = new JComboBox<>(new String[]{"All schedules", "Lifetime", "Daily", "Weekly", "Monthly"});
     private final JLabel summary = new JLabel();
     private final DefaultTableModel model = new DefaultTableModel(new String[]{"Goal", "Schedule", "Period start", "Period end", "Progress", "Target", "Outcome", "Baseline", "Last observed", "Completed"}, 0) {
-        @Override public boolean isCellEditable(int row, int column) {
+        @Override
+        public boolean isCellEditable(int row, int column) {
             return false;
         }
-        @Override public Class<?> getColumnClass(int column) {
+        @Override
+        public Class<?> getColumnClass(int column) {
             return column == 4 || column == 5 ? Long.class : String.class;
         }
     };
@@ -67,7 +69,8 @@ public final class HistoryBrowserPanel extends JPanel {
             table.getColumnModel().getColumn(column).setPreferredWidth(column == 0 ? 230 : column == 4 || column == 5 ? 90 : 175);
         }
         table.setDefaultRenderer(Long.class, new DefaultTableCellRenderer() {
-            @Override protected void setValue(Object value) {
+            @Override
+            protected void setValue(Object value) {
                 setHorizontalAlignment(SwingConstants.RIGHT);
                 setText(value == null ? "—" : String.format(Locale.ROOT, "%,d", value));
             }
@@ -91,13 +94,16 @@ public final class HistoryBrowserPanel extends JPanel {
         add(new JScrollPane(table), BorderLayout.CENTER);
         add(bottom, BorderLayout.SOUTH);
         DocumentListener listener = new DocumentListener() {
-            @Override public void insertUpdate(DocumentEvent event) {
+            @Override
+            public void insertUpdate(DocumentEvent event) {
                 filter();
             }
-            @Override public void removeUpdate(DocumentEvent event) {
+            @Override
+            public void removeUpdate(DocumentEvent event) {
                 filter();
             }
-            @Override public void changedUpdate(DocumentEvent event) {
+            @Override
+            public void changedUpdate(DocumentEvent event) {
                 filter();
             }
         };

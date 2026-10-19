@@ -18,19 +18,24 @@ public final class QuestSeriesGoal extends ClientCompletionGoal {
     public QuestSeriesGoal(QuestSeries series) {
         this.series = Objects.requireNonNull(series);
     }
-    @Override public String selectionKey() {
+    @Override
+    public String selectionKey() {
         return Objects.requireNonNull(series).name();
     }
-    @Override public String getTitle(Client client) {
+    @Override
+    public String getTitle(Client client) {
         return series + " quest series";
     }
-    @Override public String getDescription() {
+    @Override
+    public String getDescription() {
         return series.getQuests().stream().map(Quest::getName).collect(Collectors.joining(", "));
     }
-    @Override public GoalCategory getCategory() {
+    @Override
+    public GoalCategory getCategory() {
         return GoalCategory.QUEST;
     }
-    @Override public boolean refresh(Client client) {
+    @Override
+    public boolean refresh(Client client) {
         return refreshStates(quest -> quest.getState(client));
     }
     public boolean refreshStates(Function<Quest, QuestState> states) {
@@ -45,7 +50,8 @@ public final class QuestSeriesGoal extends ClientCompletionGoal {
         }
         return update(done, series.getQuests().size(), started);
     }
-    @Override public String getProgressText() {
+    @Override
+    public String getProgressText() {
         return super.getProgressText() + " quests";
     }
 }

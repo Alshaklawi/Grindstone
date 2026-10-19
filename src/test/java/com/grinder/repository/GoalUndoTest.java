@@ -14,7 +14,8 @@ import static org.junit.Assert.*;
  * @since 10/19/2026
  */
 public class GoalUndoTest {
-    @Test public void restoresManualDetailsAndMetadataWithoutTouchingOtherGoals() {
+    @Test
+    public void restoresManualDetailsAndMetadataWithoutTouchingOtherGoals() {
         GrinderProfile profile = new GrinderProfile(42);
         CustomGoal goal = new CustomGoal("Routine", "Notes", GoalCategory.OTHER, 0, 5);
         profile.replace(Collections.singletonList(goal));
@@ -29,7 +30,8 @@ public class GoalUndoTest {
         assertEquals(5, goal.getProgressMaximum());
         assertFalse(undo.undo(profile));
     }
-    @Test public void rejectsLaterEditsOtherAccountsAndExpiredPeriods() {
+    @Test
+    public void rejectsLaterEditsOtherAccountsAndExpiredPeriods() {
         GrinderProfile profile = new GrinderProfile(42);
         GoalUndo undo = new GoalUndo();
         undo.record(profile, "edit", () -> fail("Must not run"), () -> true);

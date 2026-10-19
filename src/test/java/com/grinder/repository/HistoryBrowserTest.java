@@ -15,7 +15,8 @@ import static org.junit.Assert.*;
  * @since 10/19/2026
  */
 public class HistoryBrowserTest {
-    @Test public void changingSubjectsArchivesHistoryAndUndoRestoresItsOriginalIdentity() {
+    @Test
+    public void changingSubjectsArchivesHistoryAndUndoRestoresItsOriginalIdentity() {
         GrinderProfile profile = new GrinderProfile(42);
         CustomGoal original = new CustomGoal("Original", "", GoalCategory.OTHER, 1, 1);
         profile.replace(Collections.singletonList(original));
@@ -30,14 +31,16 @@ public class HistoryBrowserTest {
         assertEquals(1, profile.metadata(original).getCompletions().size());
         assertSame(original, profile.getGoals().get(0));
     }
-    @Test public void filtersBySearchScheduleAndOverlappingDateRange() {
+    @Test
+    public void filtersBySearchScheduleAndOverlappingDateRange() {
         HistoryRecord record = new HistoryRecord("id", "Woodcutting XP", RepeatSchedule.DAILY, 100, 200, 50L, 100, "Incomplete", 110, 190, 0, false);
         assertTrue(record.matches("wood", RepeatSchedule.DAILY, 150, 170));
         assertFalse(record.matches("fishing", null, 0, 300));
         assertFalse(record.matches("", RepeatSchedule.WEEKLY, 0, 300));
         assertFalse(record.matches("", null, 200, 300));
     }
-    @Test public void deletingPreservesObservedHistoryWithoutCreatingALiveGoalLink() {
+    @Test
+    public void deletingPreservesObservedHistoryWithoutCreatingALiveGoalLink() {
         GrinderProfile profile = new GrinderProfile(42);
         CustomGoal goal = new CustomGoal("Routine", "", GoalCategory.OTHER, 1, 1);
         profile.replace(Collections.singletonList(goal));

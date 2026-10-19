@@ -10,7 +10,8 @@ import static org.junit.Assert.*;
  * @since 10/18/2026
  */
 public class GoalPresetsTest {
-    @Test public void eachPackIsNonemptyFreshAndSafeToApplyTwice() {
+    @Test
+    public void eachPackIsNonemptyFreshAndSafeToApplyTwice() {
         for (GoalPreset preset : GoalPreset.values()) {
             GrinderProfile profile = new GrinderProfile(42);
             profile.replace(Collections.emptyList());

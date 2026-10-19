@@ -34,7 +34,8 @@ import static org.junit.Assert.*;
  * @since 10/19/2026
  */
 public class RoutineWorkflowTest {
-    @Test public void recurringCustomEditorUsesOnlyThePeriodTarget() throws Exception {
+    @Test
+    public void recurringCustomEditorUsesOnlyThePeriodTarget() throws Exception {
         SwingUtilities.invokeAndWait(() -> {
             GoalEditorPanel form = new GoalEditorPanel(null, (query, callback) -> () -> {
             });
@@ -51,7 +52,8 @@ public class RoutineWorkflowTest {
             }
         });
     }
-    @Test public void routinePreviewsProduceIndependentSchedulesAndSkipDuplicates() throws Exception {
+    @Test
+    public void routinePreviewsProduceIndependentSchedulesAndSkipDuplicates() throws Exception {
         SwingUtilities.invokeAndWait(() -> {
             GrinderProfile profile = new GrinderProfile(42);
             profile.replace(Collections.emptyList());
@@ -73,7 +75,8 @@ public class RoutineWorkflowTest {
             }
         });
     }
-    @Test public void cacheReusesOnlyMatchingCardsAndReleasesRemovedGoals() {
+    @Test
+    public void cacheReusesOnlyMatchingCardsAndReleasesRemovedGoals() {
         Goal goal = new CustomGoal("Routine", "", GoalCategory.OTHER, 0, 5);
         GoalCardCache<Object> cache = new GoalCardCache<>();
         Object card = new Object();
@@ -86,7 +89,8 @@ public class RoutineWorkflowTest {
         cache.retain(Collections.emptyList());
         assertNull(cache.get(goal, Collections.singletonList(1)));
     }
-    @Test public void reliabilityDoesNotLabelUnavailableReadingsAsLiveOrCompleteStorage() {
+    @Test
+    public void reliabilityDoesNotLabelUnavailableReadingsAsLiveOrCompleteStorage() {
         RecurringGoal recurring = new RecurringGoal();
         Goal xp = new SkillExperienceGoal(Skill.WOODCUTTING);
         assertEquals(TrackingState.WAITING, TrackingState.of(xp, recurring, false, false));
@@ -98,7 +102,8 @@ public class RoutineWorkflowTest {
         recurring.observe(xp, 100_000);
         assertEquals(TrackingState.LATE_BASELINE, TrackingState.of(xp, recurring, true, false));
     }
-    @Test public void manualControlsUseCheckboxesAndDisableIncrementAtTarget() throws Exception {
+    @Test
+    public void manualControlsUseCheckboxesAndDisableIncrementAtTarget() throws Exception {
         SwingUtilities.invokeAndWait(() -> {
             GoalComponent component = new GoalComponent();
             component.setManualActions(1, 1, () -> fail("No increment"), () -> {

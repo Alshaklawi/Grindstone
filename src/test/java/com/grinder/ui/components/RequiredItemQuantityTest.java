@@ -15,7 +15,8 @@ import static org.junit.Assert.*;
  * @since 10/18/2026
  */
 public class RequiredItemQuantityTest {
-    @Test public void largeRequiredQuantityRemainsVisibleWhenDetailsAreCollapsed() throws Exception {
+    @Test
+    public void largeRequiredQuantityRemainsVisibleWhenDetailsAreCollapsed() throws Exception {
         SwingUtilities.invokeAndWait(() -> {
             GoalComponent component = new PossessedItemGoal(ItemID.COINS, 1_500_000_000L).build(null);
             JLabel quantity = label(component, "Required: 1,500,000,000");
@@ -34,7 +35,8 @@ public class RequiredItemQuantityTest {
         });
     }
 
-    @Test public void rebuildingAfterEditingShowsTheNewTargetIncludingOneItem() throws Exception {
+    @Test
+    public void rebuildingAfterEditingShowsTheNewTargetIncludingOneItem() throws Exception {
         SwingUtilities.invokeAndWait(() -> {
             PossessedItemGoal goal = new PossessedItemGoal(ItemID.DRAGON_PICKAXE, 1);
             assertNotNull(label(goal.build(null), "Required: 1"));

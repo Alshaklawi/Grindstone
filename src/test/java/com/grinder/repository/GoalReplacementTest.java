@@ -11,7 +11,8 @@ import static org.junit.Assert.*;
  * @since 10/18/2026
  */
 public class GoalReplacementTest {
-    @Test public void replacingSubjectPreservesPinButDoesNotMisattributeHistory() {
+    @Test
+    public void replacingSubjectPreservesPinButDoesNotMisattributeHistory() {
         GrinderProfile profile = new GrinderProfile(42);
         Goal attack = new SkillLevelGoal(Skill.ATTACK);
         profile.replace(Collections.singletonList(attack));
@@ -22,7 +23,8 @@ public class GoalReplacementTest {
         assertTrue(profile.metadata(defence).getCompletions().isEmpty());
         assertSame(defence, profile.getGoals().get(0));
     }
-    @Test public void editingTargetKeepsStableMetadataAndRejectsDuplicates() {
+    @Test
+    public void editingTargetKeepsStableMetadataAndRejectsDuplicates() {
         GrinderProfile profile = new GrinderProfile(42);
         Goal attack = profile.findMatchingGoal(new SkillLevelGoal(Skill.ATTACK));
         String id = profile.metadata(attack).getId();

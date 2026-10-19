@@ -10,7 +10,8 @@ import static org.junit.Assert.*;
  * @since 10/18/2026
  */
 public class GoalHistoryTest {
-    @Test public void observesEachTargetOnceAndKeepsHistoryAfterProgressRegresses() {
+    @Test
+    public void observesEachTargetOnceAndKeepsHistoryAfterProgressRegresses() {
         CustomGoal goal = new CustomGoal("Routine", "", GoalCategory.OTHER, 0, 10);
         GoalMetadata metadata = new GoalMetadata();
         assertFalse(metadata.observe(goal, "Routine", 1000));
@@ -23,7 +24,8 @@ public class GoalHistoryTest {
         assertTrue(metadata.observe(goal, "Routine", 3000));
         assertEquals(2, metadata.getCompletions().size());
     }
-    @Test public void metadataIdentityAndObservedDatesSurviveProfileReload() {
+    @Test
+    public void metadataIdentityAndObservedDatesSurviveProfileReload() {
         GrinderProfile profile = new GrinderProfile(42);
         CustomGoal goal = new CustomGoal("Routine", "", GoalCategory.OTHER, 10, 10);
         profile.replace(Collections.singletonList(goal));

@@ -31,7 +31,8 @@ public enum PlayerStorageSource {
     public int getContainerId() {
         return container;
     }
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return name;
     }
     public static PlayerStorageSource fromId(int id) {

@@ -18,7 +18,8 @@ import static org.junit.Assert.*;
  * @since 10/18/2026
  */
 public class TypographyTest {
-    @Test public void sectionAndEntryTitlesUseAnExplicitConsistentScale() throws Exception {
+    @Test
+    public void sectionAndEntryTitlesUseAnExplicitConsistentScale() throws Exception {
         SwingUtilities.invokeAndWait(() -> {
             GoalCategorySectionComponent section = new GoalCategorySectionComponent("Collection Log", null);
             GoalComponent entry = new GoalComponent();
@@ -29,7 +30,8 @@ public class TypographyTest {
         });
     }
 
-    @Test public void statusAndItemControlsUseReadableBodyText() throws Exception {
+    @Test
+    public void statusAndItemControlsUseReadableBodyText() throws Exception {
         SwingUtilities.invokeAndWait(() -> {
             GoalComponent entry = new GoalComponent();
             entry.setGoalStatus(GoalStatus.NOT_STARTED);

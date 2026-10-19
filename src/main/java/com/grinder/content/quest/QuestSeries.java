@@ -35,7 +35,8 @@ public enum QuestSeries {
         this.name = name;
         this.quests = Collections.unmodifiableList(Arrays.asList(quests));
     }
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return name;
     }
 }

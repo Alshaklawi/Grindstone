@@ -25,7 +25,8 @@ public class ParallelScheduleTest {
         assertTrue(profile.add(goal, metadata));
         return goal;
     }
-    @Test public void sameSubjectCanHaveLifetimeDailyWeeklyAndMonthlyTargets() {
+    @Test
+    public void sameSubjectCanHaveLifetimeDailyWeeklyAndMonthlyTargets() {
         GrinderProfile profile = profile();
         for (RepeatSchedule schedule : RepeatSchedule.values()) {
             add(profile, schedule);
@@ -41,7 +42,8 @@ public class ParallelScheduleTest {
         assertEquals(4, restored.getGoals().size());
         assertEquals(4, profile().mergeBackup(restored));
     }
-    @Test public void editingCannotCollideWithAnotherSchedulesIdentity() {
+    @Test
+    public void editingCannotCollideWithAnotherSchedulesIdentity() {
         GrinderProfile profile = profile();
         Goal daily = add(profile, RepeatSchedule.DAILY);
         add(profile, RepeatSchedule.WEEKLY);
