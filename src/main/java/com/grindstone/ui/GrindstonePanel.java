@@ -1143,7 +1143,6 @@ public class GrindstonePanel extends PluginPanel {
         int completed = 0;
         int active = 0;
         int notStarted = 0;
-        double ratios = 0;
         int known = 0;
 
         for (GoalView view : goals) {
@@ -1157,19 +1156,18 @@ public class GrindstonePanel extends PluginPanel {
             } else {
                 notStarted++;
             }
-            ratios += getProgressRatio(view);
             known++;
         }
 
-        int percentage = known == 0 ? 0 : (int) Math.round(ratios * 100 / known);
-        overallProgress.setVisible(known > 0);
+        int percentage = goals.isEmpty() ? 0 : (int) Math.round(completed * 100.0 / goals.size());
+        overallProgress.setVisible(!goals.isEmpty());
         overallProgress.setMaximumChunks(config.maxProgressChunks());
-        overallProgress.setProgress(percentage, 100);
+        overallProgress.setProgress(completed, goals.size());
         overallProgress.setStatus(!goals.isEmpty() && completed == goals.size() ? GoalStatus.COMPLETE : active > 0 || completed > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED);
         summaryLabel.setText(goals.isEmpty() ? "Create your first goal" : completed + " of " + goals.size() + " completed");
         summaryLabel.setToolTipText("Overview of all enabled goals, independent of search and filters.");
-        progressPercent.setText(known == 0 ? "—" : percentage + "%");
-        overallProgress.setToolTipText("Average completion of goals with available readings.");
+        progressPercent.setText(percentage + "%");
+        overallProgress.setToolTipText("Completed goals out of all enabled goals.");
         newGoalsButton.setText("New " + notStarted);
         activeGoalsButton.setText("Active " + active);
         completeGoalsButton.setText("Done " + completed);
