@@ -14,7 +14,7 @@ import static org.junit.Assert.*;
  */
 public class ProfileBackupTest {
     private GrinderProfile completedProfile() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         CustomGoal goal = new CustomGoal("Routine", "Notes", GoalCategory.OTHER, 10, 10);
         profile.replace(Collections.singletonList(goal));
         profile.metadata(goal).observe(goal, "Routine", 1000);

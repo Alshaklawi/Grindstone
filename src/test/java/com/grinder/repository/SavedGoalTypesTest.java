@@ -16,7 +16,7 @@ import static org.junit.Assert.*;
 public class SavedGoalTypesTest {
     @Test
     public void newlySavedProfilesContainOnlyStableTypeTagsNotJavaClassNames() {
-        String json = TestProfiles.REPOSITORY.exportBackup(new GrinderProfile(42));
+        String json = TestProfiles.REPOSITORY.exportBackup(TestProfiles.populated(42));
         assertTrue(json.contains("\"type\""));
         assertFalse(json.contains("\"class\""));
         assertFalse(json.contains("com.grinder."));
@@ -32,7 +32,7 @@ public class SavedGoalTypesTest {
     }
     @Test
     public void currentAndLegacyClassNamesLoadTheSameSelections() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         CompletionGoalChoices.create(null).values().forEach(choices -> choices.values().forEach(factory -> profile.add(factory.get())));
         profile.add(new PossessedItemGoal(ItemID.COINS, 3_000_000_000L));
         JsonObject json = TestProfiles.REPOSITORY.toJson(profile);
@@ -51,7 +51,7 @@ public class SavedGoalTypesTest {
     public void arbitraryClassNamesRemainBlocked() {
         assertNull(SavedGoalTypes.resolve("java.lang.Runtime"));
         assertNull(SavedGoalTypes.resolve("com.example.ExamplePlugin"));
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         profile.replace(Collections.singletonList(new PossessedItemGoal(ItemID.COINS)));
         JsonObject json = TestProfiles.REPOSITORY.toJson(profile);
         json.getAsJsonArray("goals").get(0).getAsJsonObject().addProperty("class", "java.lang.Runtime");

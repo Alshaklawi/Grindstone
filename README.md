@@ -14,9 +14,9 @@ A RuneLite plugin for tracking your Old School RuneScape goals.
 
 ## Getting started
 
-Open Grinder from the RuneLite sidebar and select **Add goal**. Use a goal's actions menu to edit or delete it. The header menu contains defaults, presets, bulk management, backups and **Clear all goals**.
+Open Grinder from the RuneLite sidebar and select **Add goal**. New profiles start empty. Use a goal's actions menu to edit or delete it. The header menu contains optional presets, bulk management, backups and **Clear all goals**.
 
-Adjust appearance and notification preferences in **RuneLite settings → Grinder**. Example goals are hidden by default; enable them in Display settings to try the available trackers.
+Adjust appearance and notification preferences in **RuneLite settings → Grinder**.
 
 ## Progress and privacy
 

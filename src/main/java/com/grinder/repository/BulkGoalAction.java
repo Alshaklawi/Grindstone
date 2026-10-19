@@ -12,8 +12,6 @@ public enum BulkGoalAction {
     RESET_CATEGORY("Restore original categories"),
     SCHEDULE("Change repeat schedule"),
     DEADLINE("Set deadline / reminder"),
-    EXAMPLE("Mark as examples"),
-    PERSONAL("Use as real goals"),
     DELETE("Delete selected");
 
     private final String label;

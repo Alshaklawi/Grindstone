@@ -256,9 +256,6 @@ public final class GrinderRepository {
                             log.debug("Skipping invalid goal metadata", exception);
                         }
                     }
-                    if ((!savedGoal.has("metadata") || !savedGoal.getAsJsonObject("metadata").has("sample")) && (goal.getTitle(null).startsWith("Example:") || goal.getTitle(null).equals("Combat task 0"))) {
-                        profile.metadata(goal).setSample(true);
-                    }
                 }
             } catch (RuntimeException exception) {
                 if (strict) {

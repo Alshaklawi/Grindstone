@@ -13,7 +13,7 @@ import static org.junit.Assert.*;
 public class GoalReplacementTest {
     @Test
     public void replacingSubjectPreservesPinButDoesNotMisattributeHistory() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         Goal attack = new SkillLevelGoal(Skill.ATTACK);
         profile.replace(Collections.singletonList(attack));
         profile.metadata(attack).setPinned(true);
@@ -25,7 +25,7 @@ public class GoalReplacementTest {
     }
     @Test
     public void editingTargetKeepsStableMetadataAndRejectsDuplicates() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         Goal attack = profile.findMatchingGoal(new SkillLevelGoal(Skill.ATTACK));
         String id = profile.metadata(attack).getId();
         SkillLevelGoal edited = new SkillLevelGoal(Skill.ATTACK);

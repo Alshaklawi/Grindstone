@@ -20,10 +20,8 @@ public class LombokCompatibilityTest {
     public void generatedMetadataAccessorsKeepValidatedAndDerivedBehavior() {
         GoalMetadata metadata = new GoalMetadata();
         metadata.setPinned(true);
-        metadata.setSample(true);
         metadata.setDisplayCategory(GoalCategory.SKILLING);
         assertTrue(metadata.isPinned());
-        assertTrue(metadata.isSample());
         assertEquals(GoalCategory.SKILLING, metadata.getDisplayCategory());
         assertTrue(metadata.isCollapsed(true));
         assertFalse(metadata.isCollapsed(false));

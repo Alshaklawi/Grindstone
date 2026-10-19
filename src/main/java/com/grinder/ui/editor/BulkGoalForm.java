@@ -50,10 +50,10 @@ public final class BulkGoalForm extends JPanel {
         super(new BorderLayout(0, 10));
         this.rows = new ArrayList<>(rows);
         setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
-        model = new DefaultTableModel(new Object[]{"Use", "Goal", "Category", "Repeat", "Example"}, 0) {
+        model = new DefaultTableModel(new Object[]{"Use", "Goal", "Category", "Repeat"}, 0) {
             @Override
             public Class<?> getColumnClass(int column) {
-                return column == 0 || column == 4 ? Boolean.class : String.class;
+                return column == 0 ? Boolean.class : String.class;
             }
 
             @Override
@@ -62,7 +62,7 @@ public final class BulkGoalForm extends JPanel {
             }
         };
         for (Row row : rows) {
-            model.addRow(new Object[]{false, row.title, row.category.getDisplayName(), row.schedule.toString(), row.sample});
+            model.addRow(new Object[]{false, row.title, row.category.getDisplayName(), row.schedule.toString()});
         }
         table = new JTable(model);
         DefaultTableCellRenderer textRenderer = new DefaultTableCellRenderer();
@@ -70,7 +70,6 @@ public final class BulkGoalForm extends JPanel {
         table.setDefaultRenderer(String.class, textRenderer);
         table.setRowHeight(24);
         table.getColumnModel().getColumn(0).setMaxWidth(44);
-        table.getColumnModel().getColumn(4).setMaxWidth(66);
         table.setToolTipText("Tick goals to include them in one action. Hidden selections remain selected; check the selected count before applying.");
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
         table.setRowSorter(sorter);
@@ -211,14 +210,12 @@ public final class BulkGoalForm extends JPanel {
         private final String title;
         private final GoalCategory category;
         private final RepeatSchedule schedule;
-        private final boolean sample;
 
-        public Row(Goal goal, String title, GoalCategory category, RepeatSchedule schedule, boolean sample) {
+        public Row(Goal goal, String title, GoalCategory category, RepeatSchedule schedule) {
             this.goal = goal;
             this.title = title;
             this.category = category;
             this.schedule = schedule;
-            this.sample = sample;
         }
     }
 }

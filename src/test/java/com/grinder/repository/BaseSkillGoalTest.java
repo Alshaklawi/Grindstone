@@ -49,7 +49,7 @@ public class BaseSkillGoalTest {
 
     @Test
     public void savesTargetsWithoutCarryingClientReadingsAcrossAccounts() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         BaseLevelGoal goal = (BaseLevelGoal) profile.findMatchingGoal(new BaseLevelGoal());
         goal.setTarget(80);
         goal.updateReadings(skill -> 99);

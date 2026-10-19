@@ -33,9 +33,6 @@ public final class GoalMetadata {
     private long lastObservedAt;
     @Getter
     @Setter
-    private boolean sample;
-    @Getter
-    @Setter
     private GoalCategory displayCategory;
     private RecurringGoal recurring;
     public RecurringGoal recurring() {
@@ -75,7 +72,6 @@ public final class GoalMetadata {
         deadlineAt = source.deadlineAt;
         deadlineReminder = source.deadlineReminder;
         lastObservedAt = source.lastObservedAt;
-        sample = source.sample;
         displayCategory = source.displayCategory;
         recurring = source.recurring == null ? null : source.recurring.copy();
         completions.addAll(source.completions);

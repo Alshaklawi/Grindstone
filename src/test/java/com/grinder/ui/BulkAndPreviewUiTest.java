@@ -69,7 +69,7 @@ public class BulkAndPreviewUiTest {
         SwingUtilities.invokeAndWait(() -> {
             Goal first = new CustomGoal("Alpha", "", GoalCategory.OTHER, 0, 1);
             Goal second = new CustomGoal("Beta", "", GoalCategory.OTHER, 0, 1);
-            BulkGoalForm form = new BulkGoalForm(Arrays.asList(new BulkGoalForm.Row(first, "Alpha", GoalCategory.OTHER, RepeatSchedule.NONE, false), new BulkGoalForm.Row(second, "Beta", GoalCategory.OTHER, RepeatSchedule.NONE, true)));
+            BulkGoalForm form = new BulkGoalForm(Arrays.asList(new BulkGoalForm.Row(first, "Alpha", GoalCategory.OTHER, RepeatSchedule.NONE), new BulkGoalForm.Row(second, "Beta", GoalCategory.OTHER, RepeatSchedule.NONE)));
             JTextField search = findSearch(form);
             JTable table = findTable(form);
             search.setText("Alpha");

@@ -1,5 +1,6 @@
 package com.grinder.ui.item;
 
+import com.grinder.repository.TestProfiles;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.TrackingState;
@@ -55,7 +56,7 @@ public class RoutineWorkflowTest {
     @Test
     public void routinePreviewsProduceIndependentSchedulesAndSkipDuplicates() throws Exception {
         SwingUtilities.invokeAndWait(() -> {
-            GrinderProfile profile = new GrinderProfile(42);
+            GrinderProfile profile = TestProfiles.populated(42);
             profile.replace(Collections.emptyList());
             try {
                 for (boolean weekly : new boolean[]{false, true}) {

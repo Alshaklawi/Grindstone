@@ -24,13 +24,12 @@ import static org.junit.Assert.*;
 public class LinkedGoalTest {
     @Test
     public void everyLinkedModeHasAHiddenExampleWithResolvableSources() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         Set<LinkedGoal.Mode> modes = new HashSet<>();
         for (Goal goal : profile.getGoals()) {
             if (goal instanceof LinkedGoal) {
                 LinkedGoal plan = (LinkedGoal) goal;
                 modes.add(plan.getMode());
-                assertTrue(profile.metadata(plan).isSample());
                 assertTrue(plan.getSources().stream().allMatch(id -> profile.getGoals().stream().anyMatch(source -> profile.metadata(source).getId().equals(id))));
             }
         }
@@ -147,8 +146,8 @@ public class LinkedGoalTest {
 
     @Test
     public void mergedBackupsRemapReferencesToExistingMatchingSources() {
-        GrinderProfile original = new GrinderProfile(42);
-        GrinderProfile destination = new GrinderProfile(42);
+        GrinderProfile original = TestProfiles.populated(42);
+        GrinderProfile destination = TestProfiles.populated(42);
         CustomGoal source = manual(original, "Unique source", 5, 5);
         LinkedGoal plan = new LinkedGoal("Unique plan", "", LinkedGoal.Mode.CHECKLIST, Collections.singletonList(original.metadata(source).getId()), new long[]{5}, 1);
         original.add(plan);
@@ -160,7 +159,7 @@ public class LinkedGoalTest {
     }
 
     private static GrinderProfile empty() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         profile.replace(Collections.emptyList());
         return profile;
     }

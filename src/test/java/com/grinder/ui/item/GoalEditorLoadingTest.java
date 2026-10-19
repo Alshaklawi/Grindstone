@@ -1,4 +1,5 @@
 package com.grinder.ui.item;
+import com.grinder.repository.TestProfiles;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.impl.CustomGoal;
 import com.grinder.content.goal.impl.LinkedGoal;
@@ -39,7 +40,7 @@ public class GoalEditorLoadingTest {
             };
             GoalEditorPanel form = new GoalEditorPanel(null, lookup, choices);
             try {
-                GrinderProfile profile = new GrinderProfile(42);
+                GrinderProfile profile = TestProfiles.populated(42);
                 for (Goal original : profile.getGoals()) {
                     if (original instanceof LinkedGoal) {
                         List<LinkedGoalForm.Choice> sources = new ArrayList<>();

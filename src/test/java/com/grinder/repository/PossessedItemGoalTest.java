@@ -121,7 +121,7 @@ public class PossessedItemGoalTest {
     }
     @Test
     public void profileSavesOnlyTheTargetAndKeepsDifferentItemsSeparate() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         profile.replace(Collections.emptyList());
         PossessedItemGoal coins = new PossessedItemGoal(ItemID.COINS, 3_000_000_000L);
         assertTrue(profile.add(coins));

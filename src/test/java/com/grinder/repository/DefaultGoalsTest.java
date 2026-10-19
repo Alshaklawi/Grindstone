@@ -22,7 +22,7 @@ import static org.junit.Assert.*;
 public class DefaultGoalsTest {
     @Test
     public void slayerDefaultsPreserveIndependentTargetsThroughReload() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         for (TrackerEntry entry : new TrackerEntry[]{TrackerEntry.SLAYER_POINTS, TrackerEntry.SLAYER_STREAK, TrackerEntry.SLAYER_WILDERNESS_STREAK}) {
             Goal goal = profile.findMatchingGoal(new TrackerGoal(entry, 1));
             assertNotNull(goal);
@@ -31,7 +31,7 @@ public class DefaultGoalsTest {
         }
         GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
         int size = restored.getGoals().size();
-        restored.ensureDefaultGoals(null);
+        TestProfiles.populate(restored);
         assertEquals(size, restored.getGoals().size());
         for (TrackerEntry entry : new TrackerEntry[]{TrackerEntry.SLAYER_POINTS, TrackerEntry.SLAYER_STREAK, TrackerEntry.SLAYER_WILDERNESS_STREAK}) {
             assertEquals(entry.getDefaultTarget() + 7, restored.findMatchingGoal(new TrackerGoal(entry, 1)).getProgressMaximum());
@@ -40,7 +40,7 @@ public class DefaultGoalsTest {
 
     @Test
     public void defaultsIncludeEveryRegisteredTrackerType() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         Set<Class<?>> represented = profile.getGoals().stream().map(Goal::getClass).collect(Collectors.toSet());
         assertEquals(SavedGoalTypes.registeredTypes(), represented);
         assertTrue(profile.getGoals().stream().anyMatch(goal -> goal instanceof PossessedItemGoal && ((PossessedItemGoal) goal).getItem() == ItemID.COINS && goal.getProgressMaximum() == 1_500_000_000L));
@@ -49,14 +49,14 @@ public class DefaultGoalsTest {
 
     @Test
     public void restoringDefaultsPreservesEditedExamplesAndDoesNotDuplicateThem() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         CustomGoal custom = (CustomGoal) profile.getGoals().stream().filter(goal -> goal instanceof CustomGoal).findFirst().get();
         custom.update("My own routine", "Keep these edits", GoalCategory.OTHER, 2, 20);
         PossessedItemGoal coins = (PossessedItemGoal) profile.findMatchingGoal(new PossessedItemGoal(ItemID.COINS));
         coins.setTarget(3_000_000_000L);
         int size = profile.getGoals().size();
-        profile.ensureDefaultGoals(null);
-        profile.ensureDefaultGoals(null);
+        TestProfiles.populate(profile);
+        TestProfiles.populate(profile);
         assertEquals(size, profile.getGoals().size());
         assertEquals("My own routine", custom.getTitle(null));
         assertEquals(2, custom.getProgressCurrent());
@@ -66,23 +66,23 @@ public class DefaultGoalsTest {
 
     @Test
     public void namedBossExampleDeduplicatesAgainstClientResolvedBossGoals() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         CombatAchievementBossGoal barrows = new CombatAchievementBossGoal("Barrows");
         assertFalse(profile.add(barrows));
         profile.remove(profile.findMatchingGoal(barrows));
         assertTrue(profile.add(new CombatAchievementBossGoal(123, "Barrows")));
         int size = profile.getGoals().size();
-        profile.ensureDefaultGoals(null);
+        TestProfiles.populate(profile);
         assertEquals(size, profile.getGoals().size());
     }
 
     @Test
     public void everyDefaultTypeSurvivesSavingAndReloadingWithoutExtraExamples() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
         int size = profile.getGoals().size();
         assertEquals(size, restored.getGoals().size());
-        restored.ensureDefaultGoals(null);
+        TestProfiles.populate(restored);
         assertEquals(size, restored.getGoals().size());
     }
 }

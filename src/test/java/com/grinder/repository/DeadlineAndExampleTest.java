@@ -31,12 +31,11 @@ public class DeadlineAndExampleTest {
 
     @Test
     public void savedMetadataAndCopiesKeepPersonalPresentationSettings() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         Goal goal = profile.getGoals().get(0);
         GoalMetadata metadata = profile.metadata(goal);
         metadata.setDeadline(DeadlineForm.parseDate("2026-12-31"), true);
         metadata.setDisplayCategory(GoalCategory.OTHER);
-        metadata.setSample(true);
         GoalMetadata copied = metadata.copy();
         copied.setDeadline(0, false);
         assertTrue(metadata.getDeadlineAt() > 0);
@@ -44,18 +43,7 @@ public class DeadlineAndExampleTest {
         GoalMetadata saved = restored.metadata(restored.getGoals().get(0));
         assertEquals(metadata.getDeadlineAt(), saved.getDeadlineAt());
         assertTrue(saved.isDeadlineReminder());
-        assertTrue(saved.isSample());
         assertEquals(GoalCategory.OTHER, saved.getDisplayCategory());
-    }
-
-    @Test
-    public void promotingAnExampleSurvivesRestoringDefaults() {
-        GrinderProfile profile = new GrinderProfile(42);
-        Goal example = profile.getGoals().stream().filter(goal -> goal instanceof ChecklistGoal).findFirst().get();
-        assertTrue(profile.metadata(example).isSample());
-        profile.metadata(example).setSample(false);
-        profile.ensureDefaultGoals(null);
-        assertFalse(profile.metadata(example).isSample());
     }
 
     @Test(expected = IllegalArgumentException.class)

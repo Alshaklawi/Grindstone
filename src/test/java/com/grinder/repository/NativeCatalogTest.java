@@ -32,7 +32,7 @@ public class NativeCatalogTest {
     }
     @Test
     public void dynamicCollectionPagesHaveIndependentIdentityAndSurviveReload() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         profile.replace(Collections.emptyList());
         assertTrue(profile.add(new CollectionLogEntryGoal(null, 10_000, "Test page A")));
         assertTrue(profile.add(new CollectionLogEntryGoal(null, 10_001, "Test page B")));
@@ -43,7 +43,7 @@ public class NativeCatalogTest {
     }
     @Test
     public void legacyEnumPagesStillLoadWithoutStructFields() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         profile.replace(Collections.singletonList(new CollectionLogEntryGoal(null, CollectionLogEntry.CHAMBERS_OF_XERIC)));
         JsonObject json = TestProfiles.REPOSITORY.toJson(profile);
         JsonObject data = json.getAsJsonArray("goals").get(0).getAsJsonObject().getAsJsonObject("data");

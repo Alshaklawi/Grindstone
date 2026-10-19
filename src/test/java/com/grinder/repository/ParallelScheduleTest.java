@@ -14,7 +14,7 @@ import static org.junit.Assert.*;
  */
 public class ParallelScheduleTest {
     private GrinderProfile profile() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         profile.replace(Collections.emptyList());
         return profile;
     }

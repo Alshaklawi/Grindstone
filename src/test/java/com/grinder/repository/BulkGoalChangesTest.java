@@ -20,7 +20,7 @@ import static org.junit.Assert.*;
 public class BulkGoalChangesTest {
     @Test
     public void clearingAllIncludesHiddenGoalsAndUndoRestoresPriorArchives() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         CustomGoal archived = new CustomGoal("Archived", "", GoalCategory.OTHER, 1, 1);
         profile.add(archived);
         profile.metadata(archived).observe(archived, "Archived", System.currentTimeMillis());
@@ -37,7 +37,7 @@ public class BulkGoalChangesTest {
     }
     @Test
     public void pinAndCategoryChangesCanBeUndoneAsOneOperation() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         List<Goal> selected = profile.getGoals().subList(0, 3);
         BulkGoalChanges.Change change = apply(profile, selected, BulkGoalAction.PIN);
         assertTrue(selected.stream().allMatch(goal -> profile.metadata(goal).isPinned()));
@@ -51,7 +51,7 @@ public class BulkGoalChangesTest {
 
     @Test
     public void rejectsUnsupportedScheduleBeforeChangingAnyGoal() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         CustomGoal custom = new CustomGoal("One", "", GoalCategory.OTHER, 2, 3);
         profile.add(custom);
         Goal unsupported = profile.findMatchingGoal(new BaseLevelGoal());
@@ -66,7 +66,7 @@ public class BulkGoalChangesTest {
 
     @Test
     public void deletesAndRestoresOriginalOrderAndMetadata() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         List<Goal> before = new ArrayList<>(profile.getGoals());
         List<Goal> selected = new ArrayList<>(before.subList(0, 3));
         profile.metadata(selected.get(0)).setPinned(true);
@@ -81,7 +81,7 @@ public class BulkGoalChangesTest {
 
     @Test
     public void scheduleChangeResetsManualProgressAndUndoRestoresIt() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         CustomGoal goal = new CustomGoal("Repeat", "", GoalCategory.OTHER, 2, 3);
         profile.add(goal);
         BulkGoalChanges.Change change = apply(profile, Collections.singletonList(goal), BulkGoalAction.SCHEDULE);

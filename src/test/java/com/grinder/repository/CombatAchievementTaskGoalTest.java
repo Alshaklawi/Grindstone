@@ -19,7 +19,7 @@ public class CombatAchievementTaskGoalTest {
         task.observeCompletion(true);
         assertEquals(GoalStatus.COMPLETE, task.getStatus());
         assertEquals(1, task.getProgressCurrent());
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         profile.replace(Collections.emptyList());
         assertTrue(profile.add(task));
         assertFalse(profile.add(new CombatAchievementTaskGoal(0, "Renamed task", "")));
@@ -27,7 +27,7 @@ public class CombatAchievementTaskGoalTest {
     }
     @Test
     public void taskSelectionsAndRequirementsPersistWithoutClassNames() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         profile.replace(Collections.singletonList(new CombatAchievementTaskGoal(31, "Test task", "Keep these requirements")));
         String backup = TestProfiles.REPOSITORY.exportBackup(profile);
         assertTrue(backup.contains("combat-task"));

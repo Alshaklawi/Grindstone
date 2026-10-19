@@ -124,7 +124,6 @@ import javax.swing.event.DocumentListener;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.client.callback.ClientThread;
-import net.runelite.client.config.ConfigManager;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
@@ -171,8 +170,6 @@ public class GrinderPanel extends PluginPanel {
     private final Client client;
     private final ClientThread clientThread;
     private final GrinderConfig config;
-    @Inject
-    private ConfigManager configManager;
 
     @Inject
     private ItemManager itemManager;
@@ -355,20 +352,12 @@ public class GrinderPanel extends PluginPanel {
         styleButton(addGoal);
         addGoal.setToolTipText("Create an automatic tracker or a custom goal with manual progress.");
         addGoal.addActionListener(event -> showAddGoalDialog());
-        JButton defaults = new JButton("Add defaults");
-        styleButton(defaults);
-        defaults.setToolTipText("Add missing starter goals without replacing your goals");
-        defaults.addActionListener(event -> previewDefaultGoals());
         goalActions.add(addGoal);
         JButton addLinked = new JButton("+ Linked goal");
         styleButton(addLinked);
         addLinked.setToolTipText("Create a checklist, any-of goal, milestone ladder, collection subset, recorded achievement, repeat count or prerequisite goal from existing trackers.");
         addLinked.addActionListener(event -> editLinkedGoal(profile, null));
         goalActions.add(addLinked);
-        JMenuItem restoreDefaults = new JMenuItem("Add missing default goals");
-        restoreDefaults.setToolTipText("Restore missing starter goals without replacing existing goals or edited targets.");
-        restoreDefaults.addActionListener(event -> defaults.doClick());
-        moreMenu.add(restoreDefaults);
         JMenuItem allCollectionPages = new JMenuItem("Add all collection-log pages...");
         allCollectionPages.setToolTipText("Read every page from the client's five collection-log tabs and add missing page goals.");
         allCollectionPages.addActionListener(event -> addAllCollectionPages());
@@ -389,12 +378,8 @@ public class GrinderPanel extends PluginPanel {
         routines.add(dailyRoutine);
         routines.add(weeklyRoutine);
         moreMenu.add(routines);
-        JMenuItem examples = new JMenuItem("Show / hide example goals");
-        examples.setToolTipText("Toggle demonstration goals without deleting them. Promote an example from its actions menu to keep it as a real goal.");
-        examples.addActionListener(event -> configManager.setConfiguration("grinder", "showSampleGoals", !config.showSampleGoals()));
-        moreMenu.add(examples);
         JMenuItem manage = new JMenuItem("Manage goals / bulk actions...");
-        manage.setToolTipText("Search and select several goals to pin, delete, categorize, change schedules, set deadlines or manage examples together.");
+        manage.setToolTipText("Search and select goals to pin, delete, categorize, change schedules or set deadlines.");
         manage.addActionListener(event -> showBulkManager());
         moreMenu.add(manage);
         JMenuItem clearGoals = new JMenuItem("Clear all goals...");
@@ -697,7 +682,7 @@ public class GrinderPanel extends PluginPanel {
                     completionNotifications.observe(currentProfile);
                 }
                 for (Goal goal : currentProfile.getGoals()) {
-                    if ((!config.showSampleGoals() && currentProfile.metadata(goal).isSample()) || (!config.linkedGoalsEnabled() && goal instanceof LinkedGoal)) {
+                    if (!config.linkedGoalsEnabled() && goal instanceof LinkedGoal) {
                         continue;
                     }
                     if (goal == null || (!config.collectionLogEnabled() && isCollectionLogGoal(goal)) || (!config.levelGoalsEnabled() && isLevelGoal(goal)) || (!config.experienceGoalsEnabled() && isExperienceGoal(goal)) || (!config.trackerGoalsEnabled() && goal instanceof TrackerGoal) || (!config.questGoalsEnabled() && goal.getCategory() == GoalCategory.QUEST) || (!config.diaryGoalsEnabled() && goal.getCategory() == GoalCategory.ACHIEVEMENT_DIARY) || (!config.combatAchievementGoalsEnabled() && goal.getCategory() == GoalCategory.COMBAT_ACHIEVEMENT) || (!config.ownedItemGoalsEnabled() && goal instanceof PossessedItemGoal) || (!config.customGoalsEnabled() && goal instanceof ManualGoal)) {
@@ -713,7 +698,7 @@ public class GrinderPanel extends PluginPanel {
                     if (goal instanceof ChecklistGoal) {
                         key = Arrays.asList(key, Arrays.hashCode(((ChecklistGoal) goal).getChecks()));
                     }
-                    key = Arrays.asList(key, metadata.getDeadlineAt(), metadata.getDeadlineAt() > 0 && System.currentTimeMillis() >= metadata.getDeadlineAt(), metadata.isSample(), metadata.getDisplayCategory());
+                    key = Arrays.asList(key, metadata.getDeadlineAt(), metadata.getDeadlineAt() > 0 && System.currentTimeMillis() >= metadata.getDeadlineAt(), metadata.getDisplayCategory());
                     GoalView cached = cardCache.get(goal, key);
                     if (cached != null && tracking != TrackingState.WAITING && goal.getProgressMaximum() > 0) {
                         allGoals.add(cached);
@@ -803,15 +788,6 @@ public class GrinderPanel extends PluginPanel {
                     component.setMaximumProgressChunks(config.maxProgressChunks());
                     component.setGoalActions(event -> editGoal(currentProfile, goal, title), event -> deleteGoal(currentProfile, goal, title));
                     component.addGoalAction("Deadline / reminder...", "Set a personal UTC deadline and optional reminder in Grinder's header.", event -> editDeadline(currentProfile, goal));
-                    if (metadata.isSample()) {
-                        component.addGoalAction("Use as a real goal", "Remove the example label so this goal stays visible when examples are hidden.", event -> clientThread.invokeLater(() -> {
-                            if (profile == currentProfile && currentProfile.getGoals().contains(goal)) {
-                                metadata.setSample(false);
-                                currentProfile.touch();
-                                render();
-                            }
-                        }));
-                    }
                     if (goal instanceof CustomGoal) {
                         CustomGoal custom = (CustomGoal) goal;
                         long shownCurrent = progressCurrent;
@@ -862,7 +838,7 @@ public class GrinderPanel extends PluginPanel {
                             }
                         });
                     }
-                    component.setAchievementNote(metadata.isSample() ? "Example · actions → use as a real goal" : repeating ? recurring.getSchedule() + " · " + (recurring.getBaselineAt() == 0 ? "Baseline pending" : "This period") : config.showCompletionHistory() && !metadata.getCompletions().isEmpty() && status != GoalStatus.COMPLETE ? "Previously reached · now incomplete" : null);
+                    component.setAchievementNote(repeating ? recurring.getSchedule() + " · " + (recurring.getBaselineAt() == 0 ? "Baseline pending" : "This period") : config.showCompletionHistory() && !metadata.getCompletions().isEmpty() && status != GoalStatus.COMPLETE ? "Previously reached · now incomplete" : null);
 
                     GoalView view = new GoalView( goal, component, safeTitle(goal), safeCategory(goal), status, goal.hasProgress(), progressCurrent, progressMaximum);
                     cardCache.put(goal, key, view);
@@ -873,7 +849,7 @@ public class GrinderPanel extends PluginPanel {
             String updateText = currentProfile == null ? "" : HtmlUtils.escape(currentProfile.getPlayerStorage().snapshotLabel());
             long dueCount = currentProfile == null || !config.showDeadlineReminders() ? 0 : currentProfile.getGoals().stream().filter(goal -> {
                 GoalMetadata metadata = currentProfile.metadata(goal);
-                return metadata.isDeadlineReminder() && metadata.getDeadlineAt() > 0 && metadata.getDeadlineAt() - System.currentTimeMillis() <= 86_400_000L && (config.showSampleGoals() || !metadata.isSample()) && (metadata.recurring().isActive() ? metadata.recurring().getStatus() : goal.getStatus()) != GoalStatus.COMPLETE;
+                return metadata.isDeadlineReminder() && metadata.getDeadlineAt() > 0 && metadata.getDeadlineAt() - System.currentTimeMillis() <= 86_400_000L && (metadata.recurring().isActive() ? metadata.recurring().getStatus() : goal.getStatus()) != GoalStatus.COMPLETE;
             }).count();
             SwingUtilities.invokeLater(() -> {
                 if (version != renderVersion.get()) {
@@ -894,7 +870,7 @@ public class GrinderPanel extends PluginPanel {
             layoutKey = null;
             updateSummary(new ArrayList<>());
             resultsLabel.setText("0 goals");
-            addMessage("No profile loaded", "Load a profile to view your goals.");
+            addMessage("Log in to get started", "Your goals load automatically for your logged-in character.");
             refreshPanel();
             return;
         }
@@ -969,7 +945,11 @@ public class GrinderPanel extends PluginPanel {
         }
 
         if (filteredGoals.isEmpty()) {
-            addMessage(todayMode ? "No matching routine goals" : "No matching goals", todayMode ? "Clear filters, add a recurring routine from the header menu, or choose Repeat in a supported goal's editor." : "Try another search term or clear your filters.");
+            if (currentProfile.getGoals().isEmpty()) {
+                addMessage("No goals yet", "Choose Add goal to start tracking a skill, activity, item or personal goal.");
+            } else {
+                addMessage(todayMode ? "No matching routine goals" : "No matching goals", todayMode ? "Clear filters or choose Repeat in a supported goal's editor." : "Try another search term or clear your filters.");
+            }
             refreshPanel();
             return;
         }
@@ -1590,32 +1570,6 @@ public class GrinderPanel extends PluginPanel {
         });
     }
 
-    private void previewDefaultGoals() {
-        GrinderProfile active = profile;
-        if (active == null) {
-            return;
-        }
-        clientThread.invokeLater(() -> {
-            if (profile != active) {
-                return;
-            }
-            GrinderProfile proposed = new GrinderProfile(active.getHash());
-            String summary = additionSummary(active, proposed.getGoals(), goal -> proposed.metadata(goal).recurring().getSchedule()) + "\nDemonstration goals are marked as examples and hidden by default. Show them from the header menu; promote one from its actions to keep it visible.\n";
-            SwingUtilities.invokeLater(() -> {
-                if (profile != active || JOptionPane.showConfirmDialog(this, previewPane(summary), "Preview missing default goals", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
-                    return;
-                }
-                clientThread.invokeLater(() -> {
-                    if (profile == active) {
-                        List<Goal> before = new ArrayList<>(active.getGoals());
-                        active.ensureDefaultGoals(itemManager);
-                        recordAddedUndo(active, before, "defaults");
-                        render();
-                    }
-                });
-            });
-        });
-    }
 
     private String additionSummary(GrinderProfile active, List<Goal> candidates, Function<Goal, RepeatSchedule> schedule) {
         StringBuilder rows = new StringBuilder();
@@ -2012,7 +1966,7 @@ public class GrinderPanel extends PluginPanel {
             List<BulkGoalForm.Row> rows = new ArrayList<>();
             for (Goal goal : active.getGoals()) {
                 GoalMetadata metadata = active.metadata(goal);
-                rows.add(new BulkGoalForm.Row(goal, safeTitle(goal), safeCategory(goal), metadata.recurring().getSchedule(), metadata.isSample()));
+                rows.add(new BulkGoalForm.Row(goal, safeTitle(goal), safeCategory(goal), metadata.recurring().getSchedule()));
             }
             SwingUtilities.invokeLater(() -> {
                 if (profile != active) {

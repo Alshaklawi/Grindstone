@@ -63,7 +63,7 @@ public class RecurringGoalTest {
     }
     @Test
     public void offlineGapsAreNotInventedMissesAndPersist() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         CustomGoal goal = new CustomGoal("Daily", "", GoalCategory.OTHER, 2, 5);
         profile.replace(Collections.singletonList(goal));
         RecurringGoal recurring = profile.metadata(goal).recurring();
@@ -122,7 +122,7 @@ public class RecurringGoalTest {
     }
     @Test
     public void transferredBackupsKeepSchedulesButNotAnotherPlayersPeriods() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         CustomGoal goal = new CustomGoal("Daily", "", GoalCategory.OTHER, 2, 5);
         profile.replace(Collections.singletonList(goal));
         RecurringGoal recurring = profile.metadata(goal).recurring();

@@ -27,7 +27,7 @@ public class SessionExperienceGoalTest {
 
     @Test
     public void savedConfigurationDoesNotPersistSessionReadings() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         SessionExperienceGoal goal = (SessionExperienceGoal) profile.findMatchingGoal(new SessionExperienceGoal(Skill.WOODCUTTING));
         goal.setTarget(20_000);
         goal.observeExperience(1_000_000);
@@ -40,7 +40,7 @@ public class SessionExperienceGoalTest {
 
     @Test
     public void editingTheSameSessionTargetKeepsObservedGains() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         SessionExperienceGoal source = (SessionExperienceGoal) profile.findMatchingGoal(new SessionExperienceGoal(Skill.WOODCUTTING));
         source.observeExperience(1_000_000);
         source.observeExperience(1_001_000);

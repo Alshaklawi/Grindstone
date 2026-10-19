@@ -17,7 +17,7 @@ import static org.junit.Assert.*;
 public class HistoryBrowserTest {
     @Test
     public void changingSubjectsArchivesHistoryAndUndoRestoresItsOriginalIdentity() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         CustomGoal original = new CustomGoal("Original", "", GoalCategory.OTHER, 1, 1);
         profile.replace(Collections.singletonList(original));
         profile.metadata(original).observe(original, "Original", 1000);
@@ -41,7 +41,7 @@ public class HistoryBrowserTest {
     }
     @Test
     public void deletingPreservesObservedHistoryWithoutCreatingALiveGoalLink() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         CustomGoal goal = new CustomGoal("Routine", "", GoalCategory.OTHER, 1, 1);
         profile.replace(Collections.singletonList(goal));
         profile.metadata(goal).observe(goal, "Routine", 1000);

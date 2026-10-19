@@ -25,7 +25,7 @@ import static org.junit.Assert.*;
 public class GoalManagementTest {
     @Test
     public void deletingAllGoalsSurvivesProfileReload() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         assertFalse(profile.getGoals().isEmpty());
         profile.replace(Collections.emptyList());
         GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
@@ -35,7 +35,7 @@ public class GoalManagementTest {
 
     @Test
     public void editedTargetsSurviveSerializationForEveryEditableType() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         profile.replace(Collections.emptyList());
         Goal[] goals = {new SkillLevelGoal(Skill.ATTACK), new SkillExperienceGoal(Skill.FISHING),
             new CombatLevelGoal(), new TotalLevelGoal(), new TotalExperienceGoal(),
@@ -55,7 +55,7 @@ public class GoalManagementTest {
 
     @Test
     public void oldGoalWithoutTargetUsesOriginalDefault() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         profile.replace(Collections.singletonList(new SkillLevelGoal(Skill.ATTACK)));
         JsonObject json = TestProfiles.REPOSITORY.toJson(profile);
         json.getAsJsonArray("goals").get(0).getAsJsonObject().getAsJsonObject("data").remove("target");
@@ -65,7 +65,7 @@ public class GoalManagementTest {
 
     @Test
     public void goalsSavedBeforePackageReorganizationStillLoad() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         profile.replace(Arrays.asList(new SkillLevelGoal(Skill.ATTACK), new SkillExperienceGoal(Skill.FISHING), new TotalLevelGoal(), new TotalExperienceGoal(), new CombatLevelGoal()));
         JsonObject json = TestProfiles.REPOSITORY.toJson(profile);
         for (JsonElement element : json.getAsJsonArray("goals")) {
@@ -80,7 +80,7 @@ public class GoalManagementTest {
 
     @Test
     public void addingExistingSkillFindsItInsteadOfDuplicatingIt() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         profile.replace(Collections.emptyList());
         SkillLevelGoal attack = new SkillLevelGoal(Skill.ATTACK);
         assertTrue(profile.add(attack));
@@ -93,15 +93,15 @@ public class GoalManagementTest {
 
     @Test
     public void restoringDefaultsIsExplicitAndDoesNotResetEditedTargets() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         Goal goal = profile.getGoals().stream().filter(g -> g instanceof SkillLevelGoal).findFirst().get();
         goal.setTarget(75);
         Goal deleted = profile.getGoals().get(0);
         int count = profile.getGoals().size();
         assertTrue(profile.remove(deleted));
         assertEquals(count - 1, profile.getGoals().size());
-        profile.ensureDefaultGoals(null);
-        profile.ensureDefaultGoals(null);
+        TestProfiles.populate(profile);
+        TestProfiles.populate(profile);
         assertEquals(count, profile.getGoals().size());
         assertEquals(75, goal.getProgressMaximum());
     }

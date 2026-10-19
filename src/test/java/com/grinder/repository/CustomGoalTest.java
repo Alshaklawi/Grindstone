@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
 public class CustomGoalTest {
     @Test
     public void customDetailsAndIdentitySurviveReload() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         profile.replace(Collections.emptyList());
         CustomGoal goal = new CustomGoal("  Bank supplies  ", "First line\n<plain text> & notes", GoalCategory.SKILLING, 3, 10);
         assertTrue(profile.add(goal));
@@ -31,7 +31,7 @@ public class CustomGoalTest {
 
     @Test
     public void separateCustomGoalsCanShareATitle() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         profile.replace(Collections.emptyList());
         CustomGoal first = new CustomGoal("Prepare", "Food", GoalCategory.OTHER, 0, 1);
         CustomGoal second = new CustomGoal("Prepare", "Potions", GoalCategory.OTHER, 0, 1);

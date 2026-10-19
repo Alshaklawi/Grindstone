@@ -30,7 +30,7 @@ public class CollectionLogHistoryTest {
 
     @Test
     public void observationsSurviveProfileReloadAndAttachToSingleItemGoals() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         profile.getCollectionLogHistory().record(ItemID.DRAGON_PICKAXE, 1000);
         profile.replace(Arrays.asList(new CollectionLogItemGoal(ItemID.DRAGON_PICKAXE, 1), new CollectionLogEntryGoal(null, CollectionLogEntry.VETION_AND_CALVARION)));
         GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
@@ -44,7 +44,7 @@ public class CollectionLogHistoryTest {
 
     @Test
     public void deletingGoalDoesNotEraseObservedHistory() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         profile.getCollectionLogHistory().record(ItemID.DRAGON_PICKAXE, 1000);
         profile.replace(Collections.emptyList());
         GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
@@ -57,15 +57,15 @@ public class CollectionLogHistoryTest {
 
     @Test
     public void historyIsSeparateForEachPlayer() {
-        GrinderProfile first = new GrinderProfile(42);
-        GrinderProfile second = new GrinderProfile(43);
+        GrinderProfile first = TestProfiles.populated(42);
+        GrinderProfile second = TestProfiles.populated(43);
         first.getCollectionLogHistory().record(ItemID.DRAGON_PICKAXE, 1000);
         assertFalse(second.getCollectionLogHistory().contains(ItemID.DRAGON_PICKAXE));
     }
 
     @Test
     public void legacyProfilesDoNotInventUnlockDates() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         JsonObject json = TestProfiles.REPOSITORY.toJson(profile);
         json.remove("collectionLogFirstSeen");
         GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(json);

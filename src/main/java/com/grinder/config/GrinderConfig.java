@@ -14,10 +14,6 @@ import net.runelite.client.config.Range;
  */
 @ConfigGroup("grinder")
 public interface GrinderConfig extends Config {
-    @ConfigItem(keyName = "showSampleGoals", name = "Show example goals", description = "Show demonstration goals separately marked as examples. Hide them to keep personal goals uncluttered; saved examples are retained.", section = DISPLAY_SECTION, position = 17)
-    default boolean showSampleGoals() {
-        return false;
-    }
     @ConfigItem(keyName = "showDeadlineReminders", name = "Show deadline reminders", description = "Show opted-in personal deadlines in Grinder's header within 24 hours and while past due. This is not an external notification or game reset.", section = DISPLAY_SECTION, position = 18)
     default boolean showDeadlineReminders() {
         return true;
@@ -100,7 +96,7 @@ public interface GrinderConfig extends Config {
     @ConfigSection(name = "Notifications", description = "Celebrate newly reached personal goals without repeating alerts on login or refresh.", position = 4)
     String notificationsSection = NOTIFICATIONS_SECTION;
 
-    @ConfigItem(keyName = "completionPopup", name = "Completion popup", description = "Show a non-blocking RuneLite overlay when a personal goal is newly completed. Examples and already-complete goals loaded or added are excluded.", section = NOTIFICATIONS_SECTION, position = 0)
+    @ConfigItem(keyName = "completionPopup", name = "Completion popup", description = "Show a non-blocking RuneLite overlay when a personal goal is newly completed. Already-complete goals loaded or added are excluded.", section = NOTIFICATIONS_SECTION, position = 0)
     default boolean completionPopup() {
         return true;
     }

@@ -81,12 +81,6 @@ public final class BulkGoalChanges {
                 case RESET_CATEGORY:
                     saved.setDisplayCategory(null);
                     break;
-                case EXAMPLE:
-                    saved.setSample(true);
-                    break;
-                case PERSONAL:
-                    saved.setSample(false);
-                    break;
                 case DEADLINE:
                     saved.setDeadline(deadlineAt, reminder);
                     break;

@@ -1,62 +1,35 @@
 package com.grinder.repository;
 
-import com.grinder.content.collectionlog.CollectionLogEntry;
 import com.grinder.content.collectionlog.CollectionLogHistory;
-import com.grinder.content.combatachievement.CombatAchievementTier;
-import com.grinder.content.diary.AchievementDiaryArea;
-import com.grinder.content.diary.DiaryTier;
 import com.grinder.content.goal.ClientCompletionGoal;
 import com.grinder.content.goal.Goal;
-import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.impl.ChecklistGoal;
 import com.grinder.content.goal.impl.CustomGoal;
 import com.grinder.content.goal.impl.LinkedGoal;
 import com.grinder.content.goal.impl.TrackerGoal;
-import com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierAreaGoal;
-import com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierGoal;
 import com.grinder.content.goal.impl.collectionlog.CollectionLogEntryGoal;
 import com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal;
 import com.grinder.content.goal.impl.combatachievement.CombatAchievementBossGoal;
-import com.grinder.content.goal.impl.combatachievement.CombatAchievementDifficultyGoal;
-import com.grinder.content.goal.impl.combatachievement.CombatAchievementTaskGoal;
-import com.grinder.content.goal.impl.combatachievement.CombatAchievementTierGoal;
-import com.grinder.content.goal.impl.experience.BaseExperienceGoal;
 import com.grinder.content.goal.impl.experience.SessionExperienceGoal;
 import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
-import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
 import com.grinder.content.goal.impl.item.PossessedItemGoal;
-import com.grinder.content.goal.impl.level.BaseLevelGoal;
-import com.grinder.content.goal.impl.level.CombatLevelGoal;
 import com.grinder.content.goal.impl.level.SkillLevelGoal;
-import com.grinder.content.goal.impl.level.TotalLevelGoal;
-import com.grinder.content.goal.impl.quest.QuestGoal;
-import com.grinder.content.goal.impl.quest.QuestSeriesGoal;
-import com.grinder.content.quest.QuestSeries;
 import com.grinder.content.storage.PlayerItemStorage;
-import com.grinder.content.tracker.TrackerEntry;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
 import java.util.function.Consumer;
 import lombok.Getter;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
-import net.runelite.api.Quest;
-import net.runelite.api.Skill;
-import net.runelite.api.gameval.ItemID;
 import net.runelite.client.game.ItemManager;
 
 /**
@@ -195,78 +168,6 @@ public class GrinderProfile {
 
     public GrinderProfile(long hash, ItemManager itemManager) {
         this.hash = hash;
-        initializeGoals(itemManager);
-    }
-
-    private void initializeGoals(ItemManager itemManager) {
-        ensureDefaultGoals(itemManager);
-    }
-
-    public void ensureDefaultGoals(ItemManager itemManager) {
-        Set<Goal> existingDefaults = new HashSet<>(goals);
-        for (CollectionLogEntry entry : CollectionLogEntry.values()) {
-            if (!hasCollectionEntry(entry)) {
-                goals.add(new CollectionLogEntryGoal(itemManager, entry));
-            }
-        }
-
-        for (TrackerEntry entry : TrackerEntry.values()) {
-            if (!hasTracker(entry)) {
-                goals.add(new TrackerGoal(entry, entry.getDefaultTarget()));
-            }
-        }
-
-        for (Skill skill : Skill.values()) {
-            if (!hasSkillGoal(skill)) {
-                goals.add(new SkillLevelGoal(skill));
-            }
-
-            if (!hasExperienceGoal(skill)) {
-                goals.add(new SkillExperienceGoal(skill));
-            }
-        }
-
-        if (goals.stream().noneMatch(goal -> goal instanceof CombatLevelGoal)) {
-            goals.add(new CombatLevelGoal());
-        }
-
-        if (goals.stream().noneMatch(goal -> goal instanceof TotalLevelGoal)) {
-            goals.add(new TotalLevelGoal());
-        }
-
-        if (goals.stream().noneMatch(goal -> goal instanceof TotalExperienceGoal && metadata(goal).recurring().getSchedule() == RepeatSchedule.NONE)) {
-            goals.add(new TotalExperienceGoal());
-        }
-
-        addDefaultCollectionItem(ItemID.DRAGON_PICKAXE);
-        add(new BaseLevelGoal());
-        add(new BaseExperienceGoal());
-        add(new SessionExperienceGoal(Skill.WOODCUTTING));
-        Goal sampleSource = findMatchingGoal(new SkillLevelGoal(Skill.ATTACK));
-        String linkedExampleId = UUID.nameUUIDFromBytes("grinder-default-linked-goal".getBytes(StandardCharsets.UTF_8)).toString();
-        add(new LinkedGoal(linkedExampleId, "Example: Attack milestones", "A ladder example. Edit its source and milestones, or delete it.", LinkedGoal.Mode.MILESTONES, Collections.singletonList(metadata(sampleSource).getId()), new long[]{50, 75, 99}, 1));
-        addDefaultCollectionItem(ItemID.TWISTED_BOW);
-        addDefaultCollectionItem(ItemID.JAR_OF_SPIRITS);
-        add(new PossessedItemGoal(ItemID.COINS, 1_500_000_000L));
-        add(new PossessedItemGoal(ItemID.DRAGON_PICKAXE, 1));
-        add(new CombatAchievementBossGoal("Barrows"));
-        add(new CombatAchievementDifficultyGoal(CombatAchievementTier.EASY));
-        add(new CombatAchievementTaskGoal(0, "Combat task 0", "The native task name, requirements and completion state load when logged in."));
-        String customExampleId = UUID.nameUUIDFromBytes("grinder-default-custom-goal".getBytes(StandardCharsets.UTF_8)).toString();
-        add(new CustomGoal(customExampleId, "Example: complete 10 personal challenges", "A manual tracker example. Edit its title, description, target and progress to suit your own goal.", GoalCategory.OTHER, 0, 10));
-        String checklistExampleId = UUID.nameUUIDFromBytes("grinder-default-checklist".getBytes(StandardCharsets.UTF_8)).toString();
-        add(new ChecklistGoal(checklistExampleId, "Example: personal routine", "Check steps manually. Add a repeat schedule to reset and archive this routine each period.", Arrays.asList("Choose today's activity", "Prepare supplies", "Finish the activity"), new boolean[3]));
-        add(new QuestGoal(Quest.DRAGON_SLAYER_I));
-        add(new QuestSeriesGoal(QuestSeries.ELF));
-        add(new AchievementDiaryTierAreaGoal( AchievementDiaryArea.LUMBRIDGE, DiaryTier.EASY));
-        add(new AchievementDiaryTierGoal(DiaryTier.EASY));
-        add(new CombatAchievementTierGoal( CombatAchievementTier.EASY));
-        GoalExamples.addLinkedExamples(this);
-        for (Goal goal : goals) {
-            if (!existingDefaults.contains(goal) && (goal.getTitle(null).startsWith("Example:") || goal.getTitle(null).equals("Combat task 0"))) {
-                metadata(goal).setSample(true);
-            }
-        }
         setItemManager(itemManager);
     }
 
@@ -462,29 +363,6 @@ public class GrinderProfile {
         this.goals.clear();
         this.goals.addAll(goals);
         this.goals.forEach(this::attachCollectionData);
-    }
-
-    private boolean hasCollectionEntry(CollectionLogEntry entry) {
-        return goals.stream().anyMatch(goal -> goal instanceof CollectionLogEntryGoal && ((CollectionLogEntryGoal) goal).getEntry() == entry);
-    }
-
-    private boolean hasTracker(TrackerEntry entry) {
-        return goals.stream().anyMatch(goal -> goal instanceof TrackerGoal && ((TrackerGoal) goal).getTracker() == entry && metadata(goal).recurring().getSchedule() == RepeatSchedule.NONE);
-    }
-
-    private boolean hasSkillGoal(Skill skill) {
-        return goals.stream().anyMatch(goal -> goal instanceof SkillLevelGoal && ((SkillLevelGoal) goal).getSkill() == skill);
-    }
-
-    private boolean hasExperienceGoal(Skill skill) {
-        return goals.stream().anyMatch(goal -> goal instanceof SkillExperienceGoal && ((SkillExperienceGoal) goal).getSkill() == skill && metadata(goal).recurring().getSchedule() == RepeatSchedule.NONE);
-    }
-
-    private void addDefaultCollectionItem(int itemId) {
-        boolean exists = goals.stream().anyMatch(goal -> goal instanceof CollectionLogItemGoal && ((CollectionLogItemGoal) goal).getItem() == itemId);
-        if (!exists) {
-            goals.add(new CollectionLogItemGoal(itemId, 1));
-        }
     }
 
     public void onContainerOpen(ItemContainer container) {

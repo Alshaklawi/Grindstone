@@ -13,7 +13,7 @@ public class GoalPresetsTest {
     @Test
     public void eachPackIsNonemptyFreshAndSafeToApplyTwice() {
         for (GoalPreset preset : GoalPreset.values()) {
-            GrinderProfile profile = new GrinderProfile(42);
+            GrinderProfile profile = TestProfiles.populated(42);
             profile.replace(Collections.emptyList());
             for (Goal goal : preset.createGoals()) {
                 assertTrue(profile.add(goal));

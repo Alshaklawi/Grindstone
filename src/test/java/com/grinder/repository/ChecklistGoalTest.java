@@ -21,7 +21,7 @@ import static org.junit.Assert.*;
 public class ChecklistGoalTest {
     @Test
     public void checksHaveIndependentStateAndUndoRestoresThem() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         ChecklistGoal goal = new ChecklistGoal("Supplies", "Prepare", Arrays.asList("Food", "Potions"));
         profile.add(goal);
         Consumer<Goal> undo = profile.snapshotEdit(goal);
@@ -57,7 +57,7 @@ public class ChecklistGoalTest {
 
     @Test
     public void backupKeepsSameAccountChecksAndClearsOtherAccountProgress() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         ChecklistGoal goal = (ChecklistGoal) profile.getGoals().stream().filter(item -> item instanceof ChecklistGoal).findFirst().get();
         goal.setChecked(0, true);
         String backup = TestProfiles.REPOSITORY.exportBackup(profile);

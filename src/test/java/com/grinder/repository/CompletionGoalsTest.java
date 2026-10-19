@@ -157,7 +157,7 @@ public class CompletionGoalsTest {
         });
     }
     private GrinderProfile emptyProfile() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         profile.replace(Collections.emptyList());
         return profile;
     }

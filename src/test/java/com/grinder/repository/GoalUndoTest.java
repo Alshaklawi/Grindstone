@@ -16,7 +16,7 @@ import static org.junit.Assert.*;
 public class GoalUndoTest {
     @Test
     public void restoresManualDetailsAndMetadataWithoutTouchingOtherGoals() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         CustomGoal goal = new CustomGoal("Routine", "Notes", GoalCategory.OTHER, 0, 5);
         profile.replace(Collections.singletonList(goal));
         Consumer<Goal> snapshot = profile.snapshotEdit(goal);
@@ -32,13 +32,13 @@ public class GoalUndoTest {
     }
     @Test
     public void rejectsLaterEditsOtherAccountsAndExpiredPeriods() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         GoalUndo undo = new GoalUndo();
         undo.record(profile, "edit", () -> fail("Must not run"), () -> true);
         profile.touch();
         assertFalse(undo.undo(profile));
         undo.record(profile, "edit", () -> fail("Must not run"), () -> true);
-        assertFalse(undo.undo(new GrinderProfile(42)));
+        assertFalse(undo.undo(TestProfiles.populated(42)));
         undo.record(profile, "edit", () -> fail("Must not run"), () -> false);
         assertFalse(undo.undo(profile));
     }

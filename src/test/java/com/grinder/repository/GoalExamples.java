@@ -38,7 +38,6 @@ final class GoalExamples {
         add(profile, LinkedGoal.Mode.ACHIEVED, Collections.singletonList(coins), new long[]{100_000_000}, 1);
         ChecklistGoal routine = new ChecklistGoal(id("daily-checklist"), "Example: daily personal checklist", "A manual daily routine example. The UTC period requires every step; it does not represent a game's daily reset rules.", Arrays.asList("Choose an activity", "Prepare supplies", "Complete the activity"), new boolean[3]);
         GoalMetadata metadata = new GoalMetadata();
-        metadata.setSample(true);
         metadata.recurring().configure(RepeatSchedule.DAILY, 3, System.currentTimeMillis());
         profile.add(routine, metadata);
         Goal source = profile.findMatchingGoal(routine, RepeatSchedule.DAILY);
@@ -49,7 +48,6 @@ final class GoalExamples {
         List<String> sources = goals.stream().map(goal -> profile.metadata(goal).getId()).collect(Collectors.toList());
         LinkedGoal example = new LinkedGoal(id("linked-" + mode.name()), "Example: " + mode, "A demonstration using existing source trackers. Edit its sources or use it as a real goal from its actions menu.", mode, sources, targets, required);
         GoalMetadata metadata = new GoalMetadata();
-        metadata.setSample(true);
         profile.add(example, metadata);
     }
 

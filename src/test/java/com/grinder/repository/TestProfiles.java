@@ -12,4 +12,14 @@ public final class TestProfiles {
 
     private TestProfiles() {
     }
+
+    public static GrinderProfile populated(long hash) {
+        GrinderProfile profile = new GrinderProfile(hash);
+        populate(profile);
+        return profile;
+    }
+
+    public static void populate(GrinderProfile profile) {
+        new GoalFixtures(profile).populate();
+    }
 }

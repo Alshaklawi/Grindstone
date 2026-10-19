@@ -56,7 +56,7 @@ public final class GoalCompletionNotifications {
         for (Goal goal : active.getGoals()) {
             GoalMetadata metadata = active.metadata(goal);
             RecurringGoal recurring = metadata.recurring();
-            if (metadata.isSample() || TrackingState.of(goal, recurring, true, active.getPlayerStorage().hasBankSnapshot()) == TrackingState.WAITING) {
+            if (TrackingState.of(goal, recurring, true, active.getPlayerStorage().hasBankSnapshot()) == TrackingState.WAITING) {
                 continue;
             }
             String id = metadata.getId();

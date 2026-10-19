@@ -26,7 +26,7 @@ public class GoalHistoryTest {
     }
     @Test
     public void metadataIdentityAndObservedDatesSurviveProfileReload() {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         CustomGoal goal = new CustomGoal("Routine", "", GoalCategory.OTHER, 10, 10);
         profile.replace(Collections.singletonList(goal));
         profile.metadata(goal).observe(goal, "Routine", 1000);

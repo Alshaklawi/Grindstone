@@ -41,7 +41,7 @@ public class ProfileStorageTest extends Plugin {
     }
 
     private GrinderProfile profile(long target) {
-        GrinderProfile profile = new GrinderProfile(42);
+        GrinderProfile profile = TestProfiles.populated(42);
         CustomGoal goal = new CustomGoal("Stored goal", "Keep notes", GoalCategory.OTHER, 0, target);
         profile.replace(Collections.singletonList(goal));
         profile.metadata(goal).setPinned(true);
