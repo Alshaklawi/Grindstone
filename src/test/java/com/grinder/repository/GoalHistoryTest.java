@@ -31,7 +31,7 @@ public class GoalHistoryTest {
         profile.metadata(goal).setPinned(true);
         profile.metadata(goal).setCollapsed(true);
         String id = profile.metadata(goal).getId();
-        GrinderProfile restored = GrinderRepository.fromJson(GrinderRepository.toJson(profile));
+        GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
         GoalMetadata metadata = restored.metadata(restored.getGoals().get(0));
         assertEquals(id, metadata.getId());
         assertTrue(metadata.isPinned());

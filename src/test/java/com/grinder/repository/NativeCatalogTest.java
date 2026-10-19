@@ -33,18 +33,18 @@ public class NativeCatalogTest {
         assertTrue(profile.add(new CollectionLogEntryGoal(null, 10_000, "Test page A")));
         assertTrue(profile.add(new CollectionLogEntryGoal(null, 10_001, "Test page B")));
         assertFalse(profile.add(new CollectionLogEntryGoal(null, 10_000, "Renamed test page A")));
-        GrinderProfile restored = GrinderRepository.fromJson(GrinderRepository.toJson(profile));
+        GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
         assertEquals(2, restored.getGoals().size());
         assertEquals(10_001, ((CollectionLogEntryGoal) restored.getGoals().get(1)).getPageStruct());
     }
     @Test public void legacyEnumPagesStillLoadWithoutStructFields() {
         GrinderProfile profile = new GrinderProfile(42);
         profile.replace(Collections.singletonList(new CollectionLogEntryGoal(null, CollectionLogEntry.CHAMBERS_OF_XERIC)));
-        com.google.gson.JsonObject json = GrinderRepository.toJson(profile);
+        com.google.gson.JsonObject json = TestProfiles.REPOSITORY.toJson(profile);
         com.google.gson.JsonObject data = json.getAsJsonArray("goals").get(0).getAsJsonObject().getAsJsonObject("data");
         data.remove("pageStruct");
         data.remove("pageName");
-        assertEquals(507, ((CollectionLogEntryGoal) GrinderRepository.fromJson(json).getGoals().get(0)).getPageStruct());
+        assertEquals(507, ((CollectionLogEntryGoal) TestProfiles.REPOSITORY.fromJson(json).getGoals().get(0)).getPageStruct());
     }
     @Test public void collectionLogAliasesRetainEarliestUnlockObservation() {
         CollectionLogHistory history = new CollectionLogHistory();

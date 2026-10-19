@@ -69,7 +69,7 @@ public class RecurringGoalTest {
         recurring.observe(goal, time("2026-11-01T10:00:00Z"));
         assertEquals(2, recurring.getHistory().size());
         assertEquals("Not observed", recurring.getHistory().get(1).getOutcome());
-        GrinderProfile loaded = GrinderRepository.fromJson(GrinderRepository.toJson(profile));
+        GrinderProfile loaded = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
         RecurringGoal restored = loaded.metadata(loaded.getGoals().get(0)).recurring();
         assertEquals(RepeatSchedule.DAILY, restored.getSchedule());
         assertEquals(2, restored.getHistory().size());
@@ -122,7 +122,7 @@ public class RecurringGoalTest {
         recurring.configure(RepeatSchedule.DAILY, 5, now);
         recurring.observe(goal, now);
         recurring.observe(goal, time("2026-10-20T10:00:00Z"));
-        GrinderProfile restored = GrinderRepository.importBackup(GrinderRepository.exportBackup(profile), 99);
+        GrinderProfile restored = TestProfiles.REPOSITORY.importBackup(TestProfiles.REPOSITORY.exportBackup(profile), 99);
         RecurringGoal transferred = restored.metadata(restored.getGoals().get(0)).recurring();
         assertEquals(RepeatSchedule.DAILY, transferred.getSchedule());
         assertEquals(5, transferred.getTarget());

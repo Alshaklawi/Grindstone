@@ -19,7 +19,7 @@ public class CustomGoalTest {
         profile.replace(Collections.emptyList());
         CustomGoal goal = new CustomGoal("  Bank supplies  ", "First line\n<plain text> & notes", GoalCategory.SKILLING, 3, 10);
         assertTrue(profile.add(goal));
-        CustomGoal restored = (CustomGoal) GrinderRepository.fromJson( GrinderRepository.toJson(profile)).getGoals().get(0);
+        CustomGoal restored = (CustomGoal) TestProfiles.REPOSITORY.fromJson( TestProfiles.REPOSITORY.toJson(profile)).getGoals().get(0);
         assertEquals(goal.getId(), restored.getId());
         assertEquals("Bank supplies", restored.getTitle(null));
         assertEquals(goal.getDescription(), restored.getDescription());

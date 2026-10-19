@@ -37,7 +37,7 @@ public class ParallelScheduleTest {
         GoalMetadata duplicate = new GoalMetadata();
         duplicate.recurring().configure(RepeatSchedule.DAILY, 200, 1_000);
         assertFalse(profile.add(new SkillExperienceGoal(Skill.WOODCUTTING), duplicate));
-        GrinderProfile restored = GrinderRepository.fromJson(GrinderRepository.toJson(profile));
+        GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
         assertEquals(4, restored.getGoals().size());
         assertEquals(4, profile().mergeBackup(restored));
     }

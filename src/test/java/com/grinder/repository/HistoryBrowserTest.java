@@ -40,12 +40,12 @@ public class HistoryBrowserTest {
         profile.replace(Collections.singletonList(goal));
         profile.metadata(goal).observe(goal, "Routine", 1000);
         profile.remove(goal);
-        GrinderProfile restored = GrinderRepository.fromJson(GrinderRepository.toJson(profile));
+        GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
         assertTrue(restored.getGoals().isEmpty());
         assertEquals(1, restored.archivedHistory().size());
         assertEquals(1, HistoryRecord.snapshot(restored, value -> value.getTitle(null)).size());
         assertEquals("", HistoryRecord.snapshot(restored, value -> value.getTitle(null)).get(0).goalId);
-        assertTrue(GrinderRepository.importBackup(GrinderRepository.exportBackup(profile), 99).archivedHistory().isEmpty());
+        assertTrue(TestProfiles.REPOSITORY.importBackup(TestProfiles.REPOSITORY.exportBackup(profile), 99).archivedHistory().isEmpty());
         assertTrue(profile.add(goal, profile.metadata(goal)));
         assertTrue(profile.archivedHistory().isEmpty());
     }

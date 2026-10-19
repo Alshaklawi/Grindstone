@@ -14,12 +14,11 @@ import com.grinder.content.goal.impl.level.SkillLevelGoal;
 import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
 import com.grinder.content.goal.impl.level.TotalLevelGoal;
 import com.grinder.content.goal.impl.TrackerGoal;
-import com.grinder.content.goal.impl.collectionlog.CollectionLogEntryGoal;
 import com.grinder.repository.GrinderProfile;
 import com.grinder.repository.GrinderRepository;
+import com.grinder.repository.ProfilePersistence;
 
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import javax.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +44,7 @@ import net.runelite.client.ui.NavigationButton;
  * @since 10/18/2026
  */
 @Slf4j
-@PluginDescriptor( internalName = "grinder", name = "Grinder", description = "Track collection log progress and personal goals", tags = {"collection", "goals", "tracker"} )
+@PluginDescriptor( internalName = "grinder", legacyDataDirectory = "grinder", name = "Grinder", description = "Track collection log progress and personal goals", tags = {"collection", "goals", "tracker"} )
 public class GrinderPlugin extends Plugin {
     @Inject
     private Client client;
@@ -64,21 +63,29 @@ public class GrinderPlugin extends Plugin {
 
     @Inject
     private GrinderPanel panel;
+    @Inject
+    private GrinderRepository repository;
+    @Inject
+    private ProfilePersistence persistence;
 
     private NavigationButton navigationButton;
-    private GrinderProfile profile;
+    private volatile GrinderProfile profile;
+    private final java.util.Map<Long, GrinderProfile> sessionProfiles = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.concurrent.atomic.AtomicInteger loadGeneration = new java.util.concurrent.atomic.AtomicInteger();
+    private volatile boolean running;
+    private volatile long loadingHash;
     private boolean completionProgressDirty;
     private boolean storageProgressDirty;
     private long lastRecurringRefresh;
 
     @Override
     protected void startUp() {
+        running = true;
+        loadGeneration.incrementAndGet();
+        sessionProfiles.clear();
+        persistence.configure(this::getPluginDirectory);
+        panel.setMigrationHandler(this::installMigratedProfile);
         com.grinder.content.combatachievement.CombatAchievementData.clearCache();
-        try {
-            GrinderRepository.load();
-        } catch (IOException e) {
-            log.error("Unable to load Grinder profiles", e);
-        }
 
         navigationButton = NavigationButton.builder()
                 .tooltip("Grinder")
@@ -98,6 +105,9 @@ public class GrinderPlugin extends Plugin {
 
     @Override
     protected void shutDown() {
+        running = false;
+        loadGeneration.incrementAndGet();
+        loadingHash = 0;
         if (config.saveOnShutdown()) {
             saveProfile();
         }
@@ -128,6 +138,9 @@ public class GrinderPlugin extends Plugin {
 
         if (!config.enabled()) {
             saveProfile();
+            loadGeneration.incrementAndGet();
+            loadingHash = 0;
+            profile = null;
             panel.unload();
             setNavigationVisible(false);
             return;
@@ -230,12 +243,12 @@ public class GrinderPlugin extends Plugin {
     }
 
     private boolean hasActivePlayerProfile() {
-        return config.enabled() && profile != null && client.getGameState() == GameState.LOGGED_IN && client.getLocalPlayer() != null && profile.getHash() == client.getAccountHash();
+        return running && config.enabled() && profile != null && client.getGameState() == GameState.LOGGED_IN && client.getLocalPlayer() != null && profile.getHash() == client.getAccountHash();
     }
 
     private void loadProfile() {
         clientThread.invokeLater(() -> {
-            if (!config.enabled() || client.getGameState() != GameState.LOGGED_IN) {
+            if (!running || !config.enabled() || client.getGameState() != GameState.LOGGED_IN) {
                 return true;
             }
             if (client.getLocalPlayer() == null || client.getAccountHash() == 0) {
@@ -247,42 +260,69 @@ public class GrinderPlugin extends Plugin {
     }
 
     private void loadReadyProfile() {
-        if (!config.enabled() || client.getGameState() != GameState.LOGGED_IN) {
+        if (!running || !config.enabled() || client.getGameState() != GameState.LOGGED_IN || client.getLocalPlayer() == null) {
             return;
         }
-
-        try {
-            if (profile != null && profile.getHash() != client.getAccountHash()) {
-                saveProfile();
-                profile = null;
-                panel.unload();
-            }
-            profile = GrinderRepository.load(client, itemManager);
-            profile.getPlayerStorage().reset();
-            profile.getPlayerStorage().captureLoaded(client);
-            profile.getCollectionLogHistory().observe(client.getItemContainer(net.runelite.api.gameval.InventoryID.COLLECTION_TRANSMIT));
-            for (Goal goal : profile.getGoals()) {
-                goal.refresh(client);
-            }
-            panel.load(profile);
-            setNavigationVisible(true);
-
-            log.debug("Loaded Grinder profile with {} goals", profile.getGoals().size());
-
-            for (Goal goal : profile.getGoals()) {
-                if (goal instanceof CollectionLogEntryGoal) {
-                    CollectionLogEntryGoal collectionGoal = (CollectionLogEntryGoal) goal;
-                    log.debug("Loaded collection log goal: {}", collectionGoal.getTitle(client));
-                }
-            }
-        } catch (IOException e) {
-            log.error("Unable to load Grinder profile", e);
+        long hash = client.getAccountHash();
+        if (hash == 0 || profile != null && profile.getHash() == hash || loadingHash == hash) {
+            return;
+        }
+        if (profile != null) {
+            saveProfile();
             profile = null;
             panel.unload();
         }
+        int token = loadGeneration.incrementAndGet();
+        loadingHash = 0;
+        GrinderProfile cached = sessionProfiles.get(hash);
+        if (cached != null) {
+            activateProfile(cached);
+            return;
+        }
+        loadingHash = hash;
+        panel.setStorageStatus("Loading saved profile…");
+        persistence.load(hash).whenComplete((loaded, failure) -> clientThread.invokeLater(() -> {
+            if (!running || token != loadGeneration.get() || !config.enabled() || client.getGameState() != GameState.LOGGED_IN || client.getAccountHash() != hash || client.getLocalPlayer() == null) {
+                return;
+            }
+            loadingHash = 0;
+            if (failure != null) {
+                log.warn("Unable to load Grinder profile; existing saves were not replaced", failure);
+                panel.setStorageStatus("Profile could not be loaded · saved files kept");
+                return;
+            }
+            activateProfile(loaded);
+        }));
+    }
+
+    private void activateProfile(GrinderProfile loaded) {
+        profile = loaded;
+        sessionProfiles.put(loaded.getHash(), loaded);
+        loaded.setItemManager(itemManager);
+        loaded.getPlayerStorage().reset();
+        loaded.getPlayerStorage().captureLoaded(client);
+        loaded.getCollectionLogHistory().observe(client.getItemContainer(net.runelite.api.gameval.InventoryID.COLLECTION_TRANSMIT));
+        for (Goal goal : loaded.getGoals()) {
+            goal.refresh(client);
+        }
+        panel.setStorageStatus(null);
+        panel.load(loaded);
+        log.debug("Loaded Grinder profile with {} goals", loaded.getGoals().size());
+    }
+
+    private void installMigratedProfile(GrinderProfile restored) {
+        if (!hasActivePlayerProfile() || restored.getHash() != profile.getHash()) {
+            return;
+        }
+        saveProfile();
+        loadGeneration.incrementAndGet();
+        activateProfile(restored);
+        saveProfile();
     }
 
     private void onLogout() {
+        loadGeneration.incrementAndGet();
+        loadingHash = 0;
         completionProgressDirty = false;
         storageProgressDirty = false;
         if (profile != null) {
@@ -296,15 +336,33 @@ public class GrinderPlugin extends Plugin {
     }
 
     private void saveProfile() {
-        if (profile == null) {
+        GrinderProfile active = profile;
+        if (active == null) {
             return;
         }
-
-        try {
-            GrinderRepository.save(profile);
-        } catch (IOException e) {
-            log.error("Unable to save Grinder profile", e);
-        }
+        clientThread.invoke(() -> {
+            try {
+                com.google.gson.JsonObject snapshot = repository.toJson(active);
+                if (running && profile == active) {
+                    panel.setStorageStatus("Saving profile…");
+                }
+                persistence.save(snapshot).whenComplete((ignored, failure) -> {
+                    if (failure != null) {
+                        log.warn("Unable to save Grinder profile; the previous save was retained", failure);
+                    }
+                    clientThread.invokeLater(() -> {
+                        if (running && profile == active) {
+                            panel.setStorageStatus(failure == null ? null : "Save failed · previous file retained");
+                        }
+                    });
+                });
+            } catch (RuntimeException failure) {
+                log.warn("Unable to capture Grinder profile; saved files were not changed", failure);
+                if (running && profile == active) {
+                    panel.setStorageStatus("Could not capture profile · saved files kept");
+                }
+            }
+        });
     }
 
     private void setNavigationVisible(boolean visible) {

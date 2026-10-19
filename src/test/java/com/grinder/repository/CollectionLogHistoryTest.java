@@ -31,7 +31,7 @@ public class CollectionLogHistoryTest {
         GrinderProfile profile = new GrinderProfile(42);
         profile.getCollectionLogHistory().record(ItemID.DRAGON_PICKAXE, 1000);
         profile.replace(Arrays.asList(new CollectionLogItemGoal(ItemID.DRAGON_PICKAXE, 1), new CollectionLogEntryGoal(null, CollectionLogEntry.VETION_AND_CALVARION)));
-        GrinderProfile restored = GrinderRepository.fromJson(GrinderRepository.toJson(profile));
+        GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
         assertEquals(2, restored.getGoals().size());
         assertEquals(Long.valueOf(1000), restored.getCollectionLogHistory().firstSeenAt(ItemID.DRAGON_PICKAXE));
         CollectionLogItemGoal goal = (CollectionLogItemGoal) restored.getGoals().get(0);
@@ -45,7 +45,7 @@ public class CollectionLogHistoryTest {
         GrinderProfile profile = new GrinderProfile(42);
         profile.getCollectionLogHistory().record(ItemID.DRAGON_PICKAXE, 1000);
         profile.replace(Collections.emptyList());
-        GrinderProfile restored = GrinderRepository.fromJson(GrinderRepository.toJson(profile));
+        GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
         assertTrue(restored.getGoals().isEmpty());
         CollectionLogItemGoal newGoal = new CollectionLogItemGoal(ItemID.DRAGON_PICKAXE, 1);
         assertTrue(restored.add(newGoal));
@@ -64,9 +64,9 @@ public class CollectionLogHistoryTest {
     @Test
     public void legacyProfilesDoNotInventUnlockDates() {
         GrinderProfile profile = new GrinderProfile(42);
-        com.google.gson.JsonObject json = GrinderRepository.toJson(profile);
+        com.google.gson.JsonObject json = TestProfiles.REPOSITORY.toJson(profile);
         json.remove("collectionLogFirstSeen");
-        GrinderProfile restored = GrinderRepository.fromJson(json);
+        GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(json);
         assertTrue(restored.getCollectionLogHistory().snapshot().isEmpty());
         assertEquals("Not yet observed in your collection log", restored.getCollectionLogHistory().firstSeenText(ItemID.DRAGON_PICKAXE));
     }

@@ -25,6 +25,19 @@ public final class RecurringGoal {
     private long completedAt;
     private long lastObservedAt;
     private final List<Period> history = new ArrayList<>();
+    public RecurringGoal copy() {
+        RecurringGoal copy = new RecurringGoal();
+        copy.schedule = schedule;
+        copy.target = target;
+        copy.start = start;
+        copy.baselineAt = baselineAt;
+        copy.lastValue = lastValue;
+        copy.progress = progress;
+        copy.completedAt = completedAt;
+        copy.lastObservedAt = lastObservedAt;
+        copy.history.addAll(history);
+        return copy;
+    }
 
     public static boolean supports(Goal goal) {
         return goal instanceof CustomGoal || goal instanceof TrackerGoal || goal instanceof SkillExperienceGoal || goal instanceof TotalExperienceGoal;

@@ -37,6 +37,16 @@ public final class GoalMetadata {
     public GoalMetadata() {
         id = UUID.randomUUID().toString();
     }
+    private GoalMetadata(GoalMetadata source) {
+        id = source.id;
+        pinned = source.pinned;
+        collapsed = source.collapsed;
+        recurring = source.recurring == null ? null : source.recurring.copy();
+        completions.addAll(source.completions);
+    }
+    public GoalMetadata copy() {
+        return new GoalMetadata(this);
+    }
     public String getId() {
         return id;
     }

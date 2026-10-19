@@ -25,7 +25,7 @@ public class GoalManagementTest {
         GrinderProfile profile = new GrinderProfile(42);
         assertFalse(profile.getGoals().isEmpty());
         profile.replace(Collections.emptyList());
-        GrinderProfile restored = GrinderRepository.fromJson(GrinderRepository.toJson(profile));
+        GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
         assertTrue(restored.getGoals().isEmpty());
         assertEquals(42, restored.getHash());
     }
@@ -42,7 +42,7 @@ public class GoalManagementTest {
             goals[i].setTarget(targets[i]);
             assertTrue(profile.add(goals[i]));
         }
-        GrinderProfile restored = GrinderRepository.fromJson(GrinderRepository.toJson(profile));
+        GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
         assertEquals(goals.length, restored.getGoals().size());
         for (int i = 0; i < goals.length; i++) {
             assertEquals(goals[i].getClass(), restored.getGoals().get(i).getClass());
@@ -54,9 +54,9 @@ public class GoalManagementTest {
     public void oldGoalWithoutTargetUsesOriginalDefault() {
         GrinderProfile profile = new GrinderProfile(42);
         profile.replace(Collections.singletonList(new SkillLevelGoal(Skill.ATTACK)));
-        JsonObject json = GrinderRepository.toJson(profile);
+        JsonObject json = TestProfiles.REPOSITORY.toJson(profile);
         json.getAsJsonArray("goals").get(0).getAsJsonObject().getAsJsonObject("data").remove("target");
-        GrinderProfile restored = GrinderRepository.fromJson(json);
+        GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(json);
         assertEquals(99, restored.getGoals().get(0).getProgressMaximum());
     }
 
@@ -64,7 +64,7 @@ public class GoalManagementTest {
     public void goalsSavedBeforePackageReorganizationStillLoad() {
         GrinderProfile profile = new GrinderProfile(42);
         profile.replace(java.util.Arrays.asList(new SkillLevelGoal(Skill.ATTACK), new SkillExperienceGoal(Skill.FISHING), new TotalLevelGoal(), new TotalExperienceGoal(), new CombatLevelGoal()));
-        JsonObject json = GrinderRepository.toJson(profile);
+        JsonObject json = TestProfiles.REPOSITORY.toJson(profile);
         for (com.google.gson.JsonElement element : json.getAsJsonArray("goals")) {
             JsonObject entry = element.getAsJsonObject();
             String oldClass = SavedGoalTypes.resolve(entry.get("type").getAsString()).getName()
@@ -72,7 +72,7 @@ public class GoalManagementTest {
             entry.addProperty("class", oldClass);
             entry.remove("type");
         }
-        assertEquals(5, GrinderRepository.fromJson(json).getGoals().size());
+        assertEquals(5, TestProfiles.REPOSITORY.fromJson(json).getGoals().size());
     }
 
     @Test

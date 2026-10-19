@@ -59,7 +59,7 @@ public class GrinderProfile {
         }
     }
     private void archive(Goal goal) {
-        GoalMetadata saved = GrinderRepository.copyMetadata(metadata(goal));
+        GoalMetadata saved = metadata(goal).copy();
         if (saved.getCompletions().isEmpty() && saved.recurring().getHistory().isEmpty() && saved.recurring().getBaselineAt() == 0) {
             return;
         }
@@ -76,7 +76,7 @@ public class GrinderProfile {
         revision++;
     }
     public java.util.function.Consumer<Goal> snapshotEdit(Goal original) {
-        GoalMetadata saved = GrinderRepository.copyMetadata(metadata(original));
+        GoalMetadata saved = metadata(original).copy();
         RepeatSchedule previousSchedule = saved.recurring().getSchedule();
         long undoWindow = previousSchedule.start(System.currentTimeMillis());
         long target = original.getProgressMaximum();

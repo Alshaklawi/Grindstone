@@ -41,7 +41,7 @@ public class CompletionGoalsTest {
             }
         }
         assertTrue(profile.add(new CombatAchievementBossGoal(1, "Test boss")));
-        GrinderProfile restored = GrinderRepository.fromJson(GrinderRepository.toJson(profile));
+        GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
         assertEquals(profile.getGoals().size(), restored.getGoals().size());
         for (int i = 0; i < profile.getGoals().size(); i++) {
             ClientCompletionGoal before = (ClientCompletionGoal) profile.getGoals().get(i);
@@ -117,9 +117,9 @@ public class CompletionGoalsTest {
     @Test public void invalidCompletionSelectionIsSkippedRatherThanBreakingProfile() {
         GrinderProfile profile = emptyProfile();
         profile.add(new QuestGoal(Quest.COOKS_ASSISTANT));
-        JsonObject json = GrinderRepository.toJson(profile);
+        JsonObject json = TestProfiles.REPOSITORY.toJson(profile);
         json.getAsJsonArray("goals").get(0).getAsJsonObject().getAsJsonObject("data").remove("quest");
-        assertTrue(GrinderRepository.fromJson(json).getGoals().isEmpty());
+        assertTrue(TestProfiles.REPOSITORY.fromJson(json).getGoals().isEmpty());
     }
     @Test public void pickerCreatesEveryNewGoalTypeWithoutTargetSpinnerErrors() throws Exception {
         SwingUtilities.invokeAndWait(() -> {

@@ -1,19 +1,22 @@
 package com.grinder.ui;
+
 import com.grinder.repository.GrinderProfile;
 import com.grinder.repository.GrinderRepository;
 import java.awt.Component;
-import java.io.Reader;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import javax.inject.Inject;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.util.Filepath;
+
 /**
  * @author Ayman Yassen
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
@@ -22,22 +25,37 @@ import net.runelite.client.util.Filepath;
 public final class ProfileBackupActions {
     private final ClientThread clientThread;
     private final ScheduledExecutorService executor;
+    private final GrinderRepository repository;
     private final AtomicBoolean busy = new AtomicBoolean();
     private final AtomicInteger generation = new AtomicInteger();
     private volatile Future<?> task;
-    @Inject public ProfileBackupActions(ClientThread clientThread, ScheduledExecutorService executor) {
+
+    @Inject
+    public ProfileBackupActions(ClientThread clientThread, ScheduledExecutorService executor, GrinderRepository repository) {
         this.clientThread = clientThread;
         this.executor = executor;
+        this.repository = repository;
     }
+
     public void cancel() {
         generation.incrementAndGet();
         if (task != null) {
-            task.cancel(true);
+            task.cancel(false);
             task = null;
         }
         busy.set(false);
     }
+
     public void show(Component owner, GrinderProfile active, BooleanSupplier live, Runnable refresh, boolean importing) {
+        choose(owner, active, live, refresh, importing, null);
+    }
+
+    public void migrate(Component owner, GrinderProfile active, BooleanSupplier live, Consumer<GrinderProfile> install) {
+        choose(owner, active, live, () -> {
+        }, true, install);
+    }
+
+    private void choose(Component owner, GrinderProfile active, BooleanSupplier live, Runnable refresh, boolean importing, Consumer<GrinderProfile> migration) {
         if (active == null) {
             JOptionPane.showMessageDialog(owner, "Log in before exporting or restoring a profile.");
             return;
@@ -47,7 +65,7 @@ public final class ProfileBackupActions {
             return;
         }
         int token = generation.get();
-        Filepath.Chooser chooser = new Filepath.Chooser().setAcceptsFiles().addExtensionFilter("Grinder JSON backup", "json").setDefaultExtension("json").setDialogTitle(importing ? "Import Grinder backup" : "Export Grinder backup");
+        Filepath.Chooser chooser = new Filepath.Chooser().setAcceptsFiles().addExtensionFilter("Grinder JSON profile", "json").setDefaultExtension("json").setDialogTitle(migration != null ? "Choose legacy grinder/profiles JSON" : importing ? "Import Grinder backup" : "Export Grinder backup");
         if (importing) {
             chooser.setIsOpen();
         } else {
@@ -56,8 +74,8 @@ public final class ProfileBackupActions {
         List<Filepath> selected;
         try {
             selected = chooser.showDialog(owner);
-        } catch (RuntimeException exception) {
-            fail(owner, live, token, exception);
+        } catch (RuntimeException failure) {
+            fail(owner, live, token, failure);
             return;
         }
         if (selected == null || selected.isEmpty() || !live.getAsBoolean()) {
@@ -65,37 +83,16 @@ public final class ProfileBackupActions {
             return;
         }
         Filepath file = selected.get(0);
-        if (!importing && file.exists() && JOptionPane.showConfirmDialog(owner, "Replace the selected backup file?", "Overwrite backup", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
-            busy.set(false);
-            return;
-        }
         if (importing) {
             task = executor.submit(() -> {
                 try {
-                    if (file.size() > 5_000_000) {
-                        throw new IllegalArgumentException("Backup must be smaller than 5 MB.");
-                    }
-                    StringBuilder json = new StringBuilder();
-                    try (Reader reader = file.openReader()) {
-                        char[] buffer = new char[8192];
-                        int count;
-                        while ((count = reader.read(buffer)) != -1) {
-                            if (Thread.currentThread().isInterrupted()) {
-                                return;
-                            }
-                            json.append(buffer, 0, count);
-                            if (json.length() > 5_000_000) {
-                                throw new IllegalArgumentException("Backup must be smaller than 5 MB.");
-                            }
-                        }
-                    }
-                    GrinderProfile restored = GrinderRepository.importBackup(json.toString(), active.getHash());
+                    GrinderProfile restored = migration == null ? repository.importBackup(repository.readText(file, 5_000_000), active.getHash()) : repository.readProfile(file, active.getHash());
                     SwingUtilities.invokeLater(() -> {
                         if (token != generation.get() || !live.getAsBoolean()) {
                             return;
                         }
-                        String prompt = "Merge " + restored.getGoals().size() + " saved goals? Existing matches and edited targets are kept. Observed progress from other accounts is not copied.";
-                        if (JOptionPane.showConfirmDialog(owner, prompt, "Restore missing goals", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
+                        String prompt = migration == null ? "Merge " + restored.getGoals().size() + " saved goals? Existing matches and edited targets are kept. Observed progress from other accounts is not copied." : "Replace this account's current goals with " + restored.getGoals().size() + " legacy goals and their exact targets/history?\nThe selected source file is not changed. The current profile is saved before replacement.";
+                        if (JOptionPane.showConfirmDialog(owner, prompt, migration == null ? "Restore missing goals" : "Confirm legacy migration", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
                             busy.set(false);
                             return;
                         }
@@ -103,39 +100,68 @@ public final class ProfileBackupActions {
                             if (token != generation.get() || !live.getAsBoolean()) {
                                 return;
                             }
-                            int added = active.mergeBackup(restored);
-                            refresh.run();
-                            finish(owner, live, token, added + " missing goals restored. Existing matches were kept.");
+                            if (migration != null) {
+                                migration.accept(restored);
+                                finish(owner, () -> true, token, "Legacy goals loaded; background saves are queued. The original file was kept. Check the header for save errors.");
+                            } else {
+                                int added = active.mergeBackup(restored);
+                                refresh.run();
+                                finish(owner, live, token, added + " missing goals restored. Existing matches were kept.");
+                            }
                         });
                     });
-                } catch (Exception exception) {
-                    fail(owner, live, token, exception);
+                } catch (Exception failure) {
+                    fail(owner, live, token, failure);
                 }
             });
         } else {
-            clientThread.invokeLater(() -> {
-                if (token != generation.get() || !live.getAsBoolean()) {
-                    return;
-                }
-                try {
-                    String snapshot = GrinderRepository.exportBackup(active);
-                    if (snapshot.length() > 5_000_000) {
-                        throw new IllegalArgumentException("Backup exceeds the 5 MB safety limit.");
+            task = executor.submit(() -> {
+                boolean exists = file.exists();
+                SwingUtilities.invokeLater(() -> {
+                    if (token != generation.get() || !live.getAsBoolean()) {
+                        return;
                     }
-                    task = executor.submit(() -> {
-                        try {
-                            file.write(snapshot);
-                            finish(owner, live, token, "Backup exported. Keep it private: it includes account-linked goals and history.");
-                        } catch (Exception exception) {
-                            fail(owner, live, token, exception);
-                        }
-                    });
-                } catch (Exception exception) {
-                    fail(owner, live, token, exception);
-                }
+                    if (exists && JOptionPane.showConfirmDialog(owner, "Replace the selected backup file?", "Overwrite backup", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
+                        busy.set(false);
+                        return;
+                    }
+                    export(owner, active, live, token, file, exists);
+                });
             });
         }
     }
+
+    private void export(Component owner, GrinderProfile active, BooleanSupplier live, int token, Filepath file, boolean overwrite) {
+        clientThread.invokeLater(() -> {
+            if (token != generation.get() || !live.getAsBoolean()) {
+                return;
+            }
+            try {
+                String snapshot = repository.exportBackup(active);
+                if (snapshot.length() > 5_000_000 || snapshot.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 5_000_000) {
+                    throw new IllegalArgumentException("Backup exceeds the 5 MB safety limit.");
+                }
+                task = executor.submit(() -> {
+                    if (token != generation.get()) {
+                        return;
+                    }
+                    try {
+                        if (overwrite) {
+                            file.write(snapshot, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+                        } else {
+                            file.write(snapshot, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW);
+                        }
+                        finish(owner, live, token, "Backup exported. Keep it private: it includes account-linked goals and history.");
+                    } catch (Exception failure) {
+                        fail(owner, live, token, failure);
+                    }
+                });
+            } catch (Exception failure) {
+                fail(owner, live, token, failure);
+            }
+        });
+    }
+
     private void finish(Component owner, BooleanSupplier live, int token, String message) {
         SwingUtilities.invokeLater(() -> {
             if (token != generation.get()) {
@@ -147,7 +173,8 @@ public final class ProfileBackupActions {
             }
         });
     }
-    private void fail(Component owner, BooleanSupplier live, int token, Exception exception) {
-        finish(owner, live, token, "Backup operation failed: " + exception.getMessage());
+
+    private void fail(Component owner, BooleanSupplier live, int token, Exception failure) {
+        finish(owner, live, token, "Backup operation failed: " + failure.getMessage());
     }
 }

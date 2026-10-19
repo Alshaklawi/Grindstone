@@ -151,6 +151,17 @@ public class GrinderPanel extends PluginPanel {
     private final Timer filterRenderTimer = new Timer(150, event -> render());
 
     private volatile GrinderProfile profile;
+    private volatile String storageStatus;
+    private java.util.function.Consumer<GrinderProfile> migrationHandler;
+
+    public void setMigrationHandler(java.util.function.Consumer<GrinderProfile> handler) {
+        migrationHandler = handler;
+    }
+
+    public void setStorageStatus(String status) {
+        storageStatus = status;
+        render();
+    }
     private boolean updatingFilters;
 
     @Inject
@@ -325,6 +336,15 @@ public class GrinderPanel extends PluginPanel {
         restore.setToolTipText("Merge missing goals without replacing existing targets.");
         restore.addActionListener(event -> transferBackup(true));
         moreMenu.add(restore);
+        JMenuItem migrate = new JMenuItem("Migrate legacy profile…");
+        migrate.setToolTipText("Choose an old grinder/profiles JSON file. After confirmation, restore its edited goals and history for this account; the source file is kept.");
+        migrate.addActionListener(event -> {
+            GrinderProfile active = profile;
+            if (active != null && migrationHandler != null) {
+                backupActions.migrate(this, active, () -> profile == active, migrationHandler);
+            }
+        });
+        moreMenu.add(migrate);
         JMenuItem expandAll = new JMenuItem("Expand all categories");
         expandAll.setToolTipText("Show the goal cards in every category.");
         expandAll.addActionListener(event -> setAllCategoriesCollapsed(false));
@@ -703,8 +723,8 @@ public class GrinderPanel extends PluginPanel {
                     return;
                 }
 
-                updateStatusLabel.setText("<html>" + updateText + "</html>");
-                updateStatusLabel.setVisible(config.showUpdateStatus());
+                updateStatusLabel.setText("<html>" + (storageStatus == null ? updateText : HtmlUtils.escape(storageStatus) + "<br>" + updateText) + "</html>");
+                updateStatusLabel.setVisible(config.showUpdateStatus() || storageStatus != null);
                 renderPrepared(currentProfile, allGoals);
             });
         });

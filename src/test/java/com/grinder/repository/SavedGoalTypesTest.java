@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
  */
 public class SavedGoalTypesTest {
     @Test public void newlySavedProfilesContainOnlyStableTypeTagsNotJavaClassNames() {
-        String json = GrinderRepository.exportBackup(new GrinderProfile(42));
+        String json = TestProfiles.REPOSITORY.exportBackup(new GrinderProfile(42));
         assertTrue(json.contains("\"type\""));
         assertFalse(json.contains("\"class\""));
         assertFalse(json.contains("com.grinder."));
@@ -32,13 +32,13 @@ public class SavedGoalTypesTest {
         GrinderProfile profile = new GrinderProfile(42);
         CompletionGoalChoices.create(null).values().forEach(choices -> choices.values().forEach(factory -> profile.add(factory.get())));
         profile.add(new PossessedItemGoal(ItemID.COINS, 3_000_000_000L));
-        JsonObject json = GrinderRepository.toJson(profile);
+        JsonObject json = TestProfiles.REPOSITORY.toJson(profile);
         for (int i = 0; i < profile.getGoals().size(); i++) {
             Goal goal = profile.getGoals().get(i);
             assertSame(goal.getClass(), SavedGoalTypes.resolve(SavedGoalTypes.nameOf(goal)));
             json.getAsJsonArray("goals").get(i).getAsJsonObject().addProperty("class", goal.getClass().getName());
         }
-        GrinderProfile restored = GrinderRepository.fromJson(json);
+        GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(json);
         assertEquals(profile.getGoals().size(), restored.getGoals().size());
         for (int i = 0; i < profile.getGoals().size(); i++) {
             assertEquals(profile.getGoals().get(i).getClass(), restored.getGoals().get(i).getClass());
@@ -49,8 +49,8 @@ public class SavedGoalTypesTest {
         assertNull(SavedGoalTypes.resolve("com.example.ExamplePlugin"));
         GrinderProfile profile = new GrinderProfile(42);
         profile.replace(Collections.singletonList(new PossessedItemGoal(ItemID.COINS)));
-        JsonObject json = GrinderRepository.toJson(profile);
+        JsonObject json = TestProfiles.REPOSITORY.toJson(profile);
         json.getAsJsonArray("goals").get(0).getAsJsonObject().addProperty("class", "java.lang.Runtime");
-        assertTrue(GrinderRepository.fromJson(json).getGoals().isEmpty());
+        assertTrue(TestProfiles.REPOSITORY.fromJson(json).getGoals().isEmpty());
     }
 }

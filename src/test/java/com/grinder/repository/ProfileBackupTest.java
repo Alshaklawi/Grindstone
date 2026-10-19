@@ -22,14 +22,14 @@ public class ProfileBackupTest {
     }
     @Test public void sameAccountBackupPreservesPinsHistoryAndManualProgress() {
         GrinderProfile original = completedProfile();
-        GrinderProfile restored = GrinderRepository.importBackup(GrinderRepository.exportBackup(original), 42);
+        GrinderProfile restored = TestProfiles.REPOSITORY.importBackup(TestProfiles.REPOSITORY.exportBackup(original), 42);
         assertEquals(10, restored.getGoals().get(0).getProgressCurrent());
         assertTrue(restored.metadata(restored.getGoals().get(0)).isPinned());
         assertEquals(1, restored.metadata(restored.getGoals().get(0)).getCompletions().size());
         assertTrue(restored.getCollectionLogHistory().contains(ItemID.TWISTED_BOW));
     }
     @Test public void transferringSetupDoesNotTransferAnotherCharactersProgress() {
-        GrinderProfile restored = GrinderRepository.importBackup(GrinderRepository.exportBackup(completedProfile()), 99);
+        GrinderProfile restored = TestProfiles.REPOSITORY.importBackup(TestProfiles.REPOSITORY.exportBackup(completedProfile()), 99);
         assertEquals(99, restored.getHash());
         assertEquals(0, restored.getGoals().get(0).getProgressCurrent());
         assertTrue(restored.metadata(restored.getGoals().get(0)).isPinned());
@@ -38,20 +38,20 @@ public class ProfileBackupTest {
     }
     @Test public void mergingRecoversMissingGoalsWithoutResettingEditedTargets() {
         GrinderProfile original = completedProfile();
-        String backup = GrinderRepository.exportBackup(original);
+        String backup = TestProfiles.REPOSITORY.exportBackup(original);
         CustomGoal current = (CustomGoal) original.getGoals().get(0);
         current.setTarget(20);
-        assertEquals(0, original.mergeBackup(GrinderRepository.importBackup(backup, 42)));
+        assertEquals(0, original.mergeBackup(TestProfiles.REPOSITORY.importBackup(backup, 42)));
         assertEquals(20, current.getProgressMaximum());
         original.remove(current);
-        assertEquals(1, original.mergeBackup(GrinderRepository.importBackup(backup, 42)));
+        assertEquals(1, original.mergeBackup(TestProfiles.REPOSITORY.importBackup(backup, 42)));
         assertTrue(original.metadata(original.getGoals().get(0)).isPinned());
     }
     @Test public void unsupportedGoalTypesAndFutureBackupVersionsAreRejected() {
-        com.google.gson.JsonObject json = GrinderRepository.toJson(completedProfile());
+        com.google.gson.JsonObject json = TestProfiles.REPOSITORY.toJson(completedProfile());
         json.addProperty("backupVersion", 2);
         try {
-            GrinderRepository.importBackup(json.toString(), 42);
+            TestProfiles.REPOSITORY.importBackup(json.toString(), 42);
             fail("Future version must be rejected");
         } catch (IllegalArgumentException expected) {
             assertNotNull(expected.getMessage());
@@ -59,7 +59,7 @@ public class ProfileBackupTest {
         json.addProperty("backupVersion", 1);
         json.getAsJsonArray("goals").get(0).getAsJsonObject().addProperty("class", "java.lang.Runtime");
         try {
-            GrinderRepository.importBackup(json.toString(), 42);
+            TestProfiles.REPOSITORY.importBackup(json.toString(), 42);
             fail("Unknown classes must be rejected");
         } catch (IllegalArgumentException expected) {
             assertNotNull(expected.getMessage());

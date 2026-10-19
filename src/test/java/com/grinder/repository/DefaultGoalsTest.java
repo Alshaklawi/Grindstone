@@ -54,7 +54,7 @@ public class DefaultGoalsTest {
 
     @Test public void everyDefaultTypeSurvivesSavingAndReloadingWithoutExtraExamples() {
         GrinderProfile profile = new GrinderProfile(42);
-        GrinderProfile restored = GrinderRepository.fromJson(GrinderRepository.toJson(profile));
+        GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
         int size = profile.getGoals().size();
         assertEquals(size, restored.getGoals().size());
         restored.ensureDefaultGoals(null);

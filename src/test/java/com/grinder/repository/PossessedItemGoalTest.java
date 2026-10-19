@@ -119,7 +119,7 @@ public class PossessedItemGoalTest {
         put(profile.getPlayerStorage(), InventoryID.BANK, ItemID.COINS, 1_500_000_000);
         coins.refresh(null);
         assertEquals(1_500_000_000L, coins.getProgressCurrent());
-        GrinderProfile restored = GrinderRepository.fromJson(GrinderRepository.toJson(profile));
+        GrinderProfile restored = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
         PossessedItemGoal saved = (PossessedItemGoal) restored.getGoals().get(0);
         assertEquals(3_000_000_000L, saved.getAmount());
         assertEquals(0, saved.getProgressCurrent());

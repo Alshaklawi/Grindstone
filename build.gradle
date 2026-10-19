@@ -34,6 +34,36 @@ tasks.withType(JavaCompile).configureEach {
 	options.release.set(11)
 }
 
+test {
+    systemProperty 'user.home', layout.buildDirectory.dir('test-home').get().asFile.absolutePath
+}
+
+tasks.register('checkPluginCompliance') {
+    doLast {
+        def forbidden = [
+            'constructing Gson instead of injection': /new\s+Gson(?:Builder)?\s*\(/,
+            'raw filesystem access': /\b(?:Files|Paths)\s*\.|java\.io\.(?:File|FileInputStream|FileOutputStream|FileReader|FileWriter|RandomAccessFile)\b/,
+            'unrestricted Filepath access': /Filepath\.Unchecked/,
+            'reflection': /java\.lang\.reflect|Class\.forName\s*\(/,
+            'external processes or native loading': /ProcessBuilder|Runtime\.getRuntime|System\.load(?:Library)?\s*\(/,
+            'sleep or interrupt': /Thread\.sleep\s*\(|\.interrupt\s*\(|\.cancel\s*\(\s*true\s*\)/,
+            'unapproved network client': /HttpURLConnection|java\.net\.http|new\s+OkHttpClient\s*\(/,
+            'game input or server action injection': /\b(?:Robot|ClientPacket|ServerSocket)\b|\.menuAction\s*\(|\.invokeMenuAction\s*\(|\.dispatchEvent\s*\(/,
+            'unsupported file chooser': /JFileChooser/,
+            'unsafe native access': /sun\.misc\.Unsafe|com\.sun\.jna|org\.lwjgl/
+        ]
+        fileTree('src/main/java').matching { include '**/*.java' }.each { source ->
+            forbidden.each { label, pattern ->
+                if (source.getText('UTF-8') =~ pattern) {
+                    throw new GradleException("Plugin compliance check: ${label} in ${source}")
+                }
+            }
+        }
+    }
+}
+
+check.dependsOn tasks.named('checkPluginCompliance')
+
 tasks.register('run', JavaExec) {
 	classpath = sourceSets.test.runtimeClasspath
 	mainClass = pluginMainClass

@@ -2,7 +2,6 @@
 package com.grinder.repository;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -18,21 +17,17 @@ import com.grinder.content.goal.impl.experience.SkillExperienceGoal;
 import com.grinder.content.goal.impl.experience.TotalExperienceGoal;
 import com.grinder.content.goal.impl.collectionlog.CollectionLogEntryGoal;
 import com.grinder.content.goal.impl.collectionlog.CollectionLogItemGoal;
-import net.runelite.api.Client;
-import net.runelite.client.game.ItemManager;
+import net.runelite.client.util.Filepath;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.Reader;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * @author Ayman Yassen
@@ -40,85 +35,113 @@ import java.util.stream.Stream;
  * @since 10/18/2026
  */
 @lombok.extern.slf4j.Slf4j
+@Singleton
 public final class GrinderRepository {
-    private static final Path DIRECTORY = Paths.get("grinder", "profiles");
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Map<Long, GrinderProfile> profiles = new HashMap<>();
+    public static final int MAX_PROFILE_BYTES = 20_000_000;
+    private final Gson gson;
 
-    private GrinderRepository() {
-    }
-    public static GoalMetadata copyMetadata(GoalMetadata metadata) {
-        return GoalMetadata.validated(GSON.fromJson(GSON.toJsonTree(metadata), GoalMetadata.class));
+    @Inject
+    public GrinderRepository(Gson gson) {
+        this.gson = gson.newBuilder().setPrettyPrinting().create();
     }
 
-    public static synchronized void load() throws IOException {
-        Files.createDirectories(DIRECTORY);
-        profiles.clear();
-
-        List<Path> paths;
-
-        try (Stream<Path> files = Files.list(DIRECTORY)) {
-            paths = files.filter(Files::isRegularFile)
-                    .filter(path -> path.getFileName().toString().endsWith(".json"))
-                    .collect(Collectors.toList());
+    public GrinderProfile load(Filepath directory, long hash) throws IOException {
+        requireHash(hash);
+        Filepath file = directory.joinSegment(hash + ".json");
+        Filepath recovery = directory.joinSegment(hash + ".json.bak");
+        if (!file.exists() && !recovery.exists()) {
+            return new GrinderProfile(hash);
         }
-
-        for (Path path : paths) {
-            try {
-                GrinderProfile profile = load(path);
-                profiles.put(profile.getHash(), profile);
-            } catch (RuntimeException | IOException exception) {
-                System.err.println("Failed to load goal profile " + path + ": " + exception.getMessage());
+        try {
+            return readProfile(file, hash);
+        } catch (IOException | RuntimeException failure) {
+            if (!recovery.exists()) {
+                throw new IOException("The saved profile could not be read. It has not been replaced.", failure);
             }
+            GrinderProfile restored = readProfile(recovery, hash);
+            log.warn("Recovered a Grinder profile from its previous valid save");
+            return restored;
         }
     }
 
-    public static synchronized GrinderProfile load(Client client, ItemManager itemManager) throws IOException {
-        long hash = client.getAccountHash();
-        if (client.getLocalPlayer() == null || hash == 0) {
-            throw new IllegalStateException("A logged-in player is required to load Grinder goals");
+    public GrinderProfile readProfile(Filepath file, long hash) throws IOException {
+        requireHash(hash);
+        JsonObject json = new JsonParser().parse(readText(file, MAX_PROFILE_BYTES)).getAsJsonObject();
+        if (!json.has("hash") || json.get("hash").getAsLong() != hash || !json.has("goals") || !json.get("goals").isJsonArray() || json.getAsJsonArray("goals").size() > 5000) {
+            throw new IOException("This profile does not belong to the current account or has invalid goal data.");
         }
-        GrinderProfile profile = profiles.get(hash);
-
-        if (profile == null) {
-            Files.createDirectories(DIRECTORY);
-            Path path = getPath(hash);
-            profile = Files.exists(path) ? load(path) : new GrinderProfile(hash);
-            profiles.put(hash, profile);
+        GrinderProfile profile = decode(json, true);
+        if (profile.getGoals().size() != json.getAsJsonArray("goals").size()) {
+            throw new IOException("The profile contains unsupported or invalid goals. The original file has not been changed.");
         }
-
-        profile.setItemManager(itemManager);
         return profile;
     }
 
-    public static synchronized GrinderProfile load(Client client) throws IOException {
-        return load(client, null);
+    public String readText(Filepath file, int maximum) throws IOException {
+        if (!file.isFile() || file.size() > maximum) {
+            throw new IOException("The selected file is missing or exceeds the size limit.");
+        }
+        StringBuilder text = new StringBuilder();
+        try (Reader reader = file.openReader()) {
+            char[] buffer = new char[8192];
+            int count;
+            while ((count = reader.read(buffer)) != -1) {
+                text.append(buffer, 0, count);
+                if (text.length() > maximum) {
+                    throw new IOException("The file exceeds the size limit.");
+                }
+            }
+        }
+        return text.toString();
     }
 
-    public static synchronized void save(GrinderProfile profile) throws IOException {
-        Files.createDirectories(DIRECTORY);
-
-        JsonObject json = toJson(profile);
-
-        Path destination = getPath(profile.getHash());
-        Path temporary = Files.createTempFile(DIRECTORY, "profile-", ".tmp");
-
+    public void save(Filepath directory, JsonObject snapshot) throws IOException {
+        long hash = snapshot.get("hash").getAsLong();
+        requireHash(hash);
+        String text = gson.toJson(snapshot);
+        if (text.length() > MAX_PROFILE_BYTES || text.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > MAX_PROFILE_BYTES) {
+            throw new IOException("The profile exceeds the save size limit. The previous save has not been changed.");
+        }
+        directory.createDirectories();
+        Filepath destination = directory.joinSegment(hash + ".json");
+        Filepath recovery = directory.joinSegment(hash + ".json.bak");
+        Filepath temporary = directory.createTempFile("profile-", ".tmp");
         try {
-            Files.writeString(temporary, GSON.toJson(json));
-
-            try {
-                Files.move(temporary, destination, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-            } catch (IOException exception) {
-                Files.move(temporary, destination, StandardCopyOption.REPLACE_EXISTING);
+            temporary.write(text);
+            if (destination.exists()) {
+                boolean valid = true;
+                try {
+                    readProfile(destination, hash);
+                } catch (IOException | RuntimeException failure) {
+                    valid = false;
+                }
+                if (valid) {
+                    destination.copyTo(recovery, StandardCopyOption.REPLACE_EXISTING);
+                } else {
+                    destination.copyTo(directory.joinSegment(hash + ".corrupt-" + System.currentTimeMillis() + ".json"));
+                }
             }
-
-            profiles.put(profile.getHash(), profile);
+            try {
+                temporary.moveTo(destination, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException unsupported) {
+                temporary.moveTo(destination, StandardCopyOption.REPLACE_EXISTING);
+            }
         } finally {
-            Files.deleteIfExists(temporary);
+            try {
+                temporary.deleteIfExists();
+            } catch (IOException cleanupFailure) {
+                log.debug("Unable to remove an unused Grinder save temporary file", cleanupFailure);
+            }
         }
     }
 
-    static JsonObject toJson(GrinderProfile profile) {
+    private static void requireHash(long hash) {
+        if (hash == 0) {
+            throw new IllegalArgumentException("A logged-in account is required.");
+        }
+    }
+
+    public JsonObject toJson(GrinderProfile profile) {
         JsonObject json = new JsonObject();
         json.addProperty("hash", profile.getHash());
 
@@ -127,13 +150,13 @@ public final class GrinderRepository {
         for (Goal goal : profile.getGoals()) {
             JsonObject savedGoal = new JsonObject();
             savedGoal.addProperty("type", SavedGoalTypes.nameOf(goal));
-            savedGoal.add("data", GSON.toJsonTree(goal));
-            savedGoal.add("metadata", GSON.toJsonTree(profile.metadata(goal)));
+            savedGoal.add("data", gson.toJsonTree(goal));
+            savedGoal.add("metadata", gson.toJsonTree(profile.metadata(goal)));
             savedGoals.add(savedGoal);
         }
 
         json.add("goals", savedGoals);
-        json.add("archivedHistory", GSON.toJsonTree(profile.archivedHistory()));
+        json.add("archivedHistory", gson.toJsonTree(profile.archivedHistory()));
         JsonObject observed = new JsonObject();
         profile.getCollectionLogHistory().snapshot().forEach((id, time) -> observed.addProperty(id.toString(), time));
         json.add("collectionLogFirstSeen", observed);
@@ -141,16 +164,11 @@ public final class GrinderRepository {
         return json;
     }
 
-    public static synchronized Map<Long, GrinderProfile> getProfiles() {
-        return Collections.unmodifiableMap(new HashMap<>(profiles));
+    public GrinderProfile fromJson(JsonObject json) {
+        return decode(json, false);
     }
 
-    private static GrinderProfile load(Path path) throws IOException {
-        JsonObject json = new JsonParser().parse(Files.readString(path)).getAsJsonObject();
-        return fromJson(json);
-    }
-
-    static GrinderProfile fromJson(JsonObject json) {
+    private GrinderProfile decode(JsonObject json, boolean strict) {
         long hash = json.get("hash").getAsLong();
         GrinderProfile profile = new GrinderProfile(hash);
         if (json.has("collectionLogFirstSeen") && json.get("collectionLogFirstSeen").isJsonObject()) {
@@ -158,6 +176,9 @@ public final class GrinderRepository {
                 try {
                     profile.getCollectionLogHistory().record(Integer.parseInt(observation.getKey()), observation.getValue().getAsLong());
                 } catch (RuntimeException exception) {
+                    if (strict) {
+                        throw new IllegalArgumentException("Invalid collection-log observation", exception);
+                    }
                     log.debug("Skipping an invalid collection-log observation", exception);
                 }
             }
@@ -188,20 +209,20 @@ public final class GrinderRepository {
                         if (entryElement == null || entryElement.isJsonNull()) {
                             continue;
                         }
-                        CollectionLogEntry entry = GSON.fromJson(entryElement, CollectionLogEntry.class);
+                        CollectionLogEntry entry = gson.fromJson(entryElement, CollectionLogEntry.class);
                         if (entry == null) {
                             continue;
                         }
                         goal = new CollectionLogEntryGoal(null, entry);
                     }
                 } else if (type == CustomGoal.class) {
-                    CustomGoal saved = GSON.fromJson(data, CustomGoal.class);
+                    CustomGoal saved = gson.fromJson(data, CustomGoal.class);
                     goal = new CustomGoal(saved.getId(), saved.getTitle(null), saved.getDescription(), saved.getCategory(), saved.getProgressCurrent(), saved.getProgressMaximum());
                 } else if (type == com.grinder.content.goal.impl.item.PossessedItemGoal.class) {
-                    com.grinder.content.goal.impl.item.PossessedItemGoal saved = GSON.fromJson(data, com.grinder.content.goal.impl.item.PossessedItemGoal.class);
+                    com.grinder.content.goal.impl.item.PossessedItemGoal saved = gson.fromJson(data, com.grinder.content.goal.impl.item.PossessedItemGoal.class);
                     goal = new com.grinder.content.goal.impl.item.PossessedItemGoal(saved.getItem(), saved.getAmount());
                 } else {
-                    goal = GSON.fromJson(data, type);
+                    goal = gson.fromJson(data, type);
                 }
 
                 if (goal != null) {
@@ -217,13 +238,19 @@ public final class GrinderRepository {
                     goals.add(goal);
                     if (savedGoal.has("metadata")) {
                         try {
-                            profile.restoreMetadata(goal, GSON.fromJson(savedGoal.get("metadata"), GoalMetadata.class));
+                            profile.restoreMetadata(goal, gson.fromJson(savedGoal.get("metadata"), GoalMetadata.class));
                         } catch (RuntimeException exception) {
+                            if (strict) {
+                                throw new IllegalArgumentException("Invalid goal metadata", exception);
+                            }
                             log.debug("Skipping invalid goal metadata", exception);
                         }
                     }
                 }
             } catch (RuntimeException exception) {
+                if (strict) {
+                    throw new IllegalArgumentException("Invalid saved goal", exception);
+                }
                 log.debug("Skipping an invalid saved Grinder goal", exception);
             }
         }
@@ -235,8 +262,11 @@ public final class GrinderRepository {
             }
             for (JsonElement saved : json.getAsJsonArray("archivedHistory")) {
                 try {
-                    profile.restoreArchive(GSON.fromJson(saved, GrinderProfile.ArchivedHistory.class));
+                    profile.restoreArchive(gson.fromJson(saved, GrinderProfile.ArchivedHistory.class));
                 } catch (RuntimeException exception) {
+                    if (strict) {
+                        throw new IllegalArgumentException("Invalid archived goal history", exception);
+                    }
                     log.debug("Skipping invalid archived goal history", exception);
                 }
             }
@@ -244,15 +274,12 @@ public final class GrinderRepository {
         return profile;
     }
 
-    private static Path getPath(long hash) {
-        return DIRECTORY.resolve(hash + ".json");
-    }
-    public static String exportBackup(GrinderProfile profile) {
+    public String exportBackup(GrinderProfile profile) {
         JsonObject snapshot = toJson(profile);
         snapshot.addProperty("backupVersion", 1);
-        return GSON.toJson(snapshot);
+        return gson.toJson(snapshot);
     }
-    public static GrinderProfile importBackup(String text, long targetHash) {
+    public GrinderProfile importBackup(String text, long targetHash) {
         if (text == null || text.length() > 5_000_000) {
             throw new IllegalArgumentException("Backup must be smaller than 5 MB.");
         }
@@ -286,7 +313,7 @@ public final class GrinderRepository {
                 }
             }
         }
-        GrinderProfile restored = fromJson(json);
+        GrinderProfile restored = decode(json, true);
         if (restored.getGoals().size() != json.getAsJsonArray("goals").size()) {
             throw new IllegalArgumentException("Backup contains invalid or unsupported goals. No goals were imported.");
         }

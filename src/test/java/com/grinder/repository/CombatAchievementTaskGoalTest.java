@@ -27,10 +27,10 @@ public class CombatAchievementTaskGoalTest {
     @Test public void taskSelectionsAndRequirementsPersistWithoutClassNames() {
         GrinderProfile profile = new GrinderProfile(42);
         profile.replace(Collections.singletonList(new CombatAchievementTaskGoal(31, "Test task", "Keep these requirements")));
-        String backup = GrinderRepository.exportBackup(profile);
+        String backup = TestProfiles.REPOSITORY.exportBackup(profile);
         assertTrue(backup.contains("combat-task"));
         assertFalse(backup.contains("com.grinder."));
-        CombatAchievementTaskGoal restored = (CombatAchievementTaskGoal) GrinderRepository.importBackup(backup, 42).getGoals().get(0);
+        CombatAchievementTaskGoal restored = (CombatAchievementTaskGoal) TestProfiles.REPOSITORY.importBackup(backup, 42).getGoals().get(0);
         assertEquals(31, restored.getTask());
         assertEquals("Keep these requirements", restored.getDescription());
     }

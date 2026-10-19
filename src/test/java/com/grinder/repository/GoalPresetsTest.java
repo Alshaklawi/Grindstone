@@ -23,7 +23,7 @@ public class GoalPresetsTest {
                 assertFalse(profile.add(goal));
             }
             assertEquals(count, profile.getGoals().size());
-            assertEquals(count, GrinderRepository.fromJson(GrinderRepository.toJson(profile)).getGoals().size());
+            assertEquals(count, TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile)).getGoals().size());
         }
     }
 }
