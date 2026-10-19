@@ -28,8 +28,6 @@ import java.util.function.Consumer;
 import lombok.Getter;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
-import net.runelite.api.Item;
-import net.runelite.api.ItemContainer;
 import net.runelite.client.game.ItemManager;
 
 /**
@@ -37,8 +35,8 @@ import net.runelite.client.game.ItemManager;
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
  * @since 10/18/2026
  */
-@Getter
 public class GrinderProfile {
+    @Getter
     private final long hash;
     private final List<Goal> goals = new ArrayList<>();
     private final transient Map<Goal, GoalMetadata> metadata = new IdentityHashMap<>();
@@ -153,14 +151,11 @@ public class GrinderProfile {
             }
         }
     }
-    private final List<Item> items = new ArrayList<>();
+    @Getter
     private final CollectionLogHistory collectionLogHistory = new CollectionLogHistory();
     private transient ItemManager itemManager;
+    @Getter
     private final transient PlayerItemStorage playerStorage = new PlayerItemStorage();
-
-    public PlayerItemStorage getPlayerStorage() {
-        return playerStorage;
-    }
 
     public GrinderProfile(long hash) {
         this(hash, null);
@@ -365,19 +360,6 @@ public class GrinderProfile {
         this.goals.forEach(this::attachCollectionData);
     }
 
-    public void onContainerOpen(ItemContainer container) {
-        items.clear();
-
-        if (container == null) {
-            return;
-        }
-
-        for (Item item : container.getItems()) {
-            if (item != null && item.getId() > 0 && item.getQuantity() > 0) {
-                items.add(item);
-            }
-        }
-    }
     /**
      * @author Ayman Yassen
      * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>

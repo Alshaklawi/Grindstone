@@ -9,3 +9,7 @@ nb-configuration.xml
 nbproject/
 *.class
 grinder/profiles/
+/bin/
+/out/
+/.tmp/
+/run-plugin.bat

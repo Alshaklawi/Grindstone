@@ -1,13 +1,9 @@
 package com.grinder.ui;
 
-import lombok.Getter;
 import com.grinder.GrinderPlugin;
-import lombok.NonNull;
-import net.runelite.client.util.ImageUtil;
-
-import javax.swing.ImageIcon;
 import java.awt.image.BufferedImage;
-import java.util.function.UnaryOperator;
+import lombok.Getter;
+import net.runelite.client.util.ImageUtil;
 
 /**
  * @author Ayman Yassen
@@ -23,23 +19,10 @@ public enum Icon {
     COMBAT_ACHIEVEMENT("/combat_achievement_icon.png"),
     SKILLING("/skilling.png");
 
-
-    private final String file;
     @Getter
     private final BufferedImage image;
 
     Icon(String file) {
-        this.file = file;
         this.image = ImageUtil.loadImageResource(GrinderPlugin.class, file);
-    }
-
-
-    public ImageIcon getIcon() {
-        return getIcon(UnaryOperator.identity());
-    }
-
-    public ImageIcon getIcon(@NonNull UnaryOperator<BufferedImage> func) {
-        BufferedImage img = func.apply(getImage());
-        return new ImageIcon(img);
     }
 }
