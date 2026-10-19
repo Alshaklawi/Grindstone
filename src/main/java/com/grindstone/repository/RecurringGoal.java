@@ -71,7 +71,7 @@ public final class RecurringGoal {
     }
     public void restart(long now) {
         if (!isActive()) {
-            throw new IllegalStateException("Only recurring goals have periods.");
+            throw new IllegalStateException("Only routines have periods.");
         }
         if (baselineAt > 0) {
             archive(now, "Period restarted · last observed");
@@ -153,7 +153,7 @@ public final class RecurringGoal {
 
     public void validate() {
         if (schedule == null || target < 1 || target > Integer.MAX_VALUE || start < 0 || baselineAt < 0 || lastValue < 0 || progress < 0 || completedAt < 0 || lastObservedAt < 0 || history == null || history.size() > 500) {
-            throw new IllegalArgumentException("Invalid recurring goal");
+            throw new IllegalArgumentException("Invalid routine");
         }
         for (Period period : history) {
             if (period == null || period.schedule == null || period.start < 0 || period.end <= period.start || period.progress < 0 || period.target < 1 || period.baselineAt < 0 || period.lastObservedAt < 0 || period.completedAt < 0 || period.outcome == null || period.outcome.length() > 100) {

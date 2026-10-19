@@ -89,7 +89,7 @@ public final class ItemPickerPanel extends JPanel {
         preview.setOpaque(true);
         preview.setBackground(ColorScheme.DARKER_GRAY_COLOR);
         preview.setPreferredSize(new Dimension(350, 60));
-        preview.setToolTipText("Confirm the item name, ID and icon before adding the goal.");
+        preview.setToolTipText("Confirm the item name, ID and icon before adding the milestone.");
         info.add(status, BorderLayout.NORTH);
         info.add(preview, BorderLayout.CENTER);
         add(info, BorderLayout.SOUTH);

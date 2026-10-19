@@ -33,7 +33,7 @@ public final class ChecklistGoalForm extends JPanel {
         description.setLineWrap(true);
         description.setWrapStyleWord(true);
         steps.setToolTipText("One distinct step per line, up to 100. Each step is checked manually and performs no game action.");
-        add(field("Goal name", title));
+        add(field("Milestone name", title));
         add(field("Description (optional)", new JScrollPane(description)));
         add(field("Checklist steps (one per line)", new JScrollPane(steps)));
     }

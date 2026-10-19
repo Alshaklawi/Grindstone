@@ -50,7 +50,7 @@ public final class BulkGoalForm extends JPanel {
         super(new BorderLayout(0, 10));
         this.rows = new ArrayList<>(rows);
         setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
-        model = new DefaultTableModel(new Object[]{"Use", "Goal", "Category", "Repeat"}, 0) {
+        model = new DefaultTableModel(new Object[]{"Use", "Milestone", "Category", "Repeat"}, 0) {
             @Override
             public Class<?> getColumnClass(int column) {
                 return column == 0 ? Boolean.class : String.class;
@@ -70,7 +70,7 @@ public final class BulkGoalForm extends JPanel {
         table.setDefaultRenderer(String.class, textRenderer);
         table.setRowHeight(24);
         table.getColumnModel().getColumn(0).setMaxWidth(44);
-        table.setToolTipText("Tick goals to include them in one action. Hidden selections remain selected; check the selected count before applying.");
+        table.setToolTipText("Tick milestones to include them in one action. Hidden selections remain selected; check the selected count before applying.");
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
         table.setRowSorter(sorter);
         JTextField search = new JTextField();
@@ -108,7 +108,7 @@ public final class BulkGoalForm extends JPanel {
         JButton select = new JButton("Select visible");
         JButton clear = new JButton("Clear all selections");
         select.setToolTipText("Select only rows matching the manager's current search.");
-        clear.setToolTipText("Clear every selected goal, including those hidden by the search.");
+        clear.setToolTipText("Clear every selected milestone, including those hidden by the search.");
         select.addActionListener(event -> {
             changingSelection = true;
             for (int i = 0; i < table.getRowCount(); i++) {
@@ -141,7 +141,7 @@ public final class BulkGoalForm extends JPanel {
         repeat.add(schedule);
         repeat.add(new JLabel("Period target"));
         repeat.add(periodTarget);
-        periodTarget.setToolTipText("Shared period target for XP, activity and custom goals. Checklists always require all their steps. Unsupported or duplicate schedules reject the entire action.");
+        periodTarget.setToolTipText("Shared period target for XP, activity and custom milestones. Checklists always require all their steps. Unsupported or duplicate schedules reject the entire action.");
         options.add(repeat);
         options.add(deadline);
         Runnable visibility = () -> {

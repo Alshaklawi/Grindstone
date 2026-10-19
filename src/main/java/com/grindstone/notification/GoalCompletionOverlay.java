@@ -54,7 +54,7 @@ public final class GoalCompletionOverlay extends OverlayPanel {
             return null;
         }
         panelComponent.getChildren().clear();
-        panelComponent.getChildren().add(TitleComponent.builder().text(current.size() == 1 ? "Goal complete!" : current.size() + " goals complete!").color(new Color(92, 220, 112)).build());
+        panelComponent.getChildren().add(TitleComponent.builder().text(current.size() == 1 ? "Milestone complete!" : current.size() + " milestones complete!").color(new Color(92, 220, 112)).build());
         for (String title : current.subList(0, Math.min(3, current.size()))) {
             panelComponent.getChildren().add(LineComponent.builder().left(title).leftColor(Color.WHITE).build());
         }

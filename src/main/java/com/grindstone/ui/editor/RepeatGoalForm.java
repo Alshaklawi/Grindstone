@@ -22,12 +22,12 @@ public final class RepeatGoalForm extends JPanel {
         setBorder(BorderFactory.createEmptyBorder(8, 0, 0, 0));
         JPanel fields = new JPanel(new GridLayout(0, 2, 8, 6));
         fields.setOpaque(false);
-        fields.add(new JLabel("Repeat"));
+        fields.add(new JLabel("Schedule"));
         fields.add(schedule);
         fields.add(new JLabel("Target per period"));
         fields.add(target);
         target.setEditor(new JSpinner.NumberEditor(target, "#,##0"));
-        schedule.setToolTipText("UTC resets: daily at midnight, weekly on Monday, monthly on the first. None restores lifetime progress.");
+        schedule.setToolTipText("One-time tracks a milestone. Daily, weekly and monthly schedules create routines with UTC resets.");
         target.setToolTipText("XP gained, activity completions, or manual progress required in each period. This does not change your lifetime target.");
         JLabel explanation = new JLabel("<html>UTC resets · XP and activities count gains.<br>Offline resets capture a new baseline on login.<br>Custom progress resets with each period or schedule change.<br>Changing the schedule or target archives the current period.</html>");
         explanation.setFont(FontManager.getRunescapeSmallFont());

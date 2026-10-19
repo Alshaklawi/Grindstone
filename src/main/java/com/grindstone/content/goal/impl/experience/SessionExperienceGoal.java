@@ -41,7 +41,7 @@ public final class SessionExperienceGoal implements Goal {
 
     public void validate() {
         if (!total && skill == null) {
-            throw new IllegalArgumentException("Choose a skill for the session goal.");
+            throw new IllegalArgumentException("Choose a skill for the session milestone.");
         }
         setTarget(target);
     }
@@ -104,7 +104,7 @@ public final class SessionExperienceGoal implements Goal {
 
     @Override
     public String getDescription() {
-        return "Only XP gains observed since this goal's first reading in the current login are counted. Existing XP is the baseline, not progress. Relogging, reconnecting or restarting this goal resets session progress. Session readings are not saved or imported.";
+        return "Only XP gains observed since this milestone's first reading in the current login are counted. Existing XP is the baseline, not progress. Relogging, reconnecting or restarting this milestone resets session progress. Session readings are not saved or imported.";
     }
 
     @Override

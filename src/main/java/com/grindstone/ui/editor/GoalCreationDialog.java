@@ -1,6 +1,7 @@
 package com.grindstone.ui.editor;
 
 import com.grindstone.content.goal.Goal;
+import com.grindstone.repository.RepeatSchedule;
 import com.grindstone.ui.Icon;
 import com.grindstone.ui.util.DialogPlacement;
 import com.grindstone.ui.util.UiTypography;
@@ -36,14 +37,15 @@ import net.runelite.client.ui.FontManager;
 public final class GoalCreationDialog extends JDialog {
     private final GoalEditorPanel form;
     private final JScrollPane scroll;
-    private final JButton add = new JButton("Add goal");
+    private final JButton add = new JButton("Add milestone");
     private final JTextArea error = new JTextArea(2, 28);
     private final JLabel heading = new JLabel("Track your next milestone");
     private final JLabel introduction = new JLabel("Choose a focus, set a target and make it yours.");
     private Goal result;
+    private boolean creating = true;
 
     private GoalCreationDialog(Component owner, GoalEditorPanel form) {
-        super(SwingUtilities.getWindowAncestor(owner), "Add goal", Dialog.ModalityType.APPLICATION_MODAL);
+        super(SwingUtilities.getWindowAncestor(owner), "Add milestone", Dialog.ModalityType.APPLICATION_MODAL);
         this.form = form;
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setMinimumSize(new Dimension(480, 220));
@@ -94,6 +96,7 @@ public final class GoalCreationDialog extends JDialog {
         form.addPropertyChangeListener("ready", event -> updateReady());
         form.addPropertyChangeListener("formLayout", event -> {
             error.setVisible(false);
+            updateReady();
             fitToForm();
         });
         updateReady();
@@ -101,8 +104,15 @@ public final class GoalCreationDialog extends JDialog {
     }
 
     private void updateReady() {
+        if (creating) {
+            boolean routine = form.getRepeatSchedule() != RepeatSchedule.NONE;
+            setTitle(routine ? "Add routine" : "Add milestone");
+            add.setText(routine ? "Add routine" : "Add milestone");
+            heading.setText(routine ? "Build your next routine" : "Track your next milestone");
+            introduction.setText(routine ? "Choose a schedule and make steady progress." : "Choose a focus, set a target and make it yours.");
+        }
         add.setEnabled(form.isReady());
-        add.setToolTipText(form.isReady() ? "Save this goal to the current player profile." : "Choose an available entry or select an item search result to continue.");
+        add.setToolTipText(form.isReady() ? "Save this milestone to the current player profile." : "Choose an available entry or select an item search result to continue.");
     }
 
     private void fitToForm() {
@@ -123,7 +133,7 @@ public final class GoalCreationDialog extends JDialog {
                 preview.setEditable(false);
                 preview.setLineWrap(true);
                 preview.setWrapStyleWord(true);
-                if (JOptionPane.showConfirmDialog(this, new JScrollPane(preview), "Review goal", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) {
+                if (JOptionPane.showConfirmDialog(this, new JScrollPane(preview), form.getRepeatSchedule() == RepeatSchedule.NONE ? "Review milestone" : "Review routine", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) {
                     return;
                 }
             }
@@ -143,13 +153,14 @@ public final class GoalCreationDialog extends JDialog {
     }
 
     public static Goal showDialog(Component owner, GoalEditorPanel form) {
-        return showDialog(owner, form, "Add goal", "Add goal");
+        return showDialog(owner, form, "Add milestone", "Add milestone");
     }
     public static Goal showDialog(Component owner, GoalEditorPanel form, String title, String action) {
         GoalCreationDialog dialog = new GoalCreationDialog(owner, form);
+        dialog.creating = "Add milestone".equals(action);
         dialog.setTitle(title);
         dialog.add.setText(action);
-        if (!"Add goal".equals(action)) {
+        if (!"Add milestone".equals(action)) {
             dialog.heading.setText("Update your tracker");
             dialog.introduction.setText("Adjust your selection, target or repeat schedule.");
         }

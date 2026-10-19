@@ -69,11 +69,11 @@ public final class GrindstoneRepository {
         requireHash(hash);
         JsonObject json = new JsonParser().parse(readText(file, MAX_PROFILE_BYTES)).getAsJsonObject();
         if (!json.has("hash") || json.get("hash").getAsLong() != hash || !json.has("goals") || !json.get("goals").isJsonArray() || json.getAsJsonArray("goals").size() > 5000) {
-            throw new IOException("This profile does not belong to the current account or has invalid goal data.");
+            throw new IOException("This profile does not belong to the current account or has invalid milestone data.");
         }
         GrindstoneProfile profile = decode(json, true);
         if (profile.getGoals().size() != json.getAsJsonArray("goals").size()) {
-            throw new IOException("The profile contains unsupported or invalid goals. The original file has not been changed.");
+            throw new IOException("The profile contains unsupported or invalid milestones. The original file has not been changed.");
         }
         return profile;
     }
@@ -251,33 +251,33 @@ public final class GrindstoneRepository {
                             profile.restoreMetadata(goal, gson.fromJson(savedGoal.get("metadata"), GoalMetadata.class));
                         } catch (RuntimeException exception) {
                             if (strict) {
-                                throw new IllegalArgumentException("Invalid goal metadata", exception);
+                                throw new IllegalArgumentException("Invalid milestone metadata", exception);
                             }
-                            log.debug("Skipping invalid goal metadata", exception);
+                            log.debug("Skipping invalid milestone metadata", exception);
                         }
                     }
                 }
             } catch (RuntimeException exception) {
                 if (strict) {
-                    throw new IllegalArgumentException("Invalid saved goal", exception);
+                    throw new IllegalArgumentException("Invalid saved milestone", exception);
                 }
-                log.debug("Skipping an invalid saved Grindstone goal", exception);
+                log.debug("Skipping an invalid saved Grindstone milestone", exception);
             }
         }
 
         profile.replace(goals);
         if (json.has("archivedHistory") && json.get("archivedHistory").isJsonArray()) {
             if (json.getAsJsonArray("archivedHistory").size() > 500) {
-                throw new IllegalArgumentException("Too many archived goal histories");
+                throw new IllegalArgumentException("Too many archived milestone histories");
             }
             for (JsonElement saved : json.getAsJsonArray("archivedHistory")) {
                 try {
                     profile.restoreArchive(gson.fromJson(saved, GrindstoneProfile.ArchivedHistory.class));
                 } catch (RuntimeException exception) {
                     if (strict) {
-                        throw new IllegalArgumentException("Invalid archived goal history", exception);
+                        throw new IllegalArgumentException("Invalid archived milestone history", exception);
                     }
-                    log.debug("Skipping invalid archived goal history", exception);
+                    log.debug("Skipping invalid archived milestone history", exception);
                 }
             }
         }
@@ -349,7 +349,7 @@ public final class GrindstoneRepository {
         }
         GrindstoneProfile restored = decode(json, true);
         if (restored.getGoals().size() != json.getAsJsonArray("goals").size()) {
-            throw new IllegalArgumentException("Backup contains invalid or unsupported goals. No goals were imported.");
+            throw new IllegalArgumentException("Backup contains invalid or unsupported milestones. No milestones were imported.");
         }
         return restored;
     }

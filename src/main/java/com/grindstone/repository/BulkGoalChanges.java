@@ -24,7 +24,7 @@ public final class BulkGoalChanges {
 
     public static Change apply(GrindstoneProfile profile, List<Goal> selected, BulkGoalAction action, GoalCategory category, RepeatSchedule schedule, long target, long deadlineAt, boolean reminder, long now) {
         if (selected.isEmpty() || selected.size() > 5000 || new HashSet<>(selected).size() != selected.size() || !profile.getGoals().containsAll(selected) || action == null || now <= 0) {
-            throw new IllegalArgumentException("Select existing goals before applying a bulk action.");
+            throw new IllegalArgumentException("Select existing milestones before applying a bulk action.");
         }
         if (action == BulkGoalAction.CATEGORY && category == null) {
             throw new IllegalArgumentException("Choose a category.");
@@ -39,15 +39,15 @@ public final class BulkGoalChanges {
             for (int i = 0; i < selected.size(); i++) {
                 Goal goal = selected.get(i);
                 if (!RecurringGoal.supports(goal)) {
-                    throw new IllegalArgumentException(goal.getTitle(null) + " does not support repeat schedules. No goals were changed.");
+                    throw new IllegalArgumentException(goal.getTitle(null) + " does not support repeat schedules. No milestones were changed.");
                 }
                 Goal matching = profile.findMatchingGoal(goal, schedule);
                 if (matching != null && matching != goal) {
-                    throw new IllegalArgumentException("A matching tracker already has that schedule. No goals were changed.");
+                    throw new IllegalArgumentException("A matching tracker already has that schedule. No milestones were changed.");
                 }
                 for (int j = 0; j < i; j++) {
                     if (GrindstoneProfile.sameSelection(goal, selected.get(j))) {
-                        throw new IllegalArgumentException("Two selected goals would share the same subject and schedule. No goals were changed.");
+                        throw new IllegalArgumentException("Two selected milestones would share the same subject and schedule. No milestones were changed.");
                     }
                 }
             }

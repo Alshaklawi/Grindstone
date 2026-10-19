@@ -34,6 +34,6 @@ public final class GoalTargetModels {
 
     public static void describe(JSpinner spinner) {
         SpinnerNumberModel model = (SpinnerNumberModel) spinner.getModel();
-        UiTooltips.set(spinner, String.format(Locale.ROOT, "Target range: %,d to %,d. Type a number or use the arrows. This changes your goal, not your game stats.", model.getMinimum(), model.getMaximum()));
+        UiTooltips.set(spinner, String.format(Locale.ROOT, "Target range: %,d to %,d. Type a number or use the arrows. This changes your milestone, not your game stats.", model.getMinimum(), model.getMaximum()));
     }
 }

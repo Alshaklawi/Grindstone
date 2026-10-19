@@ -83,8 +83,8 @@ public final class ProfileBackupActions {
                         if (token != generation.get() || !live.getAsBoolean()) {
                             return;
                         }
-                        String prompt = "Merge " + restored.getGoals().size() + " saved goals? Existing matches and edited targets are kept. Observed progress from other accounts is not copied.";
-                        if (JOptionPane.showConfirmDialog(DialogPlacement.owner(owner), prompt, "Restore missing goals", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
+                        String prompt = "Merge " + restored.getGoals().size() + " saved milestones? Existing matches and edited targets are kept. Observed progress from other accounts is not copied.";
+                        if (JOptionPane.showConfirmDialog(DialogPlacement.owner(owner), prompt, "Restore missing milestones", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
                             busy.set(false);
                             return;
                         }
@@ -94,7 +94,7 @@ public final class ProfileBackupActions {
                             }
                             int added = active.mergeBackup(restored);
                             refresh.run();
-                            finish(owner, live, token, added + " missing goals restored. Existing matches were kept.");
+                            finish(owner, live, token, added + " missing milestones restored. Existing matches were kept.");
                         });
                     });
                 } catch (Exception failure) {
@@ -138,7 +138,7 @@ public final class ProfileBackupActions {
                         } else {
                             file.write(snapshot, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW);
                         }
-                        finish(owner, live, token, "Backup exported. Keep it private: it includes account-linked goals and history.");
+                        finish(owner, live, token, "Backup exported. Keep it private: it includes account-linked milestones and history.");
                     } catch (Exception failure) {
                         fail(owner, live, token, failure);
                     }

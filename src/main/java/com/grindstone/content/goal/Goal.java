@@ -20,7 +20,7 @@ public interface Goal {
     }
 
     default void setTarget(long target) {
-        throw new UnsupportedOperationException("This goal tracks completion rather than a target");
+        throw new UnsupportedOperationException("This milestone tracks completion rather than a target");
     }
 
     default String getTitle(Client client) {

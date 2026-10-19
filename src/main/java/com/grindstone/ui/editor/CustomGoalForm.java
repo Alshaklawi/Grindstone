@@ -48,16 +48,16 @@ public final class CustomGoalForm extends JPanel {
         });
         current.setEditor(new JSpinner.NumberEditor(current, "#,##0"));
         target.setEditor(new JSpinner.NumberEditor(target, "#,##0"));
-        UiTooltips.set(title, "A short name for this personal goal (1 to 80 characters).");
+        UiTooltips.set(title, "A short name for this personal milestone (1 to 80 characters).");
         UiTooltips.set(description, "Optional notes, milestones or a plan (up to 2,000 characters). Descriptions are searchable.");
-        UiTooltips.set(category, "Choose where the goal appears in the sidebar. This does not change how progress is tracked.");
-        UiTooltips.set(current, "Enter your manual progress, from zero to the target. Equal to the target marks this goal complete.");
-        UiTooltips.set(target, "Set a positive target. Use 1 for a checklist goal, then change progress to 1 when finished.");
+        UiTooltips.set(category, "Choose where the milestone appears in the sidebar. This does not change how progress is tracked.");
+        UiTooltips.set(current, "Enter your manual progress, from zero to the target. Equal to the target marks this milestone complete.");
+        UiTooltips.set(target, "Set a positive target. Use 1 for a checklist milestone, then change progress to 1 when finished.");
         addField("Title (required, up to 80 characters)", title);
         addField("Description (optional, up to 2,000 characters)", notes);
         addField("Category", category);
         addField("Current progress", current);
-        targetLabel = addField("Target (use 1 for a simple checklist goal)", target);
+        targetLabel = addField("Target (use 1 for a simple checklist milestone)", target);
     }
 
     private JLabel addField(String text, JComponent field) {

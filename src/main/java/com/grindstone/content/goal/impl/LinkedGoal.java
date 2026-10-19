@@ -42,7 +42,7 @@ public final class LinkedGoal implements Goal {
     private transient long current;
     @Getter
     private transient boolean available;
-    private transient String details = "Waiting for source goals.";
+    private transient String details = "Waiting for source milestones.";
     private transient boolean started;
 
     public LinkedGoal(String title, String description, Mode mode, List<String> sources, long[] targets, int required) {
@@ -64,7 +64,7 @@ public final class LinkedGoal implements Goal {
     public void validate() {
         UUID.fromString(id);
         if (title == null || title.trim().isEmpty() || title.length() > 80 || description == null || description.length() > 2000 || mode == null || sources == null || sources.isEmpty() || sources.size() > 100 || targets == null || targets.length == 0 || targets.length > 100 || required < 1 || required > 1_000_000 || achieved == null || achieved.length != sources.size() || completedThrough == null || completedThrough.size() > RepeatSchedule.values().length || completedPeriods < 0) {
-            throw new IllegalArgumentException("Invalid linked goal settings.");
+            throw new IllegalArgumentException("Invalid linked milestone settings.");
         }
         for (String source : sources) {
             UUID.fromString(source);
@@ -74,13 +74,13 @@ public final class LinkedGoal implements Goal {
         }
         if (mode == Mode.MILESTONES || mode == Mode.REPEAT_COMPLETIONS) {
             if (sources.size() != 1) {
-                throw new IllegalArgumentException("This goal needs exactly one source.");
+                throw new IllegalArgumentException("This milestone needs exactly one source.");
             }
         } else if (targets.length != sources.size() || required > sources.size()) {
-            throw new IllegalArgumentException("Choose a valid number of source goals.");
+            throw new IllegalArgumentException("Choose a valid number of source milestones.");
         }
         if (mode == Mode.REPEAT_COMPLETIONS && targets.length != 1 || mode == Mode.DEPENDENCY && sources.size() < 2) {
-            throw new IllegalArgumentException("Choose one repeat source, or a main goal plus at least one prerequisite.");
+            throw new IllegalArgumentException("Choose one repeat source, or a main milestone plus at least one prerequisite.");
         }
         long previous = 0;
         for (long target : targets) {
@@ -118,7 +118,7 @@ public final class LinkedGoal implements Goal {
             Goal source = sourceIndex.get(sourceId);
             if (source == null) {
                 available = false;
-                text.append("Missing source · restore it or edit this goal.\n");
+                text.append("Missing source · restore it or edit this milestone.\n");
                 continue;
             }
             GoalMetadata metadata = profile.metadata(source);
@@ -168,7 +168,7 @@ public final class LinkedGoal implements Goal {
             available = true;
         }
         if (mode == Mode.DEPENDENCY && !prerequisites) {
-            text.insert(0, "Prerequisites pending. This only gates the personal goal, not gameplay.\n");
+            text.insert(0, "Prerequisites pending. This only gates the personal milestone, not gameplay.\n");
         }
         details = text.toString().trim();
     }
@@ -239,7 +239,7 @@ public final class LinkedGoal implements Goal {
 
     @Override
     public String getDescription() {
-        return (description.isEmpty() ? "" : description + "\n") + mode + "\n" + (details == null ? "Waiting for source goals." : details);
+        return (description.isEmpty() ? "" : description + "\n") + mode + "\n" + (details == null ? "Waiting for source milestones." : details);
     }
 
     @Override
@@ -274,12 +274,12 @@ public final class LinkedGoal implements Goal {
      */
     public enum Mode {
         CHECKLIST("All-of checklist"),
-        ANY_OF("Any-of goal"),
+        ANY_OF("Any-of milestone"),
         MILESTONES("Milestone ladder"),
         COLLECTION_SET("Selected collection items"),
         ACHIEVED("Spending-safe achievements"),
         REPEAT_COMPLETIONS("Completed recurring periods"),
-        DEPENDENCY("Goal with prerequisites");
+        DEPENDENCY("Milestone with prerequisites");
 
         private final String label;
 

@@ -33,7 +33,7 @@ public final class HistoryBrowserPanel extends JPanel {
     private final JTextField to = new JTextField();
     private final JComboBox<String> schedule = new JComboBox<>(new String[]{"All schedules", "Lifetime", "Daily", "Weekly", "Monthly"});
     private final JLabel summary = new JLabel();
-    private final DefaultTableModel model = new DefaultTableModel(new String[]{"Goal", "Schedule", "Period start", "Period end", "Progress", "Target", "Outcome", "Baseline", "Last observed", "Completed"}, 0) {
+    private final DefaultTableModel model = new DefaultTableModel(new String[]{"Milestone", "Schedule", "Period start", "Period end", "Progress", "Target", "Outcome", "Baseline", "Last observed", "Completed"}, 0) {
         @Override
         public boolean isCellEditable(int row, int column) {
             return false;
@@ -50,14 +50,14 @@ public final class HistoryBrowserPanel extends JPanel {
         this.records = new ArrayList<>(records);
         setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
         JPanel filters = new JPanel(new GridLayout(2, 4, 8, 4));
-        for (String label : new String[]{"Search goals / outcomes", "Schedule", "From (yyyy-mm-dd UTC)", "Through (yyyy-mm-dd UTC)"}) {
+        for (String label : new String[]{"Search milestones / outcomes", "Schedule", "From (yyyy-mm-dd UTC)", "Through (yyyy-mm-dd UTC)"}) {
             filters.add(new JLabel(label));
         }
         filters.add(search);
         filters.add(schedule);
         filters.add(from);
         filters.add(to);
-        search.setToolTipText("Filter goal titles and period outcomes.");
+        search.setToolTipText("Filter milestone titles and period outcomes.");
         from.setToolTipText("Optional inclusive UTC date; periods overlapping this range are included.");
         to.setToolTipText("Optional inclusive UTC date. Leave blank for no upper date limit.");
         table.setFont(FontManager.getRunescapeFont());
@@ -75,9 +75,9 @@ public final class HistoryBrowserPanel extends JPanel {
                 setText(value == null ? "—" : String.format(Locale.ROOT, "%,d", value));
             }
         });
-        JButton open = new JButton("Go to selected goal");
+        JButton open = new JButton("Show selected");
         open.setEnabled(false);
-        open.setToolTipText("Close history and reveal the selected goal in the sidebar.");
+        open.setToolTipText("Close history and reveal the selected milestone in the sidebar.");
         table.getSelectionModel().addListSelectionListener(event -> open.setEnabled(table.getSelectedRow() >= 0 && !shown.get(table.convertRowIndexToModel(table.getSelectedRow())).goalId.isEmpty()));
         open.addActionListener(event -> {
             if (table.getSelectedRow() >= 0) {

@@ -75,7 +75,7 @@ public class GrindstoneProfile {
         if (saved.getCompletions().isEmpty() && saved.recurring().getHistory().isEmpty() && saved.recurring().getBaselineAt() == 0) {
             return;
         }
-        saved.recurring().stop(System.currentTimeMillis(), "Goal archived · last observed");
+        saved.recurring().stop(System.currentTimeMillis(), "Milestone archived · last observed");
         archivedHistory.put(saved.getId(), new ArchivedHistory(goal.getTitle(null), saved));
         while (archivedHistory.size() > 500) {
             archivedHistory.remove(archivedHistory.keySet().iterator().next());
@@ -102,7 +102,7 @@ public class GrindstoneProfile {
             }
             int index = goals.indexOf(replacement);
             if (index < 0) {
-                throw new IllegalStateException("The edited goal no longer exists.");
+                throw new IllegalStateException("The edited milestone no longer exists.");
             }
             if (custom != null) {
                 custom.update(manual.getTitle(null), manual.getDescription(), manual.getCategory(), manual.getProgressCurrent(), manual.getProgressMaximum());
@@ -278,7 +278,7 @@ public class GrindstoneProfile {
         }
         for (Goal goal : goals) {
             if (goal != original && sameGoal(goal, replacement) && metadata(goal).recurring().getSchedule() == schedule) {
-                throw new IllegalArgumentException("That tracker and schedule are already tracked. Edit the existing goal instead.");
+                throw new IllegalArgumentException("That tracker and schedule are already tracked. Edit the existing milestone instead.");
             }
         }
         GoalMetadata old = metadata(original);
@@ -302,14 +302,14 @@ public class GrindstoneProfile {
         Map<String, Goal> byId = new HashMap<>();
         for (Goal goal : goals) {
             if (byId.put(metadata(goal).getId(), goal) != null) {
-                throw new IllegalArgumentException("Duplicate goal metadata ID.");
+                throw new IllegalArgumentException("Duplicate milestone metadata ID.");
             }
         }
         for (Goal goal : goals) {
             if (goal instanceof LinkedGoal) {
                 for (String source : ((LinkedGoal) goal).getSources()) {
                     if (byId.get(source) instanceof LinkedGoal) {
-                        throw new IllegalArgumentException("Linked goals cannot reference other linked goals.");
+                        throw new IllegalArgumentException("Linked milestones cannot reference other linked milestones.");
                     }
                 }
             }

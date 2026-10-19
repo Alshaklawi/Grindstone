@@ -88,7 +88,7 @@ import net.runelite.client.util.Text;
  * @since 10/18/2026
  */
 @Slf4j
-@PluginDescriptor( internalName = "grindstone", name = "Grindstone", description = "Track collection log progress and personal goals", tags = {"collection", "goals", "tracker"} )
+@PluginDescriptor( internalName = "grindstone", name = "Grindstone", description = "Track milestones, collection log unlocks and personal routines", tags = {"collection", "milestones", "routines", "goals", "tracker"} )
 public class GrindstonePlugin extends Plugin {
     @Inject
     private Client client;
@@ -239,8 +239,8 @@ public class GrindstonePlugin extends Plugin {
             if (config.skillGoalMenu() && original.getIdentifier() == 1) {
                 Skill skill = SkillWidgets.skillFor(original.getParam1());
                 if (skill != null) {
-                    addSkillGoalOption("Add level goal", skill.getName(), () -> new SkillLevelGoal(skill), false);
-                    addSkillGoalOption("Add XP goal", skill.getName(), () -> new SkillExperienceGoal(skill), true);
+                    addSkillGoalOption("Set level milestone", skill.getName(), () -> new SkillLevelGoal(skill), false);
+                    addSkillGoalOption("Set XP milestone", skill.getName(), () -> new SkillExperienceGoal(skill), true);
                 }
             }
             return;
@@ -258,8 +258,12 @@ public class GrindstonePlugin extends Plugin {
         }
         final int selectedItem = itemId;
         final String selectedName = Text.removeTags(original.getTarget()).trim();
+        String option = selectedItem > 0 ? "Track unlock" : "Track page";
+        if (selectedItem <= 0 && selectedName.isEmpty() || hasMilestoneOption(option, original.getTarget())) {
+            return;
+        }
         client.getMenu().createMenuEntry(-2)
-                .setOption("Add goal")
+                .setOption(option)
                 .setTarget(original.getTarget())
                 .setType(MenuAction.RUNELITE_LOW_PRIORITY)
                 .onClick(entry -> {
@@ -291,6 +295,16 @@ public class GrindstonePlugin extends Plugin {
         return name;
     }
 
+    private boolean hasMilestoneOption(String option, String target) {
+        String name = Text.removeTags(target).trim();
+        for (MenuEntry entry : client.getMenu().getMenuEntries()) {
+            if (option.equals(entry.getOption()) && name.equalsIgnoreCase(Text.removeTags(entry.getTarget()).trim())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void addQuestGoalMenu(MenuEntry original) {
         if (!config.questGoalsEnabled() || !config.questGoalMenu() || original.getIdentifier() != 1) {
             return;
@@ -300,8 +314,11 @@ public class GrindstonePlugin extends Plugin {
             if (!quest.getName().equalsIgnoreCase(name)) {
                 continue;
             }
+            if (hasMilestoneOption("Track quest", quest.getName())) {
+                return;
+            }
             client.getMenu().createMenuEntry(-2)
-                    .setOption("Add goal")
+                    .setOption("Track quest")
                     .setTarget(quest.getName())
                     .setType(MenuAction.RUNELITE_LOW_PRIORITY)
                     .onClick(entry -> {
@@ -323,8 +340,12 @@ public class GrindstonePlugin extends Plugin {
                 continue;
             }
             for (DiaryTier tier : DiaryTier.values()) {
+                String option = "Track " + tier + " diary";
+                if (hasMilestoneOption(option, area.toString())) {
+                    continue;
+                }
                 client.getMenu().createMenuEntry(-2)
-                        .setOption("Add " + tier + " diary goal")
+                        .setOption(option)
                         .setTarget(area.toString())
                         .setType(MenuAction.RUNELITE_LOW_PRIORITY)
                         .onClick(entry -> {
@@ -342,11 +363,11 @@ public class GrindstonePlugin extends Plugin {
             return;
         }
         String selectedName = Text.removeTags(original.getTarget()).trim();
-        if (selectedName.isEmpty()) {
+        if (selectedName.isEmpty() || hasMilestoneOption("Track task", original.getTarget())) {
             return;
         }
         client.getMenu().createMenuEntry(-2)
-                .setOption("Add goal")
+                .setOption("Track task")
                 .setTarget(original.getTarget())
                 .setType(MenuAction.RUNELITE_LOW_PRIORITY)
                 .onClick(entry -> {
@@ -384,9 +405,9 @@ public class GrindstonePlugin extends Plugin {
                 break;
             }
         }
-        if (config.combatLevelGoalMenu() && config.levelGoalsEnabled() && isMouseOverWidget(InterfaceID.CombatInterface.LEVEL)) {
+        if (config.combatLevelGoalMenu() && config.levelGoalsEnabled() && isMouseOverWidget(InterfaceID.CombatInterface.LEVEL) && !hasMilestoneOption("Set combat milestone", "Combat level")) {
             client.getMenu().createMenuEntry(-1)
-                    .setOption("Add combat level goal")
+                    .setOption("Set combat milestone")
                     .setTarget("Combat level")
                     .setType(MenuAction.RUNELITE_LOW_PRIORITY)
                     .onClick(entry -> {
@@ -398,10 +419,10 @@ public class GrindstonePlugin extends Plugin {
         if (!config.skillGoalMenu() || !isMouseOverWidget(InterfaceID.Stats.TOTAL)) {
             return;
         }
-        addSkillGoalOption("Add total level goal", "All skills", TotalLevelGoal::new, false);
-        addSkillGoalOption("Add total XP goal", "All skills", TotalExperienceGoal::new, true);
-        addSkillGoalOption("Add base level goal", "All skills", BaseLevelGoal::new, false);
-        addSkillGoalOption("Add base XP goal", "All skills", BaseExperienceGoal::new, true);
+        addSkillGoalOption("Set total level milestone", "All skills", TotalLevelGoal::new, false);
+        addSkillGoalOption("Set total XP milestone", "All skills", TotalExperienceGoal::new, true);
+        addSkillGoalOption("Set base level milestone", "All skills", BaseLevelGoal::new, false);
+        addSkillGoalOption("Set base XP milestone", "All skills", BaseExperienceGoal::new, true);
     }
 
     private boolean isMouseOverWidget(int componentId) {
@@ -411,7 +432,7 @@ public class GrindstonePlugin extends Plugin {
     }
 
     private void addSkillGoalOption(String label, String target, Supplier<Goal> factory, boolean experience) {
-        if (experience ? !config.experienceGoalsEnabled() : !config.levelGoalsEnabled()) {
+        if ((experience ? !config.experienceGoalsEnabled() : !config.levelGoalsEnabled()) || hasMilestoneOption(label, target)) {
             return;
         }
         client.getMenu().createMenuEntry(-1)
@@ -431,11 +452,11 @@ public class GrindstonePlugin extends Plugin {
         }
         String name = original.getNpc() == null ? Text.removeTags(original.getTarget()).replaceFirst("\\s*\\(level-\\d+\\)\\s*$", "") : original.getNpc().getName();
         TrackerEntry tracker = TrackerEntry.forBossName(name);
-        if (tracker == null) {
+        if (tracker == null || hasMilestoneOption("Track kills", original.getTarget())) {
             return;
         }
         client.getMenu().createMenuEntry(-2)
-                .setOption("Add goal")
+                .setOption("Track kills")
                 .setTarget(original.getTarget())
                 .setType(MenuAction.RUNELITE_LOW_PRIORITY)
                 .onClick(entry -> {
@@ -472,12 +493,12 @@ public class GrindstonePlugin extends Plugin {
         final String selectedName = name;
         final int selectedBoss = boss;
         for (MenuEntry entry : client.getMenu().getMenuEntries()) {
-            if ("Add goal".equals(entry.getOption()) && bossNameKey(entry.getTarget()).equals(bossNameKey(selectedName))) {
+            if ("Track boss achievements".equals(entry.getOption()) && bossNameKey(entry.getTarget()).equals(bossNameKey(selectedName))) {
                 return;
             }
         }
         client.getMenu().createMenuEntry(-2)
-                .setOption("Add goal")
+                .setOption("Track boss achievements")
                 .setTarget(selectedName)
                 .setType(MenuAction.RUNELITE_LOW_PRIORITY)
                 .onClick(entry -> {
@@ -670,7 +691,7 @@ public class GrindstonePlugin extends Plugin {
         }
         panel.setStorageStatus(null);
         panel.load(loaded);
-        log.debug("Loaded Grindstone profile with {} goals", loaded.getGoals().size());
+        log.debug("Loaded Grindstone profile with {} milestones", loaded.getGoals().size());
     }
 
     private void onLogout() {

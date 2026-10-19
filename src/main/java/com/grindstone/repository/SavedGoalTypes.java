@@ -86,6 +86,6 @@ final class SavedGoalTypes {
                 return entry.getKey();
             }
         }
-        throw new IllegalArgumentException("Unsupported goal type: " + goal.getClass().getName());
+        throw new IllegalArgumentException("Unsupported milestone type: " + goal.getClass().getName());
     }
 }

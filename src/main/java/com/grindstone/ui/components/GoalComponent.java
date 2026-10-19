@@ -79,7 +79,7 @@ public class GoalComponent extends JPanel {
             JCheckBox complete = new JCheckBox("Completed", current >= target);
             complete.setOpaque(false);
             complete.setFont(UiTypography.BODY);
-            complete.setToolTipText("Check or uncheck this personal goal. This does not perform any game action.");
+            complete.setToolTipText("Check or uncheck this personal milestone. This does not perform any game action.");
             complete.addActionListener(event -> toggle.run());
             manualControls.add(complete);
         } else {
@@ -87,14 +87,14 @@ public class GoalComponent extends JPanel {
             plus.setFont(UiTypography.BODY);
             plus.setMargin(new Insets(4, 5, 4, 5));
             plus.setEnabled(current < target);
-            plus.setToolTipText("Add one to this personal goal's progress. Undo is available in the header.");
+            plus.setToolTipText("Add one to this personal milestone's progress. Undo is available in the header.");
             plus.addActionListener(event -> increment.run());
             manualControls.add(plus);
         }
         JButton set = new JButton("Set progress");
         set.setFont(UiTypography.BODY);
         set.setMargin(new Insets(4, 5, 4, 5));
-        set.setToolTipText("Enter manual progress without opening the full goal editor.");
+        set.setToolTipText("Enter manual progress without opening the full milestone editor.");
         set.addActionListener(event -> setProgress.run());
         manualControls.add(set);
         manualControls.setVisible(true);
@@ -154,13 +154,13 @@ public class GoalComponent extends JPanel {
         iconLabel.setPreferredSize(new Dimension(24, 24));
 
         expandButton.putClientProperty("JButton.buttonType", "toolBarButton");
-        expandButton.setToolTipText("Collapse goal details");
+        expandButton.setToolTipText("Collapse milestone details");
         expandButton.setRolloverEnabled(true);
         expandButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         expandButton.addActionListener(event -> setExpanded(!expanded));
 
         editButton.putClientProperty("JButton.buttonType", "toolBarButton");
-        editButton.setToolTipText("Goal actions");
+        editButton.setToolTipText("Actions");
         editButton.setRolloverEnabled(true);
         editButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         editButton.setVisible(false);
@@ -244,7 +244,7 @@ public class GoalComponent extends JPanel {
     }
     public void setAchievementNote(String text) {
         achievementNoteLabel.setText(text);
-        achievementNoteLabel.setToolTipText(text == null ? null : text + ". See Goal history in goal actions for dates and targets.");
+        achievementNoteLabel.setToolTipText(text == null ? null : text + ". See Milestone history in milestone actions for dates and targets.");
         achievementNoteLabel.setVisible(text != null && !text.isEmpty());
         revalidate();
     }
@@ -293,13 +293,13 @@ public class GoalComponent extends JPanel {
     public void setGoalActions(ActionListener edit, ActionListener delete) {
         JPopupMenu menu = new JPopupMenu();
         if (edit != null) {
-            JMenuItem editTarget = new JMenuItem("Edit goal...");
-            editTarget.setToolTipText("Edit the goal target, or a custom goal's details and manual progress.");
+            JMenuItem editTarget = new JMenuItem("Edit...");
+            editTarget.setToolTipText("Edit the milestone target, or a custom milestone's details and manual progress.");
             editTarget.addActionListener(edit);
             menu.add(editTarget);
         }
-        JMenuItem remove = new JMenuItem("Delete goal...");
-        remove.setToolTipText("Remove this goal after confirmation. Game progress is unaffected; Undo restores the last deletion.");
+        JMenuItem remove = new JMenuItem("Delete...");
+        remove.setToolTipText("Remove this milestone after confirmation. Game progress is unaffected; Undo restores the last deletion.");
         remove.addActionListener(delete);
         menu.add(remove);
         setEditAction(event -> menu.show(editButton, 0, editButton.getHeight()));
@@ -407,7 +407,7 @@ public class GoalComponent extends JPanel {
         content.setVisible(expanded);
         footer.setVisible(true);
         expandButton.setText(expanded ? "−" : "+");
-        expandButton.setToolTipText(expanded ? "Collapse goal details" : "Expand goal details");
+        expandButton.setToolTipText(expanded ? "Collapse milestone details" : "Expand milestone details");
         if (expansionListener != null) {
             expansionListener.accept(expanded);
         }

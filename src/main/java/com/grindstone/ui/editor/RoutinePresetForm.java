@@ -32,7 +32,7 @@ public final class RoutinePresetForm extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         schedule.setSelectedItem(weekly ? RepeatSchedule.WEEKLY : RepeatSchedule.DAILY);
         schedule.setToolTipText("Choose the schedule for this routine. Native activity reset rules are not changed.");
-        add(new JLabel("Preview your routine · choose goals and edit targets"));
+        add(new JLabel("Preview your routine · choose milestones and edit targets"));
         add(Box.createVerticalStrut(8));
         add(schedule);
         add(Box.createVerticalStrut(8));
@@ -46,8 +46,8 @@ public final class RoutinePresetForm extends JPanel {
             addRow(new TrackerGoal(TrackerEntry.WINTERTODT, 1), 3);
         }
         String id = UUID.nameUUIDFromBytes(("grindstone-routine-" + weekly).getBytes(StandardCharsets.UTF_8)).toString();
-        addRow(new CustomGoal(id, "Personal challenge", "Edit this routine goal to describe your own activity.", GoalCategory.OTHER, 0, 1), 1);
-        JLabel note = new JLabel("<html>Existing tracker/schedule matches are skipped, not overwritten.<br>Targets count gains per UTC period. You can edit each goal afterward.</html>");
+        addRow(new CustomGoal(id, "Personal challenge", "Edit this routine to describe your own activity.", GoalCategory.OTHER, 0, 1), 1);
+        JLabel note = new JLabel("<html>Existing tracker/schedule matches are skipped, not overwritten.<br>Targets count gains per UTC period. You can edit each milestone afterward.</html>");
         note.setFont(FontManager.getRunescapeSmallFont());
         add(Box.createVerticalStrut(8));
         add(note);
@@ -91,7 +91,7 @@ public final class RoutinePresetForm extends JPanel {
             this.goal = goal;
             enabled = new JCheckBox(goal.getTitle(null), true);
             enabled.setFont(FontManager.getRunescapeFont());
-            enabled.setToolTipText("Include this goal in the routine, or uncheck to skip it.");
+            enabled.setToolTipText("Include this milestone in the routine, or uncheck to skip it.");
             this.target = new JSpinner(new SpinnerNumberModel(target, 1L, (long) Integer.MAX_VALUE, 1L));
             this.target.setEditor(new JSpinner.NumberEditor(this.target, "#,##0"));
             this.target.setPreferredSize(new Dimension(120, 28));

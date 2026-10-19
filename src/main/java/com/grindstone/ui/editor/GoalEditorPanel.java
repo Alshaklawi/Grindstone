@@ -48,7 +48,7 @@ import net.runelite.client.ui.FontManager;
  * @since 10/18/2026
  */
 public final class GoalEditorPanel extends JPanel {
-    private final JComboBox<String> type = new JComboBox<>(new String[]{ "Skill level", "Skill experience", "Combat level", "Total level", "Total experience", "Activity tracker", "Collection log", "Collection item", "Custom goal", "Quest", "Quest series", "Diary region & tier", "Diary tier (all regions)", "Combat achievements: boss", "Combat achievements: reward tier", "Combat achievements: difficulty tasks", "Owned item quantity", "Combat achievement task", "Base level (all skills)", "Base experience (all skills)", "Session experience", "Personal checklist / routine"});
+    private final JComboBox<String> type = new JComboBox<>(new String[]{ "Skill level", "Skill experience", "Combat level", "Total level", "Total experience", "Activity tracker", "Collection log", "Collection item", "Custom milestone", "Quest", "Quest series", "Diary region & tier", "Diary tier (all regions)", "Combat achievements: boss", "Combat achievements: reward tier", "Combat achievements: difficulty tasks", "Owned item quantity", "Combat achievement task", "Base level (all skills)", "Base experience (all skills)", "Session experience", "Personal checklist / routine"});
     private final ChecklistGoalForm checklistForm = new ChecklistGoalForm();
     private final CustomGoalForm customForm = new CustomGoalForm();
     private final RepeatGoalForm repeatForm = new RepeatGoalForm();
@@ -113,7 +113,7 @@ public final class GoalEditorPanel extends JPanel {
             text.append(" · ").append(String.format(Locale.ROOT, "%,d per period", getRepeatTarget()));
         }
         boolean duplicate = existingGoals != null && existingGoals.entrySet().stream().anyMatch(entry -> entry.getValue() == getRepeatSchedule() && GrindstoneProfile.sameSelection(goal, entry.getKey()));
-        text.append("\n\n").append(duplicate ? "A matching tracker and schedule existed when this editor opened. You will be asked before changing its target; no duplicate is added." : "This adds a new goal. Matching trackers are checked again before saving.");
+        text.append("\n\n").append(duplicate ? "A matching tracker and schedule existed when this editor opened. You will be asked before changing its target; no duplicate is added." : "This adds a new milestone. Matching trackers are checked again before saving.");
         text.append("\n\n").append(goal instanceof ManualGoal ? "Manual progress only. Grindstone never performs game actions." : "Client progress starts after saving. Some counters, storage and collection logs need their native interface opened. Unavailable readings are not confirmed zero.");
         if (!goal.getDescription().isEmpty()) {
             text.append("\n\n").append(goal.getDescription());
@@ -127,7 +127,7 @@ public final class GoalEditorPanel extends JPanel {
         this.itemManager = itemManager;
         itemPicker = new ItemPickerPanel(searchService, selection -> notifyReadiness());
         setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
-        UiTooltips.set(type, "Choose a goal type. The form will show only the relevant fields.");
+        UiTooltips.set(type, "Choose a milestone type. The form will show only the relevant fields.");
         UiTooltips.set(subject, "Choose the skill, activity or collection-log page to track.");
         add(new GoalTypePicker(type), BorderLayout.NORTH);
         body.setOpaque(false);
@@ -182,7 +182,7 @@ public final class GoalEditorPanel extends JPanel {
             customForm.setRecurring(repeatForm.getSchedule() != RepeatSchedule.NONE);
             customForm.setAlignmentX(LEFT_ALIGNMENT);
             body.add(customForm);
-            setHint("Write your own goal. You control its progress and can edit its details later.");
+            setHint("Write your own milestone. You control its progress and can edit its details later.");
         } else if (kind == 7 || kind == 16) {
             itemPicker.setAlignmentX(LEFT_ALIGNMENT);
             body.add(itemPicker);
@@ -224,7 +224,7 @@ public final class GoalEditorPanel extends JPanel {
             }
             updatePreview();
             body.add(preview);
-            setHint(kind >= 9 ? (choices.isEmpty() ? "Client data is not ready. Log in and reopen this dialog." : "Progress reads your logged-in character automatically. Completion goals have no manual target.") : kind == 6 ? "Open your in-game collection log to refresh unlocks. Each item keeps its first-seen date." : kind == 5 ? "Progress reads your character's activity count automatically." : kind == 1 || kind == 4 ? "Progress reads your character's real experience automatically." : "Uses real levels. Temporary boosts do not advance level goals.");
+            setHint(kind >= 9 ? (choices.isEmpty() ? "Client data is not ready. Log in and reopen this dialog." : "Progress reads your logged-in character automatically. Completion milestones have no manual target.") : kind == 6 ? "Open your in-game collection log to refresh unlocks. Each item keeps its first-seen date." : kind == 5 ? "Progress reads your character's activity count automatically." : kind == 1 || kind == 4 ? "Progress reads your character's real experience automatically." : "Uses real levels. Temporary boosts do not advance level milestones.");
             if (kind == 18 || kind == 19) {
                 setHint("Every skill must reach this target. The bar shows your lowest " + (kind == 18 ? "real skill level; temporary boosts do not count." : "skill XP, not total or average experience."));
             }
@@ -351,7 +351,7 @@ public final class GoalEditorPanel extends JPanel {
             return;
         }
         Goal sample = choices.get(name).get();
-        UiTooltips.set(subject, sample.getDescription().isEmpty() ? "Choose the goal to track on your character." : sample.getDescription());
+        UiTooltips.set(subject, sample.getDescription().isEmpty() ? "Choose the milestone to track on your character." : sample.getDescription());
         String detail = sample.supportsTarget() ? String.format(Locale.ROOT, "Target: %,d", ((Number) target.getValue()).longValue()) : sample.getTitle(null);
         preview.setText("<html><b>" + HtmlUtils.escape(name) + "</b><br>" + detail + "</html>");
     }
@@ -389,7 +389,7 @@ public final class GoalEditorPanel extends JPanel {
         }
         Supplier<Goal> factory = choices.get(subject.getSelectedValue());
         if (factory == null) {
-            throw new IllegalArgumentException("Choose a matching goal from the list first.");
+            throw new IllegalArgumentException("Choose a matching milestone from the list first.");
         }
         Goal goal = factory.get();
         if (goal.supportsTarget()) {
@@ -440,7 +440,7 @@ public final class GoalEditorPanel extends JPanel {
                 }
             }
         }
-        throw new IllegalArgumentException("This goal's subject is not available in the current client data.");
+        throw new IllegalArgumentException("This milestone's subject is not available in the current client data.");
     }
 
     @Override

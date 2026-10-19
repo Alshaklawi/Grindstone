@@ -20,7 +20,7 @@ public enum GoalCategory {
     QUEST("Quests", Icon.QUEST),
     ACHIEVEMENT_DIARY("Achievement Diaries", Icon.ACHIEVEMENT_DIARY),
     COMBAT_ACHIEVEMENT("Combat Achievements", Icon.COMBAT_ACHIEVEMENT),
-    OTHER("Other Goals", Icon.MAIN);
+    OTHER("Personal", Icon.MAIN);
 
     @Getter
     private final String displayName;

@@ -48,7 +48,7 @@ public final class GoalHistoryPanel extends JPanel {
         JTabbedPane tabs = new JTabbedPane();
         DefaultTableModel periods = model("Schedule", "Period start", "Period end", "Progress", "Target", "Outcome", "Baseline captured", "Last observed", "Completed at");
         periodRows.forEach(periods::addRow);
-        DefaultTableModel milestones = model("Goal", "Target", "First observed completed");
+        DefaultTableModel milestones = model("Milestone", "Target", "First observed completed");
         milestoneRows.forEach(milestones::addRow);
         tabs.addTab("Periods (" + periodRows.size() + ")", table(periods));
         tabs.addTab("Lifetime targets (" + milestoneRows.size() + ")", table(milestones));

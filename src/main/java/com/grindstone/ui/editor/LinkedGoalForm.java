@@ -62,7 +62,7 @@ public final class LinkedGoalForm extends JPanel {
         DefaultListCellRenderer sourceRenderer = new DefaultListCellRenderer();
         sourceRenderer.putClientProperty("html.disable", Boolean.TRUE);
         main.setRenderer(sourceRenderer);
-        model = new DefaultTableModel(new Object[]{"Use", "Source goal", "Required reading"}, 0) {
+        model = new DefaultTableModel(new Object[]{"Use", "Source milestone", "Required reading"}, 0) {
             @Override
             public Class<?> getColumnClass(int column) {
                 return column == 0 ? Boolean.class : column == 2 ? Long.class : String.class;
@@ -91,21 +91,21 @@ public final class LinkedGoalForm extends JPanel {
         JPanel sourceControls = new JPanel(new BorderLayout(0, 6));
         sourceControls.add(search, BorderLayout.NORTH);
         sourceControls.add(scroll, BorderLayout.CENTER);
-        search.setToolTipText("Search source goals. Selections remain selected when filtered out.");
+        search.setToolTipText("Search source milestones. Selections remain selected when filtered out.");
         notes.setLineWrap(true);
         notes.setWrapStyleWord(true);
-        add(field("Goal name", title));
+        add(field("Milestone name", title));
         add(field("Description (optional)", new JScrollPane(notes)));
-        add(field("Goal type", mode));
-        mainField = field("Main source (the goal gated by prerequisites, or ladder/count source)", main);
+        add(field("Type", mode));
+        mainField = field("Main source (the milestone gated by prerequisites, or ladder/count source)", main);
         milestonesField = field("Milestones, smallest first (comma separated)", milestones);
-        requiredField = field("Required goals / completed periods", required);
+        requiredField = field("Required milestones / completed periods", required);
         sourcesField = field("Sources / prerequisites", sourceControls);
         add(mainField);
         add(milestonesField);
         add(requiredField);
         add(sourcesField);
-        JLabel hint = new JLabel("<html>Uses existing trackers only. Add missing source trackers first.<br>Linked goals cannot reference other linked goals, preventing cycles.<br>Collection sets accept individual collection-item goals only.<br>Repeat counts retain observed completed periods, not unobserved history.</html>");
+        JLabel hint = new JLabel("<html>Uses existing trackers only. Add missing source trackers first.<br>Linked milestones cannot reference other linked milestones, preventing cycles.<br>Collection sets accept individual collection-item milestones only.<br>Repeat counts retain observed completed periods, not unobserved history.</html>");
         hint.setFont(UiTypography.META);
         hint.setAlignmentX(LEFT_ALIGNMENT);
         add(hint);
@@ -192,7 +192,7 @@ public final class LinkedGoalForm extends JPanel {
         if (selected == LinkedGoal.Mode.MILESTONES || selected == LinkedGoal.Mode.REPEAT_COMPLETIONS || selected == LinkedGoal.Mode.DEPENDENCY) {
             Choice choice = (Choice) main.getSelectedItem();
             if (choice == null || selected == LinkedGoal.Mode.REPEAT_COMPLETIONS && !choice.recurring) {
-                throw new IllegalArgumentException("Choose a source. Completion counts require an existing recurring goal.");
+                throw new IllegalArgumentException("Choose a source. Completion counts require an existing routine.");
             }
             requireLoadedTarget(choice);
             ids.add(choice.id);
@@ -203,7 +203,7 @@ public final class LinkedGoalForm extends JPanel {
                 if (Boolean.TRUE.equals(model.getValueAt(i, 0)) && !ids.contains(choices.get(i).id)) {
                     requireLoadedTarget(choices.get(i));
                     if (selected == LinkedGoal.Mode.COLLECTION_SET && !choices.get(i).collectionItem) {
-                        throw new IllegalArgumentException("Collection sets can reference only individual collection-item goals.");
+                        throw new IllegalArgumentException("Collection sets can reference only individual collection-item milestones.");
                     }
                     ids.add(choices.get(i).id);
                     targets.add(((Number) model.getValueAt(i, 2)).longValue());

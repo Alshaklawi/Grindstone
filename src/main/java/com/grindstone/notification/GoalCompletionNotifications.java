@@ -68,7 +68,7 @@ public final class GoalCompletionNotifications {
             if (transitions.observe(id, cycle, complete)) {
                 String title = Text.removeTags(goal.getTitle(client)).replaceAll("[\\r\\n\\t]", " ");
                 if (title.trim().isEmpty()) {
-                    title = "Personal goal";
+                    title = "Personal milestone";
                 }
                 if (title.length() > 100) {
                     title = title.substring(0, 97) + "...";
@@ -83,7 +83,7 @@ public final class GoalCompletionNotifications {
         if (config.completionPopup()) {
             overlay.show(completed);
         }
-        String message = completed.size() == 1 ? "Goal complete: " + completed.get(0) : completed.size() + " goals complete: " + String.join(", ", completed.subList(0, Math.min(3, completed.size()))) + (completed.size() > 3 ? " and " + (completed.size() - 3) + " more" : "");
+        String message = completed.size() == 1 ? "Milestone complete: " + completed.get(0) : completed.size() + " milestones complete: " + String.join(", ", completed.subList(0, Math.min(3, completed.size()))) + (completed.size() > 3 ? " and " + (completed.size() - 3) + " more" : "");
         if (config.completionChat()) {
             chat.queue(QueuedMessage.builder().type(ChatMessageType.CONSOLE).value("[Grindstone] " + message).build());
         }
