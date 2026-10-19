@@ -625,7 +625,7 @@ public class GrinderPanel extends PluginPanel {
                     currentProfile.observeRecurring(client, System.currentTimeMillis());
                 }
                 for (Goal goal : currentProfile.getGoals()) {
-                    if (goal == null || (!config.collectionLogEnabled() && isCollectionLogGoal(goal)) || (!config.levelGoalsEnabled() && isLevelGoal(goal)) || (!config.experienceGoalsEnabled() && isExperienceGoal(goal)) || (!config.trackerGoalsEnabled() && goal instanceof TrackerGoal) || (!config.questGoalsEnabled() && goal.getCategory() == GoalCategory.QUEST) || (!config.diaryGoalsEnabled() && goal.getCategory() == GoalCategory.ACHIEVEMENT_DIARY) || (!config.combatAchievementGoalsEnabled() && goal.getCategory() == GoalCategory.COMBAT_ACHIEVEMENT) || (!config.ownedItemGoalsEnabled() && goal instanceof com.grinder.content.goal.impl.item.PossessedItemGoal) || (!config.customGoalsEnabled() && goal instanceof CustomGoal)) {
+                    if (goal == null || (!config.collectionLogEnabled() && isCollectionLogGoal(goal)) || (!config.levelGoalsEnabled() && isLevelGoal(goal)) || (!config.experienceGoalsEnabled() && isExperienceGoal(goal)) || (!config.trackerGoalsEnabled() && goal instanceof TrackerGoal) || (!config.questGoalsEnabled() && goal.getCategory() == GoalCategory.QUEST) || (!config.diaryGoalsEnabled() && goal.getCategory() == GoalCategory.ACHIEVEMENT_DIARY) || (!config.combatAchievementGoalsEnabled() && goal.getCategory() == GoalCategory.COMBAT_ACHIEVEMENT) || (!config.ownedItemGoalsEnabled() && goal instanceof com.grinder.content.goal.impl.item.PossessedItemGoal) || (!config.customGoalsEnabled() && goal instanceof com.grinder.content.goal.ManualGoal)) {
                         continue;
                     }
 
@@ -635,12 +635,42 @@ public class GrinderPanel extends PluginPanel {
                     boolean repeating = recurring.isActive() && com.grinder.repository.RecurringGoal.supports(goal);
                     com.grinder.content.goal.TrackingState tracking = com.grinder.content.goal.TrackingState.of(goal, recurring, client.getGameState() == net.runelite.api.GameState.LOGGED_IN && client.getLocalPlayer() != null && client.getAccountHash() == currentProfile.getHash(), currentProfile.getPlayerStorage().hasBankSnapshot());
                     List<?> key = java.util.Arrays.asList(currentProfile, metadata, title, goal.getDescription(), goal.getProgressCurrent(), goal.getProgressMaximum(), goal.getStatus(), recurring.getSchedule(), recurring.getProgress(), recurring.getTarget(), recurring.getBaselineAt(), recurring.getStart(), metadata.isPinned(), metadata.isCollapsed(config.collapseDetailsByDefault()), metadata.getCompletions().size(), tracking, config.showGoalIcons(), config.showProgressBar(), config.maxProgressChunks(), config.showCompletionHistory(), config.showActivityIcons(), config.itemsPerRow(), config.maxItemRows(), config.showTrackingState());
+                    if (goal instanceof com.grinder.content.goal.impl.ChecklistGoal) {
+                        key = java.util.Arrays.asList(key, java.util.Arrays.hashCode(((com.grinder.content.goal.impl.ChecklistGoal) goal).getChecks()));
+                    }
                     GoalView cached = cardCache.get(goal, key);
                     if (cached != null && tracking != com.grinder.content.goal.TrackingState.WAITING && goal.getProgressMaximum() > 0) {
                         allGoals.add(cached);
                         continue;
                     }
                     GoalComponent component = goal.build(client, config);
+                    if (goal instanceof com.grinder.content.goal.impl.ChecklistGoal) {
+                        com.grinder.content.goal.impl.ChecklistGoal checklist = (com.grinder.content.goal.impl.ChecklistGoal) goal;
+                        boolean[] checked = checklist.getChecks();
+                        com.grinder.repository.RepeatSchedule openedSchedule = recurring.getSchedule();
+                        long openedPeriod = openedSchedule.start(System.currentTimeMillis());
+                        for (int step = 0; step < checked.length; step++) {
+                            int index = step;
+                            javax.swing.JCheckBox check = new javax.swing.JCheckBox(checklist.getSteps().get(step), checked[step]);
+                            check.setOpaque(false);
+                            check.setFont(UiTypography.BODY);
+                            check.setToolTipText("Manually mark this personal step complete. No game action is performed; repeating checklists reset at their UTC boundary.");
+                            check.setAlignmentX(LEFT_ALIGNMENT);
+                            check.addActionListener(event -> {
+                                boolean selected = check.isSelected();
+                                clientThread.invokeLater(() -> {
+                                    if (profile == currentProfile && currentProfile.getGoals().contains(goal) && currentProfile.metadata(goal).recurring().getSchedule() == openedSchedule && openedSchedule.start(System.currentTimeMillis()) == openedPeriod) {
+                                        java.util.function.Consumer<Goal> restore = currentProfile.snapshotEdit(goal);
+                                        checklist.setChecked(index, selected);
+                                        currentProfile.touch();
+                                        recordGoalUndo(currentProfile, goal, "checklist step", () -> restore.accept(goal));
+                                    }
+                                    refreshAll();
+                                });
+                            });
+                            component.addDetail(check);
+                        }
+                    }
                     tracking = com.grinder.content.goal.TrackingState.of(goal, recurring, client.getGameState() == net.runelite.api.GameState.LOGGED_IN && client.getLocalPlayer() != null && client.getAccountHash() == currentProfile.getHash(), currentProfile.getPlayerStorage().hasBankSnapshot());
                     GoalStatus status = repeating ? recurring.getStatus() : goal.getStatus();
                     long progressCurrent = repeating ? recurring.getProgress() : goal.getProgressCurrent();
@@ -1309,6 +1339,9 @@ public class GrinderPanel extends PluginPanel {
         }
         com.grinder.ui.editor.RepeatGoalForm form = new com.grinder.ui.editor.RepeatGoalForm();
         form.load(schedule, target);
+        if (goal instanceof com.grinder.content.goal.impl.ChecklistGoal) {
+            form.setFixedTarget(goal.getProgressMaximum());
+        }
         while (JOptionPane.showConfirmDialog(this, form, "Repeat schedule", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
             try {
                 form.commit();
@@ -1351,9 +1384,8 @@ public class GrinderPanel extends PluginPanel {
             }
             java.util.function.Consumer<Goal> restore = active.snapshotEdit(goal);
             recurring.restart(System.currentTimeMillis());
-            if (goal instanceof CustomGoal) {
-                CustomGoal custom = (CustomGoal) goal;
-                custom.update(custom.getTitle(null), custom.getDescription(), custom.getCategory(), 0, custom.getProgressMaximum());
+            if (goal instanceof com.grinder.content.goal.ManualGoal) {
+                ((com.grinder.content.goal.ManualGoal) goal).resetProgress();
             }
             active.touch();
             recordGoalUndo(active, goal, "period restart", () -> restore.accept(goal));
@@ -1366,6 +1398,12 @@ public class GrinderPanel extends PluginPanel {
             return;
         }
         com.grinder.repository.RecurringGoal recurring = active.metadata(goal).recurring();
+        if (goal instanceof com.grinder.content.goal.impl.ChecklistGoal) {
+            target = goal.getProgressMaximum();
+            if (schedule != com.grinder.repository.RepeatSchedule.NONE && (recurring.getSchedule() != schedule || recurring.getTarget() != target)) {
+                ((com.grinder.content.goal.impl.ChecklistGoal) goal).resetProgress();
+            }
+        }
         boolean newSchedule = recurring.getSchedule() != schedule;
         recurring.configure(schedule, target, System.currentTimeMillis());
         if (goal instanceof CustomGoal && schedule != com.grinder.repository.RepeatSchedule.NONE) {

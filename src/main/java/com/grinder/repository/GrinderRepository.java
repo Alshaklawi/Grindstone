@@ -222,6 +222,9 @@ public final class GrinderRepository {
                 }
 
                 if (goal != null) {
+                    if (goal instanceof com.grinder.content.goal.impl.ChecklistGoal) {
+                        ((com.grinder.content.goal.impl.ChecklistGoal) goal).validate();
+                    }
                     if (goal instanceof com.grinder.content.goal.impl.experience.SessionExperienceGoal) {
                         ((com.grinder.content.goal.impl.experience.SessionExperienceGoal) goal).validate();
                     }
@@ -312,6 +315,14 @@ public final class GrinderRepository {
                 }
                 if (SavedGoalTypes.fromTag(saved) == CustomGoal.class) {
                     saved.getAsJsonObject("data").addProperty("current", 0);
+                }
+                if (SavedGoalTypes.fromTag(saved) == com.grinder.content.goal.impl.ChecklistGoal.class) {
+                    JsonObject data = saved.getAsJsonObject("data");
+                    JsonArray cleared = new JsonArray();
+                    for (JsonElement ignored : data.getAsJsonArray("checked")) {
+                        cleared.add(false);
+                    }
+                    data.add("checked", cleared);
                 }
                 if (SavedGoalTypes.fromTag(saved) == com.grinder.content.goal.impl.LinkedGoal.class) {
                     JsonObject data = saved.getAsJsonObject("data");

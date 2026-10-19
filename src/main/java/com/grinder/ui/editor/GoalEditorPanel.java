@@ -38,13 +38,17 @@ import net.runelite.client.ui.FontManager;
  * @since 10/18/2026
  */
 public final class GoalEditorPanel extends JPanel {
-    private final JComboBox<String> type = new JComboBox<>(new String[]{ "Skill level", "Skill experience", "Combat level", "Total level", "Total experience", "Activity tracker", "Collection log", "Collection item", "Custom goal", "Quest", "Quest series", "Diary region & tier", "Diary tier (all regions)", "Combat achievements: boss", "Combat achievements: reward tier", "Combat achievements: difficulty tasks", "Owned item quantity", "Combat achievement task", "Base level (all skills)", "Base experience (all skills)", "Session experience"});
+    private final JComboBox<String> type = new JComboBox<>(new String[]{ "Skill level", "Skill experience", "Combat level", "Total level", "Total experience", "Activity tracker", "Collection log", "Collection item", "Custom goal", "Quest", "Quest series", "Diary region & tier", "Diary tier (all regions)", "Combat achievements: boss", "Combat achievements: reward tier", "Combat achievements: difficulty tasks", "Owned item quantity", "Combat achievement task", "Base level (all skills)", "Base experience (all skills)", "Session experience", "Personal checklist / routine"});
+    private final ChecklistGoalForm checklistForm = new ChecklistGoalForm();
     private final CustomGoalForm customForm = new CustomGoalForm();
     private final RepeatGoalForm repeatForm = new RepeatGoalForm();
     public com.grinder.repository.RepeatSchedule getRepeatSchedule() {
         return repeatForm.isVisible() ? repeatForm.getSchedule() : com.grinder.repository.RepeatSchedule.NONE;
     }
     public long getRepeatTarget() {
+        if (type.getSelectedIndex() == 21) {
+            return checklistForm.read().getProgressMaximum();
+        }
         return repeatForm.getTarget();
     }
     public void loadRepeat(com.grinder.repository.RepeatSchedule schedule, long target) {
@@ -95,6 +99,11 @@ public final class GoalEditorPanel extends JPanel {
             }
         });
         target.addChangeListener(event -> updatePreview());
+        checklistForm.addStepsListener(() -> {
+            if (type.getSelectedIndex() == 21) {
+                repeatForm.setFixedTarget(checklistForm.getStepCount());
+            }
+        });
         repeatForm.addScheduleListener(() -> {
             customForm.setRecurring(type.getSelectedIndex() == 8 && repeatForm.getSchedule() != com.grinder.repository.RepeatSchedule.NONE);
             firePropertyChange("formLayout", false, true);
@@ -119,7 +128,12 @@ public final class GoalEditorPanel extends JPanel {
         body.removeAll();
         choices.clear();
         int kind = type.getSelectedIndex();
-        if (kind == 8) {
+        repeatForm.setFixedTarget(null);
+        if (kind == 21) {
+            checklistForm.setAlignmentX(LEFT_ALIGNMENT);
+            body.add(checklistForm);
+            setHint("Check each step manually. Daily, weekly and monthly routines require every step, reset at the next UTC period and keep observed history. No game actions are performed.");
+        } else if (kind == 8) {
             customForm.setRecurring(repeatForm.getSchedule() != com.grinder.repository.RepeatSchedule.NONE);
             customForm.setAlignmentX(LEFT_ALIGNMENT);
             body.add(customForm);
@@ -173,7 +187,10 @@ public final class GoalEditorPanel extends JPanel {
                 setHint("Counts observed XP gains this login, not existing XP. Relogging or reconnecting resets it. For daily or weekly gains, choose Skill experience with a repeat schedule instead.");
             }
         }
-        repeatForm.setVisible(kind == 1 || kind == 4 || kind == 5 || kind == 8);
+        repeatForm.setVisible(kind == 1 || kind == 4 || kind == 5 || kind == 8 || kind == 21);
+        if (kind == 21) {
+            repeatForm.setFixedTarget(checklistForm.getStepCount());
+        }
         if (repeatForm.isVisible()) {
             repeatForm.setAlignmentX(LEFT_ALIGNMENT);
             body.add(repeatForm);
@@ -291,7 +308,7 @@ public final class GoalEditorPanel extends JPanel {
 
     public boolean isReady() {
         return type.getSelectedIndex() == 7 || type.getSelectedIndex() == 16 ? itemPicker.hasSelection()
-                : type.getSelectedIndex() == 8 || !choices.isEmpty();
+                : type.getSelectedIndex() == 8 || type.getSelectedIndex() == 21 || !choices.isEmpty();
     }
 
     private void notifyReadiness() {
@@ -299,6 +316,10 @@ public final class GoalEditorPanel extends JPanel {
     }
 
     public Goal createGoal() throws java.text.ParseException {
+        if (type.getSelectedIndex() == 21) {
+            repeatForm.commit();
+            return checklistForm.read();
+        }
         if (repeatForm.isVisible()) {
             repeatForm.commit();
         }
@@ -324,6 +345,12 @@ public final class GoalEditorPanel extends JPanel {
         itemPicker.stopSearch();
     }
     public void loadGoal(Goal goal) {
+        if (goal instanceof com.grinder.content.goal.impl.ChecklistGoal) {
+            type.setSelectedIndex(21);
+            checklistForm.load((com.grinder.content.goal.impl.ChecklistGoal) goal);
+            repeatForm.setFixedTarget(goal.getProgressMaximum());
+            return;
+        }
         if (goal instanceof com.grinder.content.goal.impl.item.PossessedItemGoal) {
             type.setSelectedIndex(16);
             target.setValue(goal.getProgressMaximum());
@@ -341,7 +368,7 @@ public final class GoalEditorPanel extends JPanel {
             return;
         }
         for (int kind = 0; kind < type.getItemCount(); kind++) {
-            if (kind == 7 || kind == 8 || kind == 16) {
+            if (kind == 7 || kind == 8 || kind == 16 || kind == 21) {
                 continue;
             }
             type.setSelectedIndex(kind);

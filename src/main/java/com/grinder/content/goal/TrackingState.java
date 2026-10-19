@@ -1,6 +1,5 @@
 package com.grinder.content.goal;
 
-import com.grinder.content.goal.impl.CustomGoal;
 import com.grinder.content.goal.impl.TrackerGoal;
 import com.grinder.content.goal.impl.item.PossessedItemGoal;
 import com.grinder.repository.RecurringGoal;
@@ -36,7 +35,7 @@ public enum TrackingState {
         if (goal instanceof com.grinder.content.goal.impl.LinkedGoal) {
             return ((com.grinder.content.goal.impl.LinkedGoal) goal).isAvailable() ? LINKED : WAITING;
         }
-        if (goal instanceof CustomGoal) {
+        if (goal instanceof com.grinder.content.goal.ManualGoal) {
             return MANUAL;
         }
         if (!loggedIn || recurring.isActive() && recurring.getBaselineAt() == 0 || goal instanceof ClientCompletionGoal && goal.getProgressMaximum() == 0 || goal.getCategory() == GoalCategory.COLLECTION_LOG && goal.getProgressMaximum() == 0) {

@@ -200,6 +200,11 @@ public class GoalComponent extends JPanel {
         return content;
     }
 
+    public void addDetail(javax.swing.JComponent detail) {
+        content.add(detail);
+        updateProgress();
+    }
+
     public void setRequiredQuantity(long quantity) {
         requiredQuantityLabel.setText(String.format(java.util.Locale.ROOT, "Required: %,d", Math.max(0, quantity)));
         requiredQuantityLabel.setToolTipText("Target item quantity, not the amount currently owned. " + requiredQuantityLabel.getText());

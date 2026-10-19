@@ -1,6 +1,5 @@
 package com.grinder.content.goal.impl;
 
-import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalCategory;
 import com.grinder.content.goal.GoalStatus;
 import java.util.UUID;
@@ -11,7 +10,7 @@ import net.runelite.api.Client;
  * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
  * @since 10/18/2026
  */
-public final class CustomGoal implements Goal {
+public final class CustomGoal implements com.grinder.content.goal.ManualGoal {
     private final String id;
     private String title;
     private String description;
@@ -30,6 +29,10 @@ public final class CustomGoal implements Goal {
 
     public String getId() {
         return id;
+    }
+    @Override
+    public void resetProgress() {
+        current = 0;
     }
 
     public void update(String title, String description, GoalCategory category, long current, long target) {

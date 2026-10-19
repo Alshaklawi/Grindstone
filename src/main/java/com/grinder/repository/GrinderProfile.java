@@ -82,6 +82,8 @@ public class GrinderProfile {
         long target = original.getProgressMaximum();
         CustomGoal custom = original instanceof CustomGoal ? (CustomGoal) original : null;
         CustomGoal manual = custom == null ? null : new CustomGoal(custom.getId(), custom.getTitle(null), custom.getDescription(), custom.getCategory(), custom.getProgressCurrent(), target);
+        com.grinder.content.goal.impl.ChecklistGoal checklist = original instanceof com.grinder.content.goal.impl.ChecklistGoal ? (com.grinder.content.goal.impl.ChecklistGoal) original : null;
+        boolean[] savedChecks = checklist == null ? null : checklist.getChecks();
         return replacement -> {
             if (previousSchedule != RepeatSchedule.NONE && previousSchedule.start(System.currentTimeMillis()) != undoWindow) {
                 throw new IllegalStateException("The previous period has reset.");
@@ -94,6 +96,9 @@ public class GrinderProfile {
                 custom.update(manual.getTitle(null), manual.getDescription(), manual.getCategory(), manual.getProgressCurrent(), manual.getProgressMaximum());
             } else if (original.supportsTarget()) {
                 original.setTarget(target);
+            }
+            if (checklist != null) {
+                checklist.restoreChecks(savedChecks);
             }
             goals.set(index, original);
             if (original != replacement) {
@@ -207,6 +212,8 @@ public class GrinderProfile {
         add(new com.grinder.content.goal.impl.combatachievement.CombatAchievementTaskGoal(0, "Combat task 0", "The native task name, requirements and completion state load when logged in."));
         String customExampleId = java.util.UUID.nameUUIDFromBytes("grinder-default-custom-goal".getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString();
         add(new CustomGoal(customExampleId, "Example: complete 10 personal challenges", "A manual tracker example. Edit its title, description, target and progress to suit your own goal.", GoalCategory.OTHER, 0, 10));
+        String checklistExampleId = java.util.UUID.nameUUIDFromBytes("grinder-default-checklist".getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString();
+        add(new com.grinder.content.goal.impl.ChecklistGoal(checklistExampleId, "Example: personal routine", "Check steps manually. Add a repeat schedule to reset and archive this routine each period.", java.util.Arrays.asList("Choose today's activity", "Prepare supplies", "Finish the activity"), new boolean[3]));
         add(new com.grinder.content.goal.impl.quest.QuestGoal(net.runelite.api.Quest.DRAGON_SLAYER_I));
         add(new com.grinder.content.goal.impl.quest.QuestSeriesGoal(com.grinder.content.quest.QuestSeries.ELF));
         add(new com.grinder.content.goal.impl.achievementdiary.AchievementDiaryTierAreaGoal( com.grinder.content.diary.AchievementDiaryArea.LUMBRIDGE, com.grinder.content.diary.DiaryTier.EASY));
@@ -282,6 +289,9 @@ public class GrinderProfile {
         }
         if (left instanceof CustomGoal) {
             return ((CustomGoal) left).getId().equals(((CustomGoal) right).getId());
+        }
+        if (left instanceof com.grinder.content.goal.impl.ChecklistGoal) {
+            return ((com.grinder.content.goal.impl.ChecklistGoal) left).getId().equals(((com.grinder.content.goal.impl.ChecklistGoal) right).getId());
         }
         if (left instanceof com.grinder.content.goal.impl.LinkedGoal) {
             return ((com.grinder.content.goal.impl.LinkedGoal) left).getId().equals(((com.grinder.content.goal.impl.LinkedGoal) right).getId());

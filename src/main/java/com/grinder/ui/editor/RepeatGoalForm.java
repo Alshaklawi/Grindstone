@@ -14,6 +14,7 @@ import net.runelite.client.ui.FontManager;
 public final class RepeatGoalForm extends JPanel {
     private final JComboBox<RepeatSchedule> schedule = new JComboBox<>(RepeatSchedule.values());
     private final JSpinner target = new JSpinner(new SpinnerNumberModel(1L, 1L, (long) Integer.MAX_VALUE, 1L));
+    private Long fixedTarget;
     public RepeatGoalForm() {
         super(new BorderLayout(0, 6));
         setOpaque(false);
@@ -31,12 +32,19 @@ public final class RepeatGoalForm extends JPanel {
         explanation.setFont(FontManager.getRunescapeSmallFont());
         add(fields, BorderLayout.NORTH);
         add(explanation, BorderLayout.CENTER);
-        schedule.addActionListener(event -> target.setEnabled(getSchedule() != RepeatSchedule.NONE));
+        schedule.addActionListener(event -> target.setEnabled(fixedTarget == null && getSchedule() != RepeatSchedule.NONE));
         target.setEnabled(false);
     }
     public void load(RepeatSchedule repeat, long target) {
         schedule.setSelectedItem(repeat);
         this.target.setValue(target);
+    }
+    public void setFixedTarget(Long fixedTarget) {
+        this.fixedTarget = fixedTarget;
+        if (fixedTarget != null) {
+            target.setValue(fixedTarget);
+        }
+        target.setEnabled(fixedTarget == null && getSchedule() != RepeatSchedule.NONE);
     }
     public RepeatSchedule getSchedule() {
         return (RepeatSchedule) schedule.getSelectedItem();
