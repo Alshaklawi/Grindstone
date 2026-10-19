@@ -49,6 +49,7 @@ import com.grindstone.ui.editor.LinkedGoalForm;
 import com.grindstone.ui.editor.RepeatGoalForm;
 import com.grindstone.ui.editor.RoutinePresetForm;
 import com.grindstone.ui.item.ItemSearchService;
+import com.grindstone.ui.util.DialogPlacement;
 import com.grindstone.ui.util.GoalCardCache;
 import com.grindstone.ui.util.SkillGoalGrouping;
 import com.grindstone.ui.util.UiTooltips;
@@ -61,7 +62,6 @@ import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dialog;
 import java.awt.Dimension;
-import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Insets;
@@ -869,7 +869,7 @@ public class GrindstonePanel extends PluginPanel {
                                 Supplier<GoalHistoryPanel> history = GoalHistoryPanel.snapshot(currentProfile.metadata(goal));
                                 SwingUtilities.invokeLater(() -> {
                                     if (profile == currentProfile) {
-                                        JOptionPane.showMessageDialog(this, history.get(), title + " — history", JOptionPane.PLAIN_MESSAGE);
+                                        JOptionPane.showMessageDialog(DialogPlacement.owner(this), history.get(), title + " — history", JOptionPane.PLAIN_MESSAGE);
                                     }
                                 });
                             }));
@@ -882,7 +882,7 @@ public class GrindstonePanel extends PluginPanel {
                         }
                         if (goal instanceof SessionExperienceGoal) {
                             component.addGoalAction("Restart session XP...", "Clear only this goal's observed login gains and capture the current XP as its new baseline.", event -> {
-                                if (JOptionPane.showConfirmDialog(this, "Reset this goal's session XP progress? Your game XP and saved completion history are unchanged.", "Restart session goal", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
+                                if (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), "Reset this goal's session XP progress? Your game XP and saved completion history are unchanged.", "Restart session goal", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
                                     clientThread.invokeLater(() -> {
                                         if (profile == currentProfile && currentProfile.getGoals().contains(goal) && hasClientProfile(currentProfile)) {
                                             ((SessionExperienceGoal) goal).restart();
@@ -1588,19 +1588,19 @@ public class GrindstonePanel extends PluginPanel {
         if (goal instanceof ChecklistGoal) {
             form.setFixedTarget(goal.getProgressMaximum());
         }
-        while (JOptionPane.showConfirmDialog(this, form, "Repeat schedule", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
+        while (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), form, "Repeat schedule", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
             try {
                 form.commit();
                 RepeatSchedule selected = form.getSchedule();
                 long selectedTarget = form.getTarget();
-                if ((schedule != selected || target != selectedTarget) && JOptionPane.showConfirmDialog(this, "Repeat: " + schedule + " → " + selected + "\nPeriod target: " + target + " → " + selectedTarget + "\nThe current observed period will be archived. Undo is available until a later edit or reset.", "Preview schedule change", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
+                if ((schedule != selected || target != selectedTarget) && JOptionPane.showConfirmDialog(DialogPlacement.owner(this), "Repeat: " + schedule + " → " + selected + "\nPeriod target: " + target + " → " + selectedTarget + "\nThe current observed period will be archived. Undo is available until a later edit or reset.", "Preview schedule change", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
                     return;
                 }
                 clientThread.invokeLater(() -> {
                     if (profile == active && active.getGoals().contains(goal)) {
                         Goal collision = active.findMatchingGoal(goal, selected);
                         if (collision != null && collision != goal) {
-                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, "That tracker already has a goal with this schedule."));
+                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), "That tracker already has a goal with this schedule."));
                             return;
                         }
                         Consumer<Goal> restore = active.snapshotEdit(goal);
@@ -1612,12 +1612,12 @@ public class GrindstonePanel extends PluginPanel {
                 });
                 return;
             } catch (ParseException exception) {
-                JOptionPane.showMessageDialog(this, "Enter a valid period target.");
+                JOptionPane.showMessageDialog(DialogPlacement.owner(this), "Enter a valid period target.");
             }
         }
     }
     private void restartPeriod(GrindstoneProfile active, Goal goal) {
-        if (profile != active || JOptionPane.showConfirmDialog(this, "Archive the current observed period and capture a fresh baseline?\nCustom progress resets to zero. Your game progress is unaffected.\nUndo is available until a later edit or scheduled reset.", "Restart current period", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
+        if (profile != active || JOptionPane.showConfirmDialog(DialogPlacement.owner(this), "Archive the current observed period and capture a fresh baseline?\nCustom progress resets to zero. Your game progress is unaffected.\nUndo is available until a later edit or scheduled reset.", "Restart current period", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
             return;
         }
         clientThread.invokeLater(() -> {
@@ -1680,7 +1680,7 @@ public class GrindstonePanel extends PluginPanel {
             List<Goal> goals = preset.createGoals();
             String summary = additionSummary(active, goals, goal -> RepeatSchedule.NONE);
             SwingUtilities.invokeLater(() -> {
-                if (profile != active || JOptionPane.showConfirmDialog(this, previewPane(summary), "Preview " + preset, JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
+                if (profile != active || JOptionPane.showConfirmDialog(DialogPlacement.owner(this), previewPane(summary), "Preview " + preset, JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
                     return;
                 }
                 clientThread.invokeLater(() -> {
@@ -1743,10 +1743,10 @@ public class GrindstonePanel extends PluginPanel {
                     return;
                 }
                 if (pages.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "Collection-log metadata is not ready. Log in and try again.");
+                    JOptionPane.showMessageDialog(DialogPlacement.owner(this), "Collection-log metadata is not ready. Log in and try again.");
                     return;
                 }
-                if (JOptionPane.showConfirmDialog(this, "Add missing goals from all " + pages.size() + " collection-log pages? Existing goals are kept.", "Add collection-log pages", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
+                if (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), "Add missing goals from all " + pages.size() + " collection-log pages? Existing goals are kept.", "Add collection-log pages", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
                     return;
                 }
                 clientThread.invokeLater(() -> {
@@ -1768,7 +1768,7 @@ public class GrindstonePanel extends PluginPanel {
             return;
         }
         RoutinePresetForm form = new RoutinePresetForm(weekly);
-        while (JOptionPane.showConfirmDialog(this, form, "Preview recurring routine", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
+        while (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), form, "Preview recurring routine", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
             try {
                 List<Goal> selected = form.selectedGoals();
                 Map<Goal, GoalMetadata> metadata = new IdentityHashMap<>();
@@ -1790,13 +1790,13 @@ public class GrindstonePanel extends PluginPanel {
                     int count = active.getGoals().size() - before.size();
                     SwingUtilities.invokeLater(() -> {
                         if (profile == active) {
-                            JOptionPane.showMessageDialog(this, count + " routine goals added. Existing schedule matches were skipped.");
+                            JOptionPane.showMessageDialog(DialogPlacement.owner(this), count + " routine goals added. Existing schedule matches were skipped.");
                         }
                     });
                 });
                 return;
             } catch (ParseException exception) {
-                JOptionPane.showMessageDialog(this, "Enter valid targets for the selected goals.");
+                JOptionPane.showMessageDialog(DialogPlacement.owner(this), "Enter valid targets for the selected goals.");
             }
         }
     }
@@ -1832,9 +1832,7 @@ public class GrindstonePanel extends PluginPanel {
                     revealGoal(active, id);
                 }));
                 dialog.pack();
-                Rectangle bounds = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
-                dialog.setSize(Math.min(dialog.getWidth(), bounds.width - 40), Math.min(dialog.getHeight(), bounds.height - 40));
-                dialog.setLocationRelativeTo(this);
+                DialogPlacement.center(dialog, this);
                 dialog.setVisible(true);
             });
         });
@@ -1878,7 +1876,7 @@ public class GrindstonePanel extends PluginPanel {
                 return;
             }
         }
-        JOptionPane.showMessageDialog(this, "This goal is hidden by its tracker visibility setting. Enable that goal type in Grindstone configuration to reveal it.");
+        JOptionPane.showMessageDialog(DialogPlacement.owner(this), "This goal is hidden by its tracker visibility setting. Enable that goal type in Grindstone configuration to reveal it.");
     }
 
     private void showAddGoalDialog() {
@@ -1888,7 +1886,7 @@ public class GrindstonePanel extends PluginPanel {
     public void showAddGoalDialog(Goal initialGoal) {
         GrindstoneProfile active = profile;
         if (active == null) {
-            JOptionPane.showMessageDialog(this, "Log in to add goals to your player profile.");
+            JOptionPane.showMessageDialog(DialogPlacement.owner(this), "Log in to add goals to your player profile.");
             return;
         }
         clientThread.invokeLater(() -> {
@@ -1917,7 +1915,7 @@ public class GrindstonePanel extends PluginPanel {
                 form.loadGoal(initialGoal);
             } catch (IllegalArgumentException exception) {
                 form.stopSearch();
-                JOptionPane.showMessageDialog(this, exception.getMessage(), "Add goal", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(DialogPlacement.owner(this), exception.getMessage(), "Add goal", JOptionPane.WARNING_MESSAGE);
                 return;
             }
         }
@@ -1941,7 +1939,7 @@ public class GrindstonePanel extends PluginPanel {
                         return;
                     }
                     if (existing.supportsTarget()) {
-                        if (JOptionPane.showConfirmDialog(this, title + " is already tracked.\nUpdate its target from " + String.format(Locale.ROOT, "%,d to %,d?", oldTarget, newTarget) + "\nRepeat: " + schedule + (schedule == RepeatSchedule.NONE ? " (lifetime tracking)" : String.format(Locale.ROOT, " · %,d per period", periodTarget)) + "\nChanging repeat settings archives the current observed period.", "Update existing goal", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION) {
+                        if (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), title + " is already tracked.\nUpdate its target from " + String.format(Locale.ROOT, "%,d to %,d?", oldTarget, newTarget) + "\nRepeat: " + schedule + (schedule == RepeatSchedule.NONE ? " (lifetime tracking)" : String.format(Locale.ROOT, " · %,d per period", periodTarget)) + "\nChanging repeat settings archives the current observed period.", "Update existing goal", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION) {
                             clientThread.invokeLater(() -> {
                                 if (profile == active && active.getGoals().contains(existing)) {
                                     Consumer<Goal> restore = active.snapshotEdit(existing);
@@ -1954,7 +1952,7 @@ public class GrindstonePanel extends PluginPanel {
                             });
                         }
                     } else {
-                        JOptionPane.showMessageDialog(this, "This goal is already in your profile.");
+                        JOptionPane.showMessageDialog(DialogPlacement.owner(this), "This goal is already in your profile.");
                     }
                 });
             } else {
@@ -2002,7 +2000,7 @@ public class GrindstonePanel extends PluginPanel {
                     form.loadGoal(goal);
                 } catch (IllegalArgumentException exception) {
                     form.stopSearch();
-                    JOptionPane.showMessageDialog(this, exception.getMessage());
+                    JOptionPane.showMessageDialog(DialogPlacement.owner(this), exception.getMessage());
                     return;
                 }
                 form.loadRepeat(schedule, periodTarget);
@@ -2030,7 +2028,7 @@ public class GrindstonePanel extends PluginPanel {
                     } catch (IllegalArgumentException exception) {
                         SwingUtilities.invokeLater(() -> {
                             if (profile == active) {
-                                JOptionPane.showMessageDialog(this, exception.getMessage());
+                                JOptionPane.showMessageDialog(DialogPlacement.owner(this), exception.getMessage());
                             }
                         });
                     }
@@ -2062,10 +2060,10 @@ public class GrindstonePanel extends PluginPanel {
                 LinkedGoalForm form = new LinkedGoalForm(sources, original);
                 JScrollPane scroll = new JScrollPane(form);
                 scroll.setPreferredSize(new Dimension(520, 570));
-                while (JOptionPane.showConfirmDialog(this, scroll, original == null ? "Add linked goal" : "Edit linked goal", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
+                while (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), scroll, original == null ? "Add linked goal" : "Edit linked goal", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
                     try {
                         LinkedGoal candidate = form.read();
-                        if (JOptionPane.showConfirmDialog(this, previewPane(candidate.getTitle(null) + "\n" + candidate.getMode() + " · " + candidate.getSources().size() + " source(s)\nTargets: " + Arrays.toString(candidate.getTargets()) + "\nMissing sources remain unavailable; this never performs game actions."), "Preview linked goal", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
+                        if (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), previewPane(candidate.getTitle(null) + "\n" + candidate.getMode() + " · " + candidate.getSources().size() + " source(s)\nTargets: " + Arrays.toString(candidate.getTargets()) + "\nMissing sources remain unavailable; this never performs game actions."), "Preview linked goal", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
                             continue;
                         }
                         clientThread.invokeLater(() -> {
@@ -2085,7 +2083,7 @@ public class GrindstonePanel extends PluginPanel {
                         });
                         return;
                     } catch (IllegalArgumentException | ParseException failure) {
-                        JOptionPane.showMessageDialog(this, failure.getMessage(), "Check linked goal", JOptionPane.WARNING_MESSAGE);
+                        JOptionPane.showMessageDialog(DialogPlacement.owner(this), failure.getMessage(), "Check linked goal", JOptionPane.WARNING_MESSAGE);
                     }
                 }
             });
@@ -2116,7 +2114,7 @@ public class GrindstonePanel extends PluginPanel {
                     return;
                 }
                 BulkGoalForm form = new BulkGoalForm(rows);
-                while (profile == active && JOptionPane.showConfirmDialog(this, form, "Manage goals", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
+                while (profile == active && JOptionPane.showConfirmDialog(DialogPlacement.owner(this), form, "Manage goals", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
                     try {
                         List<Goal> selected = form.selectedGoals();
                         if (selected.isEmpty()) {
@@ -2129,7 +2127,7 @@ public class GrindstonePanel extends PluginPanel {
                         long deadlineAt = form.getDeadlineAt();
                         boolean reminder = form.isReminderEnabled();
                         String details = action == BulkGoalAction.CATEGORY ? "\nCategory: " + category.getDisplayName() : action == BulkGoalAction.SCHEDULE ? "\nRepeat: " + schedule + " · target " + target + "\nChecklists require all their steps. Active manual progress resets when its period settings change." : action == BulkGoalAction.DEADLINE ? "\n" + (deadlineAt == 0 ? "Remove deadlines" : "Due by end of " + Instant.ofEpochMilli(deadlineAt - 1).atZone(ZoneOffset.UTC).toLocalDate() + " UTC") : "";
-                        if (JOptionPane.showConfirmDialog(this, action + " · " + selected.size() + " goals?" + details + (action == BulkGoalAction.DELETE ? "\nDeleting source goals can make linked goals unavailable.\nObserved history is archived." : "") + "\nThe action is validated before changes. One-step undo is available until a later edit or relevant reset.", "Preview bulk action", JOptionPane.OK_CANCEL_OPTION, action == BulkGoalAction.DELETE ? JOptionPane.WARNING_MESSAGE : JOptionPane.QUESTION_MESSAGE) != JOptionPane.OK_OPTION) {
+                        if (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), action + " · " + selected.size() + " goals?" + details + (action == BulkGoalAction.DELETE ? "\nDeleting source goals can make linked goals unavailable.\nObserved history is archived." : "") + "\nThe action is validated before changes. One-step undo is available until a later edit or relevant reset.", "Preview bulk action", JOptionPane.OK_CANCEL_OPTION, action == BulkGoalAction.DELETE ? JOptionPane.WARNING_MESSAGE : JOptionPane.QUESTION_MESSAGE) != JOptionPane.OK_OPTION) {
                             continue;
                         }
                         clientThread.invokeLater(() -> {
@@ -2144,12 +2142,12 @@ public class GrindstonePanel extends PluginPanel {
                                 recordUndo(active, "bulk " + action, change.undo, change.allowed);
                                 render();
                             } catch (IllegalArgumentException failure) {
-                                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, failure.getMessage(), "Bulk action not applied", JOptionPane.WARNING_MESSAGE));
+                                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), failure.getMessage(), "Bulk action not applied", JOptionPane.WARNING_MESSAGE));
                             }
                         });
                         return;
                     } catch (IllegalArgumentException | ParseException failure) {
-                        JOptionPane.showMessageDialog(this, failure.getMessage(), "Review selections", JOptionPane.WARNING_MESSAGE);
+                        JOptionPane.showMessageDialog(DialogPlacement.owner(this), failure.getMessage(), "Review selections", JOptionPane.WARNING_MESSAGE);
                     }
                 }
             });
@@ -2168,11 +2166,11 @@ public class GrindstonePanel extends PluginPanel {
             List<Goal> selected = new ArrayList<>(active.getGoals());
             long revision = active.revision();
             if (selected.isEmpty()) {
-                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, "There are no goals to clear."));
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), "There are no goals to clear."));
                 return;
             }
             SwingUtilities.invokeLater(() -> {
-                if (profile != active || JOptionPane.showConfirmDialog(this, "Remove all " + selected.size() + " goals, including hidden goals?\nRecorded history is retained within the 500-goal archive limit.\nYou can undo this until another edit or a relevant period reset.", "Clear all goals", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
+                if (profile != active || JOptionPane.showConfirmDialog(DialogPlacement.owner(this), "Remove all " + selected.size() + " goals, including hidden goals?\nRecorded history is retained within the 500-goal archive limit.\nYou can undo this until another edit or a relevant period reset.", "Clear all goals", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
                     return;
                 }
                 clientThread.invokeLater(() -> {
@@ -2180,7 +2178,7 @@ public class GrindstonePanel extends PluginPanel {
                         return;
                     }
                     if (active.revision() != revision) {
-                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, "Goals changed while confirmation was open. Nothing was cleared; try again."));
+                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), "Goals changed while confirmation was open. Nothing was cleared; try again."));
                         return;
                     }
                     BulkGoalChanges.Change change = BulkGoalChanges.apply(active, selected, BulkGoalAction.DELETE, null, RepeatSchedule.NONE, 1, 0, false, System.currentTimeMillis());
@@ -2204,7 +2202,7 @@ public class GrindstonePanel extends PluginPanel {
             boolean originalReminder = metadata.isDeadlineReminder();
             SwingUtilities.invokeLater(() -> {
                 DeadlineForm form = new DeadlineForm(originalDeadline, originalReminder);
-                while (profile == active && JOptionPane.showConfirmDialog(this, form, "Personal deadline", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
+                while (profile == active && JOptionPane.showConfirmDialog(DialogPlacement.owner(this), form, "Personal deadline", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
                     try {
                         long deadlineAt = form.getDeadlineAt();
                         boolean reminder = form.isReminderEnabled();
@@ -2219,7 +2217,7 @@ public class GrindstonePanel extends PluginPanel {
                         });
                         return;
                     } catch (IllegalArgumentException failure) {
-                        JOptionPane.showMessageDialog(this, failure.getMessage());
+                        JOptionPane.showMessageDialog(DialogPlacement.owner(this), failure.getMessage());
                     }
                 }
             });
@@ -2238,7 +2236,7 @@ public class GrindstonePanel extends PluginPanel {
         JPanel editor = new JPanel(new BorderLayout(0, 8));
         editor.add(form, BorderLayout.CENTER);
         editor.add(repeat, BorderLayout.SOUTH);
-        while (JOptionPane.showConfirmDialog(this, editor, "Edit " + title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
+        while (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), editor, "Edit " + title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
             try {
                 repeat.commit();
                 RepeatSchedule schedule = repeat.getSchedule();
@@ -2250,13 +2248,13 @@ public class GrindstonePanel extends PluginPanel {
                 clientThread.invokeLater(() -> {
                     if (profile == active && active.getGoals().contains(goal)) {
                         if (openedSchedule != RepeatSchedule.NONE && openedSchedule.start(System.currentTimeMillis()) != openedPeriod) {
-                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, "The period reset while you were editing. Reopen the editor to avoid applying the previous period's progress."));
+                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), "The period reset while you were editing. Reopen the editor to avoid applying the previous period's progress."));
                             render();
                             return;
                         }
                         Goal collision = active.findMatchingGoal(goal, schedule);
                         if (collision != null && collision != goal) {
-                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, "That personal goal already has this schedule."));
+                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), "That personal goal already has this schedule."));
                             return;
                         }
                         Consumer<Goal> restore = active.snapshotEdit(goal);
@@ -2269,7 +2267,7 @@ public class GrindstonePanel extends PluginPanel {
                 });
                 return;
             } catch (ParseException | IllegalArgumentException exception) {
-                JOptionPane.showMessageDialog(this, exception instanceof IllegalArgumentException ? exception.getMessage() : "Enter valid progress and target numbers.", "Check goal details", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(DialogPlacement.owner(this), exception instanceof IllegalArgumentException ? exception.getMessage() : "Enter valid progress and target numbers.", "Check goal details", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -2281,11 +2279,11 @@ public class GrindstonePanel extends PluginPanel {
         preview.setLineWrap(true);
         preview.setWrapStyleWord(true);
         preview.setFont(UiTypography.BODY);
-        return JOptionPane.showConfirmDialog(this, new JScrollPane(preview), "Preview goal changes", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION;
+        return JOptionPane.showConfirmDialog(DialogPlacement.owner(this), new JScrollPane(preview), "Preview goal changes", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION;
     }
 
     private void deleteGoal(GrindstoneProfile active, Goal goal, String title) {
-        if (profile != active || JOptionPane.showConfirmDialog(this, "Remove " + title + " from your goals?\nYour game progress is unaffected.", "Delete goal", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
+        if (profile != active || JOptionPane.showConfirmDialog(DialogPlacement.owner(this), "Remove " + title + " from your goals?\nYour game progress is unaffected.", "Delete goal", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
             return;
         }
         clientThread.invokeLater(() -> {
@@ -2300,7 +2298,7 @@ public class GrindstonePanel extends PluginPanel {
         undoDeleteButton.setVisible(false);
         clientThread.invokeLater(() -> {
             if (!undo.undo(profile)) {
-                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, "Undo expired after a later edit, profile change or period reset."));
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), "Undo expired after a later edit, profile change or period reset."));
             }
             render();
         });
@@ -2328,7 +2326,7 @@ public class GrindstonePanel extends PluginPanel {
         long window = schedule.start(System.currentTimeMillis());
         JSpinner value = new JSpinner(new SpinnerNumberModel(current, 0L, target, 1L));
         value.setEditor(new JSpinner.NumberEditor(value, "#,##0"));
-        while (JOptionPane.showConfirmDialog(this, value, "Set progress (0–" + String.format(Locale.ROOT, "%,d", target) + ")", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
+        while (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), value, "Set progress (0–" + String.format(Locale.ROOT, "%,d", target) + ")", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
             try {
                 value.commitEdit();
                 long requested = ((Number) value.getValue()).longValue();
@@ -2340,7 +2338,7 @@ public class GrindstonePanel extends PluginPanel {
                 });
                 return;
             } catch (ParseException exception) {
-                JOptionPane.showMessageDialog(this, "Enter a whole number within the target.");
+                JOptionPane.showMessageDialog(DialogPlacement.owner(this), "Enter a whole number within the target.");
             }
         }
     }
@@ -2359,7 +2357,7 @@ public class GrindstonePanel extends PluginPanel {
             try {
                 requested = change.applyAsLong(goal.getProgressCurrent());
             } catch (IllegalStateException exception) {
-                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, exception.getMessage()));
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), exception.getMessage()));
                 render();
                 return;
             }

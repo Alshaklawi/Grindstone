@@ -2,13 +2,13 @@ package com.grindstone.ui.editor;
 
 import com.grindstone.content.goal.Goal;
 import com.grindstone.ui.Icon;
+import com.grindstone.ui.util.DialogPlacement;
 import com.grindstone.ui.util.UiTypography;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.text.ParseException;
@@ -98,7 +98,6 @@ public final class GoalCreationDialog extends JDialog {
         });
         updateReady();
         fitToForm();
-        setLocationRelativeTo(owner);
     }
 
     private void updateReady() {
@@ -107,14 +106,12 @@ public final class GoalCreationDialog extends JDialog {
     }
 
     private void fitToForm() {
-        Rectangle bounds = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
+        Rectangle bounds = DialogPlacement.usableBounds(getOwner());
         Dimension desired = form.getPreferredSize();
         scroll.setPreferredSize(new Dimension(desired.width, Math.min(desired.height, Math.max(180, bounds.height - 230))));
         pack();
         setSize(Math.min(Math.max(480, getWidth()), bounds.width - 40), Math.min(getHeight(), bounds.height - 40));
-        if (isShowing()) {
-            setLocation(Math.max(bounds.x, Math.min(getX(), bounds.x + bounds.width - getWidth())), Math.max(bounds.y, Math.min(getY(), bounds.y + bounds.height - getHeight())));
-        }
+        DialogPlacement.center(this, getOwner());
     }
 
     private void submit() {
