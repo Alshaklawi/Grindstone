@@ -5,6 +5,7 @@ import java.awt.Container;
 import java.awt.Dimension;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
@@ -17,6 +18,41 @@ import static org.junit.Assert.*;
  * @since 10/19/2026
  */
 public class GoalCardLayoutTest {
+    @Test
+    public void progressShowsPercentageAlongsideCountsWithoutColorExplanation() throws Exception {
+        SwingUtilities.invokeAndWait(() -> {
+            GoalComponent card = card("Checklist", true);
+            assertTrue(hasLabel(card, "5 / 5 (100.0%)"));
+            card.setProgress(3, 7, "3 / 7");
+            assertTrue(hasLabel(card, "3 / 7 (42.9%)"));
+            card.setExpanded(false);
+            card.setProgressBarVisible(false);
+            assertTrue(hasLabel(card, "3 / 7 (42.9%)"));
+            card.setProgress(0, 7, "0 / 7");
+            assertTrue(hasLabel(card, "0 / 7 (0.0%)"));
+            card.setProgress(8, 7, "8 / 7");
+            assertTrue(hasLabel(card, "8 / 7 (100.0%)"));
+            card.setProgressStatus("Waiting for client data");
+            assertTrue(hasLabel(card, "Waiting for client data"));
+            card.setProgress(0, 0, "Waiting for client data");
+            assertTrue(hasLabel(card, "Waiting for client data"));
+            assertNull(progress(card).getToolTipText());
+        });
+    }
+
+    private static boolean hasLabel(Container parent, String text) {
+        for (Component child : parent.getComponents()) {
+            if (child instanceof JLabel && text.equals(((JLabel) child).getText()) && child.isVisible()) {
+                assertNull(((JLabel) child).getToolTipText());
+                return true;
+            }
+            if (child instanceof Container && hasLabel((Container) child, text)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Test
     public void replacingChecklistKeepsNeighboringCardsLeftAlignedAndFullWidth() throws Exception {
         SwingUtilities.invokeAndWait(() -> {

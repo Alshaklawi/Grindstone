@@ -432,7 +432,7 @@ public class GoalComponent extends JPanel {
         expandButton.setVisible(content.getComponentCount() > 0);
         progressBar.setProgress(progressCurrent, progressMaximum);
         setGoalStatus(progressMaximum > 0 && progressCurrent >= progressMaximum ? GoalStatus.COMPLETE : progressCurrent > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED);
-        progressLabel.setText(progressText);
+        progressLabel.setText(progressMaximum > 0 && progressStatus.isEmpty() ? String.format(Locale.ROOT, "%s (%.1f%%)", progressText, Math.min(100.0, progressCurrent * 100.0 / progressMaximum)) : progressText);
         progressLabel.setToolTipText(null);
         progressBar.setToolTipText(null);
         progressBar.setVisible(progressBarVisible);

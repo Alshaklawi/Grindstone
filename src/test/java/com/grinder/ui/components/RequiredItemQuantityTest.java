@@ -22,7 +22,7 @@ public class RequiredItemQuantityTest {
             JLabel quantity = label(component, "Required: 1,500,000,000");
             assertNotNull(quantity);
             component.setExpanded(false);
-            JLabel progress = label(component, "0 / 1,500,000,000 owned");
+            JLabel progress = label(component, "0 / 1,500,000,000 owned (0.0%)");
             assertNotNull(progress);
             for (Component current = progress; current != null; current = current.getParent()) {
                 assertTrue(current.isVisible());
