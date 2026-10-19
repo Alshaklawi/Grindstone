@@ -13,6 +13,10 @@ import net.runelite.client.config.Range;
  */
 @ConfigGroup("grinder")
 public interface GrinderConfig extends Config {
+    @ConfigItem(keyName = "groupSkillGoals", name = "Group related skill goals", description = "Keep each skill's level and XP targets together inside its category. Filters, pinning and recurring sections still apply.", section = DISPLAY_SECTION, position = 16)
+    default boolean groupSkillGoals() {
+        return true;
+    }
     @ConfigItem(keyName = "questGoalsEnabled", name = "Quest goals", description = "Show individual quests and quest series.", section = GOALS_SECTION, position = 4)
     default boolean questGoalsEnabled() {
         return true;

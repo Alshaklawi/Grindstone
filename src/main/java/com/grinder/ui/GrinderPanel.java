@@ -770,7 +770,7 @@ public class GrinderPanel extends PluginPanel {
         for (GoalView view : filteredGoals) {
             rows.add(java.util.Arrays.asList(view.goal, view.category, view.component.getClientProperty("grinder.repeat"), view.component.getClientProperty("grinder.pinned")));
         }
-        List<?> nextLayout = java.util.Arrays.asList(currentProfile, todayMode, config.showTodayOverview(), config.categorizedGoals(), config.groupRecurringGoals(), config.showPinnedSection(), new LinkedHashMap<>(collapsedCategories), new LinkedHashMap<>(collapsedRepeats), rows, allGoals.size());
+        List<?> nextLayout = java.util.Arrays.asList(currentProfile, todayMode, config.showTodayOverview(), config.categorizedGoals(), config.groupRecurringGoals(), config.groupSkillGoals(), config.showPinnedSection(), new LinkedHashMap<>(collapsedCategories), new LinkedHashMap<>(collapsedRepeats), rows, allGoals.size());
         if (nextLayout.equals(layoutKey)) {
             for (GoalView view : filteredGoals) {
                 GoalComponent previous = displayedCards.put(view.goal, view.component);
@@ -1229,12 +1229,31 @@ public class GrinderPanel extends PluginPanel {
             goalsPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 6, 0));
             goalsPanel.setAlignmentX(LEFT_ALIGNMENT);
 
-            for (GoalView view : goals) {
+            for (List<GoalView> group : config.groupSkillGoals() ? com.grinder.ui.util.SkillGoalGrouping.group(goals, view -> view.goal) : goals.stream().map(java.util.Collections::singletonList).collect(java.util.stream.Collectors.toList())) {
                 if (goalsPanel.getComponentCount() > 0) {
                     goalsPanel.add(Box.createVerticalStrut(12));
                 }
-                view.component.setAlignmentX(LEFT_ALIGNMENT);
-                goalsPanel.add(view.component);
+                if (group.size() == 1) {
+                    group.get(0).component.setAlignmentX(LEFT_ALIGNMENT);
+                    goalsPanel.add(group.get(0).component);
+                    continue;
+                }
+                JPanel skillGroup = new ContentHeightPanel();
+                skillGroup.setLayout(new BoxLayout(skillGroup, BoxLayout.Y_AXIS));
+                skillGroup.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+                skillGroup.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(ColorScheme.MEDIUM_GRAY_COLOR), BorderFactory.createEmptyBorder(6, 4, 4, 4)));
+                skillGroup.setAlignmentX(LEFT_ALIGNMENT);
+                JLabel heading = new JLabel(com.grinder.ui.util.SkillGoalGrouping.skill(group.get(0).goal).getName());
+                heading.setFont(UiTypography.TITLE);
+                heading.setBorder(BorderFactory.createEmptyBorder(0, 5, 6, 0));
+                heading.setToolTipText("Related goals for this skill. Each target keeps its own progress, actions and history.");
+                skillGroup.add(heading);
+                for (GoalView view : group) {
+                    view.component.setAlignmentX(LEFT_ALIGNMENT);
+                    skillGroup.add(view.component);
+                    skillGroup.add(Box.createVerticalStrut(4));
+                }
+                goalsPanel.add(skillGroup);
             }
 
             categorySection.add(goalsPanel);
