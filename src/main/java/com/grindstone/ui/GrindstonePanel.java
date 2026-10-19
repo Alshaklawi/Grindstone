@@ -498,7 +498,7 @@ public class GrindstonePanel extends PluginPanel {
         styleComboBox(statusFilter);
         styleComboBox(sortFilter);
         UiTooltips.set(categoryFilter, "Show goals from one category, or choose All categories.");
-        UiTooltips.set(statusFilter, "Filter by progress state. Complete also shows goals hidden by the completed-goals setting.");
+        UiTooltips.set(statusFilter, "Filter by progress state. Complete also shows finished one-time goals and hidden recurring completions.");
         UiTooltips.set(sortFilter, "Sort within each category. Closest unfinished puts incomplete goals nearest their target first.");
         UiTooltips.set(typeFilter, "Custom includes manual checklists. Linked goals combine existing trackers. Filter base stats, session gains or personal deadlines without deleting anything.");
 
@@ -1008,6 +1008,8 @@ public class GrindstonePanel extends PluginPanel {
         if (filteredGoals.isEmpty()) {
             if (currentProfile.getGoals().isEmpty()) {
                 addMessage("No goals yet", "Choose Add goal to start tracking a skill, activity, item or personal goal.");
+            } else if (!todayMode && !allGoals.isEmpty() && allGoals.stream().allMatch(view -> isComplete(view.status))) {
+                addMessage("All goals complete", "Choose Add goal for your next target, or Done to see your completed goals.");
             } else {
                 addMessage(todayMode ? "No matching routine goals" : "No matching goals", todayMode ? "Clear filters or choose Repeat in a supported goal's editor." : "Try another search term or clear your filters.");
             }
@@ -1214,7 +1216,7 @@ public class GrindstonePanel extends PluginPanel {
             selections.add("Sort: " + sortFilter.getSelectedItem());
         }
         if (config.hideCompletedGoals() && ALL_STATUSES.equals(selectedStatus)) {
-            selections.add("Completed hidden by settings");
+            selections.add("Completed recurring goals hidden by settings");
         }
         filterSummary.setVisible(!selections.isEmpty());
         String selectionText = String.join(" · ", selections);
@@ -1222,6 +1224,10 @@ public class GrindstonePanel extends PluginPanel {
         filterSummary.setToolTipText(selectionText);
 
         for (GoalView view : goals) {
+            RepeatSchedule schedule = (RepeatSchedule) view.component.getClientProperty("grindstone.repeat");
+            if (isComplete(view.status) && schedule == RepeatSchedule.NONE && !COMPLETE.equals(selectedStatus)) {
+                continue;
+            }
             if (!matchesSearch(query, view.title, view.goal.getDescription(), view.category.getDisplayName())) {
                 continue;
             }
@@ -1233,7 +1239,7 @@ public class GrindstonePanel extends PluginPanel {
             if (!matchesStatus(view.status, selectedStatus, config.hideCompletedGoals(), Boolean.TRUE.equals(view.component.getClientProperty("grindstone.ready")))) {
                 continue;
             }
-            if (!matchesSchedule((RepeatSchedule) view.component.getClientProperty("grindstone.repeat"), selectedSchedule) || pinnedOnly.isSelected() && !Boolean.TRUE.equals(view.component.getClientProperty("grindstone.pinned"))) {
+            if (!matchesSchedule(schedule, selectedSchedule) || pinnedOnly.isSelected() && !Boolean.TRUE.equals(view.component.getClientProperty("grindstone.pinned"))) {
                 continue;
             }
             Object deadline = view.component.getClientProperty("grindstone.deadline");

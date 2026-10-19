@@ -190,7 +190,7 @@ public interface GrindstoneConfig extends Config {
         return true;
     }
 
-    @ConfigItem(keyName = "hideCompletedGoals", name = "Hide completed goals", description = "Keep completed goals out of the main list. You can turn this off at any time.", section = GOALS_SECTION, position = 3)
+    @ConfigItem(keyName = "hideCompletedGoals", name = "Hide completed recurring goals", description = "Also hide completed daily, weekly and monthly goals. Completed one-time goals are hidden automatically. Select Done to view completed goals.", section = GOALS_SECTION, position = 3)
     default boolean hideCompletedGoals() {
         return false;
     }
