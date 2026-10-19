@@ -9,6 +9,7 @@ nb-configuration.xml
 nbproject/
 *.class
 grinder/profiles/
+grindstone/profiles/
 /bin/
 /out/
 /.tmp/

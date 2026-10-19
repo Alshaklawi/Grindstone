@@ -79,7 +79,7 @@ import net.runelite.client.util.Text;
  * @since 10/18/2026
  */
 @Slf4j
-@PluginDescriptor( internalName = "grinder", name = "Grindstone", description = "Track collection log progress and personal goals", tags = {"collection", "goals", "tracker"} )
+@PluginDescriptor( internalName = "grindstone", name = "Grindstone", description = "Track collection log progress and personal goals", tags = {"collection", "goals", "tracker"} )
 public class GrindstonePlugin extends Plugin {
     @Inject
     private Client client;

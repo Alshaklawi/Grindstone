@@ -41,6 +41,11 @@ test {
 
 tasks.register('checkPluginCompliance') {
     doLast {
+        def descriptor = file('src/main/java/com/grindstone/GrindstonePlugin.java').getText('UTF-8')
+        def internalName = descriptor =~ /internalName\s*=\s*"([^"]+)"/
+        if (!internalName.find() || internalName.group(1) != rootProject.name) {
+            throw new GradleException("PluginDescriptor.internalName must match the plugin's internal name: ${rootProject.name}")
+        }
         def forbidden = [
             'constructing Gson instead of injection': /new\s+Gson(?:Builder)?\s*\(/,
             'raw filesystem access': /\b(?:Files|Paths)\s*\.|java\.io\.(?:File|FileInputStream|FileOutputStream|FileReader|FileWriter|RandomAccessFile)\b/,
