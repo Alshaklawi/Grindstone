@@ -11,12 +11,20 @@ Launch with Java 11 using `./gradlew run`. For a Jagex Account, follow [RuneLite
 - Compare a started quest, finished quest, and quest-series count against the quest list.
 - Compare a region diary, all-region diary tier, combat reward points, difficulty task count, and boss task count against the corresponding interfaces.
 - Open the collection log and compare page and singleton unlocks. First-seen dates must not claim historical drop dates.
+- Check that pages from all five collection-log tabs appear in the goal picker. Try adding all pages twice; existing goals and targets must remain unchanged.
+- Add an individual combat-achievement task, compare its description and completion against the client, and verify it after relogging.
+- Compare available activity counters against their native interfaces. Check representative activity icons and category fallbacks.
 - Set a coin target and transfer coins between inventory, bank, and supported storage. The settled total must not inflate; spending must reduce progress.
 - Relog and switch accounts. Goals and history must remain isolated, and unknown bank storage must be labelled until loaded.
 
 ## New workflow verification
 
 - Open the bank and check the bank snapshot timestamp. Close it and confirm the label says snapshot, not live or fully synchronized.
+- Check update and snapshot status in the header, not repeated on goal entries.
+- Switch between categorized and flat lists; test search, pins, visibility settings, and empty results in both layouts.
+- Expand and collapse item and task details. Numeric progress and the progress bar must remain visible; the saved expansion choice must survive relogging.
+- Try targets of 1, 7, 20, 21, and 100. At the default cap there must be no more than 20 chunks; 100 must use chunks worth 5. Try a lower configured cap too.
+- Export a new backup and confirm goal types use short IDs rather than Java class paths. An older class-tagged backup must still import.
 - Pin and unpin goals. Pins should appear above categories, respect filters, and survive relogging.
 - Complete a small custom target, then raise it. Its status must become incomplete while completion history retains the old target and observation date.
 - Change a skill, quest, boss, tier, and item through Edit goal. Cancelling must keep the original. Selecting a duplicate must not delete or overwrite either goal.
