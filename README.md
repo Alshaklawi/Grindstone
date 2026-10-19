@@ -22,6 +22,8 @@ The dashboard separates new, active, completed and waiting goals. Use the counte
 
 Goal pickers have searchable, categorized lists. Activities are grouped into bossing, raids, Slayer, clues, minigames and skilling.
 
+Item search lists normal items only; entering a noted or placeholder ID resolves its normal item. Owned-item goals combine normal and noted quantities, but never count bank placeholders.
+
 ## Progress and privacy
 
 Progress uses information available to your logged-in client. Some readings require opening the relevant game interface. Item quantities cover known storage, not every possible location, and collection-log dates record when Grinder first observed an unlock.

@@ -52,7 +52,7 @@ public final class ItemPickerPanel extends JPanel {
         search.setIcon(IconTextField.Icon.SEARCH);
         search.setPreferredSize(new Dimension(350, 32));
         search.addActionListener(event -> search());
-        UiTooltips.set(search, "Search local client item names (at least 2 letters), or enter an exact numeric ID with optional #.");
+        UiTooltips.set(search, "Search normal item names (at least 2 letters), or enter an ID with optional #. Noted and placeholder IDs resolve to the normal item; placeholders never count as owned items.");
         add(search, BorderLayout.NORTH);
         results.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         results.setFixedCellHeight(42);

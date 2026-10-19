@@ -70,7 +70,7 @@ public final class PossessedItemGoal implements Goal {
     }
     @Override
     public String getDescription() {
-        return storage == null ? "Open your bank and item storage to include their contents." : storage.describe(normalizedItem > 0 ? normalizedItem : item);
+        return "Normal and noted quantities are combined; bank placeholders are excluded. " + (storage == null ? "Open your bank and item storage to include their contents." : storage.describe(normalizedItem > 0 ? normalizedItem : item));
     }
     @Override
     public String getCardDescription() {

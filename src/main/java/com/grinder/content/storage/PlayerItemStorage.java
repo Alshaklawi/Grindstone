@@ -1,4 +1,5 @@
 package com.grinder.content.storage;
+import com.grinder.util.ItemVariants;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -100,7 +101,7 @@ public final class PlayerItemStorage {
             if (definition.getPlaceholderTemplateId() != -1) {
                 return -1;
             }
-            return definition.getNote() != -1 ? definition.getLinkedNoteId() : key;
+            return ItemVariants.normalId(definition);
         });
     }
     public void refreshVariables(Client client) {

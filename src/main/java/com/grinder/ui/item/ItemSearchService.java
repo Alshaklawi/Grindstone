@@ -1,5 +1,6 @@
 package com.grinder.ui.item;
 
+import com.grinder.util.ItemVariants;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -102,7 +103,7 @@ public final class ItemSearchService implements ItemLookup {
                 if (result != null) {
                     found.add(withImage(result));
                 }
-                deliver(cancelled, callback, new Response(found, result == null ? "That ID has no usable item definition." : "Item ID resolved. Confirm its name and icon below.", true));
+                deliver(cancelled, callback, new Response(found, result == null ? "That ID has no usable item definition." : result.id != id ? "Variant resolved to its normal item. Noted and normal quantities are tracked together." : "Item ID resolved. Confirm its name and icon below.", true));
                 return true;
             }
             if (query.length() < 2) {
@@ -157,14 +158,18 @@ public final class ItemSearchService implements ItemLookup {
             if (item == null) {
                 return null;
             }
+            if (item.getNote() != -1 || item.getPlaceholderTemplateId() != -1) {
+                if (!explicitId) {
+                    return null;
+                }
+                int normal = ItemVariants.normalId(item);
+                return normal > 0 && normal < client.getItemCount() && normal != id ? readItem(normal, false) : null;
+            }
             String name = item.getMembersName();
             if (name == null || name.trim().isEmpty()) {
                 name = item.getName();
             }
             if (name == null || name.trim().isEmpty() || "null".equalsIgnoreCase(name)) {
-                return null;
-            }
-            if (!explicitId && (item.getNote() != -1 || item.getPlaceholderTemplateId() != -1)) {
                 return null;
             }
             return new Result(id, name, null);
