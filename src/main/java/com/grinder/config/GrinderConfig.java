@@ -50,7 +50,7 @@ public interface GrinderConfig extends Config {
     default boolean categorizedGoals() {
         return true;
     }
-    @ConfigItem(keyName = "showUpdateStatus", name = "Show last snapshot", description = "Show the last observed bank snapshot time in the top header.", section = DISPLAY_SECTION, position = 7)
+    @ConfigItem(keyName = "showUpdateStatus", name = "Show last snapshot", description = "Show the latest inventory, equipment or storage snapshot time in the top header.", section = DISPLAY_SECTION, position = 7)
     default boolean showUpdateStatus() {
         return true;
     }

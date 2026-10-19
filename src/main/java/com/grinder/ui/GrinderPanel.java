@@ -334,7 +334,7 @@ public class GrinderPanel extends PluginPanel {
         header.add(overallProgress);
         updateStatusLabel.setFont(UiTypography.META);
         updateStatusLabel.setAlignmentX(LEFT_ALIGNMENT);
-        updateStatusLabel.setToolTipText("Last known bank snapshot. Open storage to refresh it.");
+        updateStatusLabel.setToolTipText("Latest inventory, equipment or storage snapshot captured this login. This does not mean every storage has been loaded.");
         header.add(Box.createVerticalStrut(4));
         header.add(updateStatusLabel);
 
@@ -913,7 +913,7 @@ public class GrinderPanel extends PluginPanel {
 
                 updateStatusLabel.setText("<html>" + (storageStatus == null ? "" : HtmlUtils.escape(storageStatus) + "<br>") + (dueCount == 0 ? "" : dueCount + " personal deadline(s) due within 24h / past due<br>") + (config.showUpdateStatus() ? updateText : "") + "</html>");
                 updateStatusLabel.setVisible(config.showUpdateStatus() && currentProfile != null || storageStatus != null || dueCount > 0);
-                updateStatusLabel.setToolTipText("Last bank snapshot. Open your bank to refresh it; other storage may be incomplete.");
+                updateStatusLabel.setToolTipText("Latest inventory, equipment or storage snapshot captured this login. This does not mean every storage has been loaded.");
                 renderPrepared(currentProfile, allGoals);
             });
         });

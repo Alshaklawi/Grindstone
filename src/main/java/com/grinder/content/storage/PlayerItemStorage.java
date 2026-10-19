@@ -86,7 +86,7 @@ public final class PlayerItemStorage {
         return seen == null ? "Bank not loaded this login" : "Bank snapshot: " + DateTimeFormatter.ofPattern("HH:mm:ss z", Locale.ROOT).withZone(ZoneId.systemDefault()).format(seen);
     }
     public String snapshotLabel() {
-        Instant seen = lastSeen.get(PlayerStorageSource.BANK);
+        Instant seen = lastSeen.values().stream().max(Instant::compareTo).orElse(null);
         return "Last snapshot: " + (seen == null ? "—" : DateTimeFormatter.ofPattern("HH:mm:ss z", Locale.ROOT).withZone(ZoneId.systemDefault()).format(seen));
     }
     public boolean hasBankSnapshot() {

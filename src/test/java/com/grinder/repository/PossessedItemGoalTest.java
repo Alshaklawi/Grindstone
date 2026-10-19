@@ -2,7 +2,13 @@ package com.grinder.repository;
 import com.grinder.content.goal.GoalStatus;
 import com.grinder.content.goal.impl.item.PossessedItemGoal;
 import com.grinder.content.storage.PlayerItemStorage;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.function.IntUnaryOperator;
 import net.runelite.api.Item;
 import net.runelite.api.gameval.InventoryID;
@@ -18,6 +24,19 @@ import static org.junit.Assert.*;
  * @since 10/18/2026
  */
 public class PossessedItemGoalTest {
+    @Test
+    public void snapshotHeaderUpdatesWithoutOpeningTheBankAndResetsOnLogout() {
+        Instant now = Instant.parse("2026-10-19T12:34:56Z");
+        PlayerItemStorage storage = new PlayerItemStorage(Clock.fixed(now, ZoneOffset.UTC));
+        assertEquals("Last snapshot: —", storage.snapshotLabel());
+        put(storage, InventoryID.INV, ItemID.COINS, 10);
+        String time = DateTimeFormatter.ofPattern("HH:mm:ss z", Locale.ROOT).withZone(ZoneId.systemDefault()).format(now);
+        assertEquals("Last snapshot: " + time, storage.snapshotLabel());
+        assertFalse(storage.hasBankSnapshot());
+        storage.reset();
+        assertEquals("Last snapshot: —", storage.snapshotLabel());
+    }
+
     @Test
     public void combinesPersonalContainersWithLongArithmetic() {
         PlayerItemStorage storage = new PlayerItemStorage();
