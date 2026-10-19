@@ -35,6 +35,10 @@ public interface GrinderConfig extends Config {
     default boolean showActivityIcons() { return true; }
     @ConfigItem(keyName = "groupRecurringGoals", name = "Group recurring goals", description = "Show daily, weekly and monthly sections with UTC reset countdowns. Turning this off keeps repeat goals in the normal layout.", section = DISPLAY_SECTION, position = 11)
     default boolean groupRecurringGoals() { return true; }
+    @ConfigItem(keyName = "showTodayOverview", name = "Show routine overview", description = "Show recurring completion and next reset above the All goals list. The Today view always shows it.", section = DISPLAY_SECTION, position = 12)
+    default boolean showTodayOverview() { return true; }
+    @ConfigItem(keyName = "showTrackingState", name = "Show tracking reliability", description = "Distinguish manual, client-read, snapshot, partial-storage and captured-baseline progress. Unavailable data is never presented as a confirmed zero.", section = DISPLAY_SECTION, position = 13)
+    default boolean showTrackingState() { return true; }
     @Range(min = 1, max = 20)
     @ConfigItem(keyName = "maxProgressChunks", name = "Maximum progress chunks", description = "At most 20 chunks. For a target of 100 and 20 chunks, each chunk represents 5.", section = DISPLAY_SECTION, position = 4)
     default int maxProgressChunks() { return 20; }

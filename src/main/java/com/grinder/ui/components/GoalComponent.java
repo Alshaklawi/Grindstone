@@ -45,6 +45,8 @@ public class GoalComponent extends JPanel {
     private final JLabel requiredQuantityLabel = new JLabel();
     private final JLabel trackingNoteLabel = new JLabel();
     private final JLabel achievementNoteLabel = new JLabel();
+    private final JLabel reliabilityLabel = new JLabel();
+    public void setReliability(String label, String detail) { reliabilityLabel.setText(label); reliabilityLabel.setToolTipText(detail); reliabilityLabel.setVisible(label != null && !label.isEmpty()); }
     private final JLabel progressLabel = new JLabel();
     private final SegmentedProgressBar progressBar = new SegmentedProgressBar();
     private final JLabel statusLabel = new JLabel();
@@ -145,6 +147,11 @@ public class GoalComponent extends JPanel {
         headerText.add(requiredQuantityLabel);
         headerText.add(trackingNoteLabel);
         headerText.add(achievementNoteLabel);
+        reliabilityLabel.setFont(UiTypography.META);
+        reliabilityLabel.setForeground(MUTED_COLOR);
+        reliabilityLabel.setAlignmentX(LEFT_ALIGNMENT);
+        reliabilityLabel.setVisible(false);
+        headerText.add(reliabilityLabel);
         headerText.add(Box.createVerticalStrut(2));
         JPanel headerDetails = new JPanel(new BorderLayout(4, 0));
         headerDetails.setOpaque(false);
