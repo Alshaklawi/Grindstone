@@ -121,7 +121,7 @@ public final class PlayerItemStorage {
                 .map(entry -> entry.getKey() + ": " + String.format(Locale.ROOT, "%,d", entry.getValue()))
                 .collect(Collectors.joining("; "));
         return (amounts.isEmpty() ? "No items found in known storage." : amounts + ".")
-                + (containers.containsKey(PlayerStorageSource.BANK) ? " " + freshness() + "." : " Open your bank to include it.")
+                + (containers.containsKey(PlayerStorageSource.BANK) ? "" : " Open your bank to include it.")
                 + " Known contents this login only; open other storage to refresh it. Shared storage, GE offers, POH, deathpiles and unexposed storage are excluded.";
     }
 }

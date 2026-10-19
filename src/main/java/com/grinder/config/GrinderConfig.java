@@ -13,6 +13,26 @@ import net.runelite.client.config.Range;
  */
 @ConfigGroup("grinder")
 public interface GrinderConfig extends Config {
+    @ConfigItem(keyName = "questGoalsEnabled", name = "Quest goals", description = "Show individual quests and quest series.", section = GOALS_SECTION, position = 4)
+    default boolean questGoalsEnabled() { return true; }
+    @ConfigItem(keyName = "diaryGoalsEnabled", name = "Achievement diary goals", description = "Show region and all-region diary tier goals.", section = GOALS_SECTION, position = 5)
+    default boolean diaryGoalsEnabled() { return true; }
+    @ConfigItem(keyName = "combatAchievementGoalsEnabled", name = "Combat achievement goals", description = "Show boss, tier, difficulty and individual combat-task goals.", section = GOALS_SECTION, position = 6)
+    default boolean combatAchievementGoalsEnabled() { return true; }
+    @ConfigItem(keyName = "ownedItemGoalsEnabled", name = "Owned item goals", description = "Show quantities across known personal item storage.", section = GOALS_SECTION, position = 7)
+    default boolean ownedItemGoalsEnabled() { return true; }
+    @ConfigItem(keyName = "customGoalsEnabled", name = "Custom goals", description = "Show manually managed goals and notes.", section = GOALS_SECTION, position = 8)
+    default boolean customGoalsEnabled() { return true; }
+    @ConfigItem(keyName = "categorizedGoals", name = "Group by category", description = "Group unpinned goals into categories. Turn off for a single sorted list.", section = DISPLAY_SECTION, position = 6)
+    default boolean categorizedGoals() { return true; }
+    @ConfigItem(keyName = "showUpdateStatus", name = "Show updates in header", description = "Show the client refresh time and bank snapshot status in the top header.", section = DISPLAY_SECTION, position = 7)
+    default boolean showUpdateStatus() { return true; }
+    @ConfigItem(keyName = "showPinnedSection", name = "Show pinned section", description = "Keep pinned goals above categories. Turning this off displays them in the normal list.", section = DISPLAY_SECTION, position = 8)
+    default boolean showPinnedSection() { return true; }
+    @ConfigItem(keyName = "showCompletionHistory", name = "Show completion history", description = "Show observed completion history actions and reminders. Saved history is retained.", section = DISPLAY_SECTION, position = 9)
+    default boolean showCompletionHistory() { return true; }
+    @ConfigItem(keyName = "showActivityIcons", name = "Activity-specific icons", description = "Use native item icons for activities when goal icons are enabled.", section = DISPLAY_SECTION, position = 10)
+    default boolean showActivityIcons() { return true; }
     @Range(min = 1, max = 20)
     @ConfigItem(keyName = "maxProgressChunks", name = "Maximum progress chunks", description = "At most 20 chunks. For a target of 100 and 20 chunks, each chunk represents 5.", section = DISPLAY_SECTION, position = 4)
     default int maxProgressChunks() { return 20; }

@@ -69,7 +69,6 @@ public final class PossessedItemGoal implements Goal {
         refresh(client);
         com.grinder.ui.components.GoalComponent component = Goal.super.build(client);
         component.setRequiredQuantity(amount);
-        component.setTrackingNote(storage == null ? "Storage not loaded this login" : storage.freshness());
         return component;
     }
 }

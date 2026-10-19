@@ -113,6 +113,7 @@ public class GrinderPanel extends PluginPanel {
     private final JPanel header = new JPanel();
     private final JPanel controlsPanel = new JPanel();
     private final JLabel summaryLabel = new JLabel("No profile loaded");
+    private final JLabel updateStatusLabel = new JLabel();
     private final JLabel resultsLabel = new JLabel();
     private final SegmentedProgressBar overallProgress = new SegmentedProgressBar();
     private final IconTextField searchField = new IconTextField();
@@ -222,6 +223,11 @@ public class GrinderPanel extends PluginPanel {
         header.add(summaryLabel);
         header.add(Box.createVerticalStrut(8));
         header.add(overallProgress);
+        updateStatusLabel.setFont(UiTypography.META);
+        updateStatusLabel.setAlignmentX(LEFT_ALIGNMENT);
+        updateStatusLabel.setToolTipText("Client view refresh and last known bank snapshot. Open storage to load or refresh it; this is not an all-storage live total.");
+        header.add(Box.createVerticalStrut(4));
+        header.add(updateStatusLabel);
 
         JPanel counters = new JPanel(new GridLayout(1, 3, 4, 0));
         counters.setOpaque(false);
@@ -528,7 +534,12 @@ public class GrinderPanel extends PluginPanel {
                     if (goal == null || (!config.collectionLogEnabled() && isCollectionLogGoal(goal))
                             || (!config.levelGoalsEnabled() && isLevelGoal(goal))
                             || (!config.experienceGoalsEnabled() && isExperienceGoal(goal))
-                            || (!config.trackerGoalsEnabled() && goal instanceof TrackerGoal)) {
+                            || (!config.trackerGoalsEnabled() && goal instanceof TrackerGoal)
+                            || (!config.questGoalsEnabled() && goal.getCategory() == GoalCategory.QUEST)
+                            || (!config.diaryGoalsEnabled() && goal.getCategory() == GoalCategory.ACHIEVEMENT_DIARY)
+                            || (!config.combatAchievementGoalsEnabled() && goal.getCategory() == GoalCategory.COMBAT_ACHIEVEMENT)
+                            || (!config.ownedItemGoalsEnabled() && goal instanceof com.grinder.content.goal.impl.item.PossessedItemGoal)
+                            || (!config.customGoalsEnabled() && goal instanceof CustomGoal)) {
                         continue;
                     }
 
@@ -549,8 +560,8 @@ public class GrinderPanel extends PluginPanel {
                     component.addGoalAction(pinned ? "Unpin goal" : "Pin goal", "Pinned goals appear first, while still respecting your search and filters.", event -> clientThread.invokeLater(() -> {
                         if (profile == currentProfile && currentProfile.getGoals().contains(goal)) { currentProfile.metadata(goal).setPinned(!pinned); render(); }
                     }));
-                    component.addGoalAction("Completion history...", "View first-observed completion times for this goal's targets.", event -> showHistory(history));
-                    if (!metadata.getCompletions().isEmpty() && goal.getStatus() != GoalStatus.COMPLETE) { component.setAchievementNote("Previously reached a target · currently incomplete"); }
+                    if (config.showCompletionHistory()) { component.addGoalAction("Completion history...", "View first-observed completion times for this goal's targets.", event -> showHistory(history)); }
+                    component.setAchievementNote(config.showCompletionHistory() && !metadata.getCompletions().isEmpty() && goal.getStatus() != GoalStatus.COMPLETE ? "Previously reached a target · currently incomplete" : null);
 
                     allGoals.add(new GoalView(
                             goal,
@@ -564,11 +575,14 @@ public class GrinderPanel extends PluginPanel {
                 }
             }
 
+            String updateText = currentProfile == null ? "Not tracking" : "Updated " + java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss z", Locale.ROOT).withZone(java.time.ZoneId.systemDefault()).format(java.time.Instant.now()) + "<br>" + HtmlUtils.escape(currentProfile.getPlayerStorage().freshness());
             SwingUtilities.invokeLater(() -> {
                 if (version != renderVersion.get()) {
                     return;
                 }
 
+                updateStatusLabel.setText("<html>" + updateText + "</html>");
+                updateStatusLabel.setVisible(config.showUpdateStatus());
                 renderPrepared(currentProfile, allGoals);
             });
         });
@@ -610,7 +624,7 @@ public class GrinderPanel extends PluginPanel {
         List<GoalView> pinnedGoals = new ArrayList<>();
         List<GoalView> remainingGoals = new ArrayList<>();
         for (GoalView view : filteredGoals) {
-            if (Boolean.TRUE.equals(view.component.getClientProperty("grinder.pinned"))) { pinnedGoals.add(view); }
+            if (config.showPinnedSection() && Boolean.TRUE.equals(view.component.getClientProperty("grinder.pinned"))) { pinnedGoals.add(view); }
             else { remainingGoals.add(view); }
         }
         if (!pinnedGoals.isEmpty()) {
@@ -620,6 +634,11 @@ public class GrinderPanel extends PluginPanel {
             main.add(pinnedHeading);
             main.add(Box.createVerticalStrut(8));
             for (GoalView view : pinnedGoals) { view.component.setAlignmentX(LEFT_ALIGNMENT); main.add(view.component); main.add(Box.createVerticalStrut(12)); }
+        }
+        if (!config.categorizedGoals()) {
+            for (GoalView view : remainingGoals) { view.component.setAlignmentX(LEFT_ALIGNMENT); main.add(view.component); main.add(Box.createVerticalStrut(12)); }
+            refreshPanel();
+            return;
         }
         Map<GoalCategory, List<GoalView>> groupedGoals = groupGoals(remainingGoals);
 
