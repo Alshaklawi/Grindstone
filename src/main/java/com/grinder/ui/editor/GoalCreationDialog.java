@@ -39,19 +39,27 @@ public final class GoalCreationDialog extends JDialog {
     private final JButton add = new JButton("Add goal");
     private final JTextArea error = new JTextArea(2, 28);
     private final JLabel heading = new JLabel("Track your next milestone");
+    private final JLabel introduction = new JLabel("Choose a focus, set a target and make it yours.");
     private Goal result;
 
     private GoalCreationDialog(Component owner, GoalEditorPanel form) {
         super(SwingUtilities.getWindowAncestor(owner), "Add goal", Dialog.ModalityType.APPLICATION_MODAL);
         this.form = form;
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setMinimumSize(new Dimension(420, 220));
+        setMinimumSize(new Dimension(480, 220));
         JPanel content = new JPanel(new BorderLayout(0, 12));
         content.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14));
         heading.setFont(FontManager.getRunescapeBoldFont());
         heading.setIcon(new ImageIcon(Icon.MAIN.getImage()));
         heading.setIconTextGap(10);
-        content.add(heading, BorderLayout.NORTH);
+        JPanel welcome = new JPanel(new BorderLayout(0, 6));
+        welcome.setOpaque(false);
+        welcome.add(heading, BorderLayout.NORTH);
+        introduction.setFont(UiTypography.BODY);
+        introduction.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+        welcome.add(introduction, BorderLayout.CENTER);
+        welcome.setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
+        content.add(welcome, BorderLayout.NORTH);
         scroll = new JScrollPane(form);
         scroll.setBorder(BorderFactory.createEmptyBorder());
         scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
@@ -95,7 +103,7 @@ public final class GoalCreationDialog extends JDialog {
 
     private void updateReady() {
         add.setEnabled(form.isReady());
-        add.setToolTipText(form.isReady() ? "Save this goal to the current player profile." : "Search for an item and select a result first.");
+        add.setToolTipText(form.isReady() ? "Save this goal to the current player profile." : "Choose an available entry or select an item search result to continue.");
     }
 
     private void fitToForm() {
@@ -103,7 +111,7 @@ public final class GoalCreationDialog extends JDialog {
         Dimension desired = form.getPreferredSize();
         scroll.setPreferredSize(new Dimension(desired.width, Math.min(desired.height, Math.max(180, bounds.height - 230))));
         pack();
-        setSize(Math.max(420, getWidth()), Math.min(getHeight(), bounds.height - 40));
+        setSize(Math.min(Math.max(480, getWidth()), bounds.width - 40), Math.min(getHeight(), bounds.height - 40));
         if (isShowing()) {
             setLocation(Math.max(bounds.x, Math.min(getX(), bounds.x + bounds.width - getWidth())), Math.max(bounds.y, Math.min(getY(), bounds.y + bounds.height - getHeight())));
         }
@@ -146,8 +154,9 @@ public final class GoalCreationDialog extends JDialog {
         dialog.add.setText(action);
         if (!"Add goal".equals(action)) {
             dialog.heading.setText("Update your tracker");
+            dialog.introduction.setText("Adjust your selection, target or repeat schedule.");
         }
-        dialog.add.setToolTipText("Save the selected goal to the current player profile.");
+        dialog.updateReady();
         dialog.setVisible(true);
         return dialog.result;
     }

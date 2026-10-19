@@ -129,6 +129,7 @@ import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
 import net.runelite.client.ui.components.IconTextField;
+import net.runelite.client.util.ImageUtil;
 
 /**
  * @author Ayman Yassen
@@ -364,12 +365,15 @@ public class GrinderPanel extends PluginPanel {
         header.add(Box.createVerticalStrut(8));
         header.add(counters);
 
-        JPanel goalActions = new JPanel(new GridLayout(1, 2, 6, 0));
+        JPanel goalActions = new JPanel(new GridLayout(2, 1, 0, 5));
         goalActions.setOpaque(false);
         goalActions.setAlignmentX(LEFT_ALIGNMENT);
-        goalActions.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
+        goalActions.setMaximumSize(new Dimension(Integer.MAX_VALUE, 65));
         JButton addGoal = new JButton("+ Add goal");
         styleButton(addGoal);
+        addGoal.setIcon(new ImageIcon(ImageUtil.resizeImage(Icon.MAIN.getImage(), 16, 16)));
+        addGoal.setIconTextGap(7);
+        addGoal.setFont(UiTypography.TITLE);
         addGoal.setToolTipText("Create an automatic tracker or a custom goal with manual progress.");
         addGoal.addActionListener(event -> showAddGoalDialog());
         goalActions.add(addGoal);

@@ -129,7 +129,7 @@ public final class GoalEditorPanel extends JPanel {
         setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         UiTooltips.set(type, "Choose a goal type. The form will show only the relevant fields.");
         UiTooltips.set(subject, "Choose the skill, activity or collection-log page to track.");
-        add(field("Goal type", type), BorderLayout.NORTH);
+        add(new GoalTypePicker(type), BorderLayout.NORTH);
         body.setOpaque(false);
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
         add(body, BorderLayout.CENTER);
