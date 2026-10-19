@@ -37,6 +37,8 @@ Record the client version, tracker type, expected result, actual result, and rel
 
 ## Base goals and expanded workflows
 
+- With a checklist next to activity cards, repeatedly check/uncheck steps and collapse/expand the checklist. Refreshes must not shift neighboring cards sideways or change their available width. Repeat in flat, categorized and pinned layouts; progress must stay visible while checklist details are collapsed.
+
 - Add base level and base XP goals with targets above your lowest skill. Check against every skill: the minimum reading must drive the bar, and the number of skills meeting the target must be correct. Training a non-lowest skill must not falsely raise the minimum. Boosts must not affect base levels. Edit the target and check the qualifying-skill count immediately. Try level 1/99 and XP 1/200m, then reject out-of-range values. Save/relog and verify targets remain.
 - Add per-skill and total session-XP goals. Existing XP must count as zero gains; manually earn XP, edit the target, and confirm gains are preserved. Restart one goal and check its new baseline. Relog/reconnect and confirm the session restarts while completion history and target settings remain. Session state must not transfer through backups.
 - Add a manual checklist with a long step name, then check/uncheck steps. Test narrow sidebar width, collapsed details, undo, cancellation and editing notes without losing checks. Make it daily or weekly: all steps must be required, resets must clear checks and archive progress. Leave the checkbox UI open across a UTC reset; an old-period click must not complete the new period. Back up / restore on the same account, then test another account: checks must be cleared there.

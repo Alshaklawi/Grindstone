@@ -860,6 +860,7 @@ public class GrinderPanel extends PluginPanel {
                 if (previous != null && previous != view.component && previous.getParent() != null) {
                     java.awt.Container parent = previous.getParent();
                     int index = java.util.Arrays.asList(parent.getComponents()).indexOf(previous);
+                    view.component.setAlignmentX(previous.getAlignmentX());
                     parent.remove(previous);
                     parent.add(view.component, index);
                     parent.revalidate();

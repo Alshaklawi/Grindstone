@@ -107,6 +107,7 @@ public class GoalComponent extends JPanel {
 
     public GoalComponent() {
         super(new BorderLayout(0, 6));
+        setAlignmentX(LEFT_ALIGNMENT);
         setOpaque(true);
         setBackground(CARD_COLOR);
         setBorder(BorderFactory.createCompoundBorder( BorderFactory.createLineBorder(ColorScheme.BORDER_COLOR), BorderFactory.createEmptyBorder(9, 8, 9, 8)));
