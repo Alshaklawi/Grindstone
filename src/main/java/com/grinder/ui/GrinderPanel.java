@@ -714,6 +714,20 @@ public class GrinderPanel extends PluginPanel {
                     if (repeating) {
                         component.addGoalAction("Restart current period...", "Archive observed progress and capture a fresh baseline. Game progress is never reset.", event -> restartPeriod(currentProfile, goal));
                     }
+                    if (goal instanceof com.grinder.content.goal.impl.experience.SessionExperienceGoal) {
+                        component.addGoalAction("Restart session XP...", "Clear only this goal's observed login gains and capture the current XP as its new baseline.", event -> {
+                            if (JOptionPane.showConfirmDialog(this, "Reset this goal's session XP progress? Your game XP and saved completion history are unchanged.", "Restart session goal", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
+                                clientThread.invokeLater(() -> {
+                                    if (profile == currentProfile && currentProfile.getGoals().contains(goal) && hasClientProfile(currentProfile)) {
+                                        ((com.grinder.content.goal.impl.experience.SessionExperienceGoal) goal).restart();
+                                        goal.refresh(client);
+                                        currentProfile.touch();
+                                        refreshAll();
+                                    }
+                                });
+                            }
+                        });
+                    }
                     component.setAchievementNote(repeating ? recurring.getSchedule() + " · " + (recurring.getBaselineAt() == 0 ? "Baseline pending" : "This period") : config.showCompletionHistory() && !metadata.getCompletions().isEmpty() && status != GoalStatus.COMPLETE ? "Previously reached · now incomplete" : null);
 
                     GoalView view = new GoalView( goal, component, safeTitle(goal), safeCategory(goal), status, goal.hasProgress(), progressCurrent, progressMaximum);
@@ -1930,7 +1944,7 @@ public class GrinderPanel extends PluginPanel {
     }
 
     private boolean isExperienceGoal(Goal goal) {
-        return goal instanceof SkillExperienceGoal || goal instanceof TotalExperienceGoal || goal instanceof com.grinder.content.goal.impl.experience.BaseExperienceGoal;
+        return goal instanceof SkillExperienceGoal || goal instanceof TotalExperienceGoal || goal instanceof com.grinder.content.goal.impl.experience.BaseExperienceGoal || goal instanceof com.grinder.content.goal.impl.experience.SessionExperienceGoal;
     }
 
 

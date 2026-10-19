@@ -232,7 +232,7 @@ public class GrinderPlugin extends Plugin {
         boolean changed = false;
 
         for (Goal goal : profile.getGoals()) {
-            if ((goal instanceof SkillLevelGoal && ((SkillLevelGoal) goal).getSkill() == event.getSkill()) || (goal instanceof SkillExperienceGoal && ((SkillExperienceGoal) goal).getSkill() == event.getSkill()) || goal instanceof TotalLevelGoal || goal instanceof TotalExperienceGoal || goal instanceof CombatLevelGoal || goal instanceof com.grinder.content.goal.BaseSkillGoal) {
+            if ((goal instanceof SkillLevelGoal && ((SkillLevelGoal) goal).getSkill() == event.getSkill()) || (goal instanceof SkillExperienceGoal && ((SkillExperienceGoal) goal).getSkill() == event.getSkill()) || goal instanceof TotalLevelGoal || goal instanceof TotalExperienceGoal || goal instanceof CombatLevelGoal || goal instanceof com.grinder.content.goal.BaseSkillGoal || goal instanceof com.grinder.content.goal.impl.experience.SessionExperienceGoal) {
                 changed |= goal.refresh(client);
             }
         }
@@ -303,6 +303,9 @@ public class GrinderPlugin extends Plugin {
         loaded.getPlayerStorage().captureLoaded(client);
         loaded.getCollectionLogHistory().observe(client.getItemContainer(net.runelite.api.gameval.InventoryID.COLLECTION_TRANSMIT));
         for (Goal goal : loaded.getGoals()) {
+            if (goal instanceof com.grinder.content.goal.impl.experience.SessionExperienceGoal) {
+                ((com.grinder.content.goal.impl.experience.SessionExperienceGoal) goal).restart();
+            }
             goal.refresh(client);
         }
         panel.setStorageStatus(null);

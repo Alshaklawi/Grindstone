@@ -222,6 +222,9 @@ public final class GrinderRepository {
                 }
 
                 if (goal != null) {
+                    if (goal instanceof com.grinder.content.goal.impl.experience.SessionExperienceGoal) {
+                        ((com.grinder.content.goal.impl.experience.SessionExperienceGoal) goal).validate();
+                    }
                     if (goal instanceof com.grinder.content.goal.impl.LinkedGoal) {
                         ((com.grinder.content.goal.impl.LinkedGoal) goal).validate();
                     }

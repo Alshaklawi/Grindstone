@@ -194,6 +194,7 @@ public class GrinderProfile {
         addDefaultCollectionItem(ItemID.DRAGON_PICKAXE);
         add(new com.grinder.content.goal.impl.level.BaseLevelGoal());
         add(new com.grinder.content.goal.impl.experience.BaseExperienceGoal());
+        add(new com.grinder.content.goal.impl.experience.SessionExperienceGoal(Skill.WOODCUTTING));
         Goal sampleSource = findMatchingGoal(new SkillLevelGoal(Skill.ATTACK));
         String linkedExampleId = java.util.UUID.nameUUIDFromBytes("grinder-default-linked-goal".getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString();
         add(new com.grinder.content.goal.impl.LinkedGoal(linkedExampleId, "Example: Attack milestones", "A ladder example. Edit its source and milestones, or delete it.", com.grinder.content.goal.impl.LinkedGoal.Mode.MILESTONES, java.util.Collections.singletonList(metadata(sampleSource).getId()), new long[]{50, 75, 99}, 1));
@@ -290,6 +291,11 @@ public class GrinderProfile {
         }
         if (left instanceof SkillExperienceGoal) {
             return ((SkillExperienceGoal) left).getSkill() == ((SkillExperienceGoal) right).getSkill();
+        }
+        if (left instanceof com.grinder.content.goal.impl.experience.SessionExperienceGoal) {
+            com.grinder.content.goal.impl.experience.SessionExperienceGoal first = (com.grinder.content.goal.impl.experience.SessionExperienceGoal) left;
+            com.grinder.content.goal.impl.experience.SessionExperienceGoal second = (com.grinder.content.goal.impl.experience.SessionExperienceGoal) right;
+            return first.isTotal() == second.isTotal() && first.getSkill() == second.getSkill();
         }
         if (left instanceof TrackerGoal) {
             return ((TrackerGoal) left).getTracker() == ((TrackerGoal) right).getTracker();
