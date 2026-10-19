@@ -62,7 +62,7 @@ public class CollectionLogItemGoal implements Goal {
     }
 
     private boolean isObtained(ItemContainer container) {
-        return history != null && history.contains(item) || container != null && container.contains(item);
+        return history != null && history.contains(item) || container != null && container.contains(com.grinder.content.collectionlog.CollectionLogPages.canonicalItemId(item));
     }
 
     @Override

@@ -5,6 +5,7 @@ import com.grinder.util.HtmlUtils;
 
 import com.grinder.config.GrinderConfig;
 import com.grinder.content.collectionlog.CollectionLogEntry;
+import com.grinder.content.collectionlog.CollectionLogPages;
 import com.grinder.content.collectionlog.CollectionLogHistory;
 import com.grinder.content.goal.Goal;
 import com.grinder.content.goal.GoalCategory;
@@ -35,14 +36,19 @@ public class CollectionLogEntryGoal implements Goal {
 
     @Getter
     private final CollectionLogEntry entry;
+    private final int pageStruct;
+    private final String pageName;
+    public int getPageStruct() { return pageStruct; }
+    public String getPageName() { return pageName; }
 
     private transient ItemManager itemManager;
+    private transient int iconItem;
     private transient CollectionLogHistory history;
 
     public void setHistory(CollectionLogHistory history) { this.history = history; }
 
     private boolean isKnownObtained(ItemContainer container, ItemComposition item) {
-        return history != null && history.contains(item.getId()) || entry.isObtained(container, item);
+        return history != null && history.contains(item.getId()) || container != null && container.contains(item.getId());
     }
     private transient Map<Integer, ItemComponent> itemComponents = new HashMap<>();
     private transient GoalComponent current;
@@ -54,6 +60,16 @@ public class CollectionLogEntryGoal implements Goal {
     public CollectionLogEntryGoal(ItemManager itemManager, CollectionLogEntry entry) {
         this.itemManager = itemManager;
         this.entry = entry;
+        this.pageStruct = java.util.Objects.requireNonNull(entry).getStruct();
+        this.pageName = entry.name();
+        initializeTransientState();
+    }
+    public CollectionLogEntryGoal(ItemManager itemManager, int pageStruct, String pageName) {
+        if (pageStruct <= 0 || pageName == null || pageName.trim().isEmpty() || pageName.length() > 200) { throw new IllegalArgumentException("Invalid collection-log page"); }
+        this.itemManager = itemManager;
+        this.pageStruct = pageStruct;
+        this.pageName = pageName;
+        this.entry = java.util.Arrays.stream(CollectionLogEntry.values()).filter(value -> value.getStruct() == pageStruct).findFirst().orElse(null);
         initializeTransientState();
     }
 
@@ -93,14 +109,14 @@ public class CollectionLogEntryGoal implements Goal {
 
     private void refresh(Client client, GrinderConfig config) {
         ItemContainer container = client.getItemContainer(COLLECTION_LOG_CONTAINER_ID);
-        ItemComposition[] items = entry.getItems(client);
+        ItemComposition[] items = CollectionLogPages.items(client, pageStruct);
         List<ItemComponent> components = new ArrayList<>(items.length);
 
         long nextObtained = 0;
         long nextTotal = 0;
 
         current.setTitle(getTitle(client));
-        current.setIcon(getIcon(client));
+        current.setIcon(config != null && !config.showActivityIcons() ? Icon.COLLECTION_LOG.getImage() : getIcon(client));
         current.setStartDate(getStart());
         current.setEndDate(getEnd());
 
@@ -153,11 +169,15 @@ public class CollectionLogEntryGoal implements Goal {
 
     @Override
     public String getTitle(Client client) {
-        return entry.getTitle(client);
+        return CollectionLogPages.title(client, pageStruct, pageName);
     }
 
     @Override
     public BufferedImage getIcon(Client client) {
+        if (itemManager != null && client != null) {
+            if (iconItem <= 0) { int[] items = CollectionLogPages.itemIds(client, pageStruct); if (items.length > 0) { iconItem = items[0]; } }
+            if (iconItem > 0) { return itemManager.getImage(iconItem); }
+        }
         return Icon.COLLECTION_LOG.getImage();
     }
 
@@ -206,7 +226,7 @@ public class CollectionLogEntryGoal implements Goal {
             return;
         }
 
-        ItemComposition[] items = entry.getItems(client);
+        ItemComposition[] items = CollectionLogPages.items(client, pageStruct);
         long nextObtained = 0;
         long nextTotal = 0;
 

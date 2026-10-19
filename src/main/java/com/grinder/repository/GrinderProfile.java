@@ -125,6 +125,7 @@ public class GrinderProfile {
     }
 
     private void attachCollectionData(Goal goal) {
+        if (goal instanceof TrackerGoal) { ((TrackerGoal) goal).setItemManager(itemManager); }
         if (goal instanceof com.grinder.content.goal.impl.item.PossessedItemGoal) {
             ((com.grinder.content.goal.impl.item.PossessedItemGoal) goal).attach(playerStorage, itemManager);
         }
@@ -178,7 +179,7 @@ public class GrinderProfile {
             return ((TrackerGoal) left).getTracker() == ((TrackerGoal) right).getTracker();
         }
         if (left instanceof CollectionLogEntryGoal) {
-            return ((CollectionLogEntryGoal) left).getEntry() == ((CollectionLogEntryGoal) right).getEntry();
+            return ((CollectionLogEntryGoal) left).getPageStruct() == ((CollectionLogEntryGoal) right).getPageStruct();
         }
         if (left instanceof CollectionLogItemGoal) {
             return ((CollectionLogItemGoal) left).getItem() == ((CollectionLogItemGoal) right).getItem();

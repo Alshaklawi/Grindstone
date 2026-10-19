@@ -279,6 +279,10 @@ public class GrinderPanel extends PluginPanel {
         restoreDefaults.setToolTipText("Restore missing starter goals without replacing existing goals or edited targets.");
         restoreDefaults.addActionListener(event -> defaults.doClick());
         moreMenu.add(restoreDefaults);
+        JMenuItem allCollectionPages = new JMenuItem("Add all collection-log pages...");
+        allCollectionPages.setToolTipText("Read every page from the client's five collection-log tabs and add missing page goals.");
+        allCollectionPages.addActionListener(event -> addAllCollectionPages());
+        moreMenu.add(allCollectionPages);
         javax.swing.JMenu presets = new javax.swing.JMenu("Add goal preset");
         presets.setToolTipText("Add a focused goal pack without replacing existing goals or edited targets.");
         for (com.grinder.content.goal.GoalPreset preset : com.grinder.content.goal.GoalPreset.values()) {
@@ -981,6 +985,24 @@ public class GrinderPanel extends PluginPanel {
             int count = added;
             render();
             SwingUtilities.invokeLater(() -> { if (profile == active) { JOptionPane.showMessageDialog(this, count + " goals added. Existing matches were skipped."); } });
+        });
+    }
+    private void addAllCollectionPages() {
+        GrinderProfile active = profile;
+        if (active == null) { return; }
+        clientThread.invokeLater(() -> {
+            if (profile != active) { return; }
+            Map<Integer, String> pages = com.grinder.content.collectionlog.CollectionLogPages.discover(client);
+            SwingUtilities.invokeLater(() -> {
+                if (profile != active) { return; }
+                if (pages.isEmpty()) { JOptionPane.showMessageDialog(this, "Collection-log metadata is not ready. Log in and try again."); return; }
+                if (JOptionPane.showConfirmDialog(this, "Add missing goals from all " + pages.size() + " collection-log pages? Existing goals are kept.", "Add collection-log pages", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) { return; }
+                clientThread.invokeLater(() -> {
+                    if (profile != active) { return; }
+                    pages.forEach((id, name) -> active.add(new CollectionLogEntryGoal(itemManager, id, name)));
+                    render();
+                });
+            });
         });
     }
 

@@ -174,11 +174,16 @@ public final class GrinderRepository {
                 if (type == null || data == null || !data.isJsonObject()) { continue; }
                 Goal goal;
                 if (type == CollectionLogEntryGoal.class) {
+                    JsonObject page = data.getAsJsonObject();
+                    if (page.has("pageStruct")) {
+                        goal = new CollectionLogEntryGoal(null, page.get("pageStruct").getAsInt(), page.get("pageName").getAsString());
+                    } else {
                     JsonElement entryElement = data.getAsJsonObject().get("entry");
                     if (entryElement == null || entryElement.isJsonNull()) { continue; }
                     CollectionLogEntry entry = GSON.fromJson(entryElement, CollectionLogEntry.class);
                     if (entry == null) { continue; }
                     goal = new CollectionLogEntryGoal(null, entry);
+                    }
                 } else if (type == CustomGoal.class) {
                     CustomGoal saved = GSON.fromJson(data, CustomGoal.class);
                     goal = new CustomGoal(saved.getId(), saved.getTitle(null), saved.getDescription(), saved.getCategory(), saved.getProgressCurrent(), saved.getProgressMaximum());

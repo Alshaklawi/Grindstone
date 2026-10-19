@@ -31,12 +31,12 @@ public final class CollectionLogHistory {
 
     public void record(int itemId, long epochMillis) {
         if (itemId <= 0 || epochMillis <= 0) { return; }
-        firstSeen.merge(itemId, epochMillis, Math::min);
+        firstSeen.merge(CollectionLogPages.canonicalItemId(itemId), epochMillis, Math::min);
     }
 
-    public boolean contains(int itemId) { return firstSeen.containsKey(itemId); }
+    public boolean contains(int itemId) { return firstSeen.containsKey(CollectionLogPages.canonicalItemId(itemId)); }
 
-    public Long firstSeenAt(int itemId) { return firstSeen.get(itemId); }
+    public Long firstSeenAt(int itemId) { return firstSeen.get(CollectionLogPages.canonicalItemId(itemId)); }
 
     public Map<Integer, Long> snapshot() { return Collections.unmodifiableMap(new HashMap<>(firstSeen)); }
 

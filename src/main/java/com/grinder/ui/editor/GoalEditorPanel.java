@@ -175,6 +175,10 @@ public final class GoalEditorPanel extends JPanel {
     }
 
     private void populateChoices(int kind) {
+        if (kind == 6 && !completionChoices.getOrDefault(6, java.util.Collections.emptyMap()).isEmpty()) {
+            choices.putAll(completionChoices.get(6));
+            return;
+        }
         if (kind >= 9) {
             choices.putAll(completionChoices.getOrDefault(kind, java.util.Collections.emptyMap()));
             return;

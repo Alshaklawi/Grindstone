@@ -23,6 +23,9 @@ public class TrackerGoal implements Goal {
     private int count;
 
     private transient long current;
+    private transient net.runelite.client.game.ItemManager itemManager;
+    private transient boolean activityIcons = true;
+    public void setItemManager(net.runelite.client.game.ItemManager itemManager) { this.itemManager = itemManager; }
 
     public TrackerGoal(final TrackerEntry entry, final int count) {
         if (entry == null) {
@@ -61,12 +64,13 @@ public class TrackerGoal implements Goal {
 
     @Override
     public BufferedImage getIcon(Client client) {
+        if (activityIcons && itemManager != null) { int item = tracker.iconItem(client); if (item > 0) { return itemManager.getImage(item); } }
         return tracker.getIcon().getImage();
     }
 
     @Override
     public GoalCategory getCategory() {
-        return tracker == TrackerEntry.WINTERTODT ? GoalCategory.SKILLING : GoalCategory.BOSSING;
+        return tracker.getCategory();
     }
 
     @Override
@@ -103,6 +107,7 @@ public class TrackerGoal implements Goal {
 
     @Override
     public com.grinder.ui.components.GoalComponent build(Client client, com.grinder.config.GrinderConfig config) {
+        activityIcons = config == null || config.showActivityIcons();
         refresh(client);
         com.grinder.ui.components.GoalComponent component = Goal.super.build(client);
         component.setIconVisible(config == null || config.showGoalIcons());
