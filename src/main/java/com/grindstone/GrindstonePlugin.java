@@ -5,6 +5,7 @@ import com.google.inject.Provides;
 import com.grindstone.config.GrindstoneConfig;
 import com.grindstone.content.collectionlog.CollectionLogPages;
 import com.grindstone.content.combatachievement.CombatAchievementData;
+import com.grindstone.content.combatachievement.CombatAchievementTier;
 import com.grindstone.content.diary.AchievementDiaryArea;
 import com.grindstone.content.diary.DiaryTier;
 import com.grindstone.content.milestone.BaseSkillMilestone;
@@ -17,6 +18,8 @@ import com.grindstone.content.milestone.impl.collectionlog.CollectionLogEntryMil
 import com.grindstone.content.milestone.impl.collectionlog.CollectionLogTabMilestone;
 import com.grindstone.content.milestone.impl.collectionlog.CollectionLogItemMilestone;
 import com.grindstone.content.milestone.impl.combatachievement.CombatAchievementBossMilestone;
+import com.grindstone.content.milestone.impl.combatachievement.CombatAchievementDifficultyMilestone;
+import com.grindstone.content.milestone.impl.combatachievement.CombatAchievementTierMilestone;
 import com.grindstone.content.milestone.impl.combatachievement.CombatAchievementTaskMilestone;
 import com.grindstone.content.milestone.impl.experience.BaseExperienceMilestone;
 import com.grindstone.content.milestone.impl.experience.SessionExperienceMilestone;
@@ -272,6 +275,10 @@ public class GrindstonePlugin extends Plugin {
             }
             return;
         }
+        if (original.getParam1() >>> 16 == InterfaceID.CA_OVERVIEW || original.getParam1() >>> 16 == InterfaceID.CA_REWARDS) {
+            addCombatAchievementTierMenu(original);
+            return;
+        }
         if (original.getParam1() >>> 16 == InterfaceID.CA_TASKS) {
             addCombatAchievementGoalMenu(original);
             return;
@@ -392,6 +399,41 @@ public class GrindstonePlugin extends Plugin {
                             }
                         });
             }
+            return;
+        }
+    }
+
+    private void addCombatAchievementTierMenu(MenuEntry original) {
+        if (!config.combatAchievementGoalsEnabled() || !config.combatAchievementGoalMenu()) {
+            return;
+        }
+        boolean reward = original.getParam1() >>> 16 == InterfaceID.CA_REWARDS;
+        int component = original.getParam1();
+        if (reward && component != InterfaceID.CaRewards.TIERS_CLICK && component != InterfaceID.CaRewards.TIERS_TABS && component != InterfaceID.CaRewards.TIERS_CONTENT || !reward && component != InterfaceID.CaOverview.CA_BUTTONS_CLICK && component != InterfaceID.CaOverview.CA_BUTTONS) {
+            return;
+        }
+        String name = (getGoalMenuName(original) + " " + Text.removeTags(original.getOption())).replaceAll("(?i)tasks?|rewards?|tiers?", " ").trim().toLowerCase(Locale.ROOT);
+        for (CombatAchievementTier tier : CombatAchievementTier.values()) {
+            if (!name.matches("(?s).*\\b" + tier.toString().toLowerCase(Locale.ROOT) + "\\b.*")) {
+                continue;
+            }
+            String target = tier + (reward ? " reward tier" : " tasks");
+            Supplier<Milestone> factory = reward ? () -> new CombatAchievementTierMilestone(tier) : () -> new CombatAchievementDifficultyMilestone(tier);
+            if (!canOfferGoal(factory.get()) || hasMilestoneOption("Set milestone", target)) {
+                return;
+            }
+            client.getMenu().createMenuEntry(-2)
+                    .setOption("Set milestone")
+                    .setTarget(target)
+                    .setType(MenuAction.RUNELITE_LOW_PRIORITY)
+                    .onClick(entry -> {
+                        if (hasActivePlayerProfile() && config.combatAchievementGoalsEnabled() && config.combatAchievementGoalMenu()) {
+                            Milestone goal = factory.get();
+                            if (canOfferGoal(goal)) {
+                                openGoalEditor(goal);
+                            }
+                        }
+                    });
             return;
         }
     }
