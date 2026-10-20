@@ -151,11 +151,11 @@ public class GrindstonePanel extends PluginPanel {
     private ProfileBackupActions backupActions;
     private static final String ALL_CATEGORIES = "All categories";
     private static final String ALL_STATUSES = "All statuses";
-    private static final String NOT_STARTED = "Not started";
-    private static final String IN_PROGRESS = "In progress";
-    private static final String COMPLETE = "Complete";
+    private static final String NOT_STARTED = "New";
+    private static final String IN_PROGRESS = "Active";
+    private static final String COMPLETE = "Done";
     private static final String UNFINISHED = "Unfinished";
-    private static final String WAITING = "Waiting for data";
+    private static final String WAITING = "Waiting";
     private static final String ALL_SCHEDULES = "All schedules";
     private static final String ONE_OFF = "One-off milestones";
     private static final String ALL_TYPES = "All milestone types";
@@ -356,31 +356,6 @@ public class GrindstonePanel extends PluginPanel {
         });
         header.add(catchUpButton);
 
-        JPanel counters = new JPanel(new GridLayout(2, 2, 4, 4));
-        counters.setOpaque(false);
-        counters.setAlignmentX(LEFT_ALIGNMENT);
-        newGoalsButton.setForeground(SegmentedProgressBar.getColorFor(MilestoneStatus.NOT_STARTED));
-        activeGoalsButton.setForeground(SegmentedProgressBar.getColorFor(MilestoneStatus.IN_PROGRESS));
-        completeGoalsButton.setForeground(SegmentedProgressBar.getColorFor(MilestoneStatus.COMPLETE));
-        newGoalsButton.setToolTipText("Show not-started milestones. Click again to show all statuses.");
-        activeGoalsButton.setToolTipText("Show in-progress milestones. Click again to show all statuses.");
-        completeGoalsButton.setToolTipText("Show completed milestones, including hidden completions. Click again to show all statuses.");
-        waitingGoalsButton.setToolTipText("Show milestones needing a login or native client reading. Click again to show all statuses.");
-        for (JToggleButton counter : new JToggleButton[]{newGoalsButton, activeGoalsButton, completeGoalsButton, waitingGoalsButton}) {
-            counter.setFont(UiTypography.BODY);
-            counter.setMargin(new Insets(3, 3, 3, 3));
-            counter.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        }
-        newGoalsButton.addActionListener(event -> toggleQuickStatus(NOT_STARTED));
-        activeGoalsButton.addActionListener(event -> toggleQuickStatus(IN_PROGRESS));
-        completeGoalsButton.addActionListener(event -> toggleQuickStatus(COMPLETE));
-        waitingGoalsButton.addActionListener(event -> toggleQuickStatus(WAITING));
-        counters.add(newGoalsButton);
-        counters.add(activeGoalsButton);
-        counters.add(completeGoalsButton);
-        counters.add(waitingGoalsButton);
-        header.add(Box.createVerticalStrut(8));
-        header.add(counters);
         header.add(snapshots);
 
         JPanel goalActions = new JPanel(new GridLayout(2, 1, 0, 5));
@@ -491,6 +466,33 @@ public class GrindstonePanel extends PluginPanel {
         header.add(undoDeleteButton);
     }
 
+    private JPanel createStatusCounters() {
+        JPanel counters = new JPanel(new GridLayout(2, 2, 4, 4));
+        counters.setOpaque(false);
+        counters.setAlignmentX(LEFT_ALIGNMENT);
+        newGoalsButton.setForeground(SegmentedProgressBar.getColorFor(MilestoneStatus.NOT_STARTED));
+        activeGoalsButton.setForeground(SegmentedProgressBar.getColorFor(MilestoneStatus.IN_PROGRESS));
+        completeGoalsButton.setForeground(SegmentedProgressBar.getColorFor(MilestoneStatus.COMPLETE));
+        newGoalsButton.setToolTipText("Show not-started milestones. Click again to show all statuses.");
+        activeGoalsButton.setToolTipText("Show in-progress milestones. Click again to show all statuses.");
+        completeGoalsButton.setToolTipText("Show completed milestones, including hidden completions. Click again to show all statuses.");
+        waitingGoalsButton.setToolTipText("Show milestones needing a login or native client reading. Click again to show all statuses.");
+        for (JToggleButton counter : new JToggleButton[]{newGoalsButton, activeGoalsButton, completeGoalsButton, waitingGoalsButton}) {
+            counter.setFont(UiTypography.BODY);
+            counter.setMargin(new Insets(3, 3, 3, 3));
+            counter.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        }
+        newGoalsButton.addActionListener(event -> toggleQuickStatus(NOT_STARTED));
+        activeGoalsButton.addActionListener(event -> toggleQuickStatus(IN_PROGRESS));
+        completeGoalsButton.addActionListener(event -> toggleQuickStatus(COMPLETE));
+        waitingGoalsButton.addActionListener(event -> toggleQuickStatus(WAITING));
+        counters.add(newGoalsButton);
+        counters.add(activeGoalsButton);
+        counters.add(waitingGoalsButton);
+        counters.add(completeGoalsButton);
+        return counters;
+    }
+
     private void buildControls() {
         controlsPanel.setLayout(new BoxLayout(controlsPanel, BoxLayout.Y_AXIS));
         controlsPanel.setBackground(PANEL_COLOR);
@@ -507,7 +509,7 @@ public class GrindstonePanel extends PluginPanel {
         searchField.setAlignmentX(LEFT_ALIGNMENT);
 
         categoryFilter.setModel(new DefaultComboBoxModel<>(new String[]{ALL_CATEGORIES}));
-        statusFilter.setModel(new DefaultComboBoxModel<>(new String[]{ALL_STATUSES, UNFINISHED, NOT_STARTED, IN_PROGRESS, COMPLETE, WAITING}));
+        statusFilter.setModel(new DefaultComboBoxModel<>(new String[]{ALL_STATUSES, UNFINISHED, NOT_STARTED, IN_PROGRESS, WAITING, COMPLETE}));
         scheduleFilter.setModel(new DefaultComboBoxModel<>(new String[]{ALL_SCHEDULES, ONE_OFF, "Daily", "Weekly", "Monthly"}));
         styleComboBox(scheduleFilter);
         scheduleFilter.setAlignmentX(LEFT_ALIGNMENT);
@@ -527,7 +529,7 @@ public class GrindstonePanel extends PluginPanel {
         styleComboBox(statusFilter);
         styleComboBox(sortFilter);
         UiTooltips.set(categoryFilter, "Show milestones from one category, or choose All categories.");
-        UiTooltips.set(statusFilter, "Filter by progress state. Complete also shows finished one-time milestones and hidden recurring completions.");
+        UiTooltips.set(statusFilter, "Filter by progress state. Done also shows finished one-time milestones and hidden recurring completions.");
         UiTooltips.set(sortFilter, "Sort within each category. Closest unfinished puts incomplete milestones nearest their target first.");
         UiTooltips.set(typeFilter, "Custom includes manual checklists. Linked milestones combine existing trackers. Filter base stats, session gains or personal deadlines without deleting anything.");
 
@@ -553,6 +555,8 @@ public class GrindstonePanel extends PluginPanel {
         filterOptions.add(Box.createVerticalStrut(7));
         filterOptions.add(createControlLabel("Status"));
         filterOptions.add(Box.createVerticalStrut(3));
+        filterOptions.add(createStatusCounters());
+        filterOptions.add(Box.createVerticalStrut(4));
         filterOptions.add(statusFilter);
         filterOptions.add(Box.createVerticalStrut(7));
         filterOptions.add(createControlLabel("Sort"));
