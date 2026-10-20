@@ -1,7 +1,6 @@
 package com.grindstone.ui;
 
 import com.grindstone.config.GrindstoneConfig;
-import com.grindstone.config.ProgressOverlayView;
 import com.grindstone.content.collectionlog.CollectionLogPages;
 import com.grindstone.content.storage.PlayerStorageSource;
 import com.grindstone.content.milestone.BaseSkillMilestone;
@@ -108,7 +107,6 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -117,7 +115,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTextArea;
@@ -129,13 +126,10 @@ import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.event.MenuEvent;
-import javax.swing.event.MenuListener;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.client.callback.ClientThread;
-import net.runelite.client.config.ConfigManager;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
@@ -151,8 +145,6 @@ import net.runelite.client.util.ImageUtil;
 public class GrindstonePanel extends PluginPanel {
     @Inject
     private GrindstoneProgressOverlay progressOverlay;
-    @Inject
-    private ConfigManager configManager;
     @Inject
     private MilestoneCompletionNotifications completionNotifications;
     @Inject
@@ -411,53 +403,57 @@ public class GrindstonePanel extends PluginPanel {
         JMenuItem allCollectionPages = new JMenuItem("Add all collection-log pages...");
         allCollectionPages.setToolTipText("Read every page from the client's five collection-log tabs and add missing page milestones.");
         allCollectionPages.addActionListener(event -> addAllCollectionPages());
-        moreMenu.add(allCollectionPages);
-        JMenu presets = new JMenu("Add milestone preset");
+
+        JMenu presets = new JMenu("Add presets");
         presets.setToolTipText("Add a focused milestone pack without replacing existing milestones or edited targets.");
         for (MilestonePreset preset : MilestonePreset.values()) {
             JMenuItem option = new JMenuItem(preset.toString());
             option.addActionListener(event -> addPreset(preset));
             presets.add(option);
         }
-        moreMenu.add(presets);
-        JMenu routines = new JMenu("Routine presets");
+
+        JMenu routines = new JMenu("Routines");
         JMenuItem dailyRoutine = new JMenuItem("Daily skilling & personal");
         dailyRoutine.addActionListener(event -> addRoutine(false));
         JMenuItem weeklyRoutine = new JMenuItem("Weekly activities & personal");
         weeklyRoutine.addActionListener(event -> addRoutine(true));
         routines.add(dailyRoutine);
         routines.add(weeklyRoutine);
-        moreMenu.add(routines);
-        moreMenu.add(createProgressOverlayMenu());
-        JMenuItem manage = new JMenuItem("Manage milestones & routines...");
+        presets.addSeparator();
+        presets.add(routines);
+        presets.add(allCollectionPages);
+        moreMenu.add(presets);
+        JMenu milestoneActions = new JMenu("Manage milestones");
+        JMenuItem manage = new JMenuItem("Select and edit...");
         manage.setToolTipText("Search and select milestones to pin, delete, categorize, change schedules or set deadlines.");
         manage.addActionListener(event -> showBulkManager());
-        moreMenu.add(manage);
+        milestoneActions.add(manage);
         JMenuItem clearGoals = new JMenuItem("Clear all milestones...");
         clearGoals.setToolTipText("Remove all milestones from this profile, including hidden milestones. Confirmation and undo are available.");
         clearGoals.addActionListener(event -> clearAllGoals());
-        moreMenu.add(clearGoals);
+        milestoneActions.addSeparator();
+        milestoneActions.add(clearGoals);
+        moreMenu.add(milestoneActions);
+        JMenu backups = new JMenu("Profile backups");
         JMenuItem export = new JMenuItem("Export profile backup...");
         export.setToolTipText("Save a private local JSON backup. No network is used.");
         export.addActionListener(event -> transferBackup(false));
-        moreMenu.add(export);
+        backups.add(export);
         JMenuItem restore = new JMenuItem("Restore / import backup...");
         restore.setToolTipText("Merge missing milestones without replacing existing targets.");
         restore.addActionListener(event -> transferBackup(true));
-        moreMenu.add(restore);
+        backups.add(restore);
+        JMenu viewOptions = new JMenu("Category display");
         JMenuItem expandAll = new JMenuItem("Expand all categories");
         expandAll.setToolTipText("Show the milestone cards in every category.");
         expandAll.addActionListener(event -> setAllCategoriesCollapsed(false));
-        moreMenu.add(expandAll);
+        viewOptions.add(expandAll);
         JMenuItem collapseAll = new JMenuItem("Collapse all categories");
         collapseAll.setToolTipText("Show category headers only. Your milestones and progress are kept.");
         collapseAll.addActionListener(event -> setAllCategoriesCollapsed(true));
-        moreMenu.add(collapseAll);
-        JMenuItem reset = new JMenuItem("Reset search and filters");
-        reset.setToolTipText("Clear the search, category, status and type filters, and restore name sorting.");
-        reset.addActionListener(event -> clearFiltersButton.doClick());
-        moreMenu.addSeparator();
-        moreMenu.add(reset);
+        viewOptions.add(collapseAll);
+        moreMenu.add(viewOptions);
+        moreMenu.add(backups);
         header.add(Box.createVerticalStrut(8));
         header.add(goalActions);
         JPanel navigation = new JPanel(new GridLayout(1, 3, 4, 0));
@@ -621,48 +617,6 @@ public class GrindstonePanel extends PluginPanel {
 
         actionRow.add(resultsLabel, BorderLayout.CENTER);
         controlsPanel.add(actionRow);
-    }
-
-    private JMenu createProgressOverlayMenu() {
-        JMenu menu = new JMenu("Progress overlay");
-        fillProgressOverlayMenu(menu);
-        menu.addMenuListener(new MenuListener() {
-            @Override
-            public void menuSelected(MenuEvent event) {
-                fillProgressOverlayMenu(menu);
-            }
-
-            @Override
-            public void menuDeselected(MenuEvent event) {
-            }
-
-            @Override
-            public void menuCanceled(MenuEvent event) {
-            }
-        });
-        return menu;
-    }
-
-    private void fillProgressOverlayMenu(JMenu menu) {
-        menu.removeAll();
-        JCheckBoxMenuItem enabled = new JCheckBoxMenuItem("Show in game", config.progressOverlayEnabled());
-        enabled.setToolTipText("Hold Alt to move the tracker. More options are in Grindstone settings.");
-        enabled.addActionListener(event -> {
-            boolean selected = enabled.isSelected();
-            clientThread.invokeLater(() -> configManager.setConfiguration(GrindstoneConfig.GROUP, "progressOverlayEnabled", selected));
-        });
-        menu.add(enabled);
-        menu.addSeparator();
-        ButtonGroup views = new ButtonGroup();
-        for (ProgressOverlayView view : ProgressOverlayView.values()) {
-            JRadioButtonMenuItem option = new JRadioButtonMenuItem(view.getTitle(), config.progressOverlayView() == view);
-            option.addActionListener(event -> clientThread.invokeLater(() -> {
-                configManager.setConfiguration(GrindstoneConfig.GROUP, "progressOverlayView", view);
-                configManager.setConfiguration(GrindstoneConfig.GROUP, "progressOverlayEnabled", true);
-            }));
-            views.add(option);
-            menu.add(option);
-        }
     }
 
     private JLabel createControlLabel(String text) {
@@ -2078,7 +2032,7 @@ public class GrindstonePanel extends PluginPanel {
     private void showAddGoalDialog(GrindstoneProfile active, Map<Integer, Map<String, Supplier<Milestone>>> choices, Map<Milestone, RepeatSchedule> existingGoalsSnapshot, Milestone initialGoal, Set<Integer> obtained) {
         MilestoneEditorPanel form = new MilestoneEditorPanel(itemManager, itemSearchService, choices);
         form.setExistingGoals(existingGoalsSnapshot);
-        form.setCollectionSnapshotAvailable(active.getCollectionLogHistory().hasSnapshot());
+        form.setCollectionSnapshotStatus(active.getCollectionLogHistory().hasSnapshot(), active.getCollectionLogHistory().getKnownUnlockCount(), active.getCollectionLogHistory().getSnapshotAt());
         form.hideObtainedCollectionItems(obtained);
         if (initialGoal != null) {
             try {
@@ -2184,7 +2138,7 @@ public class GrindstonePanel extends PluginPanel {
                     return;
                 }
                 MilestoneEditorPanel form = new MilestoneEditorPanel(itemManager, itemSearchService, choices, true);
-                form.setCollectionSnapshotAvailable(active.getCollectionLogHistory().hasSnapshot());
+                form.setCollectionSnapshotStatus(active.getCollectionLogHistory().hasSnapshot(), active.getCollectionLogHistory().getKnownUnlockCount(), active.getCollectionLogHistory().getSnapshotAt());
                 try {
                     form.loadGoal(goal);
                 } catch (IllegalArgumentException exception) {

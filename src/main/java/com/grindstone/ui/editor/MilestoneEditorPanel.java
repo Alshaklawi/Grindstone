@@ -31,6 +31,9 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Insets;
 import java.text.ParseException;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -107,9 +110,32 @@ public final class MilestoneEditorPanel extends JPanel {
     private boolean updating;
     private boolean collectionSnapshotAvailable = true;
 
-    public void setCollectionSnapshotAvailable(boolean available) {
+    private int collectionKnownUnlocks;
+    private long collectionSnapshotAt;
+
+    public void setCollectionSnapshotStatus(boolean available, int knownUnlocks, long capturedAt) {
         collectionSnapshotAvailable = available;
+        collectionKnownUnlocks = knownUnlocks;
+        collectionSnapshotAt = capturedAt;
         rebuild();
+    }
+
+    private JPanel createCollectionSnapshotInfo() {
+        JPanel row = new JPanel(new BorderLayout(8, 0));
+        row.setOpaque(false);
+        row.setAlignmentX(LEFT_ALIGNMENT);
+        JLabel status = new JLabel(collectionSnapshotAvailable ? "Snapshot ready · " + collectionKnownUnlocks + " unlocks" : "Snapshot needed · " + collectionKnownUnlocks + " known unlocks");
+        status.setIcon(new ImageIcon(Icon.COLLECTION_LOG.getImage()));
+        row.add(status, BorderLayout.CENTER);
+        JButton info = new JButton("i");
+        info.setMargin(new Insets(1, 6, 1, 6));
+        String captured = collectionSnapshotAt > 0 ? "<br>Last full capture: " + DateTimeFormatter.ofPattern("MMM d, HH:mm").withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(collectionSnapshotAt)) + "." : "<br>No verified full snapshot yet.";
+        String tip = "<html>Open your in-game collection log to capture available unlocks.<br>A full snapshot must match the game's total before adding collection milestones." + captured + "<br>See dashboard Snapshots for incomplete data and refresh tips.</html>";
+        info.setToolTipText(tip);
+        info.getAccessibleContext().setAccessibleName("Collection log snapshot information");
+        status.setToolTipText(tip);
+        row.add(info, BorderLayout.EAST);
+        return row;
     }
 
     private boolean needsCollectionSnapshot() {
@@ -216,9 +242,13 @@ public final class MilestoneEditorPanel extends JPanel {
         skillButtons.clear();
         int kind = type.getSelectedIndex();
         repeatForm.setFixedTarget(null);
+        if (kind == 6 || kind == 7 || kind == 22) {
+            body.add(createCollectionSnapshotInfo());
+            body.add(Box.createVerticalStrut(8));
+        }
         if (needsCollectionSnapshot()) {
             repeatForm.setVisible(false);
-            setHint("A full collection-log snapshot is required. Close this dialog and open your in-game collection log. Loaded unlocks are captured automatically. Then reopen Add milestone once the snapshot is complete.");
+            setHint("Open your in-game collection log, then reopen Add milestone after a full snapshot is captured. Check Snapshots on the dashboard for capture progress.");
             body.add(hint);
             notifyReadiness();
             revalidate();
