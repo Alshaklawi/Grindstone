@@ -149,16 +149,16 @@ public class GrindstonePanel extends PluginPanel {
     private MilestoneCompletionNotifications completionNotifications;
     @Inject
     private ProfileBackupActions backupActions;
-    private static final String ALL_CATEGORIES = "All categories";
+    private static final String ALL_CATEGORIES = "All";
     private static final String ALL_STATUSES = "All statuses";
     private static final String NOT_STARTED = "New";
     private static final String IN_PROGRESS = "Active";
     private static final String COMPLETE = "Done";
     private static final String UNFINISHED = "Unfinished";
     private static final String WAITING = "Waiting";
-    private static final String ALL_SCHEDULES = "All schedules";
+    private static final String ALL_SCHEDULES = "All";
     private static final String ONE_OFF = "One-off milestones";
-    private static final String ALL_TYPES = "All milestone types";
+    private static final String ALL_TYPES = "All";
     private static final String AUTOMATIC = "Automatic";
     private static final String CUSTOM = "Custom";
     private static final String LINKED = "Linked";
@@ -208,6 +208,8 @@ public class GrindstonePanel extends PluginPanel {
     private final JComboBox<String> typeFilter = new JComboBox<>();
     private final JComboBox<String> scheduleFilter = new JComboBox<>();
     private final JCheckBox pinnedOnly = new JCheckBox("Pinned only");
+    private final JToggleButton allStatusesButton = new JToggleButton("All 0");
+    private final JToggleButton unfinishedStatusesButton = new JToggleButton("Unfinished 0");
     private final JToggleButton newGoalsButton = new JToggleButton("New 0");
     private final JToggleButton activeGoalsButton = new JToggleButton("Active 0");
     private final JToggleButton completeGoalsButton = new JToggleButton("Done 0");
@@ -356,7 +358,6 @@ public class GrindstonePanel extends PluginPanel {
         });
         header.add(catchUpButton);
 
-        header.add(snapshots);
 
         JPanel goalActions = new JPanel(new GridLayout(2, 1, 0, 6));
         goalActions.setOpaque(false);
@@ -446,6 +447,7 @@ public class GrindstonePanel extends PluginPanel {
         }
         header.add(Box.createVerticalStrut(6));
         header.add(navigation);
+        header.add(snapshots);
         undoDeleteButton.setVisible(false);
         undoDeleteButton.setToolTipText("Restore the most recently deleted milestone in this player profile.");
         undoDeleteButton.setAlignmentX(LEFT_ALIGNMENT);
@@ -468,7 +470,7 @@ public class GrindstonePanel extends PluginPanel {
     }
 
     private JPanel createStatusCounters() {
-        JPanel counters = new JPanel(new GridLayout(2, 2, 4, 4));
+        JPanel counters = new JPanel(new GridLayout(3, 2, 4, 4));
         counters.setOpaque(false);
         counters.setAlignmentX(LEFT_ALIGNMENT);
         newGoalsButton.setForeground(SegmentedProgressBar.getColorFor(MilestoneStatus.NOT_STARTED));
@@ -478,20 +480,36 @@ public class GrindstonePanel extends PluginPanel {
         activeGoalsButton.setToolTipText("Show in-progress milestones. Click again to show all statuses.");
         completeGoalsButton.setToolTipText("Show completed milestones, including hidden completions. Click again to show all statuses.");
         waitingGoalsButton.setToolTipText("Show milestones needing a login or native client reading. Click again to show all statuses.");
-        for (JToggleButton counter : new JToggleButton[]{newGoalsButton, activeGoalsButton, completeGoalsButton, waitingGoalsButton}) {
+        for (JToggleButton counter : new JToggleButton[]{allStatusesButton, unfinishedStatusesButton, newGoalsButton, activeGoalsButton, completeGoalsButton, waitingGoalsButton}) {
             counter.setFont(UiTypography.BODY);
             counter.setMargin(new Insets(3, 3, 3, 3));
             counter.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         }
+        allStatusesButton.setToolTipText("Show all milestone statuses.");
+        unfinishedStatusesButton.setToolTipText("Show every milestone that is not done, including those waiting for data.");
+        allStatusesButton.addActionListener(event -> statusFilter.setSelectedItem(ALL_STATUSES));
+        unfinishedStatusesButton.addActionListener(event -> toggleQuickStatus(UNFINISHED));
         newGoalsButton.addActionListener(event -> toggleQuickStatus(NOT_STARTED));
         activeGoalsButton.addActionListener(event -> toggleQuickStatus(IN_PROGRESS));
         completeGoalsButton.addActionListener(event -> toggleQuickStatus(COMPLETE));
         waitingGoalsButton.addActionListener(event -> toggleQuickStatus(WAITING));
+        counters.add(allStatusesButton);
+        counters.add(unfinishedStatusesButton);
         counters.add(newGoalsButton);
         counters.add(activeGoalsButton);
         counters.add(waitingGoalsButton);
         counters.add(completeGoalsButton);
         return counters;
+    }
+
+    private JPanel createFilterField(String title, JComboBox<String> control) {
+        JPanel field = new JPanel(new BorderLayout(0, 3));
+        field.setOpaque(false);
+        field.add(createControlLabel(title), BorderLayout.NORTH);
+        control.setPreferredSize(new Dimension(95, 28));
+        control.setMinimumSize(new Dimension(0, 28));
+        field.add(control, BorderLayout.CENTER);
+        return field;
     }
 
     private void buildControls() {
@@ -550,36 +568,28 @@ public class GrindstonePanel extends PluginPanel {
         filterOptions.setLayout(new BoxLayout(filterOptions, BoxLayout.Y_AXIS));
         filterOptions.setOpaque(false);
         filterOptions.setAlignmentX(LEFT_ALIGNMENT);
-        filterOptions.add(createControlLabel("Category"));
-        filterOptions.add(Box.createVerticalStrut(3));
-        filterOptions.add(categoryFilter);
-        filterOptions.add(Box.createVerticalStrut(7));
         filterOptions.add(createControlLabel("Status"));
-        filterOptions.add(Box.createVerticalStrut(3));
-        filterOptions.add(createStatusCounters());
         filterOptions.add(Box.createVerticalStrut(4));
-        filterOptions.add(statusFilter);
-        filterOptions.add(Box.createVerticalStrut(7));
-        filterOptions.add(createControlLabel("Sort"));
-        filterOptions.add(Box.createVerticalStrut(3));
-        filterOptions.add(sortFilter);
-        filterOptions.add(Box.createVerticalStrut(7));
-        filterOptions.add(createControlLabel("Type"));
-        filterOptions.add(Box.createVerticalStrut(3));
-        filterOptions.add(typeFilter);
-        filterOptions.add(Box.createVerticalStrut(7));
-        filterOptions.add(createControlLabel("Schedule"));
-        filterOptions.add(Box.createVerticalStrut(3));
-        filterOptions.add(scheduleFilter);
-        filterOptions.add(Box.createVerticalStrut(7));
-        filterOptions.add(pinnedOnly);
-        styleButton(clearFiltersButton);
-        clearFiltersButton.setText("Clear filters");
-        clearFiltersButton.setToolTipText("Reset search, filters and sorting.");
-        clearFiltersButton.setAlignmentX(LEFT_ALIGNMENT);
-        clearFiltersButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
+        filterOptions.add(createStatusCounters());
+        filterOptions.add(Box.createVerticalStrut(10));
+        JPanel selectors = new JPanel(new GridLayout(2, 2, 6, 8));
+        selectors.setOpaque(false);
+        selectors.setAlignmentX(LEFT_ALIGNMENT);
+        selectors.add(createFilterField("Category", categoryFilter));
+        selectors.add(createFilterField("Type", typeFilter));
+        selectors.add(createFilterField("Schedule", scheduleFilter));
+        selectors.add(createFilterField("Sort", sortFilter));
+        filterOptions.add(selectors);
         filterOptions.add(Box.createVerticalStrut(8));
-        filterOptions.add(clearFiltersButton);
+        JPanel filterActions = new JPanel(new BorderLayout(6, 0));
+        filterActions.setOpaque(false);
+        filterActions.setAlignmentX(LEFT_ALIGNMENT);
+        filterActions.add(pinnedOnly, BorderLayout.CENTER);
+        styleButton(clearFiltersButton);
+        clearFiltersButton.setText("Reset");
+        clearFiltersButton.setToolTipText("Reset search, filters and sorting.");
+        filterActions.add(clearFiltersButton, BorderLayout.EAST);
+        filterOptions.add(filterActions);
         JScrollPane filterScroll = new JScrollPane(filterOptions);
         filterScroll.setBorder(BorderFactory.createEmptyBorder());
         filterScroll.setOpaque(false);
@@ -587,9 +597,9 @@ public class GrindstonePanel extends PluginPanel {
         filterScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         filterScroll.getVerticalScrollBar().setUnitIncrement(16);
         filterScroll.setAlignmentX(LEFT_ALIGNMENT);
-        filterScroll.setPreferredSize(new Dimension(200, 180));
+        filterScroll.setPreferredSize(new Dimension(200, 280));
         filterScroll.setMinimumSize(new Dimension(0, 100));
-        filterScroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 180));
+        filterScroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 280));
         filterScroll.setVisible(false);
         styleButton(filtersToggle);
         filtersToggle.setToolTipText("Show category, status, type, schedule, pin and sort options. The number includes search and active selections.");
@@ -695,6 +705,8 @@ public class GrindstonePanel extends PluginPanel {
 
     private void syncQuickStatus() {
         Object status = statusFilter.getSelectedItem();
+        allStatusesButton.setSelected(ALL_STATUSES.equals(status));
+        unfinishedStatusesButton.setSelected(UNFINISHED.equals(status));
         newGoalsButton.setSelected(NOT_STARTED.equals(status));
         activeGoalsButton.setSelected(IN_PROGRESS.equals(status));
         completeGoalsButton.setSelected(COMPLETE.equals(status));
@@ -983,7 +995,7 @@ public class GrindstonePanel extends PluginPanel {
                 }
 
                 snapshots.updateSnapshots(snapshotStatuses, snapshotTips, missingSnapshots);
-                snapshots.setVisible(config.showUpdateStatus());
+                snapshots.setVisible(config.showUpdateStatus() && currentProfile != null);
                 catchUpText = capturedCatchUp;
                 catchUpButton.setText("Since last seen - " + catchUp.size() + " updated");
                 catchUpButton.setVisible(!catchUp.isEmpty());
@@ -1291,6 +1303,8 @@ public class GrindstonePanel extends PluginPanel {
         summaryLabel.setToolTipText("Overview of all enabled milestones, independent of search and filters.");
         progressPercent.setText(percentage + "%");
         overallProgress.setToolTipText("Completed milestones out of all enabled milestones.");
+        allStatusesButton.setText("All " + goals.size());
+        unfinishedStatusesButton.setText("Unfinished " + (goals.size() - completed));
         newGoalsButton.setText("New " + notStarted);
         activeGoalsButton.setText("Active " + active);
         completeGoalsButton.setText("Done " + completed);
