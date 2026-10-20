@@ -257,7 +257,7 @@ public class GrindstonePlugin extends Plugin {
         if (original.getType() != MenuAction.CC_OP && original.getType() != MenuAction.CC_OP_LOW_PRIORITY) {
             return;
         }
-        if (original.getParam1() >>> 16 == InterfaceID.QUESTLIST) {
+        if (original.getParam1() >>> 16 == InterfaceID.QUESTLIST || original.getParam1() == InterfaceID.SideJournal.QUEST_LIST) {
             addQuestGoalMenu(original);
             return;
         }
@@ -351,7 +351,7 @@ public class GrindstonePlugin extends Plugin {
     }
 
     private void addQuestGoalMenu(MenuEntry original) {
-        if (!config.questGoalsEnabled() || !config.questGoalMenu() || original.getIdentifier() != 1) {
+        if (!config.questGoalsEnabled() || !config.questGoalMenu()) {
             return;
         }
         String name = getGoalMenuName(original);
@@ -359,16 +359,19 @@ public class GrindstonePlugin extends Plugin {
             if (!quest.getName().equalsIgnoreCase(name)) {
                 continue;
             }
-            if (!canOfferGoal(new QuestMilestone(quest)) || hasMilestoneOption("Track quest", quest.getName())) {
+            if (!canOfferGoal(new QuestMilestone(quest)) || hasMilestoneOption("Set milestone", quest.getName())) {
                 return;
             }
             client.getMenu().createMenuEntry(-2)
-                    .setOption("Track quest")
+                    .setOption("Set milestone")
                     .setTarget(quest.getName())
                     .setType(MenuAction.RUNELITE_LOW_PRIORITY)
                     .onClick(entry -> {
                         if (hasActivePlayerProfile() && config.questGoalsEnabled() && config.questGoalMenu()) {
-                            openGoalEditor(new QuestMilestone(quest));
+                            QuestMilestone goal = new QuestMilestone(quest);
+                            if (canOfferGoal(goal)) {
+                                openGoalEditor(goal);
+                            }
                         }
                     });
             return;
