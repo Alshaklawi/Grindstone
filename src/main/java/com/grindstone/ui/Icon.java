@@ -12,6 +12,7 @@ import net.runelite.client.util.ImageUtil;
  */
 public enum Icon {
     MAIN("grindstone.png"),
+    MINIGAMES("minigames_icon.png"),
     QUEST("quests_icon.png"),
     COLLECTION_LOG("collection_log_icon.png"),
     BOSSING("bossing.png"),

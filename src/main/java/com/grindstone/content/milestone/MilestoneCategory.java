@@ -14,7 +14,7 @@ public enum MilestoneCategory {
     RAIDS("Raids", Icon.BOSSING),
     SLAYER("Slayer", Icon.BOSSING),
     CLUES("Clues", Icon.COLLECTION_LOG),
-    MINIGAMES("Minigames", Icon.MAIN),
+    MINIGAMES("Minigames", Icon.MINIGAMES),
     COLLECTION_LOG("Collection Log", Icon.COLLECTION_LOG),
     ITEMS("Items", Icon.MAIN),
     SKILLING("Skilling", Icon.SKILLING),
