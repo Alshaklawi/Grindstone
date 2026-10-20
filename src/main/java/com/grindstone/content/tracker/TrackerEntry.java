@@ -115,7 +115,6 @@ public enum TrackerEntry {
             }
         }
     }
-    @Getter
     private final String displayName;
     @Getter
     private final int id;
@@ -140,6 +139,9 @@ public enum TrackerEntry {
         this.category = MilestoneCategory.SLAYER;
         this.varbit = varbit;
         this.defaultTarget = defaultTarget;
+    }
+    public String getDisplayName() {
+        return category == MilestoneCategory.BOSSING ? displayName.replaceFirst(" kills$", "") : displayName;
     }
     public boolean isSelectable() {
         return this != SOUL_WARS_DEATHS && this != COLOSSEUM_WAVES;
