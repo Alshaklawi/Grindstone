@@ -64,7 +64,7 @@ public class CollectionLogItemMilestone implements Milestone {
     }
 
     private boolean isObtained(ItemContainer container) {
-        return history != null && history.contains(item) || container != null && container.contains(CollectionLogPages.canonicalItemId(item));
+        return history != null ? history.contains(item) : container != null && container.count(CollectionLogPages.canonicalItemId(item)) > 0;
     }
 
     @Override
@@ -122,8 +122,16 @@ public class CollectionLogItemMilestone implements Milestone {
     }
 
     @Override
+    public boolean refresh(Client client) {
+        boolean next = isObtained(client);
+        boolean changed = obtained != next;
+        obtained = next;
+        return changed;
+    }
+
+    @Override
     public Supplier<MilestoneComponent> prepare(Client client, GrindstoneConfig config) {
-        obtained = isObtained(client);
+        refresh(client);
         return Milestone.super.prepare(client, config);
     }
 

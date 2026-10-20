@@ -50,7 +50,7 @@ public class CollectionLogEntryMilestone implements Milestone {
     }
 
     private boolean isKnownObtained(ItemContainer container, ItemComposition item) {
-        return history != null && history.contains(item.getId()) || container != null && container.contains(item.getId());
+        return history != null ? history.contains(item.getId()) : container != null && container.count(item.getId()) > 0;
     }
     private transient long obtained;
     private transient long total;
@@ -187,8 +187,16 @@ public class CollectionLogEntryMilestone implements Milestone {
     }
 
     @Override
+    public boolean refresh(Client client) {
+        long previousObtained = obtained;
+        long previousTotal = total;
+        onItemContainerUpdated(client, client.getItemContainer(COLLECTION_LOG_CONTAINER_ID));
+        return obtained != previousObtained || total != previousTotal;
+    }
+
+    @Override
     public void onItemContainerUpdated(Client client, ItemContainer container) {
-        if (container == null || container.getId() != COLLECTION_LOG_CONTAINER_ID) {
+        if (container == null && history == null || container != null && container.getId() != COLLECTION_LOG_CONTAINER_ID) {
             return;
         }
 

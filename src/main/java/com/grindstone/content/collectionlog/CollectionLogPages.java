@@ -2,6 +2,7 @@ package com.grindstone.content.collectionlog;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import net.runelite.api.Client;
@@ -15,13 +16,33 @@ import net.runelite.api.gameval.ItemID;
  * @since 10/19/2026
  */
 public final class CollectionLogPages {
-    private static final int[] TAB_STRUCTS = {471, 472, 473, 474, 475};
+    private static final int TABS_ENUM = 2102;
+    private static final int ITEM_REPLACEMENTS_ENUM = 3721;
+    private static volatile Map<Integer, Integer> replacements = Collections.emptyMap();
     private static final int TAB_PAGES_PARAM = 683;
     private static final int PAGE_TITLE_PARAM = 689;
     private static final int PAGE_ITEMS_PARAM = 690;
     private CollectionLogPages() {
     }
+    public static void refreshReplacements(Client client) {
+        EnumComposition mapping = client.getEnum(ITEM_REPLACEMENTS_ENUM);
+        if (mapping == null || mapping.getKeys() == null || mapping.getIntVals() == null || mapping.getKeys().length != mapping.getIntVals().length) {
+            return;
+        }
+        Map<Integer, Integer> values = new HashMap<>();
+        for (int index = 0; index < mapping.getKeys().length; index++) {
+            if (mapping.getKeys()[index] > 0 && mapping.getIntVals()[index] > 0) {
+                values.put(mapping.getKeys()[index], mapping.getIntVals()[index]);
+            }
+        }
+        replacements = Collections.unmodifiableMap(values);
+    }
+
     public static int canonicalItemId(int item) {
+        Integer replacement = replacements.get(item);
+        if (replacement != null) {
+            return replacement;
+        }
         switch (item) {
             case ItemID.TOL_TEA: return ItemID.TOL_TEA_DUMMY;
             case ItemID.TOL_PLAIN_SACK: return ItemID.TOL_PLAIN_SACK_DUMMY;
@@ -43,7 +64,12 @@ public final class CollectionLogPages {
         if (client == null) {
             return pages;
         }
-        for (int id : TAB_STRUCTS) {
+        refreshReplacements(client);
+        EnumComposition tabs = client.getEnum(TABS_ENUM);
+        if (tabs == null || tabs.getIntVals() == null) {
+            return pages;
+        }
+        for (int id : tabs.getIntVals()) {
             StructComposition tab = client.getStructComposition(id);
             if (tab == null) {
                 continue;
