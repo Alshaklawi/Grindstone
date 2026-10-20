@@ -244,7 +244,7 @@ public class GrindstonePanel extends PluginPanel {
     private final Timer filterRenderTimer = new Timer(150, event -> render());
 
     private volatile GrindstoneProfile profile;
-    private LookAndFeel appliedLookAndFeel = UIManager.getLookAndFeel();
+    private LookAndFeel appliedLookAndFeel;
     private volatile String storageStatus;
     public void setStorageStatus(String status) {
         storageStatus = status;
@@ -347,7 +347,10 @@ public class GrindstonePanel extends PluginPanel {
         more.setToolTipText("More milestone options");
         more.putClientProperty("JButton.buttonType", "toolBarButton");
         JPopupMenu moreMenu = new JPopupMenu();
-        more.addActionListener(event -> moreMenu.show(more, 0, more.getHeight()));
+        more.addActionListener(event -> {
+            SwingUtilities.updateComponentTreeUI(moreMenu);
+            moreMenu.show(more, 0, more.getHeight());
+        });
         JButton dashboardToggle = new JButton("-");
         styleButton(dashboardToggle);
         dashboardToggle.setToolTipText("Collapse dashboard overview and snapshots");
