@@ -25,12 +25,10 @@ public final class OverlayStyle {
 
     public static void frame(Graphics2D graphics, int width, int height, Color accent) {
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        graphics.setColor(new Color(0, 0, 0, 60));
-        graphics.fillRoundRect(2, 3, width - 3, height - 4, 12, 12);
         graphics.setColor(BACKGROUND);
-        graphics.fillRoundRect(0, 0, width - 3, height - 4, 10, 10);
+        graphics.fillRoundRect(0, 0, width, height, 10, 10);
         graphics.setColor(BORDER);
-        graphics.drawRoundRect(0, 0, width - 4, height - 5, 10, 10);
+        graphics.drawRoundRect(0, 0, width - 1, height - 1, 10, 10);
         graphics.setColor(accent);
         graphics.fillRoundRect(11, 0, width - 26, 2, 2, 2);
     }
