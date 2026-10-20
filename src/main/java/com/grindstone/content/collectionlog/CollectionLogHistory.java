@@ -71,6 +71,10 @@ public final class CollectionLogHistory {
         return firstSeen.get(CollectionLogPages.getCanonicalItemId(itemId));
     }
 
+    public int getKnownUnlockCount() {
+        return firstSeen.size();
+    }
+
     public Map<Integer, Long> getSnapshot() {
         return Collections.unmodifiableMap(new HashMap<>(firstSeen));
     }

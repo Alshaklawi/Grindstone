@@ -3,6 +3,7 @@ package com.grindstone.ui;
 import com.grindstone.config.GrindstoneConfig;
 import com.grindstone.config.ProgressOverlayView;
 import com.grindstone.content.collectionlog.CollectionLogPages;
+import com.grindstone.content.storage.PlayerStorageSource;
 import com.grindstone.content.milestone.BaseSkillMilestone;
 import com.grindstone.content.milestone.Milestone;
 import com.grindstone.content.milestone.MilestoneCategory;
@@ -42,6 +43,7 @@ import com.grindstone.ui.components.MilestoneHistoryPanel;
 import com.grindstone.ui.components.MilestoneListPanel;
 import com.grindstone.ui.components.HistoryBrowserPanel;
 import com.grindstone.ui.components.SegmentedProgressBar;
+import com.grindstone.ui.components.SnapshotStatusPanel;
 import com.grindstone.ui.editor.BulkMilestoneForm;
 import com.grindstone.ui.editor.CompletionMilestoneChoices;
 import com.grindstone.ui.editor.CustomMilestoneForm;
@@ -75,6 +77,7 @@ import java.awt.event.MouseEvent;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -130,6 +133,7 @@ import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
+import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.game.ItemManager;
@@ -196,6 +200,7 @@ public class GrindstonePanel extends PluginPanel {
     private final JPanel main = new MilestoneListPanel();
     private final JPanel header = new JPanel();
     private final JPanel controlsPanel = new JPanel();
+    private final SnapshotStatusPanel snapshots = new SnapshotStatusPanel();
     private final JLabel summaryLabel = new JLabel("No profile loaded");
     private final JLabel progressPercent = new JLabel();
     private final JLabel filterSummary = new JLabel();
@@ -343,7 +348,7 @@ public class GrindstonePanel extends PluginPanel {
         header.add(overallProgress);
         updateStatusLabel.setFont(UiTypography.META);
         updateStatusLabel.setAlignmentX(LEFT_ALIGNMENT);
-        updateStatusLabel.setToolTipText("Latest inventory, equipment or storage snapshot captured this login. This does not mean every storage has been loaded.");
+        updateStatusLabel.setToolTipText("Storage and save messages. See Snapshots for captured game data.");
         header.add(Box.createVerticalStrut(4));
         header.add(updateStatusLabel);
         catchUpButton.setAlignmentX(LEFT_ALIGNMENT);
@@ -384,6 +389,7 @@ public class GrindstonePanel extends PluginPanel {
         counters.add(waitingGoalsButton);
         header.add(Box.createVerticalStrut(8));
         header.add(counters);
+        header.add(snapshots);
 
         JPanel goalActions = new JPanel(new GridLayout(2, 1, 0, 5));
         goalActions.setOpaque(false);
@@ -405,15 +411,6 @@ public class GrindstonePanel extends PluginPanel {
         JMenuItem allCollectionPages = new JMenuItem("Add all collection-log pages...");
         allCollectionPages.setToolTipText("Read every page from the client's five collection-log tabs and add missing page milestones.");
         allCollectionPages.addActionListener(event -> addAllCollectionPages());
-        JMenuItem collectionSnapshot = new JMenuItem("Collection-log snapshot...");
-        collectionSnapshot.addActionListener(event -> {
-            GrindstoneProfile active = profile;
-            clientThread.invokeLater(() -> {
-                String status = active == null ? "Log in to capture your collection log." : active.getCollectionLogHistory().hasSnapshot() ? "Last full snapshot: " + Instant.ofEpochMilli(active.getCollectionLogHistory().getSnapshotAt()) + " · " + active.getCollectionLogHistory().getSnapshotCount() + " unlocks." : "No full collection-log snapshot has been captured yet.";
-                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), status + "\n\nOpen your in-game collection log. Grindstone captures loaded unlocks automatically and verifies the total. A full snapshot is required before adding collection milestones."));
-            });
-        });
-        moreMenu.add(collectionSnapshot);
         moreMenu.add(allCollectionPages);
         JMenu presets = new JMenu("Add milestone preset");
         presets.setToolTipText("Add a focused milestone pack without replacing existing milestones or edited targets.");
@@ -1003,7 +1000,9 @@ public class GrindstonePanel extends PluginPanel {
                     progressOverlay.clear();
                 }
             }
-            String updateText = currentProfile == null ? "" : HtmlUtils.escape(currentProfile.getPlayerStorage().getSnapshotLabel());
+            Map<String, String> snapshotStatuses = new LinkedHashMap<>();
+            Map<String, String> snapshotTips = new LinkedHashMap<>();
+            prepareSnapshotStatuses(currentProfile, snapshotStatuses, snapshotTips);
             long dueCount = currentProfile == null || !config.showDeadlineReminders() ? 0 : currentProfile.getGoals().stream().filter(goal -> {
                 MilestoneMetadata metadata = currentProfile.getMetadata(goal);
                 return metadata.isDeadlineReminder() && metadata.getDeadlineAt() > 0 && metadata.getDeadlineAt() - System.currentTimeMillis() <= 86_400_000L && (metadata.getRecurring().isActive() ? metadata.getRecurring().getStatus() : goal.getStatus()) != MilestoneStatus.COMPLETE;
@@ -1023,12 +1022,14 @@ public class GrindstonePanel extends PluginPanel {
                     return;
                 }
 
+                snapshots.updateSnapshots(snapshotStatuses, snapshotTips);
+                snapshots.setVisible(config.showUpdateStatus());
                 catchUpText = capturedCatchUp;
                 catchUpButton.setText("Since last seen - " + catchUp.size() + " updated");
                 catchUpButton.setVisible(!catchUp.isEmpty());
-                updateStatusLabel.setText("<html>" + (storageStatus == null ? "" : HtmlUtils.escape(storageStatus) + "<br>") + (dueCount == 0 ? "" : dueCount + " personal deadline(s) due within 24h / past due<br>") + (config.showUpdateStatus() ? updateText : "") + "</html>");
-                updateStatusLabel.setVisible(config.showUpdateStatus() && currentProfile != null || storageStatus != null || dueCount > 0);
-                updateStatusLabel.setToolTipText("Latest inventory, equipment or storage snapshot captured this login. This does not mean every storage has been loaded.");
+                updateStatusLabel.setText("<html>" + (storageStatus == null ? "" : HtmlUtils.escape(storageStatus) + "<br>") + (dueCount == 0 ? "" : dueCount + " personal deadline(s) due within 24h / past due<br>") + "</html>");
+                updateStatusLabel.setVisible(storageStatus != null || dueCount > 0);
+                updateStatusLabel.setToolTipText("Storage and save messages. See Snapshots for captured game data.");
                 List<MilestoneView> allGoals = new ArrayList<>(preparedViews.size());
                 for (Supplier<MilestoneView> prepared : preparedViews) {
                     allGoals.add(prepared.get());
@@ -1036,6 +1037,40 @@ public class GrindstonePanel extends PluginPanel {
                 renderPrepared(currentProfile, allGoals);
             });
         });
+    }
+
+    private void prepareSnapshotStatuses(GrindstoneProfile active, Map<String, String> statuses, Map<String, String> tips) {
+        Map<PlayerStorageSource, Instant> seen = active == null ? Collections.emptyMap() : active.getPlayerStorage().getLastSeen();
+        DateTimeFormatter time = DateTimeFormatter.ofPattern("MMM d, HH:mm").withZone(ZoneId.systemDefault());
+        for (PlayerStorageSource source : new PlayerStorageSource[]{PlayerStorageSource.INVENTORY, PlayerStorageSource.EQUIPMENT, PlayerStorageSource.BANK}) {
+            Instant captured = seen.get(source);
+            statuses.put(source.toString(), captured == null ? "Not loaded" : "Captured");
+            String refresh = source == PlayerStorageSource.BANK ? "Open your bank to refresh its contents." : "Updated automatically while logged in.";
+            tips.put(source.toString(), "<html>" + refresh + "<br>" + (captured == null ? "No data captured this login." : "Captured " + time.format(captured) + ".") + "<br>Only this character's known contents are counted.</html>");
+        }
+        int known = active == null ? 0 : active.getCollectionLogHistory().getKnownUnlockCount();
+        boolean live = active != null && client.getGameState() == GameState.LOGGED_IN && client.getAccountHash() == active.getHash();
+        int total = live && client.getVarpValue(VarPlayerID.COLLECTION_COUNT_MAX) > 0 ? client.getVarpValue(VarPlayerID.COLLECTION_COUNT) : -1;
+        boolean complete = active != null && active.getCollectionLogHistory().hasSnapshot();
+        boolean current = complete && (total < 0 || known == total);
+        String logStatus = current ? known + " unlocks" : known > 0 || total >= 0 ? known + (total < 0 ? " known" : " / " + total) + " · partial" : "Not loaded";
+        statuses.put("Collection log", logStatus);
+        String captured = complete ? "<br>Last full capture: " + time.format(Instant.ofEpochMilli(active.getCollectionLogHistory().getSnapshotAt())) + "." : "<br>No full snapshot yet; collection milestones remain unavailable.";
+        tips.put("Collection log", "<html>Open your in-game collection log to capture available unlocks.<br>" + (current ? "Full snapshot verified against the game's total." : "Incomplete data: " + known + " known unlocks" + (total < 0 ? "." : " out of " + total + ".") + "<br>The game may not expose every unlock just by opening the log.<br>Its Search interface can expose further collection data.") + captured + "<br>Reopen after playing on another device.</html>");
+        int loaded = 0;
+        StringBuilder other = new StringBuilder("<html>Open each storage in game to refresh it. Captures last for this login.");
+        for (PlayerStorageSource source : PlayerStorageSource.values()) {
+            if (source == PlayerStorageSource.INVENTORY || source == PlayerStorageSource.EQUIPMENT || source == PlayerStorageSource.BANK) {
+                continue;
+            }
+            Instant capturedAt = seen.get(source);
+            if (capturedAt != null) {
+                loaded++;
+            }
+            other.append("<br>").append(HtmlUtils.escape(source.toString())).append(": ").append(capturedAt == null ? "Not loaded" : time.format(capturedAt));
+        }
+        statuses.put("Other storage", loaded + " captured");
+        tips.put("Other storage", other.append("</html>").toString());
     }
 
     private void renderPrepared(GrindstoneProfile currentProfile, List<MilestoneView> allGoals) {
