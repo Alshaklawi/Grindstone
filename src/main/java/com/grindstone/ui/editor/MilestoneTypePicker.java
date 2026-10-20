@@ -25,10 +25,10 @@ import net.runelite.client.util.ImageUtil;
  * @since 10/19/2026
  */
 public final class MilestoneTypePicker extends JPanel {
-    private static final String[] GROUPS = {"Skills", "Activities", "Collection", "Quests", "Achievement Diary", "Combat Achievements", "Personal"};
-    private static final String[] DESCRIPTIONS = {"Build levels, earn experience or raise your base stats.", "Track boss kills, raids, Slayer, clues and minigames.", "Complete your collection log or work towards an item stack.", "Finish a quest or follow an entire quest series.", "Complete achievement diary regions and tiers.", "Work through Combat Achievement tasks and reward tiers.", "Create your own milestone, checklist or repeating routine."};
-    private static final Icon[] ICONS = {Icon.SKILLING, Icon.BOSSING, Icon.COLLECTION_LOG, Icon.QUEST, Icon.ACHIEVEMENT_DIARY, Icon.COMBAT_ACHIEVEMENT, Icon.MAIN};
-    private static final int[][] TYPES = {{0, 1, 2, 3, 4, 18, 19, 20}, {5}, {22, 6, 7, 16}, {9, 10}, {11, 12}, {13, 14, 15, 17}, {8, 21}};
+    private static final String[] GROUPS = {"Skills", "Activities", "Collection Log", "Items", "Quests", "Achievement Diary", "Combat Achievements", "Personal"};
+    private static final String[] DESCRIPTIONS = {"Build levels, earn experience or raise your base stats.", "Track boss kills, raids, Slayer, clues and minigames.", "Track collection-log totals, pages and individual unlocks.", "Track owned item quantities across known personal storage.", "Finish a quest or follow an entire quest series.", "Complete achievement diary regions and tiers.", "Work through Combat Achievement tasks and reward tiers.", "Create your own milestone, checklist or repeating routine."};
+    private static final Icon[] ICONS = {Icon.SKILLING, Icon.BOSSING, Icon.COLLECTION_LOG, Icon.MAIN, Icon.QUEST, Icon.ACHIEVEMENT_DIARY, Icon.COMBAT_ACHIEVEMENT, Icon.MAIN};
+    private static final int[][] TYPES = {{0, 1, 2, 3, 4, 18, 19, 20}, {5}, {22, 6, 7}, {16}, {9, 10}, {11, 12}, {13, 14, 15, 17}, {8, 21}};
     private final JComboBox<String> model;
     private final JComboBox<Integer> selection = new JComboBox<>();
     private final JToggleButton[] groups = new JToggleButton[GROUPS.length];

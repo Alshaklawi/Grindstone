@@ -16,6 +16,7 @@ public enum MilestoneCategory {
     CLUES("Clues", Icon.COLLECTION_LOG),
     MINIGAMES("Minigames", Icon.MAIN),
     COLLECTION_LOG("Collection Log", Icon.COLLECTION_LOG),
+    ITEMS("Items", Icon.MAIN),
     SKILLING("Skilling", Icon.SKILLING),
     QUEST("Quests", Icon.QUEST),
     ACHIEVEMENT_DIARY("Achievement Diary", Icon.ACHIEVEMENT_DIARY),

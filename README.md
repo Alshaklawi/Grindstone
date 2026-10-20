@@ -37,7 +37,7 @@ From your first skill milestone to your next collection-log slot, choose the tar
 | **Achievement Diary** | Diary regions and tiers |
 | **Combat Achievements** | Boss tasks, difficulties and reward tiers |
 | **Collection log** | Total unlock targets, individual unlocks or entire pages, with item previews and obtained progress |
-| **Item quantities** | Supplies and equipment across known inventory, equipment, bank and supported storage |
+| **Items** | Supplies and equipment across known inventory, equipment, bank and supported storage |
 | **Personal milestones** | Custom counters, notes, checklists and linked milestones |
 
 Before adding collection-log milestones, open your in-game collection log and click **Search** with an empty search. Grindstone captures a full local snapshot; you can check it under **… → Collection-log snapshot**. Refresh the snapshot after playing on another device. Use **Add all collection-log pages** to add missing page milestones.

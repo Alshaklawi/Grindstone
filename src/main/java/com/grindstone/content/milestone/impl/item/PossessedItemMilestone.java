@@ -68,7 +68,7 @@ public final class PossessedItemMilestone implements Milestone {
     }
     @Override
     public MilestoneCategory getCategory() {
-        return MilestoneCategory.OTHER;
+        return MilestoneCategory.ITEMS;
     }
     @Override
     public String getDescription() {
