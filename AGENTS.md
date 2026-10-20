@@ -8,6 +8,7 @@
 - Keep only the requested author/Discord/creation-date header on each type. Preserve its actual creation date.
 - Automatically commit completed changes in atomic commits; separate formatting from behavior changes. Preserve unrelated edits. Do not push unless asked, or commit the local run-plugin.bat script.
 - Keep README player-facing and concise. Do not add redundant developer notes or checklist documents.
+- Keep UI labels concise and contextual. Do not repeat the selected section in its options or field labels when that context is already clear.
 - Never automate game input or add prohibited gameplay assistance. No reflection, native access, external processes, dynamic code loading or Java serialization.
 - Keep client reads on the client thread and Swing changes on the EDT. Never block the client thread or lifecycle methods; cancel tasks and listeners on shutdown.
 - Use events instead of expensive per-tick scans. Use debug logging for diagnostics.

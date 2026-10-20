@@ -157,7 +157,7 @@ public final class CompletionMilestoneChoices {
         types.put(29, new LinkedHashMap<>());
         CollectionLogPages.getTabs(client).forEach((id, name) -> types.get(29).put(name, () -> new CollectionLogTabMilestone(id, name)));
         types.put(22, new LinkedHashMap<>());
-        types.get(22).put("Total collection-log unlocks", CollectionLogTotalMilestone::new);
+        types.get(22).put("Total unlocks", CollectionLogTotalMilestone::new);
         types.put(6, new TreeMap<>());
         types.put(17, new TreeMap<>());
         CombatAchievementData.getTasks(client).forEach((id, task) -> types.get(17).put(task.getName() + " (" + task.getTier() + ")", () -> new CombatAchievementTaskMilestone(id, task.getName(), task.getDescription())));

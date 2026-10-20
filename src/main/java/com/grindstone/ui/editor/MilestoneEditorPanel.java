@@ -68,7 +68,7 @@ import net.runelite.client.ui.FontManager;
  * @since 10/18/2026
  */
 public final class MilestoneEditorPanel extends JPanel {
-    private final JComboBox<String> type = new JComboBox<>(new String[]{ "Skill level", "Skill experience", "Combat level", "Total level", "Total experience", "Boss kills & completions", "Collection-log page", "Collection-log item unlock", "Custom milestone", "Quest", "Quest series", "Achievement diary region & tier", "Achievement diary tier (all regions)", "Combat achievements: boss", "Combat achievements: reward tier", "Combat achievements: difficulty tasks", "Owned item quantity", "Combat achievement task", "Base level (all skills)", "Base experience (all skills)", "Session experience", "Personal checklist / routine", "Total collection-log unlocks", "Raid completions", "Slayer counters", "Clue scroll completions", "Minigame counters", "Skilling activities", "Quest speedrun completions", "Collection-log tab"});
+    private final JComboBox<String> type = new JComboBox<>(new String[]{ "Skill level", "Skill experience", "Combat level", "Total level", "Total experience", "Boss kills & completions", "Page", "Item unlock", "Custom milestone", "Quest", "Quest series", "Achievement diary region & tier", "Achievement diary tier (all regions)", "Combat achievements: boss", "Combat achievements: reward tier", "Combat achievements: difficulty tasks", "Owned item quantity", "Combat achievement task", "Base level (all skills)", "Base experience (all skills)", "Session experience", "Personal checklist / routine", "Total unlocks", "Raid completions", "Slayer counters", "Clue scroll completions", "Minigame counters", "Skilling activities", "Quest speedrun completions", "Tab"});
     private final ChecklistMilestoneForm checklistForm = new ChecklistMilestoneForm();
     private final CustomMilestoneForm customForm = new CustomMilestoneForm();
     private final RepeatMilestoneForm repeatForm = new RepeatMilestoneForm();
@@ -294,7 +294,7 @@ public final class MilestoneEditorPanel extends JPanel {
             updating = false;
             if (kind < 2 || CompletionMilestoneChoices.isActivityType(kind) || kind == 6 || kind == 29 || kind >= 9 && kind < 18 || kind == 20) {
                 boolean skillSelection = kind == 0 || kind == 1 || kind == 20;
-                body.add(field(skillSelection ? "Skill" : CompletionMilestoneChoices.isActivityType(kind) ? "Activity" : kind >= 9 ? "Track" : "Collection-log page", skillSelection ? createSkillPicker() : subject));
+                body.add(field(skillSelection ? "Skill" : CompletionMilestoneChoices.isActivityType(kind) ? "Activity" : kind == 29 ? "Tab" : kind >= 9 ? "Track" : "Page", skillSelection ? createSkillPicker() : subject));
                 body.add(Box.createVerticalStrut(12));
             }
             Milestone sample = choices.isEmpty() ? null : choices.values().iterator().next().get();
