@@ -261,7 +261,7 @@ public class GrindstonePlugin extends Plugin {
             addQuestGoalMenu(original);
             return;
         }
-        if (original.getParam1() >>> 16 == InterfaceID.AREA_TASK) {
+        if (original.getParam1() >>> 16 == InterfaceID.AREA_TASK || original.getParam1() == InterfaceID.SideJournal.TASK_LIST) {
             addDiaryGoalMenu(original);
             return;
         }
@@ -378,17 +378,22 @@ public class GrindstonePlugin extends Plugin {
         }
     }
 
+    private String getDiaryAreaName(String text) {
+        return Text.removeTags(text).trim().replaceFirst("(?i)^(?:open|wiki) +", "").replaceFirst("(?i) +(?:diary|journal)$", "").trim();
+    }
+
     private void addDiaryGoalMenu(MenuEntry original) {
-        if (!config.diaryGoalsEnabled() || !config.diaryGoalMenu() || original.getIdentifier() != 1) {
+        if (!config.diaryGoalsEnabled() || !config.diaryGoalMenu()) {
             return;
         }
-        String name = getGoalMenuName(original).replaceFirst("(?i)\\s+diary$", "");
+        String name = getDiaryAreaName(getGoalMenuName(original));
+        String optionName = getDiaryAreaName(original.getOption());
         for (AchievementDiaryArea area : AchievementDiaryArea.values()) {
-            if (!area.toString().equalsIgnoreCase(name)) {
+            if (!area.toString().equalsIgnoreCase(name) && !area.toString().equalsIgnoreCase(optionName)) {
                 continue;
             }
             for (DiaryTier tier : DiaryTier.values()) {
-                String option = "Track " + tier + " diary";
+                String option = "Set " + tier + " milestone";
                 if (!canOfferGoal(new AchievementDiaryTierAreaMilestone(area, tier)) || hasMilestoneOption(option, area.toString())) {
                     continue;
                 }
@@ -398,7 +403,10 @@ public class GrindstonePlugin extends Plugin {
                         .setType(MenuAction.RUNELITE_LOW_PRIORITY)
                         .onClick(entry -> {
                             if (hasActivePlayerProfile() && config.diaryGoalsEnabled() && config.diaryGoalMenu()) {
-                                openGoalEditor(new AchievementDiaryTierAreaMilestone(area, tier));
+                                AchievementDiaryTierAreaMilestone goal = new AchievementDiaryTierAreaMilestone(area, tier);
+                                if (canOfferGoal(goal)) {
+                                    openGoalEditor(goal);
+                                }
                             }
                         });
             }
