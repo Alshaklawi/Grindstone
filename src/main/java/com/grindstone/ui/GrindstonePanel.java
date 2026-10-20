@@ -2119,14 +2119,14 @@ public class GrindstonePanel extends PluginPanel {
             if (profile != active || !active.getGoals().contains(goal)) {
                 return;
             }
-            Map<Integer, Map<String, Supplier<Milestone>>> choices = CompletionMilestoneChoices.create(client);
+            Map<Integer, Map<String, Supplier<Milestone>>> choices = CompletionMilestoneChoices.forEditing(client, active.getCollectionLogHistory());
             RepeatSchedule schedule = active.metadata(goal).recurring().getSchedule();
             long periodTarget = active.metadata(goal).recurring().getTarget();
             SwingUtilities.invokeLater(() -> {
                 if (profile != active) {
                     return;
                 }
-                MilestoneEditorPanel form = new MilestoneEditorPanel(itemManager, itemSearchService, choices);
+                MilestoneEditorPanel form = new MilestoneEditorPanel(itemManager, itemSearchService, choices, true);
                 try {
                     form.loadGoal(goal);
                 } catch (IllegalArgumentException exception) {

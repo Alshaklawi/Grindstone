@@ -39,6 +39,7 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Supplier;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -104,6 +105,7 @@ public final class MilestoneEditorPanel extends JPanel {
     private final JPanel presets = new JPanel(new GridLayout(1, 3, 6, 0));
     private final Map<String, Supplier<Milestone>> choices = new LinkedHashMap<>();
     private final ItemManager itemManager;
+    private final boolean editing;
     private boolean updating;
     private Map<Milestone, RepeatSchedule> existingGoals;
     private final Map<Integer, Map<String, Supplier<Milestone>>> completionChoices;
@@ -147,8 +149,13 @@ public final class MilestoneEditorPanel extends JPanel {
     }
 
     public MilestoneEditorPanel(ItemManager itemManager, ItemLookup searchService, Map<Integer, Map<String, Supplier<Milestone>>> completionChoices) {
+        this(itemManager, searchService, completionChoices, false);
+    }
+
+    public MilestoneEditorPanel(ItemManager itemManager, ItemLookup searchService, Map<Integer, Map<String, Supplier<Milestone>>> completionChoices, boolean editing) {
         super(new BorderLayout(0, 12));
         this.completionChoices = completionChoices;
+        this.editing = editing;
         this.itemManager = itemManager;
         itemPicker = new ItemPickerPanel(searchService, selection -> notifyReadiness());
         setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
@@ -220,6 +227,7 @@ public final class MilestoneEditorPanel extends JPanel {
                 MilestoneTargetModels.describe(target);
                 JPanel quantity = field("Target quantity", target);
                 presets.removeAll();
+                presets.setVisible(true);
                 for (long value : new long[]{1_000_000L, 100_000_000L, 1_500_000_000L}) {
                     JButton preset = new JButton(NumberFormats.target(value));
                     preset.setToolTipText(String.format(Locale.ROOT, "Set target quantity to %,d", value));
@@ -377,7 +385,7 @@ public final class MilestoneEditorPanel extends JPanel {
             return;
         }
         long previous = target.getValue() instanceof Number ? ((Number) target.getValue()).longValue() : 0;
-        SpinnerNumberModel model = completionChoices.containsKey(type.getSelectedIndex())
+        SpinnerNumberModel model = !editing && completionChoices.containsKey(type.getSelectedIndex())
                 ? MilestoneTargetModels.createNextTarget(goal) : MilestoneTargetModels.create(goal);
         if (preserve && previous >= ((Number) model.getMinimum()).longValue() && previous <= ((Number) model.getMaximum()).longValue()) {
             model.setValue(previous);
@@ -396,15 +404,35 @@ public final class MilestoneEditorPanel extends JPanel {
                 : kind == 3 ? new long[]{1000, 1500, maximum}
                 : kind == 4 ? new long[]{100_000_000, goal.getProgressMaximum(), maximum}
                 : new long[]{100, 500, 1000};
+        long minimum = Math.max(((Number) model.getMinimum()).longValue(), goal.getProgressCurrent() + 1);
+        Set<Long> suggestions = new TreeSet<>();
         for (long value : values) {
-            if (value < ((Number) model.getMinimum()).longValue() || value > maximum) {
-                continue;
+            if (value >= minimum && value <= maximum) {
+                suggestions.add(value);
+            }
+        }
+        // Fill gaps with nearby round thresholds instead of leaving only distant targets.
+        long step = kind == 0 || kind == 18 ? 5 : kind == 2 ? 10 : 100;
+        while (step <= minimum / 100 && step <= Long.MAX_VALUE / 10) {
+            step *= 10;
+        }
+        long next = ((minimum - 1) / step + 1) * step;
+        if (suggestions.size() < 3) {
+            for (int index = 0; index < 3 && next <= maximum; index++, next += step) {
+                suggestions.add(next);
+            }
+        }
+        int shown = 0;
+        for (long value : suggestions) {
+            if (shown++ == 3) {
+                break;
             }
             JButton preset = new JButton(NumberFormats.target(value));
             preset.setToolTipText(String.format(Locale.ROOT, "Set target to %,d", value));
             preset.addActionListener(event -> target.setValue(value));
             presets.add(preset);
         }
+        presets.setVisible(presets.getComponentCount() > 0);
     }
 
     private void onSubjectSelected(String value) {

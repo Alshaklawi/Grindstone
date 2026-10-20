@@ -45,6 +45,14 @@ public final class CompletionMilestoneChoices {
     private CompletionMilestoneChoices() {
     }
     public static Map<Integer, Map<String, Supplier<Milestone>>> available(Client client, CollectionLogHistory history) {
+        return snapshot(client, history, true);
+    }
+
+    public static Map<Integer, Map<String, Supplier<Milestone>>> forEditing(Client client, CollectionLogHistory history) {
+        return snapshot(client, history, false);
+    }
+
+    private static Map<Integer, Map<String, Supplier<Milestone>>> snapshot(Client client, CollectionLogHistory history, boolean unfinishedOnly) {
         Map<Integer, Map<String, Supplier<Milestone>>> types = create(client);
         types.put(0, new LinkedHashMap<>());
         types.put(1, new LinkedHashMap<>());
@@ -81,12 +89,12 @@ public final class CompletionMilestoneChoices {
             });
             choices.values().removeIf(factory -> {
                 Milestone goal = factory.get();
-                return !hasRemainingTarget(goal);
+                return unfinishedOnly && !hasRemainingTarget(goal);
             });
         });
         Map<String, Supplier<Milestone>> sessions = new LinkedHashMap<>();
         for (Skill skill : Skill.values()) {
-            if (client.getSkillExperience(skill) < 200_000_000) {
+            if (!unfinishedOnly || client.getSkillExperience(skill) < 200_000_000) {
                 sessions.put(skill.getName(), () -> new SessionExperienceMilestone(skill));
             }
         }
