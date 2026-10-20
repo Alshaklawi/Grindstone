@@ -44,6 +44,10 @@ public final class CollectionLogPages {
             return replacement;
         }
         switch (item) {
+            case ItemID.FOSSIL_MOTHERLODE_REWARD_HAT: return ItemID.MOTHERLODE_REWARD_HAT;
+            case ItemID.FOSSIL_MOTHERLODE_REWARD_TOP: return ItemID.MOTHERLODE_REWARD_TOP;
+            case ItemID.FOSSIL_MOTHERLODE_REWARD_LEGS: return ItemID.MOTHERLODE_REWARD_LEGS;
+            case ItemID.FOSSIL_MOTHERLODE_REWARD_BOOTS: return ItemID.MOTHERLODE_REWARD_BOOTS;
             case ItemID.TOL_TEA: return ItemID.TOL_TEA_DUMMY;
             case ItemID.TOL_PLAIN_SACK: return ItemID.TOL_PLAIN_SACK_DUMMY;
             case ItemID.TOL_GREEN_SACK: return ItemID.TOL_GREEN_SACK_DUMMY;
