@@ -175,7 +175,7 @@ public enum TrackerEntry {
         }
     }
     public boolean isSelectable() {
-        return this != SOUL_WARS_DEATHS && this != COLOSSEUM_WAVES;
+        return this != SOUL_WARS_DEATHS && this != COLOSSEUM_WAVES && this != SPEEDRUNS;
     }
     public String getDescription() {
         if (this == LMS_SCORE) {
