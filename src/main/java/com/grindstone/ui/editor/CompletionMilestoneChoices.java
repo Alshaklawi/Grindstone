@@ -8,6 +8,7 @@ import com.grindstone.content.combatachievement.CombatAchievementTier;
 import com.grindstone.content.diary.AchievementDiaryArea;
 import com.grindstone.content.diary.DiaryTier;
 import com.grindstone.content.milestone.Milestone;
+import com.grindstone.content.milestone.MilestoneCategory;
 import com.grindstone.content.milestone.MilestoneStatus;
 import com.grindstone.content.milestone.impl.TrackerMilestone;
 import com.grindstone.content.tracker.TrackerEntry;
@@ -66,10 +67,6 @@ public final class CompletionMilestoneChoices {
         types.get(3).put("Total level", TotalLevelMilestone::new);
         types.put(4, new LinkedHashMap<>());
         types.get(4).put("Total experience", TotalExperienceMilestone::new);
-        types.put(5, new LinkedHashMap<>());
-        for (TrackerEntry entry : TrackerEntry.values()) {
-            types.get(5).put(entry.getDisplayName(), () -> new TrackerMilestone(entry, entry.getDefaultTarget()));
-        }
         types.put(18, new LinkedHashMap<>());
         types.get(18).put("Base level", BaseLevelMilestone::new);
         types.put(19, new LinkedHashMap<>());
@@ -116,8 +113,40 @@ public final class CompletionMilestoneChoices {
         return goal.getProgressCurrent() < cap;
     }
 
+    public static boolean isActivityType(int kind) {
+        return kind == 5 || kind >= 23 && kind <= 28;
+    }
+
+    private static int activityType(MilestoneCategory category) {
+        switch (category) {
+            case BOSSING:
+                return 5;
+            case RAIDS:
+                return 23;
+            case SLAYER:
+                return 24;
+            case CLUES:
+                return 25;
+            case MINIGAMES:
+                return 26;
+            case SKILLING:
+                return 27;
+            case QUEST:
+                return 28;
+            default:
+                throw new IllegalArgumentException("Unsupported activity category: " + category);
+        }
+    }
+
     public static Map<Integer, Map<String, Supplier<Milestone>>> create(Client client) {
         Map<Integer, Map<String, Supplier<Milestone>>> types = new LinkedHashMap<>();
+        types.put(5, new LinkedHashMap<>());
+        for (int kind = 23; kind <= 28; kind++) {
+            types.put(kind, new LinkedHashMap<>());
+        }
+        for (TrackerEntry entry : TrackerEntry.values()) {
+            types.get(activityType(entry.getCategory())).put(entry.getDisplayName(), () -> new TrackerMilestone(entry, entry.getDefaultTarget()));
+        }
         types.put(22, new LinkedHashMap<>());
         types.get(22).put("Total collection-log unlocks", CollectionLogTotalMilestone::new);
         types.put(6, new TreeMap<>());

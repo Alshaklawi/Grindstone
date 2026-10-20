@@ -6,7 +6,6 @@ import com.grindstone.content.milestone.ManualMilestone;
 import com.grindstone.content.milestone.Milestone;
 import com.grindstone.content.milestone.impl.ChecklistMilestone;
 import com.grindstone.content.milestone.impl.CustomMilestone;
-import com.grindstone.content.milestone.impl.TrackerMilestone;
 import com.grindstone.content.milestone.impl.collectionlog.CollectionLogEntryMilestone;
 import com.grindstone.content.milestone.impl.collectionlog.CollectionLogItemMilestone;
 import com.grindstone.content.milestone.impl.experience.BaseExperienceMilestone;
@@ -18,7 +17,6 @@ import com.grindstone.content.milestone.impl.level.BaseLevelMilestone;
 import com.grindstone.content.milestone.impl.level.CombatLevelMilestone;
 import com.grindstone.content.milestone.impl.level.SkillLevelMilestone;
 import com.grindstone.content.milestone.impl.level.TotalLevelMilestone;
-import com.grindstone.content.tracker.TrackerEntry;
 import com.grindstone.repository.GrindstoneProfile;
 import com.grindstone.repository.RepeatSchedule;
 import com.grindstone.ui.Icon;
@@ -67,7 +65,7 @@ import net.runelite.client.ui.FontManager;
  * @since 10/18/2026
  */
 public final class MilestoneEditorPanel extends JPanel {
-    private final JComboBox<String> type = new JComboBox<>(new String[]{ "Skill level", "Skill experience", "Combat level", "Total level", "Total experience", "Activity tracker", "Collection-log page", "Collection-log item unlock", "Custom milestone", "Quest", "Quest series", "Achievement diary region & tier", "Achievement diary tier (all regions)", "Combat achievements: boss", "Combat achievements: reward tier", "Combat achievements: difficulty tasks", "Owned item quantity", "Combat achievement task", "Base level (all skills)", "Base experience (all skills)", "Session experience", "Personal checklist / routine", "Total collection-log unlocks"});
+    private final JComboBox<String> type = new JComboBox<>(new String[]{ "Skill level", "Skill experience", "Combat level", "Total level", "Total experience", "Boss kills & completions", "Collection-log page", "Collection-log item unlock", "Custom milestone", "Quest", "Quest series", "Achievement diary region & tier", "Achievement diary tier (all regions)", "Combat achievements: boss", "Combat achievements: reward tier", "Combat achievements: difficulty tasks", "Owned item quantity", "Combat achievement task", "Base level (all skills)", "Base experience (all skills)", "Session experience", "Personal checklist / routine", "Total collection-log unlocks", "Raid completions", "Slayer counters", "Clue scroll completions", "Minigame counters", "Skilling activities", "Quest speedrun completions"});
     private final ChecklistMilestoneForm checklistForm = new ChecklistMilestoneForm();
     private final CustomMilestoneForm customForm = new CustomMilestoneForm();
     private final RepeatMilestoneForm repeatForm = new RepeatMilestoneForm();
@@ -264,15 +262,15 @@ public final class MilestoneEditorPanel extends JPanel {
             updating = true;
             subject.setItems(choices.keySet());
             updating = false;
-            if (kind < 2 || kind == 5 || kind == 6 || kind >= 9 && kind < 18 || kind == 20) {
+            if (kind < 2 || CompletionMilestoneChoices.isActivityType(kind) || kind == 6 || kind >= 9 && kind < 18 || kind == 20) {
                 boolean skillSelection = kind == 0 || kind == 1 || kind == 20;
-                body.add(field(skillSelection ? "Skill" : kind >= 9 ? "Track" : kind == 5 ? "Activity" : "Collection-log page", skillSelection ? createSkillPicker() : subject));
+                body.add(field(skillSelection ? "Skill" : CompletionMilestoneChoices.isActivityType(kind) ? "Activity" : kind >= 9 ? "Track" : "Collection-log page", skillSelection ? createSkillPicker() : subject));
                 body.add(Box.createVerticalStrut(12));
             }
             Milestone sample = choices.isEmpty() ? null : choices.values().iterator().next().get();
             if (sample != null && sample.supportsTarget()) {
                 configureTarget(false);
-                JPanel targetField = field(kind == 1 || kind == 4 || kind == 19 || kind == 20 ? "Target experience" : kind == 5 ? "Target amount" : kind == 22 ? "Target unlocks" : "Target level", target);
+                JPanel targetField = field(kind == 1 || kind == 4 || kind == 19 || kind == 20 ? "Target experience" : CompletionMilestoneChoices.isActivityType(kind) ? "Target amount" : kind == 22 ? "Target unlocks" : "Target level", target);
                 targetField.add(presets, BorderLayout.SOUTH);
                 presets.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
                 body.add(targetField);
@@ -281,6 +279,9 @@ public final class MilestoneEditorPanel extends JPanel {
             updatePreview();
             body.add(preview);
             setHint(kind >= 9 ? (choices.isEmpty() ? "Client data is not ready. Log in and reopen this dialog." : "Progress reads your logged-in character automatically. Completion milestones have no manual target.") : kind == 6 ? "Open your in-game collection log to refresh unlocks. Each item keeps its first-seen date." : kind == 5 ? "Progress reads your character's activity count automatically." : kind == 1 || kind == 4 ? "Progress reads your character's real experience automatically." : "Uses real levels. Temporary boosts do not advance level milestones.");
+            if (CompletionMilestoneChoices.isActivityType(kind)) {
+                setHint("Uses your character's client-reported activity counter. Open the relevant in-game interface if the reading has not loaded. Repeating routines count gains from their captured baseline.");
+            }
             if (kind == 22) {
                 setHint("Counts total collection-log unlocks across all pages. Open your collection log if the total has not loaded. Each unlock counts once; duplicate item quantities do not add progress.");
             }
@@ -291,7 +292,7 @@ public final class MilestoneEditorPanel extends JPanel {
                 setHint("Counts observed XP gains this login, not existing XP. Relogging or reconnecting resets it. For daily or weekly gains, choose Skill experience with a repeat schedule instead.");
             }
         }
-        repeatForm.setVisible(kind == 1 || kind == 4 || kind == 5 || kind == 8 || kind == 21);
+        repeatForm.setVisible(kind == 1 || kind == 4 || CompletionMilestoneChoices.isActivityType(kind) || kind == 8 || kind == 21);
         if (kind == 21) {
             repeatForm.setFixedTarget(checklistForm.getStepCount());
         }
@@ -384,10 +385,6 @@ public final class MilestoneEditorPanel extends JPanel {
             choices.put("Total level", TotalLevelMilestone::new);
         } else if (kind == 4) {
             choices.put("Total experience", TotalExperienceMilestone::new);
-        } else if (kind == 5) {
-            for (TrackerEntry entry : TrackerEntry.values()) {
-                choices.put(entry.getDisplayName(), () -> new TrackerMilestone(entry, entry.getDefaultTarget()));
-            }
         } else {
             for (CollectionLogEntry entry : CollectionLogEntry.values()) {
                 String name = entry.name().replace('_', ' ').toLowerCase(Locale.ROOT);

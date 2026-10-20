@@ -88,7 +88,7 @@ public enum TrackerEntry {
     LEVIATHAN_AWAKENED("The Leviathan: Awakened kills", VarPlayerID.TOTAL_LEVIATHAN_AWAKENED_KILLS, MilestoneCategory.BOSSING),
     DUKE_SUCELLUS_AWAKENED("Duke Sucellus: Awakened kills", VarPlayerID.TOTAL_DUKE_SUCELLUS_AWAKENED_KILLS, MilestoneCategory.BOSSING),
     RAT_BOSS("Scurrius kills", VarPlayerID.TOTAL_RAT_BOSS_KILLS, MilestoneCategory.BOSSING),
-    COLOSSEUM_WAVES("Fortis Colosseum waves completed", VarPlayerID.TOTAL_COLOSSEUM_WAVES_COMPLETED, MilestoneCategory.MINIGAMES),
+    COLOSSEUM_WAVES("Fortis Colosseum waves completed", VarPlayerID.TOTAL_COLOSSEUM_WAVES_COMPLETED, MilestoneCategory.BOSSING),
     PERILOUS_MOONS("Lunar Chests opened", VarPlayerID.TOTAL_PMOON_CHESTS, MilestoneCategory.BOSSING),
     SOL("Sol Heredit kills", VarPlayerID.TOTAL_SOL_KILLS, MilestoneCategory.BOSSING),
     ARAXXOR("Araxxor kills", VarPlayerID.TOTAL_ARAXXOR_KILLS, MilestoneCategory.BOSSING),
