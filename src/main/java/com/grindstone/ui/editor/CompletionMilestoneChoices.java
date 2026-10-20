@@ -145,6 +145,9 @@ public final class CompletionMilestoneChoices {
             types.put(kind, new LinkedHashMap<>());
         }
         for (TrackerEntry entry : TrackerEntry.values()) {
+            if (!entry.isSelectable()) {
+                continue;
+            }
             types.get(getActivityType(entry.getCategory())).put(entry.getDisplayName(), () -> new TrackerMilestone(entry, entry.getDefaultTarget()));
         }
         types.put(22, new LinkedHashMap<>());

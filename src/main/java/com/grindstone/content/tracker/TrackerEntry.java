@@ -62,6 +62,7 @@ public enum TrackerEntry {
     GAUNTLET_HM("The Corrupted Gauntlet completions", VarPlayerID.TOTAL_COMPLETED_GAUNTLET_HM, MilestoneCategory.BOSSING),
     NIGHTMARE("Nightmare kills", VarPlayerID.TOTAL_NIGHTMARE_KILLS, MilestoneCategory.BOSSING),
     NIGHTMARE_CHALLENGE("Phosani's Nightmare kills", VarPlayerID.TOTAL_NIGHTMARE_CHALLENGE_KILLS, MilestoneCategory.BOSSING),
+    LMS_SCORE("Last Man Standing score", VarPlayerID.BR_RANK, MilestoneCategory.MINIGAMES),
     SOUL_WARS_KILLS("Soul Wars kills", VarPlayerID.SOUL_WARS_TOTAL_KILLS, MilestoneCategory.MINIGAMES),
     SOUL_WARS_DEATHS("Soul Wars deaths", VarPlayerID.SOUL_WARS_TOTAL_DEATHS, MilestoneCategory.MINIGAMES),
     SOUL_WARS_GAMES("Soul Wars games", VarPlayerID.SOUL_WARS_TOTAL_GAMES, MilestoneCategory.MINIGAMES),
@@ -142,7 +143,13 @@ public enum TrackerEntry {
         this.defaultTarget = defaultTarget;
         this.representativeItem = ItemID.SLAYER_HELM;
     }
+    public boolean isSelectable() {
+        return this != SOUL_WARS_DEATHS && this != COLOSSEUM_WAVES;
+    }
     public String getDescription() {
+        if (this == LMS_SCORE) {
+            return "Current competitive Last Man Standing score, not wins or reward points. Your score can decrease. Play a competitive game to refresh the client reading.";
+        }
         if (this == SLAYER_POINTS) {
             return "Current unspent Slayer reward points, not lifetime points earned. Spending points reduces progress. Open Slayer rewards to refresh the client reading.";
         }
