@@ -1,6 +1,6 @@
 # Grindstone
 
-[![Version](https://img.shields.io/badge/version-1.0.0-gold)](https://github.com/Alshaklawi/Grindstone)
+[![Version](https://img.shields.io/badge/version-1.1.0-gold)](https://github.com/Alshaklawi/Grindstone)
 [![Installs](https://img.shields.io/endpoint?url=https%3A%2F%2Fapi.runelite.net%2Fpluginhub%2Fshields%2Finstalls%2Fplugin%2Fgrindstone)](https://runelite.net/plugin-hub/show/grindstone)
 [![Plugin Rank](https://img.shields.io/endpoint?url=https%3A%2F%2Fapi.runelite.net%2Fpluginhub%2Fshields%2Frank%2Fplugin%2Fgrindstone)](https://runelite.net/plugin-hub/show/grindstone)
 [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=github)](https://github.com/sponsors/Alshaklawi)
