@@ -15,6 +15,7 @@ import com.grindstone.content.tracker.TrackerEntry;
 import com.grindstone.content.milestone.impl.achievementdiary.AchievementDiaryTierAreaMilestone;
 import com.grindstone.content.milestone.impl.achievementdiary.AchievementDiaryTierMilestone;
 import com.grindstone.content.milestone.impl.collectionlog.CollectionLogEntryMilestone;
+import com.grindstone.content.milestone.impl.collectionlog.CollectionLogTabMilestone;
 import com.grindstone.content.milestone.impl.combatachievement.CombatAchievementBossMilestone;
 import com.grindstone.content.milestone.impl.combatachievement.CombatAchievementDifficultyMilestone;
 import com.grindstone.content.milestone.impl.combatachievement.CombatAchievementTaskMilestone;
@@ -75,6 +76,9 @@ public final class CompletionMilestoneChoices {
         types.forEach((kind, choices) -> {
             choices.replaceAll((name, factory) -> {
                 Milestone goal = factory.get();
+                if (goal instanceof CollectionLogTabMilestone) {
+                    ((CollectionLogTabMilestone) goal).setHistory(history);
+                }
                 if (goal instanceof CollectionLogEntryMilestone) {
                     ((CollectionLogEntryMilestone) goal).setHistory(history);
                 }
@@ -150,6 +154,8 @@ public final class CompletionMilestoneChoices {
             }
             types.get(getActivityType(entry.getCategory())).put(entry.getDisplayName(), () -> new TrackerMilestone(entry, entry.getDefaultTarget()));
         }
+        types.put(29, new LinkedHashMap<>());
+        CollectionLogPages.getTabs(client).forEach((id, name) -> types.get(29).put(name, () -> new CollectionLogTabMilestone(id, name)));
         types.put(22, new LinkedHashMap<>());
         types.get(22).put("Total collection-log unlocks", CollectionLogTotalMilestone::new);
         types.put(6, new TreeMap<>());

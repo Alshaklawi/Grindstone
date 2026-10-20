@@ -14,6 +14,7 @@ import com.grindstone.content.milestone.impl.CustomMilestone;
 import com.grindstone.content.milestone.impl.LinkedMilestone;
 import com.grindstone.content.milestone.impl.TrackerMilestone;
 import com.grindstone.content.milestone.impl.collectionlog.CollectionLogEntryMilestone;
+import com.grindstone.content.milestone.impl.collectionlog.CollectionLogTabMilestone;
 import com.grindstone.content.milestone.impl.experience.SessionExperienceMilestone;
 import com.grindstone.content.milestone.impl.experience.SkillExperienceMilestone;
 import com.grindstone.content.milestone.impl.item.PossessedItemMilestone;
@@ -217,7 +218,10 @@ public final class GrindstoneRepository {
                     continue;
                 }
                 Milestone goal;
-                if (type == CollectionLogEntryMilestone.class) {
+                if (type == CollectionLogTabMilestone.class) {
+                    JsonObject tab = data.getAsJsonObject();
+                    goal = new CollectionLogTabMilestone(tab.get("tabStruct").getAsInt(), tab.get("tabName").getAsString());
+                } else if (type == CollectionLogEntryMilestone.class) {
                     JsonObject page = data.getAsJsonObject();
                     if (page.has("pageStruct")) {
                         goal = new CollectionLogEntryMilestone(null, page.get("pageStruct").getAsInt(), page.get("pageName").getAsString());

@@ -68,7 +68,7 @@ import net.runelite.client.ui.FontManager;
  * @since 10/18/2026
  */
 public final class MilestoneEditorPanel extends JPanel {
-    private final JComboBox<String> type = new JComboBox<>(new String[]{ "Skill level", "Skill experience", "Combat level", "Total level", "Total experience", "Boss kills & completions", "Collection-log page", "Collection-log item unlock", "Custom milestone", "Quest", "Quest series", "Achievement diary region & tier", "Achievement diary tier (all regions)", "Combat achievements: boss", "Combat achievements: reward tier", "Combat achievements: difficulty tasks", "Owned item quantity", "Combat achievement task", "Base level (all skills)", "Base experience (all skills)", "Session experience", "Personal checklist / routine", "Total collection-log unlocks", "Raid completions", "Slayer counters", "Clue scroll completions", "Minigame counters", "Skilling activities", "Quest speedrun completions"});
+    private final JComboBox<String> type = new JComboBox<>(new String[]{ "Skill level", "Skill experience", "Combat level", "Total level", "Total experience", "Boss kills & completions", "Collection-log page", "Collection-log item unlock", "Custom milestone", "Quest", "Quest series", "Achievement diary region & tier", "Achievement diary tier (all regions)", "Combat achievements: boss", "Combat achievements: reward tier", "Combat achievements: difficulty tasks", "Owned item quantity", "Combat achievement task", "Base level (all skills)", "Base experience (all skills)", "Session experience", "Personal checklist / routine", "Total collection-log unlocks", "Raid completions", "Slayer counters", "Clue scroll completions", "Minigame counters", "Skilling activities", "Quest speedrun completions", "Collection-log tab"});
     private final ChecklistMilestoneForm checklistForm = new ChecklistMilestoneForm();
     private final CustomMilestoneForm customForm = new CustomMilestoneForm();
     private final RepeatMilestoneForm repeatForm = new RepeatMilestoneForm();
@@ -140,7 +140,7 @@ public final class MilestoneEditorPanel extends JPanel {
 
     private boolean needsCollectionSnapshot() {
         int kind = type.getSelectedIndex();
-        return (kind == 6 || kind == 7 || kind == 22) && !collectionSnapshotAvailable;
+        return (kind == 6 || kind == 7 || kind == 22 || kind == 29) && !collectionSnapshotAvailable;
     }
     private Map<Milestone, RepeatSchedule> existingGoals;
     private final Map<Integer, Map<String, Supplier<Milestone>>> completionChoices;
@@ -242,7 +242,7 @@ public final class MilestoneEditorPanel extends JPanel {
         skillButtons.clear();
         int kind = type.getSelectedIndex();
         repeatForm.setFixedTarget(null);
-        if (kind == 6 || kind == 7 || kind == 22) {
+        if (kind == 6 || kind == 7 || kind == 22 || kind == 29) {
             body.add(createCollectionSnapshotInfo());
             body.add(Box.createVerticalStrut(8));
         }
@@ -292,7 +292,7 @@ public final class MilestoneEditorPanel extends JPanel {
             updating = true;
             subject.setItems(choices.keySet());
             updating = false;
-            if (kind < 2 || CompletionMilestoneChoices.isActivityType(kind) || kind == 6 || kind >= 9 && kind < 18 || kind == 20) {
+            if (kind < 2 || CompletionMilestoneChoices.isActivityType(kind) || kind == 6 || kind == 29 || kind >= 9 && kind < 18 || kind == 20) {
                 boolean skillSelection = kind == 0 || kind == 1 || kind == 20;
                 body.add(field(skillSelection ? "Skill" : CompletionMilestoneChoices.isActivityType(kind) ? "Activity" : kind >= 9 ? "Track" : "Collection-log page", skillSelection ? createSkillPicker() : subject));
                 body.add(Box.createVerticalStrut(12));
@@ -311,6 +311,9 @@ public final class MilestoneEditorPanel extends JPanel {
             setHint(kind >= 9 ? (choices.isEmpty() ? "Client data is not ready. Log in and reopen this dialog." : "Progress reads your logged-in character automatically. Completion milestones have no manual target.") : kind == 6 ? "Open your in-game collection log to refresh unlocks. Each item keeps its first-seen date." : kind == 5 ? "Progress reads your character's activity count automatically." : kind == 1 || kind == 4 ? "Progress reads your character's real experience automatically." : "Uses real levels. Temporary boosts do not advance level milestones.");
             if (CompletionMilestoneChoices.isActivityType(kind)) {
                 setHint("Uses your character's client-reported activity counter. Open the relevant in-game interface if the reading has not loaded. Repeating routines count gains from their captured baseline.");
+            }
+            if (kind == 29) {
+                setHint("Complete a whole collection-log tab. Each distinct unlock counts once across its pages; duplicate drops do not add progress.");
             }
             if (kind == 22) {
                 setHint("Counts total collection-log unlocks across all pages. Open your collection log if the total has not loaded. Each unlock counts once; duplicate item quantities do not add progress.");

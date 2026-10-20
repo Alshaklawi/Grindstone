@@ -8,6 +8,7 @@ import com.grindstone.content.milestone.impl.CustomMilestone;
 import com.grindstone.content.milestone.impl.LinkedMilestone;
 import com.grindstone.content.milestone.impl.TrackerMilestone;
 import com.grindstone.content.milestone.impl.collectionlog.CollectionLogEntryMilestone;
+import com.grindstone.content.milestone.impl.collectionlog.CollectionLogTabMilestone;
 import com.grindstone.content.milestone.impl.collectionlog.CollectionLogItemMilestone;
 import com.grindstone.content.milestone.impl.combatachievement.CombatAchievementBossMilestone;
 import com.grindstone.content.milestone.impl.experience.SessionExperienceMilestone;
@@ -180,6 +181,9 @@ public class GrindstoneProfile {
         if (goal instanceof PossessedItemMilestone) {
             ((PossessedItemMilestone) goal).attach(playerStorage, itemManager);
         }
+        if (goal instanceof CollectionLogTabMilestone) {
+            ((CollectionLogTabMilestone) goal).setHistory(collectionLogHistory);
+        }
         if (goal instanceof CollectionLogEntryMilestone) {
             CollectionLogEntryMilestone entry = (CollectionLogEntryMilestone) goal;
             entry.setItemManager(itemManager);
@@ -253,6 +257,9 @@ public class GrindstoneProfile {
         }
         if (left instanceof TrackerMilestone) {
             return ((TrackerMilestone) left).getTracker() == ((TrackerMilestone) right).getTracker();
+        }
+        if (left instanceof CollectionLogTabMilestone) {
+            return ((CollectionLogTabMilestone) left).getTabStruct() == ((CollectionLogTabMilestone) right).getTabStruct();
         }
         if (left instanceof CollectionLogEntryMilestone) {
             return ((CollectionLogEntryMilestone) left).getPageStruct() == ((CollectionLogEntryMilestone) right).getPageStruct();

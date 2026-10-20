@@ -59,6 +59,39 @@ public final class CollectionLogPages {
             default: return item;
         }
     }
+    public static Map<Integer, String> getTabs(Client client) {
+        Map<Integer, String> tabs = new LinkedHashMap<>();
+        if (client == null) {
+            tabs.put(471, "Bosses");
+            tabs.put(472, "Raids");
+            tabs.put(473, "Clues");
+            tabs.put(474, "Minigames");
+            tabs.put(475, "Other");
+            return Collections.unmodifiableMap(tabs);
+        }
+        EnumComposition entries = client.getEnum(TABS_ENUM);
+        if (entries != null && entries.getIntVals() != null) {
+            for (int id : entries.getIntVals()) {
+                StructComposition tab = client.getStructComposition(id);
+                String name = tab == null ? null : tab.getStringValue(682);
+                if (id > 0 && name != null && !name.trim().isEmpty() && !"null".equals(name)) {
+                    tabs.put(id, name);
+                }
+            }
+        }
+        return Collections.unmodifiableMap(tabs);
+    }
+
+    public static int[] getTabItemIds(Client client, int tabStruct) {
+        StructComposition tab = client == null ? null : client.getStructComposition(tabStruct);
+        int pagesEnum = tab == null ? 0 : tab.getIntValue(TAB_PAGES_PARAM);
+        EnumComposition pages = pagesEnum <= 0 ? null : client.getEnum(pagesEnum);
+        if (pages == null || pages.getIntVals() == null) {
+            return new int[0];
+        }
+        return Arrays.stream(pages.getIntVals()).filter(id -> id > 0).flatMap(page -> Arrays.stream(getItemIds(client, page))).distinct().toArray();
+    }
+
     public static Map<Integer, String> discover(Client client) {
         Map<Integer, String> pages = new LinkedHashMap<>();
         if (client == null) {

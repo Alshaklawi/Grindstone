@@ -9,6 +9,7 @@ import com.grindstone.content.milestone.impl.TrackerMilestone;
 import com.grindstone.content.milestone.impl.achievementdiary.AchievementDiaryTierAreaMilestone;
 import com.grindstone.content.milestone.impl.achievementdiary.AchievementDiaryTierMilestone;
 import com.grindstone.content.milestone.impl.collectionlog.CollectionLogEntryMilestone;
+import com.grindstone.content.milestone.impl.collectionlog.CollectionLogTabMilestone;
 import com.grindstone.content.milestone.impl.collectionlog.CollectionLogItemMilestone;
 import com.grindstone.content.milestone.impl.combatachievement.CombatAchievementBossMilestone;
 import com.grindstone.content.milestone.impl.combatachievement.CombatAchievementDifficultyMilestone;
@@ -54,6 +55,7 @@ final class SavedMilestoneTypes {
         register(types, SkillExperienceMilestone.class, "skill-xp");
         register(types, TotalExperienceMilestone.class, "total-xp");
         register(types, CollectionLogEntryMilestone.class, "collection-page");
+        register(types, CollectionLogTabMilestone.class, "collection-tab");
         register(types, CollectionLogItemMilestone.class, "collection-item");
         register(types, CollectionLogTotalMilestone.class, "collection-total");
         register(types, QuestMilestone.class, "quest");

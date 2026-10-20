@@ -14,6 +14,7 @@ import com.grindstone.content.milestone.MilestoneCategory;
 import com.grindstone.content.milestone.impl.TrackerMilestone;
 import com.grindstone.content.milestone.impl.achievementdiary.AchievementDiaryTierAreaMilestone;
 import com.grindstone.content.milestone.impl.collectionlog.CollectionLogEntryMilestone;
+import com.grindstone.content.milestone.impl.collectionlog.CollectionLogTabMilestone;
 import com.grindstone.content.milestone.impl.collectionlog.CollectionLogItemMilestone;
 import com.grindstone.content.milestone.impl.combatachievement.CombatAchievementBossMilestone;
 import com.grindstone.content.milestone.impl.combatachievement.CombatAchievementTaskMilestone;
@@ -431,6 +432,9 @@ public class GrindstonePlugin extends Plugin {
             return false;
         }
         goal.refresh(client);
+        if (goal instanceof CollectionLogTabMilestone) {
+            ((CollectionLogTabMilestone) goal).setHistory(profile.getCollectionLogHistory());
+        }
         if (goal instanceof CollectionLogItemMilestone) {
             ((CollectionLogItemMilestone) goal).setHistory(profile.getCollectionLogHistory());
             goal.prepare(client, null);
