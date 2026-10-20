@@ -18,7 +18,7 @@ public final class DialogPlacement {
     private DialogPlacement() {
     }
 
-    public static Component owner(Component component) {
+    public static Component getOwner(Component component) {
         if (component == null) {
             return null;
         }
@@ -29,8 +29,8 @@ public final class DialogPlacement {
         return window == null ? component : window;
     }
 
-    public static Rectangle usableBounds(Component component) {
-        Component owner = owner(component);
+    public static Rectangle getUsableBounds(Component component) {
+        Component owner = getOwner(component);
         GraphicsConfiguration configuration = owner == null ? null : owner.getGraphicsConfiguration();
         if (configuration == null) {
             configuration = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration();
@@ -45,9 +45,9 @@ public final class DialogPlacement {
     }
 
     public static void center(Window dialog, Component component) {
-        Rectangle bounds = usableBounds(component);
+        Rectangle bounds = getUsableBounds(component);
         dialog.setSize(Math.min(dialog.getWidth(), Math.max(1, bounds.width - 40)), Math.min(dialog.getHeight(), Math.max(1, bounds.height - 40)));
-        dialog.setLocationRelativeTo(owner(component));
+        dialog.setLocationRelativeTo(getOwner(component));
         dialog.setLocation(Math.max(bounds.x, Math.min(dialog.getX(), bounds.x + bounds.width - dialog.getWidth())), Math.max(bounds.y, Math.min(dialog.getY(), bounds.y + bounds.height - dialog.getHeight())));
     }
 }

@@ -110,7 +110,7 @@ public final class PossessedItemMilestone implements Milestone {
         if (normalizedItem == 0) {
             normalizedItem = client == null ? item : storage.normalize(client, item);
         }
-        long next = storage.quantity(normalizedItem);
+        long next = storage.getQuantity(normalizedItem);
         boolean changed = next != current;
         current = next;
         return changed;

@@ -166,7 +166,7 @@ public enum TrackerEntry {
     int readCount(IntUnaryOperator varps, IntUnaryOperator varbits) {
         return Math.max(0, (varbit ? varbits : varps).applyAsInt(id));
     }
-    public int iconItem(Client client) {
+    public int getIconItem(Client client) {
         if (this == CLUES_TOTAL) {
             return ItemID.TRAIL_REWARD_CASKET_MASTER;
         }
@@ -182,7 +182,7 @@ public enum TrackerEntry {
         for (Map.Entry<Integer, String> page : pages.entrySet()) {
             String candidate = normalized(page.getValue());
             if (candidate.length() > best && (name.startsWith(candidate) || candidate.startsWith(name))) {
-                int[] items = CollectionLogPages.itemIds(client, page.getKey());
+                int[] items = CollectionLogPages.getItemIds(client, page.getKey());
                 if (items.length > 0) {
                     representativeItem = items[0];
                     best = candidate.length();

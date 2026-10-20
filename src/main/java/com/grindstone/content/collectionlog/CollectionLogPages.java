@@ -38,7 +38,7 @@ public final class CollectionLogPages {
         replacements = Collections.unmodifiableMap(values);
     }
 
-    public static int canonicalItemId(int item) {
+    public static int getCanonicalItemId(int item) {
         Integer replacement = replacements.get(item);
         if (replacement != null) {
             return replacement;
@@ -82,7 +82,7 @@ public final class CollectionLogPages {
                 if (page <= 0) {
                     continue;
                 }
-                String name = title(client, page, "");
+                String name = getTitle(client, page, "");
                 if (!name.isEmpty()) {
                     pages.put(page, name);
                 }
@@ -90,24 +90,24 @@ public final class CollectionLogPages {
         }
         return Collections.unmodifiableMap(pages);
     }
-    public static String title(Client client, int page, String fallback) {
+    public static String getTitle(Client client, int page, String fallback) {
         StructComposition struct = client == null ? null : client.getStructComposition(page);
         String name = struct == null ? null : struct.getStringValue(PAGE_TITLE_PARAM);
         return name == null || name.trim().isEmpty() || "null".equals(name) ? fallback : name;
     }
-    public static int[] itemIds(Client client, int page) {
+    public static int[] getItemIds(Client client, int page) {
         StructComposition struct = client == null ? null : client.getStructComposition(page);
         if (struct == null) {
             return new int[0];
         }
         int enumId = struct.getIntValue(PAGE_ITEMS_PARAM);
         EnumComposition items = enumId <= 0 ? null : client.getEnum(enumId);
-        return items == null || items.getIntVals() == null ? new int[0] : Arrays.stream(items.getIntVals()).filter(id -> id > 0).map(CollectionLogPages::canonicalItemId).distinct().toArray();
+        return items == null || items.getIntVals() == null ? new int[0] : Arrays.stream(items.getIntVals()).filter(id -> id > 0).map(CollectionLogPages::getCanonicalItemId).distinct().toArray();
     }
-    public static ItemComposition[] items(Client client, int page) {
+    public static ItemComposition[] getItems(Client client, int page) {
         if (client == null) {
             return new ItemComposition[0];
         }
-        return Arrays.stream(itemIds(client, page)).mapToObj(client::getItemDefinition).filter(Objects::nonNull).toArray(ItemComposition[]::new);
+        return Arrays.stream(getItemIds(client, page)).mapToObj(client::getItemDefinition).filter(Objects::nonNull).toArray(ItemComposition[]::new);
     }
 }

@@ -79,7 +79,7 @@ public abstract class BaseSkillMilestone implements Milestone {
 
     @Override
     public final String getProgressText() {
-        return (tracksExperience() ? NumberFormats.experience(current) + " / " + NumberFormats.experience(getProgressMaximum()) + " base XP" : current + " / " + getProgressMaximum() + " base level") + " · " + reached + "/" + Skill.values().length + " skills";
+        return (tracksExperience() ? NumberFormats.formatExperience(current) + " / " + NumberFormats.formatExperience(getProgressMaximum()) + " base XP" : current + " / " + getProgressMaximum() + " base level") + " · " + reached + "/" + Skill.values().length + " skills";
     }
 
     @Override

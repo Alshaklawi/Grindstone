@@ -23,12 +23,12 @@ import net.runelite.client.ui.FontManager;
  */
 public final class MilestoneHistoryPanel extends JPanel {
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'UTC'").withZone(ZoneOffset.UTC);
-    public static Supplier<MilestoneHistoryPanel> snapshot(MilestoneMetadata metadata) {
+    public static Supplier<MilestoneHistoryPanel> createSnapshot(MilestoneMetadata metadata) {
         List<Object[]> periods = new ArrayList<>();
         List<Object[]> milestones = new ArrayList<>();
-        RecurringMilestone recurring = metadata.recurring();
+        RecurringMilestone recurring = metadata.getRecurring();
         if (recurring.isActive()) {
-            periods.add(new Object[]{recurring.getSchedule(), date(recurring.getStart()), recurring.getBaselineAt() == 0 ? "—" : date(recurring.getSchedule().next(recurring.getStart())), recurring.getProgress(), recurring.getTarget(), recurring.getBaselineAt() == 0 ? "Waiting for login" : recurring.getCompletedAt() > 0 ? "Completed · current period" : "Current period", date(recurring.getBaselineAt()), date(recurring.getLastObservedAt()), date(recurring.getCompletedAt())});
+            periods.add(new Object[]{recurring.getSchedule(), date(recurring.getStart()), recurring.getBaselineAt() == 0 ? "—" : date(recurring.getSchedule().getNextReset(recurring.getStart())), recurring.getProgress(), recurring.getTarget(), recurring.getBaselineAt() == 0 ? "Waiting for login" : recurring.getCompletedAt() > 0 ? "Completed · current period" : "Current period", date(recurring.getBaselineAt()), date(recurring.getLastObservedAt()), date(recurring.getCompletedAt())});
         }
         List<RecurringMilestone.Period> history = recurring.getHistory();
         for (int index = history.size() - 1; index >= 0; index--) {

@@ -39,12 +39,12 @@ public final class ProfilePersistence {
     }
 
     public CompletableFuture<GrindstoneProfile> load(long hash) {
-        Directory root = directory();
+        Directory root = getDirectory();
         return enqueue(() -> repository.load(root.get().joinSegment("profiles"), hash));
     }
 
     public CompletableFuture<Void> save(JsonObject snapshot) {
-        Directory root = directory();
+        Directory root = getDirectory();
         return enqueue(() -> {
             repository.save(root.get().joinSegment("profiles"), snapshot);
             return null;
@@ -70,7 +70,7 @@ public final class ProfilePersistence {
         return queued.thenApply(value -> value);
     }
 
-    private synchronized Directory directory() {
+    private synchronized Directory getDirectory() {
         if (directory == null) {
             throw new IllegalStateException("Profile storage is not configured.");
         }

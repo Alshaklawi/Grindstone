@@ -125,7 +125,7 @@ public final class MilestoneEditorPanel extends JPanel {
 
     public void hideObtainedCollectionItems(Set<Integer> obtained) {
         Set<Integer> snapshot = new HashSet<>(obtained);
-        itemPicker.setAvailableItems(id -> type.getSelectedIndex() != 7 || !snapshot.contains(CollectionLogPages.canonicalItemId(id)));
+        itemPicker.setAvailableItems(id -> type.getSelectedIndex() != 7 || !snapshot.contains(CollectionLogPages.getCanonicalItemId(id)));
     }
 
     public void setExistingGoals(Map<Milestone, RepeatSchedule> existingGoals) {
@@ -136,7 +136,7 @@ public final class MilestoneEditorPanel extends JPanel {
         return existingGoals != null;
     }
 
-    public String reviewText(Milestone goal) {
+    public String getReviewText(Milestone goal) {
         String name = goal.getTitle(null);
         if ((type.getSelectedIndex() == 7 || type.getSelectedIndex() == 16) && itemPicker.hasSelection()) {
             name = itemPicker.getSelectedItemName() + " · item " + itemPicker.getSelectedItemId();
@@ -248,7 +248,7 @@ public final class MilestoneEditorPanel extends JPanel {
                 presets.removeAll();
                 presets.setVisible(true);
                 for (long value : new long[]{1_000_000L, 100_000_000L, 1_500_000_000L}) {
-                    JButton preset = new JButton(NumberFormats.target(value));
+                    JButton preset = new JButton(NumberFormats.formatTarget(value));
                     preset.setToolTipText(String.format(Locale.ROOT, "Set target quantity to %,d", value));
                     preset.addActionListener(event -> target.setValue(value));
                     presets.add(preset);
@@ -445,7 +445,7 @@ public final class MilestoneEditorPanel extends JPanel {
             if (shown++ == 3) {
                 break;
             }
-            JButton preset = new JButton(NumberFormats.target(value));
+            JButton preset = new JButton(NumberFormats.formatTarget(value));
             preset.setToolTipText(String.format(Locale.ROOT, "Set target to %,d", value));
             preset.addActionListener(event -> target.setValue(value));
             presets.add(preset);

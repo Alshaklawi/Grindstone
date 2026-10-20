@@ -95,7 +95,7 @@ public final class GrindstoneProgressOverlay extends Overlay {
             if (current.view == ProgressOverlayView.MILESTONES) {
                 summary = current.total + " milestones tracked";
             } else if (current.view == ProgressOverlayView.DAILY) {
-                summary += " · resets in " + OverlayStyle.countdown(RepeatSchedule.DAILY.next(RepeatSchedule.DAILY.start(now)), now);
+                summary += " · resets in " + OverlayStyle.formatCountdown(RepeatSchedule.DAILY.getNextReset(RepeatSchedule.DAILY.getPeriodStart(now)), now);
             }
             card.drawString(OverlayStyle.fit(summary, card.getFontMetrics(), current.width - 28), 13, 54);
             card.setColor(new Color(80, 83, 88, 100));
@@ -138,7 +138,7 @@ public final class GrindstoneProgressOverlay extends Overlay {
         graphics.drawString(OverlayStyle.fit(entry.getTitle(), graphics.getFontMetrics(), width - 46), 28, y + 10);
         graphics.setFont(FontManager.getRunescapeSmallFont());
         graphics.setColor(OverlayStyle.MUTED);
-        String progress = entry.isReady() ? entry.getTarget() > 0 ? NumberFormats.experience(entry.getCurrent()) + " / " + NumberFormats.experience(entry.getTarget()) : entry.isComplete() ? "Complete" : "In progress" : "Waiting for client data";
+        String progress = entry.isReady() ? entry.getTarget() > 0 ? NumberFormats.formatExperience(entry.getCurrent()) + " / " + NumberFormats.formatExperience(entry.getTarget()) : entry.isComplete() ? "Complete" : "In progress" : "Waiting for client data";
         graphics.drawString(OverlayStyle.fit(progress, graphics.getFontMetrics(), width - 80), 28, y + 24);
         double ratio = entry.getTarget() <= 0 ? 0 : Math.min(1, entry.getCurrent() / (double) entry.getTarget());
         String percentage = entry.isReady() && entry.getTarget() > 0 ? Math.round(ratio * 100) + "%" : "";

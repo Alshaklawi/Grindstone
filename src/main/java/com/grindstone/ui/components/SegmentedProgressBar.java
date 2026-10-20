@@ -44,10 +44,10 @@ public final class SegmentedProgressBar extends JProgressBar {
     }
 
     public void setStatus(MilestoneStatus status) {
-        setForeground(colorFor(status));
+        setForeground(getColorFor(status));
     }
 
-    public static Color colorFor(MilestoneStatus status) {
+    public static Color getColorFor(MilestoneStatus status) {
         return status == MilestoneStatus.COMPLETE ? ColorScheme.PROGRESS_COMPLETE_COLOR
                 : status == MilestoneStatus.IN_PROGRESS ? ColorScheme.PROGRESS_INPROGRESS_COLOR
                 : ColorScheme.LIGHT_GRAY_COLOR;

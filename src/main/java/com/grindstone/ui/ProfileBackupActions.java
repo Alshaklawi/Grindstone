@@ -49,11 +49,11 @@ public final class ProfileBackupActions {
 
     public void show(Component owner, GrindstoneProfile active, BooleanSupplier live, Runnable refresh, boolean importing) {
         if (active == null) {
-            JOptionPane.showMessageDialog(DialogPlacement.owner(owner), "Log in before exporting or restoring a profile.");
+            JOptionPane.showMessageDialog(DialogPlacement.getOwner(owner), "Log in before exporting or restoring a profile.");
             return;
         }
         if (!busy.compareAndSet(false, true)) {
-            JOptionPane.showMessageDialog(DialogPlacement.owner(owner), "A backup operation is already running.");
+            JOptionPane.showMessageDialog(DialogPlacement.getOwner(owner), "A backup operation is already running.");
             return;
         }
         int token = generation.get();
@@ -65,7 +65,7 @@ public final class ProfileBackupActions {
         }
         List<Filepath> selected;
         try {
-            selected = chooser.showDialog(DialogPlacement.owner(owner));
+            selected = chooser.showDialog(DialogPlacement.getOwner(owner));
         } catch (RuntimeException failure) {
             fail(owner, live, token, failure);
             return;
@@ -84,7 +84,7 @@ public final class ProfileBackupActions {
                             return;
                         }
                         String prompt = "Merge " + restored.getGoals().size() + " saved milestones? Existing matches and edited targets are kept. Observed progress from other accounts is not copied.";
-                        if (JOptionPane.showConfirmDialog(DialogPlacement.owner(owner), prompt, "Restore missing milestones", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
+                        if (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(owner), prompt, "Restore missing milestones", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
                             busy.set(false);
                             return;
                         }
@@ -108,7 +108,7 @@ public final class ProfileBackupActions {
                     if (token != generation.get() || !live.getAsBoolean()) {
                         return;
                     }
-                    if (exists && JOptionPane.showConfirmDialog(DialogPlacement.owner(owner), "Replace the selected backup file?", "Overwrite backup", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
+                    if (exists && JOptionPane.showConfirmDialog(DialogPlacement.getOwner(owner), "Replace the selected backup file?", "Overwrite backup", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
                         busy.set(false);
                         return;
                     }
@@ -156,7 +156,7 @@ public final class ProfileBackupActions {
             }
             busy.set(false);
             if (live.getAsBoolean()) {
-                JOptionPane.showMessageDialog(DialogPlacement.owner(owner), message);
+                JOptionPane.showMessageDialog(DialogPlacement.getOwner(owner), message);
             }
         });
     }

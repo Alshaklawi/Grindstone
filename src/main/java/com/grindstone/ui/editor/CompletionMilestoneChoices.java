@@ -45,15 +45,15 @@ import net.runelite.api.Skill;
 public final class CompletionMilestoneChoices {
     private CompletionMilestoneChoices() {
     }
-    public static Map<Integer, Map<String, Supplier<Milestone>>> available(Client client, CollectionLogHistory history) {
-        return snapshot(client, history, true);
+    public static Map<Integer, Map<String, Supplier<Milestone>>> getAvailable(Client client, CollectionLogHistory history) {
+        return getSnapshot(client, history, true);
     }
 
-    public static Map<Integer, Map<String, Supplier<Milestone>>> forEditing(Client client, CollectionLogHistory history) {
-        return snapshot(client, history, false);
+    public static Map<Integer, Map<String, Supplier<Milestone>>> getForEditing(Client client, CollectionLogHistory history) {
+        return getSnapshot(client, history, false);
     }
 
-    private static Map<Integer, Map<String, Supplier<Milestone>>> snapshot(Client client, CollectionLogHistory history, boolean unfinishedOnly) {
+    private static Map<Integer, Map<String, Supplier<Milestone>>> getSnapshot(Client client, CollectionLogHistory history, boolean unfinishedOnly) {
         Map<Integer, Map<String, Supplier<Milestone>>> types = create(client);
         types.put(0, new LinkedHashMap<>());
         types.put(1, new LinkedHashMap<>());
@@ -117,7 +117,7 @@ public final class CompletionMilestoneChoices {
         return kind == 5 || kind >= 23 && kind <= 28;
     }
 
-    private static int activityType(MilestoneCategory category) {
+    private static int getActivityType(MilestoneCategory category) {
         switch (category) {
             case BOSSING:
                 return 5;
@@ -145,13 +145,13 @@ public final class CompletionMilestoneChoices {
             types.put(kind, new LinkedHashMap<>());
         }
         for (TrackerEntry entry : TrackerEntry.values()) {
-            types.get(activityType(entry.getCategory())).put(entry.getDisplayName(), () -> new TrackerMilestone(entry, entry.getDefaultTarget()));
+            types.get(getActivityType(entry.getCategory())).put(entry.getDisplayName(), () -> new TrackerMilestone(entry, entry.getDefaultTarget()));
         }
         types.put(22, new LinkedHashMap<>());
         types.get(22).put("Total collection-log unlocks", CollectionLogTotalMilestone::new);
         types.put(6, new TreeMap<>());
         types.put(17, new TreeMap<>());
-        CombatAchievementData.tasks(client).forEach((id, task) -> types.get(17).put(task.getName() + " (" + task.getTier() + ")", () -> new CombatAchievementTaskMilestone(id, task.getName(), task.getDescription())));
+        CombatAchievementData.getTasks(client).forEach((id, task) -> types.get(17).put(task.getName() + " (" + task.getTier() + ")", () -> new CombatAchievementTaskMilestone(id, task.getName(), task.getDescription())));
         CollectionLogPages.discover(client).forEach((id, name) -> types.get(6).put(name, () -> new CollectionLogEntryMilestone(null, id, name)));
         for (int kind = 9; kind <= 15; kind++) {
             types.put(kind, kind == 12 || kind >= 14 ? new LinkedHashMap<>() : new TreeMap<>());
@@ -173,8 +173,8 @@ public final class CompletionMilestoneChoices {
             types.get(15).put(tier.toString(), () -> new CombatAchievementDifficultyMilestone(tier));
         }
         if (client != null) {
-            CombatAchievementData.tasksByBoss(client).forEach((boss, tasks) -> {
-                String name = CombatAchievementData.bossName(client, boss);
+            CombatAchievementData.getTasksByBoss(client).forEach((boss, tasks) -> {
+                String name = CombatAchievementData.getBossName(client, boss);
                 types.get(13).put(name, () -> new CombatAchievementBossMilestone(boss, name));
             });
         }

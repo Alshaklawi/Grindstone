@@ -153,7 +153,7 @@ public final class SessionExperienceMilestone implements Milestone {
 
     @Override
     public String getProgressText() {
-        return NumberFormats.experience(progress) + " / " + NumberFormats.experience(target) + " this login";
+        return NumberFormats.formatExperience(progress) + " / " + NumberFormats.formatExperience(target) + " this login";
     }
 
     @Override

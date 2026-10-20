@@ -18,7 +18,7 @@ public enum RepeatSchedule {
     WEEKLY,
     MONTHLY;
 
-    public long start(long now) {
+    public long getPeriodStart(long now) {
         LocalDate date = Instant.ofEpochMilli(now).atZone(ZoneOffset.UTC).toLocalDate();
         if (this == WEEKLY) {
             date = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
@@ -29,7 +29,7 @@ public enum RepeatSchedule {
         return date.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
     }
 
-    public long next(long start) {
+    public long getNextReset(long start) {
         LocalDate date = Instant.ofEpochMilli(start).atZone(ZoneOffset.UTC).toLocalDate();
         date = this == MONTHLY ? date.plusMonths(1) : this == WEEKLY ? date.plusWeeks(1) : date.plusDays(1);
         return date.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();

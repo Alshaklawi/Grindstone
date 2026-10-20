@@ -53,21 +53,21 @@ public final class BulkMilestoneChanges {
             }
         }
         List<Milestone> originalOrder = new ArrayList<>(profile.getGoals());
-        List<GrindstoneProfile.ArchivedHistory> originalArchives = new ArrayList<>(profile.archivedHistory());
+        List<GrindstoneProfile.ArchivedHistory> originalArchives = new ArrayList<>(profile.getArchivedHistory());
         Map<Milestone, MilestoneMetadata> metadata = new LinkedHashMap<>();
         Map<Milestone, Consumer<Milestone>> restore = new LinkedHashMap<>();
         Map<RepeatSchedule, Long> periods = new LinkedHashMap<>();
         for (Milestone goal : selected) {
-            MilestoneMetadata saved = profile.metadata(goal).copy();
+            MilestoneMetadata saved = profile.getMetadata(goal).copy();
             metadata.put(goal, saved);
             restore.put(goal, profile.snapshotEdit(goal));
-            RepeatSchedule previous = saved.recurring().getSchedule();
+            RepeatSchedule previous = saved.getRecurring().getSchedule();
             if (previous != RepeatSchedule.NONE) {
-                periods.put(previous, previous.start(now));
+                periods.put(previous, previous.getPeriodStart(now));
             }
         }
         for (Milestone goal : selected) {
-            MilestoneMetadata saved = profile.metadata(goal);
+            MilestoneMetadata saved = profile.getMetadata(goal);
             switch (action) {
                 case PIN:
                     saved.setPinned(true);
@@ -86,8 +86,8 @@ public final class BulkMilestoneChanges {
                     break;
                 case SCHEDULE:
                     long periodTarget = goal instanceof ChecklistMilestone ? goal.getProgressMaximum() : target;
-                    boolean changed = saved.recurring().getSchedule() != schedule || saved.recurring().getTarget() != periodTarget;
-                    saved.recurring().configure(schedule, periodTarget, now);
+                    boolean changed = saved.getRecurring().getSchedule() != schedule || saved.getRecurring().getTarget() != periodTarget;
+                    saved.getRecurring().configure(schedule, periodTarget, now);
                     if (changed && schedule != RepeatSchedule.NONE && goal instanceof ManualMilestone) {
                         ((ManualMilestone) goal).resetProgress();
                     }
@@ -103,13 +103,13 @@ public final class BulkMilestoneChanges {
             }
         }
         for (Milestone goal : selected) {
-            RepeatSchedule current = profile.metadata(goal).recurring().getSchedule();
+            RepeatSchedule current = profile.getMetadata(goal).getRecurring().getSchedule();
             if (current != RepeatSchedule.NONE) {
-                periods.put(current, current.start(now));
+                periods.put(current, current.getPeriodStart(now));
             }
         }
         profile.touch();
-        BooleanSupplier allowed = () -> periods.entrySet().stream().allMatch(entry -> entry.getKey().start(System.currentTimeMillis()) == entry.getValue());
+        BooleanSupplier allowed = () -> periods.entrySet().stream().allMatch(entry -> entry.getKey().getPeriodStart(System.currentTimeMillis()) == entry.getValue());
         Runnable undo = () -> {
             if (!allowed.getAsBoolean()) {
                 throw new IllegalStateException("A recurring period reset; this bulk edit can no longer be undone.");

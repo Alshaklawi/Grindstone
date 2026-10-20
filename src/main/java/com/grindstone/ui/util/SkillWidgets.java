@@ -41,7 +41,7 @@ public final class SkillWidgets {
     private SkillWidgets() {
     }
 
-    public static Skill skillFor(int componentId) {
+    public static Skill getSkillFor(int componentId) {
         return SKILLS.get(componentId);
     }
 }

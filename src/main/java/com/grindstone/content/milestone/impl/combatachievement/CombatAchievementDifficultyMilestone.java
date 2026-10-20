@@ -36,7 +36,7 @@ public final class CombatAchievementDifficultyMilestone extends ClientCompletion
     @Override
     public boolean refresh(Client client) {
         if (tasks == null || tasks.isEmpty()) {
-            tasks = CombatAchievementData.taskIds(client, tier);
+            tasks = CombatAchievementData.getTaskIds(client, tier);
         }
         long done = tasks.stream().filter(task -> CombatAchievementData.isComplete(client, task)).count();
         return update(done, tasks.size(), done > 0);

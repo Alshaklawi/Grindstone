@@ -355,16 +355,16 @@ public class GrindstonePanel extends PluginPanel {
             details.setEditable(false);
             details.setLineWrap(true);
             details.setWrapStyleWord(true);
-            JOptionPane.showMessageDialog(DialogPlacement.owner(this), new JScrollPane(details), "Since last seen", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), new JScrollPane(details), "Since last seen", JOptionPane.INFORMATION_MESSAGE);
         });
         header.add(catchUpButton);
 
         JPanel counters = new JPanel(new GridLayout(2, 2, 4, 4));
         counters.setOpaque(false);
         counters.setAlignmentX(LEFT_ALIGNMENT);
-        newGoalsButton.setForeground(SegmentedProgressBar.colorFor(MilestoneStatus.NOT_STARTED));
-        activeGoalsButton.setForeground(SegmentedProgressBar.colorFor(MilestoneStatus.IN_PROGRESS));
-        completeGoalsButton.setForeground(SegmentedProgressBar.colorFor(MilestoneStatus.COMPLETE));
+        newGoalsButton.setForeground(SegmentedProgressBar.getColorFor(MilestoneStatus.NOT_STARTED));
+        activeGoalsButton.setForeground(SegmentedProgressBar.getColorFor(MilestoneStatus.IN_PROGRESS));
+        completeGoalsButton.setForeground(SegmentedProgressBar.getColorFor(MilestoneStatus.COMPLETE));
         newGoalsButton.setToolTipText("Show not-started milestones. Click again to show all statuses.");
         activeGoalsButton.setToolTipText("Show in-progress milestones. Click again to show all statuses.");
         completeGoalsButton.setToolTipText("Show completed milestones, including hidden completions. Click again to show all statuses.");
@@ -410,7 +410,7 @@ public class GrindstonePanel extends PluginPanel {
             GrindstoneProfile active = profile;
             clientThread.invokeLater(() -> {
                 String status = active == null ? "Log in to capture your collection log." : active.getCollectionLogHistory().hasSnapshot() ? "Last full snapshot: " + Instant.ofEpochMilli(active.getCollectionLogHistory().getSnapshotAt()) + " · " + active.getCollectionLogHistory().getSnapshotCount() + " unlocks." : "No full collection-log snapshot has been captured yet.";
-                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), status + "\n\nOpen your in-game collection log. Grindstone captures loaded unlocks automatically and verifies the total. A full snapshot is required before adding collection milestones."));
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), status + "\n\nOpen your in-game collection log. Grindstone captures loaded unlocks automatically and verifies the total. A full snapshot is required before adding collection milestones."));
             });
         });
         moreMenu.add(collectionSnapshot);
@@ -817,9 +817,9 @@ public class GrindstonePanel extends PluginPanel {
                         continue;
                     }
 
-                    String title = safeTitle(goal);
-                    MilestoneMetadata metadata = currentProfile.metadata(goal);
-                    RecurringMilestone recurring = metadata.recurring();
+                    String title = getSafeTitle(goal);
+                    MilestoneMetadata metadata = currentProfile.getMetadata(goal);
+                    RecurringMilestone recurring = metadata.getRecurring();
                     boolean repeating = recurring.isActive() && RecurringMilestone.supports(goal);
                     TrackingState tracking = TrackingState.of(goal, recurring, client.getGameState() == GameState.LOGGED_IN && client.getLocalPlayer() != null && client.getAccountHash() == currentProfile.getHash(), currentProfile.getPlayerStorage().hasBankSnapshot());
                     List<?> key = Arrays.asList(currentProfile, metadata, title, goal.getDescription(), goal.getProgressCurrent(), goal.getProgressMaximum(), goal.getStatus(), recurring.getSchedule(), recurring.getProgress(), recurring.getTarget(), recurring.getBaselineAt(), recurring.getStart(), metadata.isPinned(), metadata.isCollapsed(config.collapseDetailsByDefault()), metadata.getCompletions().size(), tracking, config.showGoalIcons(), config.showProgressBar(), config.maxProgressChunks(), config.showCompletionHistory(), config.showActivityIcons(), config.itemsPerRow(), config.maxItemRows(), config.showTrackingState(), config.showObtainedItems(), config.showItemTooltips());
@@ -853,8 +853,8 @@ public class GrindstonePanel extends PluginPanel {
                         metadata.observe(goal, title, System.currentTimeMillis());
                     }
                     MilestoneMetadata displayMetadata = metadata.copy();
-                    RecurringMilestone displayRecurring = displayMetadata.recurring();
-                    MilestoneCategory category = safeCategory(goal);
+                    RecurringMilestone displayRecurring = displayMetadata.getRecurring();
+                    MilestoneCategory category = getSafeCategory(goal);
                     boolean hasProgress = goal.hasProgress();
                     String sourceDetail = goal.getCardDescription().isEmpty() ? goal.getDescription() : "";
                     long shownCurrent = progressCurrent;
@@ -872,7 +872,7 @@ public class GrindstonePanel extends PluginPanel {
                             ChecklistMilestone checklist = (ChecklistMilestone) goal;
                             boolean[] checked = checks;
                             RepeatSchedule openedSchedule = displayRecurring.getSchedule();
-                            long openedPeriod = openedSchedule.start(System.currentTimeMillis());
+                            long openedPeriod = openedSchedule.getPeriodStart(System.currentTimeMillis());
                             for (int step = 0; step < checked.length; step++) {
                                 int index = step;
                                 JCheckBox check = new JCheckBox("", checked[step]);
@@ -884,7 +884,7 @@ public class GrindstonePanel extends PluginPanel {
                                 check.addActionListener(event -> {
                                     boolean selected = check.isSelected();
                                     clientThread.invokeLater(() -> {
-                                        if (profile == currentProfile && currentProfile.getGoals().contains(goal) && currentProfile.metadata(goal).recurring().getSchedule() == openedSchedule && openedSchedule.start(System.currentTimeMillis()) == openedPeriod) {
+                                        if (profile == currentProfile && currentProfile.getGoals().contains(goal) && currentProfile.getMetadata(goal).getRecurring().getSchedule() == openedSchedule && openedSchedule.getPeriodStart(System.currentTimeMillis()) == openedPeriod) {
                                             Consumer<Milestone> restore = currentProfile.snapshotEdit(goal);
                                             checklist.setChecked(index, selected);
                                             currentProfile.touch();
@@ -926,13 +926,13 @@ public class GrindstonePanel extends PluginPanel {
                         String baselineDetail = displayRecurring.getBaselineAt() == 0 ? "" : " Baseline: " + Instant.ofEpochMilli(displayRecurring.getBaselineAt()) + ".";
                         long observedAt = repeating ? displayRecurring.getLastObservedAt() : displayMetadata.getLastObservedAt();
                         component.setReliability(config.showTrackingState() ? displayTracking.getCardLabel() : null, displayTracking.getDetail() + baselineDetail + (observedAt == 0 ? "" : " Last reading: " + Instant.ofEpochMilli(observedAt) + ".") + (sourceDetail.isEmpty() ? "" : " " + sourceDetail));
-                        component.setDeadlineNote(displayMetadata.deadlineText(System.currentTimeMillis()));
+                        component.setDeadlineNote(displayMetadata.getDeadlineText(System.currentTimeMillis()));
                         component.putClientProperty("grindstone.deadline", displayMetadata.getDeadlineAt());
                         component.setExpansionListener(null);
                         component.setExpanded(!displayMetadata.isCollapsed(config.collapseDetailsByDefault()));
                         component.setExpansionListener(expanded -> clientThread.invokeLater(() -> {
                             if (profile == currentProfile && currentProfile.getGoals().contains(goal)) {
-                                currentProfile.metadata(goal).setCollapsed(!expanded);
+                                currentProfile.getMetadata(goal).setCollapsed(!expanded);
                             }
                         }));
                         component.setMaximumProgressChunks(config.maxProgressChunks());
@@ -949,7 +949,7 @@ public class GrindstonePanel extends PluginPanel {
                         component.putClientProperty("grindstone.pinned", pinned);
                         component.addGoalAction(pinned ? "Unpin" : "Pin", "Pinned milestones appear first, while still respecting your search and filters.", event -> clientThread.invokeLater(() -> {
                             if (profile == currentProfile && currentProfile.getGoals().contains(goal)) {
-                                currentProfile.metadata(goal).setPinned(!pinned);
+                                currentProfile.getMetadata(goal).setPinned(!pinned);
                                 currentProfile.touch();
                                 render();
                             }
@@ -959,10 +959,10 @@ public class GrindstonePanel extends PluginPanel {
                                 if (profile != currentProfile || !currentProfile.getGoals().contains(goal)) {
                                     return;
                                 }
-                                Supplier<MilestoneHistoryPanel> history = MilestoneHistoryPanel.snapshot(currentProfile.metadata(goal));
+                                Supplier<MilestoneHistoryPanel> history = MilestoneHistoryPanel.createSnapshot(currentProfile.getMetadata(goal));
                                 SwingUtilities.invokeLater(() -> {
                                     if (profile == currentProfile) {
-                                        JOptionPane.showMessageDialog(DialogPlacement.owner(this), history.get(), title + " — history", JOptionPane.PLAIN_MESSAGE);
+                                        JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), history.get(), title + " — history", JOptionPane.PLAIN_MESSAGE);
                                     }
                                 });
                             }));
@@ -975,7 +975,7 @@ public class GrindstonePanel extends PluginPanel {
                         }
                         if (goal instanceof SessionExperienceMilestone) {
                             component.addGoalAction("Restart session XP...", "Clear only this milestone's observed login gains and capture the current XP as its new baseline.", event -> {
-                                if (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), "Reset this milestone's session XP progress? Your game XP and saved completion history are unchanged.", "Restart session milestone", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
+                                if (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(this), "Reset this milestone's session XP progress? Your game XP and saved completion history are unchanged.", "Restart session milestone", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
                                     clientThread.invokeLater(() -> {
                                         if (profile == currentProfile && currentProfile.getGoals().contains(goal) && hasClientProfile(currentProfile)) {
                                             ((SessionExperienceMilestone) goal).restart();
@@ -1003,15 +1003,15 @@ public class GrindstonePanel extends PluginPanel {
                     progressOverlay.clear();
                 }
             }
-            String updateText = currentProfile == null ? "" : HtmlUtils.escape(currentProfile.getPlayerStorage().snapshotLabel());
+            String updateText = currentProfile == null ? "" : HtmlUtils.escape(currentProfile.getPlayerStorage().getSnapshotLabel());
             long dueCount = currentProfile == null || !config.showDeadlineReminders() ? 0 : currentProfile.getGoals().stream().filter(goal -> {
-                MilestoneMetadata metadata = currentProfile.metadata(goal);
-                return metadata.isDeadlineReminder() && metadata.getDeadlineAt() > 0 && metadata.getDeadlineAt() - System.currentTimeMillis() <= 86_400_000L && (metadata.recurring().isActive() ? metadata.recurring().getStatus() : goal.getStatus()) != MilestoneStatus.COMPLETE;
+                MilestoneMetadata metadata = currentProfile.getMetadata(goal);
+                return metadata.isDeadlineReminder() && metadata.getDeadlineAt() > 0 && metadata.getDeadlineAt() - System.currentTimeMillis() <= 86_400_000L && (metadata.getRecurring().isActive() ? metadata.getRecurring().getStatus() : goal.getStatus()) != MilestoneStatus.COMPLETE;
             }).count();
             List<String> catchUp = new ArrayList<>();
             if (currentProfile != null) {
                 for (Milestone goal : currentProfile.getGoals()) {
-                    String reading = currentProfile.metadata(goal).getCatchUpText();
+                    String reading = currentProfile.getMetadata(goal).getCatchUpText();
                     if (reading != null) {
                         catchUp.add(reading);
                     }
@@ -1069,7 +1069,7 @@ public class GrindstonePanel extends PluginPanel {
         }
         sortGoals(filteredGoals);
         if (todayMode) {
-            filteredGoals.sort(Comparator.comparingLong((MilestoneView view) -> nextReset(view)).thenComparing(view -> isComplete(view.status)));
+            filteredGoals.sort(Comparator.comparingLong((MilestoneView view) -> getNextReset(view)).thenComparing(view -> isComplete(view.status)));
         }
         resultsLabel.setText("Showing " + filteredGoals.size() + " of " + allGoals.size());
         resultsLabel.setToolTipText("Milestones matching your search, filters and visibility settings.");
@@ -1210,7 +1210,7 @@ public class GrindstonePanel extends PluginPanel {
             routineTitle.setText("Your routine · " + completed + "/" + recurring.size() + " reached");
             routineProgress.setProgress(Math.round(ratio * 100), 100);
             routineProgress.setVisible(waiting < recurring.size());
-            long next = recurring.stream().mapToLong(this::nextReset).min().orElse(0);
+            long next = recurring.stream().mapToLong(this::getNextReset).min().orElse(0);
             routineDue.setText("<html>Next reset: " + DateTimeFormatter.ofPattern("EEE HH:mm 'UTC'", Locale.ROOT).withZone(ZoneOffset.UTC).format(Instant.ofEpochMilli(next)) + "<br>" + (waiting == recurring.size() ? "Waiting for readings" : Math.round(ratio * 100) + "% of known progress") + (waiting > 0 ? " · " + waiting + " waiting" : "") + "</html>");
             if (routineOverview.getParent() != main) {
                 main.add(routineOverview, 0);
@@ -1238,7 +1238,7 @@ public class GrindstonePanel extends PluginPanel {
         progress.setMaximumSize(new Dimension(Integer.MAX_VALUE, 8));
         progress.setAlignmentX(LEFT_ALIGNMENT);
         overview.add(progress);
-        long next = recurring.stream().mapToLong(this::nextReset).min().orElse(0);
+        long next = recurring.stream().mapToLong(this::getNextReset).min().orElse(0);
         JLabel due = new JLabel("<html>Next reset: " + DateTimeFormatter.ofPattern("EEE HH:mm 'UTC'", Locale.ROOT).withZone(ZoneOffset.UTC).format(Instant.ofEpochMilli(next)) + "<br>" + (waiting == recurring.size() ? "Waiting for readings" : Math.round(ratio * 100) + "% of known progress") + (waiting > 0 ? " · " + waiting + " waiting" : "") + "</html>");
         routineDue = due;
         due.setFont(UiTypography.META);
@@ -1249,9 +1249,9 @@ public class GrindstonePanel extends PluginPanel {
         main.add(routineGap, 1);
     }
 
-    private long nextReset(MilestoneView view) {
+    private long getNextReset(MilestoneView view) {
         RepeatSchedule schedule = (RepeatSchedule) view.component.getClientProperty("grindstone.repeat");
-        return schedule == RepeatSchedule.NONE ? Long.MAX_VALUE : schedule.next(schedule.start(System.currentTimeMillis()));
+        return schedule == RepeatSchedule.NONE ? Long.MAX_VALUE : schedule.getNextReset(schedule.getPeriodStart(System.currentTimeMillis()));
     }
 
     private void updateSummary(List<MilestoneView> goals) {
@@ -1542,7 +1542,7 @@ public class GrindstonePanel extends PluginPanel {
     private void updateRepeatHeading(RepeatSchedule schedule, List<MilestoneView> goals, JButton heading) {
         boolean collapsed = Boolean.TRUE.equals(collapsedRepeats.get(schedule));
         long now = System.currentTimeMillis();
-        long minutes = Math.max(1, (schedule.next(schedule.start(now)) - now + 59_999) / 60_000);
+        long minutes = Math.max(1, (schedule.getNextReset(schedule.getPeriodStart(now)) - now + 59_999) / 60_000);
         String countdown = minutes >= 1440 ? minutes / 1440 + "d " + minutes % 1440 / 60 + "h" : minutes >= 60 ? minutes / 60 + "h " + minutes % 60 + "m" : minutes + "m";
         long completed = goals.stream().filter(view -> isComplete(view.status)).count();
         heading.setText("<html>" + (collapsed ? "▶ " : "▼ ") + schedule + " · " + completed + "/" + goals.size() + "<br>Resets in " + countdown + " (UTC)</html>");
@@ -1657,7 +1657,7 @@ public class GrindstonePanel extends PluginPanel {
                 skillGroup.setBackground(ColorScheme.DARKER_GRAY_COLOR);
                 skillGroup.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(ColorScheme.MEDIUM_GRAY_COLOR), BorderFactory.createEmptyBorder(6, 4, 4, 4)));
                 skillGroup.setAlignmentX(LEFT_ALIGNMENT);
-                JLabel heading = new JLabel(SkillMilestoneGrouping.skill(group.get(0).goal).getName());
+                JLabel heading = new JLabel(SkillMilestoneGrouping.getSkill(group.get(0).goal).getName());
                 heading.setFont(UiTypography.TITLE);
                 heading.setBorder(BorderFactory.createEmptyBorder(0, 5, 6, 0));
                 heading.setToolTipText("Related milestones for this skill. Each target keeps its own progress, actions and history.");
@@ -1707,19 +1707,19 @@ public class GrindstonePanel extends PluginPanel {
         if (goal instanceof ChecklistMilestone) {
             form.setFixedTarget(goal.getProgressMaximum());
         }
-        while (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), form, "Repeat schedule", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
+        while (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(this), form, "Repeat schedule", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
             try {
                 form.commit();
                 RepeatSchedule selected = form.getSchedule();
                 long selectedTarget = form.getTarget();
-                if ((schedule != selected || target != selectedTarget) && JOptionPane.showConfirmDialog(DialogPlacement.owner(this), "Repeat: " + schedule + " → " + selected + "\nPeriod target: " + target + " → " + selectedTarget + "\nThe current observed period will be archived. Undo is available until a later edit or reset.", "Preview schedule change", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
+                if ((schedule != selected || target != selectedTarget) && JOptionPane.showConfirmDialog(DialogPlacement.getOwner(this), "Repeat: " + schedule + " → " + selected + "\nPeriod target: " + target + " → " + selectedTarget + "\nThe current observed period will be archived. Undo is available until a later edit or reset.", "Preview schedule change", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
                     return;
                 }
                 clientThread.invokeLater(() -> {
                     if (profile == active && active.getGoals().contains(goal)) {
                         Milestone collision = active.findMatchingGoal(goal, selected);
                         if (collision != null && collision != goal) {
-                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), "That tracker already has a milestone with this schedule."));
+                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), "That tracker already has a milestone with this schedule."));
                             return;
                         }
                         Consumer<Milestone> restore = active.snapshotEdit(goal);
@@ -1731,19 +1731,19 @@ public class GrindstonePanel extends PluginPanel {
                 });
                 return;
             } catch (ParseException exception) {
-                JOptionPane.showMessageDialog(DialogPlacement.owner(this), "Enter a valid period target.");
+                JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), "Enter a valid period target.");
             }
         }
     }
     private void restartPeriod(GrindstoneProfile active, Milestone goal) {
-        if (profile != active || JOptionPane.showConfirmDialog(DialogPlacement.owner(this), "Archive the current observed period and capture a fresh baseline?\nCustom progress resets to zero. Your game progress is unaffected.\nUndo is available until a later edit or scheduled reset.", "Restart current period", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
+        if (profile != active || JOptionPane.showConfirmDialog(DialogPlacement.getOwner(this), "Archive the current observed period and capture a fresh baseline?\nCustom progress resets to zero. Your game progress is unaffected.\nUndo is available until a later edit or scheduled reset.", "Restart current period", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
             return;
         }
         clientThread.invokeLater(() -> {
             if (profile != active || !active.getGoals().contains(goal)) {
                 return;
             }
-            RecurringMilestone recurring = active.metadata(goal).recurring();
+            RecurringMilestone recurring = active.getMetadata(goal).getRecurring();
             if (!recurring.isActive()) {
                 return;
             }
@@ -1762,7 +1762,7 @@ public class GrindstonePanel extends PluginPanel {
         if (!RecurringMilestone.supports(goal)) {
             return;
         }
-        RecurringMilestone recurring = active.metadata(goal).recurring();
+        RecurringMilestone recurring = active.getMetadata(goal).getRecurring();
         if (goal instanceof ChecklistMilestone) {
             target = goal.getProgressMaximum();
             if (schedule != RepeatSchedule.NONE && (recurring.getSchedule() != schedule || recurring.getTarget() != target)) {
@@ -1808,7 +1808,7 @@ public class GrindstonePanel extends PluginPanel {
             goals.removeIf(this::isCompletedQuestOrDiary);
             String summary = additionSummary(active, goals, goal -> RepeatSchedule.NONE);
             SwingUtilities.invokeLater(() -> {
-                if (profile != active || JOptionPane.showConfirmDialog(DialogPlacement.owner(this), previewPane(summary), "Preview " + preset, JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
+                if (profile != active || JOptionPane.showConfirmDialog(DialogPlacement.getOwner(this), previewPane(summary), "Preview " + preset, JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
                     return;
                 }
                 clientThread.invokeLater(() -> {
@@ -1866,7 +1866,7 @@ public class GrindstonePanel extends PluginPanel {
                 return;
             }
             if (!active.getCollectionLogHistory().hasSnapshot()) {
-                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), "First open your in-game collection log to load a full snapshot. Then add collection-log milestones once the snapshot is complete."));
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), "First open your in-game collection log to load a full snapshot. Then add collection-log milestones once the snapshot is complete."));
                 return;
             }
             Map<Integer, String> pages = CollectionLogPages.discover(client);
@@ -1875,10 +1875,10 @@ public class GrindstonePanel extends PluginPanel {
                     return;
                 }
                 if (pages.isEmpty()) {
-                    JOptionPane.showMessageDialog(DialogPlacement.owner(this), "Collection-log metadata is not ready. Log in and try again.");
+                    JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), "Collection-log metadata is not ready. Log in and try again.");
                     return;
                 }
-                if (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), "Add missing milestones from all " + pages.size() + " collection-log pages? Existing milestones are kept.", "Add collection-log pages", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
+                if (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(this), "Add missing milestones from all " + pages.size() + " collection-log pages? Existing milestones are kept.", "Add collection-log pages", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
                     return;
                 }
                 clientThread.invokeLater(() -> {
@@ -1900,12 +1900,12 @@ public class GrindstonePanel extends PluginPanel {
             return;
         }
         RoutinePresetForm form = new RoutinePresetForm(weekly);
-        while (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), form, "Preview recurring routine", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
+        while (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(this), form, "Preview recurring routine", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
             try {
                 List<Milestone> selected = form.selectedGoals();
                 Map<Milestone, MilestoneMetadata> metadata = new IdentityHashMap<>();
                 for (Milestone goal : selected) {
-                    metadata.put(goal, form.metadata(goal, System.currentTimeMillis()));
+                    metadata.put(goal, form.getMetadata(goal, System.currentTimeMillis()));
                 }
                 clientThread.invokeLater(() -> {
                     if (profile != active) {
@@ -1922,13 +1922,13 @@ public class GrindstonePanel extends PluginPanel {
                     int count = active.getGoals().size() - before.size();
                     SwingUtilities.invokeLater(() -> {
                         if (profile == active) {
-                            JOptionPane.showMessageDialog(DialogPlacement.owner(this), count + " routines added. Existing schedule matches were skipped.");
+                            JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), count + " routines added. Existing schedule matches were skipped.");
                         }
                     });
                 });
                 return;
             } catch (ParseException exception) {
-                JOptionPane.showMessageDialog(DialogPlacement.owner(this), "Enter valid targets for the selected milestones.");
+                JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), "Enter valid targets for the selected milestones.");
             }
         }
     }
@@ -1952,7 +1952,7 @@ public class GrindstonePanel extends PluginPanel {
             if (profile != active) {
                 return;
             }
-            List<HistoryRecord> records = HistoryRecord.snapshot(active, this::safeTitle);
+            List<HistoryRecord> records = HistoryRecord.createSnapshot(active, this::getSafeTitle);
             SwingUtilities.invokeLater(() -> {
                 if (profile != active) {
                     return;
@@ -1975,12 +1975,12 @@ public class GrindstonePanel extends PluginPanel {
             if (profile != active) {
                 return;
             }
-            Milestone goal = active.getGoals().stream().filter(value -> active.metadata(value).getId().equals(id)).findFirst().orElse(null);
+            Milestone goal = active.getGoals().stream().filter(value -> active.getMetadata(value).getId().equals(id)).findFirst().orElse(null);
             if (goal == null) {
                 return;
             }
-            String title = safeTitle(goal);
-            boolean complete = active.metadata(goal).recurring().isActive() ? active.metadata(goal).recurring().getStatus() == MilestoneStatus.COMPLETE : goal.getStatus() == MilestoneStatus.COMPLETE;
+            String title = getSafeTitle(goal);
+            boolean complete = active.getMetadata(goal).getRecurring().isActive() ? active.getMetadata(goal).getRecurring().getStatus() == MilestoneStatus.COMPLETE : goal.getStatus() == MilestoneStatus.COMPLETE;
             SwingUtilities.invokeLater(() -> {
                 if (profile != active) {
                     return;
@@ -2008,7 +2008,7 @@ public class GrindstonePanel extends PluginPanel {
                 return;
             }
         }
-        JOptionPane.showMessageDialog(DialogPlacement.owner(this), "This milestone is hidden by its tracker visibility setting. Enable that milestone type in Grindstone configuration to reveal it.");
+        JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), "This milestone is hidden by its tracker visibility setting. Enable that milestone type in Grindstone configuration to reveal it.");
     }
 
     private void showAddGoalDialog() {
@@ -2018,7 +2018,7 @@ public class GrindstonePanel extends PluginPanel {
     public void showAddGoalDialog(Milestone initialGoal) {
         GrindstoneProfile active = profile;
         if (active == null) {
-            JOptionPane.showMessageDialog(DialogPlacement.owner(this), "Log in to add milestones to your player profile.");
+            JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), "Log in to add milestones to your player profile.");
             return;
         }
         clientThread.invokeLater(() -> {
@@ -2026,12 +2026,12 @@ public class GrindstonePanel extends PluginPanel {
                 return;
             }
             Map<Integer, Map<String, Supplier<Milestone>>> choices =
-            CompletionMilestoneChoices.available(client, active.getCollectionLogHistory());
+            CompletionMilestoneChoices.getAvailable(client, active.getCollectionLogHistory());
             Map<Milestone, RepeatSchedule> existing = new LinkedHashMap<>();
             for (Milestone goal : active.getGoals()) {
-                existing.put(goal, active.metadata(goal).recurring().getSchedule());
+                existing.put(goal, active.getMetadata(goal).getRecurring().getSchedule());
             }
-            Set<Integer> obtained = new LinkedHashSet<>(active.getCollectionLogHistory().snapshot().keySet());
+            Set<Integer> obtained = new LinkedHashSet<>(active.getCollectionLogHistory().getSnapshot().keySet());
             SwingUtilities.invokeLater(() -> {
                 if (profile == active) {
                     showAddGoalDialog(active, choices, existing, initialGoal, obtained);
@@ -2050,7 +2050,7 @@ public class GrindstonePanel extends PluginPanel {
                 form.loadGoal(initialGoal);
             } catch (IllegalArgumentException exception) {
                 form.stopSearch();
-                JOptionPane.showMessageDialog(DialogPlacement.owner(this), exception.getMessage(), "Add milestone", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), exception.getMessage(), "Add milestone", JOptionPane.WARNING_MESSAGE);
                 return;
             }
         }
@@ -2065,12 +2065,12 @@ public class GrindstonePanel extends PluginPanel {
                 return;
             }
             if (isCollectionLogGoal(candidate) && !active.getCollectionLogHistory().hasSnapshot()) {
-                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), "A full collection-log snapshot is required before adding collection milestones. Open your collection log to capture it automatically."));
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), "A full collection-log snapshot is required before adding collection milestones. Open your collection log to capture it automatically."));
                 return;
             }
             Milestone existing = active.findMatchingGoal(candidate, schedule);
             if (existing != null) {
-                String title = safeTitle(existing);
+                String title = getSafeTitle(existing);
                 long oldTarget = existing.getProgressMaximum();
                 long newTarget = candidate.getProgressMaximum();
                 SwingUtilities.invokeLater(() -> {
@@ -2078,7 +2078,7 @@ public class GrindstonePanel extends PluginPanel {
                         return;
                     }
                     if (existing.supportsTarget()) {
-                        if (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), title + " is already tracked.\nUpdate its target from " + String.format(Locale.ROOT, "%,d to %,d?", oldTarget, newTarget) + "\nRepeat: " + schedule + (schedule == RepeatSchedule.NONE ? " (lifetime tracking)" : String.format(Locale.ROOT, " · %,d per period", periodTarget)) + "\nChanging repeat settings archives the current observed period.", "Update existing milestone", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION) {
+                        if (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(this), title + " is already tracked.\nUpdate its target from " + String.format(Locale.ROOT, "%,d to %,d?", oldTarget, newTarget) + "\nRepeat: " + schedule + (schedule == RepeatSchedule.NONE ? " (lifetime tracking)" : String.format(Locale.ROOT, " · %,d per period", periodTarget)) + "\nChanging repeat settings archives the current observed period.", "Update existing milestone", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION) {
                             clientThread.invokeLater(() -> {
                                 if (profile == active && active.getGoals().contains(existing)) {
                                     Consumer<Milestone> restore = active.snapshotEdit(existing);
@@ -2091,7 +2091,7 @@ public class GrindstonePanel extends PluginPanel {
                             });
                         }
                     } else {
-                        JOptionPane.showMessageDialog(DialogPlacement.owner(this), "This milestone is already in your profile.");
+                        JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), "This milestone is already in your profile.");
                     }
                 });
             } else {
@@ -2101,13 +2101,13 @@ public class GrindstonePanel extends PluginPanel {
                 if ((diary || quest) && candidate.getStatus() == MilestoneStatus.COMPLETE) {
                     SwingUtilities.invokeLater(() -> {
                         if (profile == active) {
-                            JOptionPane.showMessageDialog(DialogPlacement.owner(this), diary ? "This achievement diary is already complete. Choose an unfinished diary to track." : "This quest or quest series is already complete. Choose an unfinished quest to track.");
+                            JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), diary ? "This achievement diary is already complete. Choose an unfinished diary to track." : "This quest or quest series is already complete. Choose an unfinished quest to track.");
                         }
                     });
                     return;
                 }
                 configureRepeat(active, candidate, schedule, periodTarget);
-                active.add(candidate, active.metadata(candidate));
+                active.add(candidate, active.getMetadata(candidate));
                 recordUndo(active, "add milestone", () -> active.remove(candidate), () -> active.getGoals().contains(candidate));
                 SwingUtilities.invokeLater(() -> {
                     if (profile != active) {
@@ -2138,12 +2138,12 @@ public class GrindstonePanel extends PluginPanel {
                 return;
             }
             if (isCollectionLogGoal(goal) && !active.getCollectionLogHistory().hasSnapshot()) {
-                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), "Load a full collection-log snapshot before editing collection milestones. Open your collection log to capture it automatically."));
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), "Load a full collection-log snapshot before editing collection milestones. Open your collection log to capture it automatically."));
                 return;
             }
-            Map<Integer, Map<String, Supplier<Milestone>>> choices = CompletionMilestoneChoices.forEditing(client, active.getCollectionLogHistory());
-            RepeatSchedule schedule = active.metadata(goal).recurring().getSchedule();
-            long periodTarget = active.metadata(goal).recurring().getTarget();
+            Map<Integer, Map<String, Supplier<Milestone>>> choices = CompletionMilestoneChoices.getForEditing(client, active.getCollectionLogHistory());
+            RepeatSchedule schedule = active.getMetadata(goal).getRecurring().getSchedule();
+            long periodTarget = active.getMetadata(goal).getRecurring().getTarget();
             SwingUtilities.invokeLater(() -> {
                 if (profile != active) {
                     return;
@@ -2154,7 +2154,7 @@ public class GrindstonePanel extends PluginPanel {
                     form.loadGoal(goal);
                 } catch (IllegalArgumentException exception) {
                     form.stopSearch();
-                    JOptionPane.showMessageDialog(DialogPlacement.owner(this), exception.getMessage());
+                    JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), exception.getMessage());
                     return;
                 }
                 form.loadRepeat(schedule, periodTarget);
@@ -2182,7 +2182,7 @@ public class GrindstonePanel extends PluginPanel {
                     } catch (IllegalArgumentException exception) {
                         SwingUtilities.invokeLater(() -> {
                             if (profile == active) {
-                                JOptionPane.showMessageDialog(DialogPlacement.owner(this), exception.getMessage());
+                                JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), exception.getMessage());
                             }
                         });
                     }
@@ -2202,9 +2202,9 @@ public class GrindstonePanel extends PluginPanel {
             List<LinkedMilestoneForm.Choice> sources = new ArrayList<>();
             for (Milestone goal : active.getGoals()) {
                 if (!(goal instanceof LinkedMilestone)) {
-                    MilestoneMetadata metadata = active.metadata(goal);
-                    boolean recurring = metadata.recurring().isActive();
-                    sources.add(new LinkedMilestoneForm.Choice(metadata.getId(), safeTitle(goal) + (recurring ? " · " + metadata.recurring().getSchedule() : ""), recurring ? metadata.recurring().getTarget() : goal.getProgressMaximum(), goal instanceof CollectionLogItemMilestone, recurring || !metadata.recurring().getHistory().isEmpty()));
+                    MilestoneMetadata metadata = active.getMetadata(goal);
+                    boolean recurring = metadata.getRecurring().isActive();
+                    sources.add(new LinkedMilestoneForm.Choice(metadata.getId(), getSafeTitle(goal) + (recurring ? " · " + metadata.getRecurring().getSchedule() : ""), recurring ? metadata.getRecurring().getTarget() : goal.getProgressMaximum(), goal instanceof CollectionLogItemMilestone, recurring || !metadata.getRecurring().getHistory().isEmpty()));
                 }
             }
             SwingUtilities.invokeLater(() -> {
@@ -2214,10 +2214,10 @@ public class GrindstonePanel extends PluginPanel {
                 LinkedMilestoneForm form = new LinkedMilestoneForm(sources, original);
                 JScrollPane scroll = new JScrollPane(form);
                 scroll.setPreferredSize(new Dimension(520, 570));
-                while (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), scroll, original == null ? "Add linked milestone" : "Edit linked milestone", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
+                while (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(this), scroll, original == null ? "Add linked milestone" : "Edit linked milestone", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
                     try {
                         LinkedMilestone candidate = form.read();
-                        if (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), previewPane(candidate.getTitle(null) + "\n" + candidate.getMode() + " · " + candidate.getSources().size() + " source(s)\nTargets: " + Arrays.toString(candidate.getTargets()) + "\nMissing sources remain unavailable; this never performs game actions."), "Preview linked milestone", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
+                        if (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(this), previewPane(candidate.getTitle(null) + "\n" + candidate.getMode() + " · " + candidate.getSources().size() + " source(s)\nTargets: " + Arrays.toString(candidate.getTargets()) + "\nMissing sources remain unavailable; this never performs game actions."), "Preview linked milestone", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
                             continue;
                         }
                         clientThread.invokeLater(() -> {
@@ -2237,7 +2237,7 @@ public class GrindstonePanel extends PluginPanel {
                         });
                         return;
                     } catch (IllegalArgumentException | ParseException failure) {
-                        JOptionPane.showMessageDialog(DialogPlacement.owner(this), failure.getMessage(), "Check linked milestone", JOptionPane.WARNING_MESSAGE);
+                        JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), failure.getMessage(), "Check linked milestone", JOptionPane.WARNING_MESSAGE);
                     }
                 }
             });
@@ -2257,18 +2257,18 @@ public class GrindstonePanel extends PluginPanel {
             if (profile != active) {
                 return;
             }
-            long revision = active.revision();
+            long revision = active.getRevision();
             List<BulkMilestoneForm.Row> rows = new ArrayList<>();
             for (Milestone goal : active.getGoals()) {
-                MilestoneMetadata metadata = active.metadata(goal);
-                rows.add(new BulkMilestoneForm.Row(goal, safeTitle(goal), safeCategory(goal), metadata.recurring().getSchedule()));
+                MilestoneMetadata metadata = active.getMetadata(goal);
+                rows.add(new BulkMilestoneForm.Row(goal, getSafeTitle(goal), getSafeCategory(goal), metadata.getRecurring().getSchedule()));
             }
             SwingUtilities.invokeLater(() -> {
                 if (profile != active) {
                     return;
                 }
                 BulkMilestoneForm form = new BulkMilestoneForm(rows);
-                while (profile == active && JOptionPane.showConfirmDialog(DialogPlacement.owner(this), form, "Manage milestones", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
+                while (profile == active && JOptionPane.showConfirmDialog(DialogPlacement.getOwner(this), form, "Manage milestones", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
                     try {
                         List<Milestone> selected = form.selectedGoals();
                         if (selected.isEmpty()) {
@@ -2281,7 +2281,7 @@ public class GrindstonePanel extends PluginPanel {
                         long deadlineAt = form.getDeadlineAt();
                         boolean reminder = form.isReminderEnabled();
                         String details = action == BulkMilestoneAction.CATEGORY ? "\nCategory: " + category.getDisplayName() : action == BulkMilestoneAction.SCHEDULE ? "\nRepeat: " + schedule + " · target " + target + "\nChecklists require all their steps. Active manual progress resets when its period settings change." : action == BulkMilestoneAction.DEADLINE ? "\n" + (deadlineAt == 0 ? "Remove deadlines" : "Due by end of " + Instant.ofEpochMilli(deadlineAt - 1).atZone(ZoneOffset.UTC).toLocalDate() + " UTC") : "";
-                        if (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), action + " · " + selected.size() + " milestones?" + details + (action == BulkMilestoneAction.DELETE ? "\nDeleting source milestones can make linked milestones unavailable.\nObserved history is archived." : "") + "\nThe action is validated before changes. One-step undo is available until a later edit or relevant reset.", "Preview bulk action", JOptionPane.OK_CANCEL_OPTION, action == BulkMilestoneAction.DELETE ? JOptionPane.WARNING_MESSAGE : JOptionPane.QUESTION_MESSAGE) != JOptionPane.OK_OPTION) {
+                        if (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(this), action + " · " + selected.size() + " milestones?" + details + (action == BulkMilestoneAction.DELETE ? "\nDeleting source milestones can make linked milestones unavailable.\nObserved history is archived." : "") + "\nThe action is validated before changes. One-step undo is available until a later edit or relevant reset.", "Preview bulk action", JOptionPane.OK_CANCEL_OPTION, action == BulkMilestoneAction.DELETE ? JOptionPane.WARNING_MESSAGE : JOptionPane.QUESTION_MESSAGE) != JOptionPane.OK_OPTION) {
                             continue;
                         }
                         clientThread.invokeLater(() -> {
@@ -2289,19 +2289,19 @@ public class GrindstonePanel extends PluginPanel {
                                 return;
                             }
                             try {
-                                if (active.revision() != revision) {
+                                if (active.getRevision() != revision) {
                                     throw new IllegalArgumentException("Milestones changed while this manager was open. No changes applied; reopen it to review the current milestones.");
                                 }
                                 BulkMilestoneChanges.Change change = BulkMilestoneChanges.apply(active, selected, action, category, schedule, target, deadlineAt, reminder, System.currentTimeMillis());
                                 recordUndo(active, "bulk " + action, change.undo, change.allowed);
                                 render();
                             } catch (IllegalArgumentException failure) {
-                                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), failure.getMessage(), "Bulk action not applied", JOptionPane.WARNING_MESSAGE));
+                                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), failure.getMessage(), "Bulk action not applied", JOptionPane.WARNING_MESSAGE));
                             }
                         });
                         return;
                     } catch (IllegalArgumentException | ParseException failure) {
-                        JOptionPane.showMessageDialog(DialogPlacement.owner(this), failure.getMessage(), "Review selections", JOptionPane.WARNING_MESSAGE);
+                        JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), failure.getMessage(), "Review selections", JOptionPane.WARNING_MESSAGE);
                     }
                 }
             });
@@ -2318,21 +2318,21 @@ public class GrindstonePanel extends PluginPanel {
                 return;
             }
             List<Milestone> selected = new ArrayList<>(active.getGoals());
-            long revision = active.revision();
+            long revision = active.getRevision();
             if (selected.isEmpty()) {
-                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), "There are no milestones to clear."));
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), "There are no milestones to clear."));
                 return;
             }
             SwingUtilities.invokeLater(() -> {
-                if (profile != active || JOptionPane.showConfirmDialog(DialogPlacement.owner(this), "Remove all " + selected.size() + " milestones, including hidden milestones?\nRecorded history is retained within the 500-milestone archive limit.\nYou can undo this until another edit or a relevant period reset.", "Clear all milestones", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
+                if (profile != active || JOptionPane.showConfirmDialog(DialogPlacement.getOwner(this), "Remove all " + selected.size() + " milestones, including hidden milestones?\nRecorded history is retained within the 500-milestone archive limit.\nYou can undo this until another edit or a relevant period reset.", "Clear all milestones", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
                     return;
                 }
                 clientThread.invokeLater(() -> {
                     if (profile != active) {
                         return;
                     }
-                    if (active.revision() != revision) {
-                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), "Milestones changed while confirmation was open. Nothing was cleared; try again."));
+                    if (active.getRevision() != revision) {
+                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), "Milestones changed while confirmation was open. Nothing was cleared; try again."));
                         return;
                     }
                     BulkMilestoneChanges.Change change = BulkMilestoneChanges.apply(active, selected, BulkMilestoneAction.DELETE, null, RepeatSchedule.NONE, 1, 0, false, System.currentTimeMillis());
@@ -2351,19 +2351,19 @@ public class GrindstonePanel extends PluginPanel {
             if (profile != active || !active.getGoals().contains(goal)) {
                 return;
             }
-            MilestoneMetadata metadata = active.metadata(goal);
+            MilestoneMetadata metadata = active.getMetadata(goal);
             long originalDeadline = metadata.getDeadlineAt();
             boolean originalReminder = metadata.isDeadlineReminder();
             SwingUtilities.invokeLater(() -> {
                 DeadlineForm form = new DeadlineForm(originalDeadline, originalReminder);
-                while (profile == active && JOptionPane.showConfirmDialog(DialogPlacement.owner(this), form, "Personal deadline", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
+                while (profile == active && JOptionPane.showConfirmDialog(DialogPlacement.getOwner(this), form, "Personal deadline", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
                     try {
                         long deadlineAt = form.getDeadlineAt();
                         boolean reminder = form.isReminderEnabled();
                         clientThread.invokeLater(() -> {
-                            if (profile == active && active.getGoals().contains(goal) && active.metadata(goal).getDeadlineAt() == originalDeadline && active.metadata(goal).isDeadlineReminder() == originalReminder) {
+                            if (profile == active && active.getGoals().contains(goal) && active.getMetadata(goal).getDeadlineAt() == originalDeadline && active.getMetadata(goal).isDeadlineReminder() == originalReminder) {
                                 Consumer<Milestone> restore = active.snapshotEdit(goal);
-                                active.metadata(goal).setDeadline(deadlineAt, reminder);
+                                active.getMetadata(goal).setDeadline(deadlineAt, reminder);
                                 active.touch();
                                 recordGoalUndo(active, goal, "deadline", () -> restore.accept(goal));
                                 render();
@@ -2371,7 +2371,7 @@ public class GrindstonePanel extends PluginPanel {
                         });
                         return;
                     } catch (IllegalArgumentException failure) {
-                        JOptionPane.showMessageDialog(DialogPlacement.owner(this), failure.getMessage());
+                        JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), failure.getMessage());
                     }
                 }
             });
@@ -2379,36 +2379,36 @@ public class GrindstonePanel extends PluginPanel {
     }
 
     private void editCustomGoal(GrindstoneProfile active, CustomMilestone goal, String title) {
-        RepeatSchedule openedSchedule = active.metadata(goal).recurring().getSchedule();
-        long openedPeriod = openedSchedule.start(System.currentTimeMillis());
+        RepeatSchedule openedSchedule = active.getMetadata(goal).getRecurring().getSchedule();
+        long openedPeriod = openedSchedule.getPeriodStart(System.currentTimeMillis());
         CustomMilestoneForm form = new CustomMilestoneForm();
         form.load(goal);
         RepeatMilestoneForm repeat = new RepeatMilestoneForm();
-        repeat.load(active.metadata(goal).recurring().getSchedule(), active.metadata(goal).recurring().getTarget());
+        repeat.load(active.getMetadata(goal).getRecurring().getSchedule(), active.getMetadata(goal).getRecurring().getTarget());
         form.setRecurring(repeat.getSchedule() != RepeatSchedule.NONE);
         repeat.addScheduleListener(() -> form.setRecurring(repeat.getSchedule() != RepeatSchedule.NONE));
         JPanel editor = new JPanel(new BorderLayout(0, 8));
         editor.add(form, BorderLayout.CENTER);
         editor.add(repeat, BorderLayout.SOUTH);
-        while (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), editor, "Edit " + title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
+        while (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(this), editor, "Edit " + title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
             try {
                 repeat.commit();
                 RepeatSchedule schedule = repeat.getSchedule();
                 long periodTarget = repeat.getTarget();
                 CustomMilestone draft = form.read(schedule == RepeatSchedule.NONE ? 0 : periodTarget);
-                if (!confirmEdit(title, goal, draft, active.metadata(goal).recurring().getSchedule(), schedule, active.metadata(goal).recurring().getTarget(), periodTarget)) {
+                if (!confirmEdit(title, goal, draft, active.getMetadata(goal).getRecurring().getSchedule(), schedule, active.getMetadata(goal).getRecurring().getTarget(), periodTarget)) {
                     return;
                 }
                 clientThread.invokeLater(() -> {
                     if (profile == active && active.getGoals().contains(goal)) {
-                        if (openedSchedule != RepeatSchedule.NONE && openedSchedule.start(System.currentTimeMillis()) != openedPeriod) {
-                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), "The period reset while you were editing. Reopen the editor to avoid applying the previous period's progress."));
+                        if (openedSchedule != RepeatSchedule.NONE && openedSchedule.getPeriodStart(System.currentTimeMillis()) != openedPeriod) {
+                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), "The period reset while you were editing. Reopen the editor to avoid applying the previous period's progress."));
                             render();
                             return;
                         }
                         Milestone collision = active.findMatchingGoal(goal, schedule);
                         if (collision != null && collision != goal) {
-                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), "That personal milestone already has this schedule."));
+                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), "That personal milestone already has this schedule."));
                             return;
                         }
                         Consumer<Milestone> restore = active.snapshotEdit(goal);
@@ -2421,7 +2421,7 @@ public class GrindstonePanel extends PluginPanel {
                 });
                 return;
             } catch (ParseException | IllegalArgumentException exception) {
-                JOptionPane.showMessageDialog(DialogPlacement.owner(this), exception instanceof IllegalArgumentException ? exception.getMessage() : "Enter valid progress and target numbers.", "Check milestone details", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), exception instanceof IllegalArgumentException ? exception.getMessage() : "Enter valid progress and target numbers.", "Check milestone details", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -2433,16 +2433,16 @@ public class GrindstonePanel extends PluginPanel {
         preview.setLineWrap(true);
         preview.setWrapStyleWord(true);
         preview.setFont(UiTypography.BODY);
-        return JOptionPane.showConfirmDialog(DialogPlacement.owner(this), new JScrollPane(preview), "Preview milestone changes", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION;
+        return JOptionPane.showConfirmDialog(DialogPlacement.getOwner(this), new JScrollPane(preview), "Preview milestone changes", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION;
     }
 
     private void deleteGoal(GrindstoneProfile active, Milestone goal, String title) {
-        if (profile != active || JOptionPane.showConfirmDialog(DialogPlacement.owner(this), "Remove " + title + " from your milestones?\nYour game progress is unaffected.", "Delete milestone", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
+        if (profile != active || JOptionPane.showConfirmDialog(DialogPlacement.getOwner(this), "Remove " + title + " from your milestones?\nYour game progress is unaffected.", "Delete milestone", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
             return;
         }
         clientThread.invokeLater(() -> {
             if (profile == active && active.remove(goal)) {
-                recordUndo(active, "delete", () -> active.add(goal, active.metadata(goal)), () -> active.findMatchingGoal(goal, active.metadata(goal).recurring().getSchedule()) == null);
+                recordUndo(active, "delete", () -> active.add(goal, active.getMetadata(goal)), () -> active.findMatchingGoal(goal, active.getMetadata(goal).getRecurring().getSchedule()) == null);
                 render();
             }
         });
@@ -2452,7 +2452,7 @@ public class GrindstonePanel extends PluginPanel {
         undoDeleteButton.setVisible(false);
         clientThread.invokeLater(() -> {
             if (!undo.undo(profile)) {
-                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), "Undo expired after a later edit, profile change or period reset."));
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), "Undo expired after a later edit, profile change or period reset."));
             }
             render();
         });
@@ -2470,29 +2470,29 @@ public class GrindstonePanel extends PluginPanel {
     }
 
     private void recordGoalUndo(GrindstoneProfile active, Milestone goal, String label, Runnable action) {
-        RepeatSchedule schedule = active.metadata(goal).recurring().getSchedule();
-        long period = schedule.start(System.currentTimeMillis());
-        recordUndo(active, label, action, () -> active.getGoals().contains(goal) && (schedule == RepeatSchedule.NONE || schedule.start(System.currentTimeMillis()) == period));
+        RepeatSchedule schedule = active.getMetadata(goal).getRecurring().getSchedule();
+        long period = schedule.getPeriodStart(System.currentTimeMillis());
+        recordUndo(active, label, action, () -> active.getGoals().contains(goal) && (schedule == RepeatSchedule.NONE || schedule.getPeriodStart(System.currentTimeMillis()) == period));
     }
 
     private void promptManualProgress(GrindstoneProfile active, CustomMilestone goal, long current, long target) {
-        RepeatSchedule schedule = active.metadata(goal).recurring().getSchedule();
-        long window = schedule.start(System.currentTimeMillis());
+        RepeatSchedule schedule = active.getMetadata(goal).getRecurring().getSchedule();
+        long window = schedule.getPeriodStart(System.currentTimeMillis());
         JSpinner value = new JSpinner(new SpinnerNumberModel(current, 0L, target, 1L));
         value.setEditor(new JSpinner.NumberEditor(value, "#,##0"));
-        while (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), value, "Set progress (0–" + String.format(Locale.ROOT, "%,d", target) + ")", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
+        while (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(this), value, "Set progress (0–" + String.format(Locale.ROOT, "%,d", target) + ")", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
             try {
                 value.commitEdit();
                 long requested = ((Number) value.getValue()).longValue();
                 changeManualProgress(active, goal, previous -> {
-                    if (schedule != RepeatSchedule.NONE && schedule.start(System.currentTimeMillis()) != window) {
+                    if (schedule != RepeatSchedule.NONE && schedule.getPeriodStart(System.currentTimeMillis()) != window) {
                         throw new IllegalStateException("The period reset while this dialog was open. Reopen Set progress for the new period.");
                     }
                     return requested;
                 });
                 return;
             } catch (ParseException exception) {
-                JOptionPane.showMessageDialog(DialogPlacement.owner(this), "Enter a whole number within the target.");
+                JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), "Enter a whole number within the target.");
             }
         }
     }
@@ -2503,7 +2503,7 @@ public class GrindstonePanel extends PluginPanel {
                 return;
             }
             long now = System.currentTimeMillis();
-            RecurringMilestone recurring = active.metadata(goal).recurring();
+            RecurringMilestone recurring = active.getMetadata(goal).getRecurring();
             if (recurring.isActive()) {
                 recurring.observe(goal, now);
             }
@@ -2511,7 +2511,7 @@ public class GrindstonePanel extends PluginPanel {
             try {
                 requested = change.applyAsLong(goal.getProgressCurrent());
             } catch (IllegalStateException exception) {
-                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), exception.getMessage()));
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), exception.getMessage()));
                 render();
                 return;
             }
@@ -2520,7 +2520,7 @@ public class GrindstonePanel extends PluginPanel {
             if (recurring.isActive()) {
                 recurring.observe(goal, now);
             } else {
-                active.metadata(goal).observe(goal, goal.getTitle(null), now);
+                active.getMetadata(goal).observe(goal, goal.getTitle(null), now);
             }
             active.touch();
             recordGoalUndo(active, goal, "progress", () -> restore.accept(goal));
@@ -2528,14 +2528,14 @@ public class GrindstonePanel extends PluginPanel {
         });
     }
 
-    private String safeTitle(Milestone goal) {
+    private String getSafeTitle(Milestone goal) {
         String title = goal.getTitle(client);
         return title == null ? "" : title;
     }
 
-    private MilestoneCategory safeCategory(Milestone goal) {
-        if (profile != null && profile.metadata(goal).getDisplayCategory() != null) {
-            return profile.metadata(goal).getDisplayCategory();
+    private MilestoneCategory getSafeCategory(Milestone goal) {
+        if (profile != null && profile.getMetadata(goal).getDisplayCategory() != null) {
+            return profile.getMetadata(goal).getDisplayCategory();
         }
         MilestoneCategory category = goal.getCategory();
         return category == null ? MilestoneCategory.OTHER : category;

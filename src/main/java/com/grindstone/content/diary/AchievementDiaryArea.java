@@ -28,10 +28,10 @@ public enum AchievementDiaryArea {
         this.counts = counts;
         this.completed = completed;
     }
-    public int taskCount(Client client, DiaryTier tier) {
-        return taskCount(client::getVarbitValue, tier);
+    public int getTaskCount(Client client, DiaryTier tier) {
+        return getTaskCount(client::getVarbitValue, tier);
     }
-    public int taskCount(IntUnaryOperator values, DiaryTier tier) {
+    public int getTaskCount(IntUnaryOperator values, DiaryTier tier) {
         return Math.max(0, values.applyAsInt(counts[tier.ordinal()]));
     }
     public boolean isComplete(Client client, DiaryTier tier) {
@@ -39,7 +39,7 @@ public enum AchievementDiaryArea {
     }
     public boolean isComplete(IntUnaryOperator values, DiaryTier tier) {
         int index = tier.ordinal();
-        return completed[index] >= 0 ? values.applyAsInt(completed[index]) > 0 : taskCount(values, tier) >= new int[]{10, 19, 10}[index];
+        return completed[index] >= 0 ? values.applyAsInt(completed[index]) > 0 : getTaskCount(values, tier) >= new int[]{10, 19, 10}[index];
     }
     @Override
     public String toString() {

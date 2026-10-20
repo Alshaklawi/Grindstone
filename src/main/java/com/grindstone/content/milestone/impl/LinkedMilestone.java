@@ -100,7 +100,7 @@ public final class LinkedMilestone implements Milestone {
         Map<String, Milestone> sourceIndex = new HashMap<>();
         for (Milestone goal : profile.getGoals()) {
             if (!(goal instanceof LinkedMilestone)) {
-                sourceIndex.put(profile.metadata(goal).getId(), goal);
+                sourceIndex.put(profile.getMetadata(goal).getId(), goal);
             }
         }
         update(profile, loggedIn, sourceIndex);
@@ -121,13 +121,13 @@ public final class LinkedMilestone implements Milestone {
                 text.append("Missing source · restore it or edit this milestone.\n");
                 continue;
             }
-            MilestoneMetadata metadata = profile.metadata(source);
+            MilestoneMetadata metadata = profile.getMetadata(source);
             if (mode == Mode.COLLECTION_SET && !(source instanceof CollectionLogItemMilestone)) {
                 available = false;
                 text.append("Invalid collection source · choose individual collection items.\n");
                 continue;
             }
-            RecurringMilestone recurring = metadata.recurring();
+            RecurringMilestone recurring = metadata.getRecurring();
             boolean known = TrackingState.of(source, recurring, loggedIn, profile.getPlayerStorage().hasBankSnapshot()) != TrackingState.WAITING;
             long value = recurring.isActive() ? recurring.getProgress() : source.getProgressCurrent();
             started |= known && value > 0;

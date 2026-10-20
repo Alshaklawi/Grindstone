@@ -3,6 +3,7 @@
 - Build for Java 11 and use RuneLite APIs and native UI components.
 - Keep this project compatible with RuneLite Plugin Hub's Java 11 Linux packaging workflow and v5 plugin-hub-tooling bundle. Preserve standard plugin source/resource layout, plugin metadata and internal name, supported dependencies and API usage. Keep local launchers and screenshot utilities out of the production artifact. Run relevant build and compliance checks before committing; distinguish local checks from an actual Plugin Hub packager/API verification run.
 - Use Lombok for straightforward boilerplate; preserve validation, defensive copies and custom behavior.
+- Follow Java method naming conventions consistently: use getX for accessors, isX/hasX/canX for boolean queries, and clear verbs for actions and factories. Avoid bare noun accessor names such as activityType(), metadata() or recurring(). Preserve framework-required overrides and config keys.
 - Use explicit imports, same-line opening braces, multiline block contents, one enum entry per line, and one declaration annotation per line. Never wrap solely for line length.
 - Keep only the requested author/Discord/creation-date header on each type. Preserve its actual creation date.
 - Automatically commit completed changes in atomic commits; separate formatting from behavior changes. Preserve unrelated edits. Do not push unless asked, or commit the local run-plugin.bat script.

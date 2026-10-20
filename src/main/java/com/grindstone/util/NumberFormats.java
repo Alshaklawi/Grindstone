@@ -8,7 +8,7 @@ import java.util.Locale;
 public final class NumberFormats {
     private NumberFormats() {
     }
-    public static String experience(long value) {
+    public static String formatExperience(long value) {
         if (value >= 1_000_000) {
             return String.format(Locale.ROOT, "%.1fM", value / 1_000_000.0);
         }
@@ -17,7 +17,7 @@ public final class NumberFormats {
         }
         return Long.toString(value);
     }
-    public static String target(long value) {
+    public static String formatTarget(long value) {
         if (value >= 1_000_000_000L) {
             return String.format(Locale.ROOT, "%.1fB", value / 1_000_000_000.0);
         }

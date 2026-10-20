@@ -71,7 +71,7 @@ public final class MilestoneMetadata {
     @Setter
     private MilestoneCategory displayCategory;
     private RecurringMilestone recurring;
-    public RecurringMilestone recurring() {
+    public RecurringMilestone getRecurring() {
         if (recurring == null) {
             recurring = new RecurringMilestone();
         }
@@ -90,7 +90,7 @@ public final class MilestoneMetadata {
         this.deadlineAt = deadlineAt;
         deadlineReminder = deadlineAt != 0 && reminder;
     }
-    public String deadlineText(long now) {
+    public String getDeadlineText(long now) {
         if (deadlineAt == 0) {
             return "";
         }
@@ -154,7 +154,7 @@ public final class MilestoneMetadata {
         }
         return saved;
     }
-    public String historyText() {
+    public String getHistoryText() {
         if (completions.isEmpty()) {
             return "No completed targets observed yet.";
         }

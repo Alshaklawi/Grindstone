@@ -105,14 +105,14 @@ public class ItemContainerComponent extends JPanel {
         emptyLabel.setToolTipText(message);
     }
 
-    private int columnsForWidth() {
+    private int getColumnsForWidth() {
         int width = getWidth();
         return width <= 0 ? itemsPerRow
                 : Math.max(1, Math.min(itemsPerRow, (width + GAP) / (ItemComponent.CELL_SIZE + GAP)));
     }
 
     private void refresh() {
-        int nextColumns = columnsForWidth();
+        int nextColumns = getColumnsForWidth();
         if (items.isEmpty()) {
             columns = nextColumns;
             grid.setLayout(new BorderLayout());
@@ -141,7 +141,7 @@ public class ItemContainerComponent extends JPanel {
 
     @Override
     public void doLayout() {
-        if (columnsForWidth() != columns) {
+        if (getColumnsForWidth() != columns) {
             refresh();
         }
         super.doLayout();
@@ -149,8 +149,8 @@ public class ItemContainerComponent extends JPanel {
 
     @Override
     public Dimension getPreferredSize() {
-        int count = expanded ? items.size() : Math.min(items.size(), columnsForWidth() * maxRows);
-        int cols = columnsForWidth();
+        int count = expanded ? items.size() : Math.min(items.size(), getColumnsForWidth() * maxRows);
+        int cols = getColumnsForWidth();
         int rows = count == 0 ? 0 : (count + cols - 1) / cols;
         int height = rows == 0 ? emptyLabel.getPreferredSize().height
                 : rows * ItemComponent.CELL_SIZE + Math.max(0, rows - 1) * GAP;

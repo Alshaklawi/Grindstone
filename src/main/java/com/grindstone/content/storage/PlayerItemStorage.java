@@ -78,14 +78,14 @@ public final class PlayerItemStorage {
         containers.put(source, counts);
         lastSeen.put(source, clock.instant());
     }
-    public Map<PlayerStorageSource, Instant> lastSeen() {
+    public Map<PlayerStorageSource, Instant> getLastSeen() {
         return Collections.unmodifiableMap(new EnumMap<>(lastSeen));
     }
-    public String freshness() {
+    public String getFreshness() {
         Instant seen = lastSeen.get(PlayerStorageSource.BANK);
         return seen == null ? "Bank not loaded this login" : "Bank snapshot: " + DateTimeFormatter.ofPattern("HH:mm:ss z", Locale.ROOT).withZone(ZoneId.systemDefault()).format(seen);
     }
-    public String snapshotLabel() {
+    public String getSnapshotLabel() {
         Instant seen = lastSeen.values().stream().max(Instant::compareTo).orElse(null);
         return "Last snapshot: " + (seen == null ? "—" : DateTimeFormatter.ofPattern("HH:mm:ss z", Locale.ROOT).withZone(ZoneId.systemDefault()).format(seen));
     }
@@ -101,7 +101,7 @@ public final class PlayerItemStorage {
             if (definition.getPlaceholderTemplateId() != -1) {
                 return -1;
             }
-            return ItemVariants.normalId(definition);
+            return ItemVariants.getNormalId(definition);
         });
     }
     public void refreshVariables(Client client) {
@@ -111,10 +111,10 @@ public final class PlayerItemStorage {
     }
     public void refreshRuneValues(IntUnaryOperator varbits, IntUnaryOperator mapping) {
         Map<Integer, Long> runes = new HashMap<>();
-        boolean hasPouch = quantity(ItemID.BH_RUNE_POUCH) > 0
-        || quantity(ItemID.BH_RUNE_POUCH_TROUVER) > 0
-        || quantity(ItemID.DIVINE_RUNE_POUCH) > 0
-        || quantity(ItemID.DIVINE_RUNE_POUCH_TROUVER) > 0;
+        boolean hasPouch = getQuantity(ItemID.BH_RUNE_POUCH) > 0
+        || getQuantity(ItemID.BH_RUNE_POUCH_TROUVER) > 0
+        || getQuantity(ItemID.DIVINE_RUNE_POUCH) > 0
+        || getQuantity(ItemID.DIVINE_RUNE_POUCH_TROUVER) > 0;
         if (hasPouch) {
             for (int slot = 0; slot < RUNE_TYPES.length; slot++) {
                 int type = varbits.applyAsInt(RUNE_TYPES[slot]);
@@ -143,7 +143,7 @@ public final class PlayerItemStorage {
         }
         variables.put(source, coins);
     }
-    public Map<String, Long> breakdown(int item) {
+    public Map<String, Long> getBreakdown(int item) {
         Map<String, Long> result = new LinkedHashMap<>();
         containers.forEach((source, counts) -> {
             long quantity = counts.getOrDefault(item, 0L);
@@ -159,11 +159,11 @@ public final class PlayerItemStorage {
         });
         return result;
     }
-    public long quantity(int item) {
-        return breakdown(item).values().stream().mapToLong(Long::longValue).sum();
+    public long getQuantity(int item) {
+        return getBreakdown(item).values().stream().mapToLong(Long::longValue).sum();
     }
     public String describe(int item) {
-        String amounts = breakdown(item).entrySet().stream()
+        String amounts = getBreakdown(item).entrySet().stream()
                 .map(entry -> entry.getKey() + ": " + String.format(Locale.ROOT, "%,d", entry.getValue()))
                 .collect(Collectors.joining("; "));
         return (amounts.isEmpty() ? "No items found in known storage." : amounts + ".")

@@ -21,12 +21,12 @@ public class SkillWidgetsTest {
     public void mapsEverySkillOnceWithoutTreatingTotalAsASkill() {
         Set<Skill> skills = new HashSet<>();
         for (int widget = InterfaceID.Stats.ATTACK; widget <= InterfaceID.Stats.SAILING; widget++) {
-            assertTrue(skills.add(SkillWidgets.skillFor(widget)));
+            assertTrue(skills.add(SkillWidgets.getSkillFor(widget)));
         }
         assertEquals(new HashSet<>(Arrays.asList(Skill.values())), skills);
-        assertEquals(Skill.STRENGTH, SkillWidgets.skillFor(InterfaceID.Stats.STRENGTH));
-        assertEquals(Skill.DEFENCE, SkillWidgets.skillFor(InterfaceID.Stats.DEFENCE));
-        assertNull(SkillWidgets.skillFor(InterfaceID.Stats.TOTAL));
-        assertNull(SkillWidgets.skillFor(InterfaceID.Stats.UNIVERSE));
+        assertEquals(Skill.STRENGTH, SkillWidgets.getSkillFor(InterfaceID.Stats.STRENGTH));
+        assertEquals(Skill.DEFENCE, SkillWidgets.getSkillFor(InterfaceID.Stats.DEFENCE));
+        assertNull(SkillWidgets.getSkillFor(InterfaceID.Stats.TOTAL));
+        assertNull(SkillWidgets.getSkillFor(InterfaceID.Stats.UNIVERSE));
     }
 }

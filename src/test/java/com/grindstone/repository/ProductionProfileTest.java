@@ -25,13 +25,13 @@ public class ProductionProfileTest {
         GrindstoneProfile profile = new GrindstoneProfile(42);
         CustomMilestone goal = new CustomMilestone("My routine", "My notes", MilestoneCategory.OTHER, 3, 10);
         profile.add(goal);
-        profile.metadata(goal).setPinned(true);
+        profile.getMetadata(goal).setPinned(true);
         JsonObject saved = TestProfiles.REPOSITORY.toJson(profile);
         GrindstoneProfile restored = TestProfiles.REPOSITORY.fromJson(saved);
         assertEquals(1, restored.getGoals().size());
         assertEquals("My routine", restored.getGoals().get(0).getTitle(null));
         assertEquals(3, restored.getGoals().get(0).getProgressCurrent());
         assertEquals(10, restored.getGoals().get(0).getProgressMaximum());
-        assertTrue(restored.metadata(restored.getGoals().get(0)).isPinned());
+        assertTrue(restored.getMetadata(restored.getGoals().get(0)).isPinned());
     }
 }

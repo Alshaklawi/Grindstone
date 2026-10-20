@@ -17,7 +17,7 @@ public final class MilestoneUndo {
     private String label;
     public void record(GrindstoneProfile profile, String label, Runnable action, BooleanSupplier allowed) {
         this.profile = profile;
-        this.revision = profile.revision();
+        this.revision = profile.getRevision();
         this.label = label;
         this.action = action;
         this.allowed = allowed;
@@ -29,7 +29,7 @@ public final class MilestoneUndo {
         label = null;
     }
     public boolean undo(GrindstoneProfile active) {
-        boolean valid = active != null && active == profile && active.revision() == revision && action != null && allowed.getAsBoolean();
+        boolean valid = active != null && active == profile && active.getRevision() == revision && action != null && allowed.getAsBoolean();
         Runnable saved = action;
         clear();
         if (valid) {

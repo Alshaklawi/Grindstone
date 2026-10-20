@@ -86,7 +86,7 @@ public class SkillExperienceMilestone implements Milestone {
 
     @Override
     public String getProgressText() {
-        return NumberFormats.experience(current) + " / " + NumberFormats.experience(getProgressMaximum());
+        return NumberFormats.formatExperience(current) + " / " + NumberFormats.formatExperience(getProgressMaximum());
     }
 
     @Override

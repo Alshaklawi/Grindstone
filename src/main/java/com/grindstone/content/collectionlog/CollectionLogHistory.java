@@ -60,23 +60,23 @@ public final class CollectionLogHistory {
         if (itemId <= 0 || epochMillis <= 0) {
             return;
         }
-        firstSeen.merge(CollectionLogPages.canonicalItemId(itemId), epochMillis, Math::min);
+        firstSeen.merge(CollectionLogPages.getCanonicalItemId(itemId), epochMillis, Math::min);
     }
 
     public boolean contains(int itemId) {
-        return firstSeen.containsKey(CollectionLogPages.canonicalItemId(itemId));
+        return firstSeen.containsKey(CollectionLogPages.getCanonicalItemId(itemId));
     }
 
-    public Long firstSeenAt(int itemId) {
-        return firstSeen.get(CollectionLogPages.canonicalItemId(itemId));
+    public Long getFirstSeenAt(int itemId) {
+        return firstSeen.get(CollectionLogPages.getCanonicalItemId(itemId));
     }
 
-    public Map<Integer, Long> snapshot() {
+    public Map<Integer, Long> getSnapshot() {
         return Collections.unmodifiableMap(new HashMap<>(firstSeen));
     }
 
-    public String firstSeenText(int itemId) {
-        Long time = firstSeenAt(itemId);
+    public String getFirstSeenText(int itemId) {
+        Long time = getFirstSeenAt(itemId);
         return time == null ? "Not yet observed in your collection log" : "First seen: " + FORMAT.format(Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()));
     }
 }

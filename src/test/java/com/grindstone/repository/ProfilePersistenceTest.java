@@ -63,13 +63,13 @@ public class ProfilePersistenceTest {
     @Test
     public void metadataCopyDoesNotShareMutablePeriodState() {
         MilestoneMetadata original = new MilestoneMetadata();
-        original.recurring().configure(RepeatSchedule.DAILY, 5, 1000);
+        original.getRecurring().configure(RepeatSchedule.DAILY, 5, 1000);
         MilestoneMetadata copy = original.copy();
         copy.setPinned(true);
-        copy.recurring().configure(RepeatSchedule.WEEKLY, 10, 2000);
+        copy.getRecurring().configure(RepeatSchedule.WEEKLY, 10, 2000);
         assertEquals(original.getId(), copy.getId());
         assertFalse(original.isPinned());
-        assertEquals(RepeatSchedule.DAILY, original.recurring().getSchedule());
-        assertEquals(5, original.recurring().getTarget());
+        assertEquals(RepeatSchedule.DAILY, original.getRecurring().getSchedule());
+        assertEquals(5, original.getRecurring().getTarget());
     }
 }

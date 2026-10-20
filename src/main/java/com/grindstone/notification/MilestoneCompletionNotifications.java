@@ -64,8 +64,8 @@ public final class MilestoneCompletionNotifications {
         List<String> headings = new ArrayList<>();
         int routineCompletions = 0;
         for (Milestone goal : active.getGoals()) {
-            MilestoneMetadata metadata = active.metadata(goal);
-            RecurringMilestone recurring = metadata.recurring();
+            MilestoneMetadata metadata = active.getMetadata(goal);
+            RecurringMilestone recurring = metadata.getRecurring();
             String id = metadata.getId();
             ids.add(id);
             if (TrackingState.of(goal, recurring, true, active.getPlayerStorage().hasBankSnapshot()) == TrackingState.WAITING) {
@@ -76,11 +76,11 @@ public final class MilestoneCompletionNotifications {
             String cycle = target + ":" + (repeating ? recurring.getSchedule() + ":" + recurring.getStart() : "once");
             boolean complete = (repeating ? recurring.getStatus() : goal.getStatus()) == MilestoneStatus.COMPLETE;
             if (transitions.observe(id, cycle, complete)) {
-                String title = NotificationMessages.title(goal.getTitle(client));
+                String title = NotificationMessages.formatTitle(goal.getTitle(client));
                 String label = (repeating ? recurring.getSchedule() + ": " : "") + title;
                 completed.add(label);
                 headings.add(repeating ? "Routine complete" : "Milestone complete");
-                details.add(label + (config.completionNumbers() ? NotificationMessages.progress(goal, repeating ? recurring.getProgress() : goal.getProgressCurrent(), target) : ""));
+                details.add(label + (config.completionNumbers() ? NotificationMessages.formatProgress(goal, repeating ? recurring.getProgress() : goal.getProgressCurrent(), target) : ""));
                 if (repeating) {
                     routineCompletions++;
                 }
@@ -99,10 +99,10 @@ public final class MilestoneCompletionNotifications {
         String message = heading + ": " + detail;
         if (config.completionChat()) {
             for (int index = 0; index < Math.min(5, details.size()); index++) {
-                chat.queue(QueuedMessage.builder().type(ChatMessageType.CONSOLE).value(NotificationMessages.chat(headings.get(index), details.get(index), config.notificationColours(), true)).build());
+                chat.queue(QueuedMessage.builder().type(ChatMessageType.CONSOLE).value(NotificationMessages.formatChat(headings.get(index), details.get(index), config.notificationColours(), true)).build());
             }
             if (details.size() > 5) {
-                chat.queue(QueuedMessage.builder().type(ChatMessageType.CONSOLE).value(NotificationMessages.chat("More targets reached", (details.size() - 5) + " more complete. Open History in Grindstone to view them.", config.notificationColours(), true)).build());
+                chat.queue(QueuedMessage.builder().type(ChatMessageType.CONSOLE).value(NotificationMessages.formatChat("More targets reached", (details.size() - 5) + " more complete. Open History in Grindstone to view them.", config.notificationColours(), true)).build());
             }
         }
         if (config.completionNotification().isEnabled()) {

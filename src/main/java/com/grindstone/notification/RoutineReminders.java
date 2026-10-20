@@ -62,7 +62,7 @@ public final class RoutineReminders {
                 periods.remove(schedule);
                 continue;
             }
-            long start = schedule.start(now);
+            long start = schedule.getPeriodStart(now);
             Long previousPeriod = periods.put(schedule, start);
             if (previousPeriod == null || previousPeriod != start) {
                 boolean remindNow = previousPeriod == null ? config.routineReminderOnLogin() : config.routineReminderOnReset();
@@ -73,20 +73,20 @@ public final class RoutineReminders {
             }
             List<String> pending = new ArrayList<>();
             for (Milestone goal : profile.getGoals()) {
-                RecurringMilestone routine = profile.metadata(goal).recurring();
+                RecurringMilestone routine = profile.getMetadata(goal).getRecurring();
                 if (routine.getSchedule() != schedule || !RecurringMilestone.supports(goal) || routine.getStatus() == MilestoneStatus.COMPLETE || TrackingState.of(goal, routine, true, profile.getPlayerStorage().hasBankSnapshot()) == TrackingState.WAITING) {
                     continue;
                 }
-                pending.add(NotificationMessages.title(goal.getTitle(client)) + (config.routineReminderNumbers() ? NotificationMessages.progress(goal, routine.getProgress(), routine.getTarget()) : ""));
+                pending.add(NotificationMessages.formatTitle(goal.getTitle(client)) + (config.routineReminderNumbers() ? NotificationMessages.formatProgress(goal, routine.getProgress(), routine.getTarget()) : ""));
             }
             if (pending.isEmpty()) {
                 continue;
             }
             lastReminded.put(schedule, now);
             String heading = schedule + " reminder";
-            String detail = pending.size() + (pending.size() == 1 ? " routine left: " : " routines left: ") + String.join("; ", pending.subList(0, Math.min(3, pending.size()))) + (pending.size() > 3 ? "; and " + (pending.size() - 3) + " more" : "") + "." + (config.routineReminderCountdown() ? " Resets in " + OverlayStyle.countdown(schedule.next(start), now) + "." : "");
+            String detail = pending.size() + (pending.size() == 1 ? " routine left: " : " routines left: ") + String.join("; ", pending.subList(0, Math.min(3, pending.size()))) + (pending.size() > 3 ? "; and " + (pending.size() - 3) + " more" : "") + "." + (config.routineReminderCountdown() ? " Resets in " + OverlayStyle.formatCountdown(schedule.getNextReset(start), now) + "." : "");
             if (config.routineReminderChat()) {
-                chat.queue(QueuedMessage.builder().type(ChatMessageType.CONSOLE).value(NotificationMessages.chat(heading, detail, config.notificationColours(), false)).build());
+                chat.queue(QueuedMessage.builder().type(ChatMessageType.CONSOLE).value(NotificationMessages.formatChat(heading, detail, config.notificationColours(), false)).build());
             }
             if (config.routineReminderNotification().isEnabled()) {
                 notifier.notify(config.routineReminderNotification(), heading + ": " + detail);

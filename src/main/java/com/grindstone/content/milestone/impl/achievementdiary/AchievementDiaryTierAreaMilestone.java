@@ -35,7 +35,7 @@ public final class AchievementDiaryTierAreaMilestone extends ClientCompletionMil
     }
     @Override
     public boolean refresh(Client client) {
-        return update(area.isComplete(client, tier) ? 1 : 0, 1, area.taskCount(client, tier) > 0);
+        return update(area.isComplete(client, tier) ? 1 : 0, 1, area.getTaskCount(client, tier) > 0);
     }
     @Override
     public String getProgressText() {

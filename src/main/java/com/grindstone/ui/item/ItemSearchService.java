@@ -162,7 +162,7 @@ public final class ItemSearchService implements ItemLookup {
                 if (!explicitId) {
                     return null;
                 }
-                int normal = ItemVariants.normalId(item);
+                int normal = ItemVariants.getNormalId(item);
                 return normal > 0 && normal < client.getItemCount() && normal != id ? readItem(normal, false) : null;
             }
             String name = item.getMembersName();

@@ -11,11 +11,11 @@ public final class ItemVariants {
     private ItemVariants() {
     }
 
-    public static int normalId(ItemComposition item) {
-        return item == null ? -1 : normalId(item.getId(), item.getNote(), item.getLinkedNoteId(), item.getPlaceholderTemplateId(), item.getPlaceholderId());
+    public static int getNormalId(ItemComposition item) {
+        return item == null ? -1 : getNormalId(item.getId(), item.getNote(), item.getLinkedNoteId(), item.getPlaceholderTemplateId(), item.getPlaceholderId());
     }
 
-    public static int normalId(int id, int noteTemplate, int linkedNote, int placeholderTemplate, int placeholder) {
+    public static int getNormalId(int id, int noteTemplate, int linkedNote, int placeholderTemplate, int placeholder) {
         if (id <= 0) {
             return -1;
         }

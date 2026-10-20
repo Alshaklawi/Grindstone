@@ -39,7 +39,7 @@ public final class AchievementDiaryTierMilestone extends ClientCompletionMilesto
             if (area.isComplete(client, tier)) {
                 done++;
             }
-            started |= area.taskCount(client, tier) > 0;
+            started |= area.getTaskCount(client, tier) > 0;
         }
         return update(done, AchievementDiaryArea.values().length, started);
     }

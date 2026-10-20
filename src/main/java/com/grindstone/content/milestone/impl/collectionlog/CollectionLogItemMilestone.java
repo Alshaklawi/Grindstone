@@ -64,7 +64,7 @@ public class CollectionLogItemMilestone implements Milestone {
     }
 
     private boolean isObtained(ItemContainer container) {
-        return history != null ? history.contains(item) : container != null && container.count(CollectionLogPages.canonicalItemId(item)) > 0;
+        return history != null ? history.contains(item) : container != null && container.count(CollectionLogPages.getCanonicalItemId(item)) > 0;
     }
 
     @Override
@@ -84,7 +84,7 @@ public class CollectionLogItemMilestone implements Milestone {
 
     @Override
     public String getDescription() {
-        return history == null || !history.contains(item) ? "" : history.firstSeenText(item);
+        return history == null || !history.contains(item) ? "" : history.getFirstSeenText(item);
     }
 
     @Override

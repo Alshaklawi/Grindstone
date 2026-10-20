@@ -152,14 +152,14 @@ public final class GrindstoneRepository {
             JsonObject savedGoal = new JsonObject();
             savedGoal.addProperty("type", SavedMilestoneTypes.nameOf(goal));
             savedGoal.add("data", gson.toJsonTree(goal));
-            savedGoal.add("metadata", gson.toJsonTree(profile.metadata(goal)));
+            savedGoal.add("metadata", gson.toJsonTree(profile.getMetadata(goal)));
             savedGoals.add(savedGoal);
         }
 
         json.add("goals", savedGoals);
-        json.add("archivedHistory", gson.toJsonTree(profile.archivedHistory()));
+        json.add("archivedHistory", gson.toJsonTree(profile.getArchivedHistory()));
         JsonObject observed = new JsonObject();
-        profile.getCollectionLogHistory().snapshot().forEach((id, time) -> observed.addProperty(id.toString(), time));
+        profile.getCollectionLogHistory().getSnapshot().forEach((id, time) -> observed.addProperty(id.toString(), time));
         json.add("collectionLogFirstSeen", observed);
         json.addProperty("collectionLogSnapshotAt", profile.getCollectionLogHistory().getSnapshotAt());
         json.addProperty("collectionLogSnapshotCount", profile.getCollectionLogHistory().getSnapshotCount());

@@ -84,7 +84,7 @@ public class TrackerMilestone implements Milestone {
     @Override
     public BufferedImage getIcon(Client client) {
         if (activityIcons && itemManager != null) {
-            int item = tracker.iconItem(client);
+            int item = tracker.getIconItem(client);
             if (item > 0) {
                 return itemManager.getImage(item);
             }

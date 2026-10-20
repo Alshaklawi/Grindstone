@@ -80,7 +80,7 @@ public class CollectionLogEntryMilestone implements Milestone {
     @Override
     public Supplier<MilestoneComponent> prepare(Client client, GrindstoneConfig config) {
         ItemContainer container = client.getItemContainer(COLLECTION_LOG_CONTAINER_ID);
-        ItemComposition[] items = CollectionLogPages.items(client, pageStruct);
+        ItemComposition[] items = CollectionLogPages.getItems(client, pageStruct);
         List<Supplier<ItemComponent>> preparedItems = new ArrayList<>(items.length);
         long nextObtained = 0;
         long nextTotal = 0;
@@ -103,7 +103,7 @@ public class CollectionLogEntryMilestone implements Milestone {
             int id = item.getId();
             String name = item.getName();
             BufferedImage image = itemManager == null ? null : itemManager.getImage(id);
-            String observed = history == null ? "Date not recorded" : history.firstSeenText(id);
+            String observed = history == null ? "Date not recorded" : history.getFirstSeenText(id);
             String tooltip = config == null || config.showItemTooltips() ? "<html>" + HtmlUtils.escape(name) + "<br>" + (isObtained ? "Obtained" : "Not obtained") + "<br>" + HtmlUtils.escape(observed) + "</html>" : null;
             preparedItems.add(() -> new ItemComponent(id, name, image, tooltip, isObtained));
         }
@@ -132,14 +132,14 @@ public class CollectionLogEntryMilestone implements Milestone {
 
     @Override
     public String getTitle(Client client) {
-        return CollectionLogPages.title(client, pageStruct, pageName);
+        return CollectionLogPages.getTitle(client, pageStruct, pageName);
     }
 
     @Override
     public BufferedImage getIcon(Client client) {
         if (itemManager != null && client != null) {
             if (iconItem <= 0) {
-                int[] items = CollectionLogPages.itemIds(client, pageStruct);
+                int[] items = CollectionLogPages.getItemIds(client, pageStruct);
                 if (items.length > 0) {
                     iconItem = items[0];
                 }
@@ -200,7 +200,7 @@ public class CollectionLogEntryMilestone implements Milestone {
             return;
         }
 
-        ItemComposition[] items = CollectionLogPages.items(client, pageStruct);
+        ItemComposition[] items = CollectionLogPages.getItems(client, pageStruct);
         long nextObtained = 0;
         long nextTotal = 0;
 

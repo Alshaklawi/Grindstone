@@ -42,7 +42,7 @@ public final class CombatAchievementTaskMilestone extends ClientCompletionMilest
     }
     @Override
     public boolean refresh(Client client) {
-        definition = CombatAchievementData.tasks(client).get(task);
+        definition = CombatAchievementData.getTasks(client).get(task);
         return definition == null ? update(0, 0, false) : observeCompletion(CombatAchievementData.isComplete(client, task));
     }
     public boolean observeCompletion(boolean complete) {

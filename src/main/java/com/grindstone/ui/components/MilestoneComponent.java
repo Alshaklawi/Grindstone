@@ -252,7 +252,7 @@ public class MilestoneComponent extends JPanel {
     public void setGoalStatus(MilestoneStatus status) {
         MilestoneStatus state = status == null ? MilestoneStatus.NOT_STARTED : status;
         statusLabel.setText(state == MilestoneStatus.COMPLETE ? "Complete" : state == MilestoneStatus.IN_PROGRESS ? "In progress" : "Not started");
-        statusLabel.setForeground(SegmentedProgressBar.colorFor(state));
+        statusLabel.setForeground(SegmentedProgressBar.getColorFor(state));
         statusLabel.setToolTipText(null);
         progressBar.setStatus(state);
     }

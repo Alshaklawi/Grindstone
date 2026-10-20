@@ -264,7 +264,7 @@ public class GrindstonePlugin extends Plugin {
         }
         if (original.getParam1() >>> 16 == InterfaceID.STATS) {
             if (config.skillGoalMenu() && original.getIdentifier() == 1) {
-                Skill skill = SkillWidgets.skillFor(original.getParam1());
+                Skill skill = SkillWidgets.getSkillFor(original.getParam1());
                 if (skill != null) {
                     addSkillGoalOption("Set level milestone", skill.getName(), () -> new SkillLevelMilestone(skill), false);
                     addSkillGoalOption("Set XP milestone", skill.getName(), () -> new SkillExperienceMilestone(skill), true);
@@ -290,7 +290,7 @@ public class GrindstonePlugin extends Plugin {
             return;
         }
         if (selectedItem > 0) {
-            if (!canOfferGoal(new CollectionLogItemMilestone(CollectionLogPages.canonicalItemId(selectedItem), 1))) {
+            if (!canOfferGoal(new CollectionLogItemMilestone(CollectionLogPages.getCanonicalItemId(selectedItem), 1))) {
                 return;
             }
         } else {
@@ -310,7 +310,7 @@ public class GrindstonePlugin extends Plugin {
                     }
                     Milestone goal = null;
                     if (selectedItem > 0) {
-                        goal = new CollectionLogItemMilestone(CollectionLogPages.canonicalItemId(selectedItem), 1);
+                        goal = new CollectionLogItemMilestone(CollectionLogPages.getCanonicalItemId(selectedItem), 1);
                     } else {
                         for (Map.Entry<Integer, String> page : CollectionLogPages.discover(client).entrySet()) {
                             if (page.getValue().equalsIgnoreCase(selectedName)) {
@@ -325,7 +325,7 @@ public class GrindstonePlugin extends Plugin {
                 });
     }
 
-    private String goalMenuName(MenuEntry original) {
+    private String getGoalMenuName(MenuEntry original) {
         String name = Text.removeTags(original.getTarget()).trim();
         if (name.isEmpty() && original.getWidget() != null) {
             name = Text.removeTags(original.getWidget().getText()).trim();
@@ -347,7 +347,7 @@ public class GrindstonePlugin extends Plugin {
         if (!config.questGoalsEnabled() || !config.questGoalMenu() || original.getIdentifier() != 1) {
             return;
         }
-        String name = goalMenuName(original);
+        String name = getGoalMenuName(original);
         for (Quest quest : Quest.values()) {
             if (!quest.getName().equalsIgnoreCase(name)) {
                 continue;
@@ -372,7 +372,7 @@ public class GrindstonePlugin extends Plugin {
         if (!config.diaryGoalsEnabled() || !config.diaryGoalMenu() || original.getIdentifier() != 1) {
             return;
         }
-        String name = goalMenuName(original).replaceFirst("(?i)\\s+diary$", "");
+        String name = getGoalMenuName(original).replaceFirst("(?i)\\s+diary$", "");
         for (AchievementDiaryArea area : AchievementDiaryArea.values()) {
             if (!area.toString().equalsIgnoreCase(name)) {
                 continue;
@@ -404,7 +404,7 @@ public class GrindstonePlugin extends Plugin {
         if (selectedName.isEmpty() || hasMilestoneOption("Track task", original.getTarget())) {
             return;
         }
-        boolean available = CombatAchievementData.tasks(client).values().stream()
+        boolean available = CombatAchievementData.getTasks(client).values().stream()
                 .filter(task -> Text.removeTags(task.getName()).trim().equalsIgnoreCase(selectedName))
                 .anyMatch(task -> canOfferGoal(new CombatAchievementTaskMilestone(task.getId(), task.getName(), task.getDescription())));
         if (!available) {
@@ -418,7 +418,7 @@ public class GrindstonePlugin extends Plugin {
                     if (!hasActivePlayerProfile() || !config.combatAchievementGoalsEnabled() || !config.combatAchievementGoalMenu()) {
                         return;
                     }
-                    for (CombatAchievementData.Task task : CombatAchievementData.tasks(client).values()) {
+                    for (CombatAchievementData.Task task : CombatAchievementData.getTasks(client).values()) {
                         if (Text.removeTags(task.getName()).trim().equalsIgnoreCase(selectedName)) {
                             openGoalEditor(new CombatAchievementTaskMilestone(task.getId(), task.getName(), task.getDescription()));
                             return;
@@ -536,20 +536,20 @@ public class GrindstonePlugin extends Plugin {
             return;
         }
         if (combatBossIds.isEmpty()) {
-            CombatAchievementData.tasksByBoss(client).forEach((boss, tasks) -> {
+            CombatAchievementData.getTasksByBoss(client).forEach((boss, tasks) -> {
                 if (!tasks.isEmpty()) {
-                    combatBossIds.put(bossNameKey(CombatAchievementData.bossName(client, boss)), boss);
+                    combatBossIds.put(getBossNameKey(CombatAchievementData.getBossName(client, boss)), boss);
                 }
             });
         }
         String name = Text.removeTags(original.getTarget().replace("<br>", " ")).trim();
-        Integer boss = combatBossIds.get(bossNameKey(name));
+        Integer boss = combatBossIds.get(getBossNameKey(name));
         if (boss == null && original.getWidget() != null) {
             Set<String> names = new LinkedHashSet<>();
             findBossCardNames(client.getWidget(InterfaceID.CaBosses.BOSSES_LIST), original.getWidget().getBounds(), names);
             if (names.size() == 1) {
                 name = names.iterator().next();
-                boss = combatBossIds.get(bossNameKey(name));
+                boss = combatBossIds.get(getBossNameKey(name));
             }
         }
         if (boss == null) {
@@ -561,7 +561,7 @@ public class GrindstonePlugin extends Plugin {
             return;
         }
         for (MenuEntry entry : client.getMenu().getMenuEntries()) {
-            if ("Track boss achievements".equals(entry.getOption()) && bossNameKey(entry.getTarget()).equals(bossNameKey(selectedName))) {
+            if ("Track boss achievements".equals(entry.getOption()) && getBossNameKey(entry.getTarget()).equals(getBossNameKey(selectedName))) {
                 return;
             }
         }
@@ -576,7 +576,7 @@ public class GrindstonePlugin extends Plugin {
                 });
     }
 
-    private static String bossNameKey(String text) {
+    private static String getBossNameKey(String text) {
         return text == null ? "" : Text.removeTags(text.replace("<br>", " ")).trim().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
     }
 
@@ -586,7 +586,7 @@ public class GrindstonePlugin extends Plugin {
         }
         Rectangle bounds = widget.getBounds();
         String text = widget.getText();
-        if (text != null && card.contains(bounds.getCenterX(), bounds.getCenterY()) && combatBossIds.containsKey(bossNameKey(text))) {
+        if (text != null && card.contains(bounds.getCenterX(), bounds.getCenterY()) && combatBossIds.containsKey(getBossNameKey(text))) {
             names.add(Text.removeTags(text.replace("<br>", " ")).trim().replaceAll("\\s+", " "));
         }
         Widget[] dynamic = widget.getDynamicChildren();
@@ -667,7 +667,7 @@ public class GrindstonePlugin extends Plugin {
         if (collectionSearchTick < 0) {
             CollectionLogPages.refreshReplacements(client);
         }
-        int item = CollectionLogPages.canonicalItemId((Integer) arguments[1]);
+        int item = CollectionLogPages.getCanonicalItemId((Integer) arguments[1]);
         if (item > 0) {
             collectionSearchItems.add(item);
             collectionSearchTick = client.getTickCount();
@@ -746,7 +746,7 @@ public class GrindstonePlugin extends Plugin {
         }
         if (hasActivePlayerProfile() && System.currentTimeMillis() - lastRecurringRefresh >= 30_000) {
             lastRecurringRefresh = System.currentTimeMillis();
-            if (profile.getGoals().stream().anyMatch(goal -> profile.metadata(goal).recurring().isActive() || profile.metadata(goal).getDeadlineAt() > 0)) {
+            if (profile.getGoals().stream().anyMatch(goal -> profile.getMetadata(goal).getRecurring().isActive() || profile.getMetadata(goal).getDeadlineAt() > 0)) {
                 panel.refreshAll();
             }
         }
@@ -857,7 +857,7 @@ public class GrindstonePlugin extends Plugin {
         loaded.getPlayerStorage().captureLoaded(client);
         loaded.getCollectionLogHistory().observe(client.getItemContainer(InventoryID.COLLECTION_TRANSMIT));
         for (Milestone goal : loaded.getGoals()) {
-            loaded.metadata(goal).beginCatchUp();
+            loaded.getMetadata(goal).beginCatchUp();
             if (goal instanceof SessionExperienceMilestone) {
                 ((SessionExperienceMilestone) goal).restart();
             }

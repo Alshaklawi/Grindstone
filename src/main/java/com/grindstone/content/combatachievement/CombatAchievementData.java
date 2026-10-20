@@ -28,7 +28,7 @@ public final class CombatAchievementData {
     public static boolean supportsTask(int task) {
         return task >= 0 && task < COMPLETED.length * 32;
     }
-    public static Map<Integer, Task> tasks(Client client) {
+    public static Map<Integer, Task> getTasks(Client client) {
         if (client == null) {
             return Collections.emptyMap();
         }
@@ -109,7 +109,7 @@ public final class CombatAchievementData {
     };
     private CombatAchievementData() {
     }
-    public static Map<Integer, List<Integer>> tasksByBoss(Client client) {
+    public static Map<Integer, List<Integer>> getTasksByBoss(Client client) {
         Map<Integer, List<Integer>> result = new LinkedHashMap<>();
         for (CombatAchievementTier tier : CombatAchievementTier.values()) {
             EnumComposition tasks = client.getEnum(tier.getTaskEnum());
@@ -134,15 +134,15 @@ public final class CombatAchievementData {
         }
         return result;
     }
-    public static String bossName(Client client, int boss) {
+    public static String getBossName(Client client, int boss) {
         EnumComposition names = client.getEnum(BOSS_NAMES_ENUM);
         String name = names == null ? null : names.getStringValue(boss);
         return name == null || name.isEmpty() || "null".equals(name) ? "Other combat tasks" : name;
     }
-    public static List<Integer> taskIds(Client client, int boss) {
-        return tasksByBoss(client).getOrDefault(boss, Collections.emptyList());
+    public static List<Integer> getTaskIds(Client client, int boss) {
+        return getTasksByBoss(client).getOrDefault(boss, Collections.emptyList());
     }
-    public static List<Integer> taskIds(Client client, CombatAchievementTier tier) {
+    public static List<Integer> getTaskIds(Client client, CombatAchievementTier tier) {
         List<Integer> ids = new ArrayList<>();
         EnumComposition tasks = client.getEnum(tier.getTaskEnum());
         if (tasks == null || tasks.getIntVals() == null) {

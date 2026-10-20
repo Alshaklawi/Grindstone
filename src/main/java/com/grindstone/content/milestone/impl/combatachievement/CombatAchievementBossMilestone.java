@@ -55,8 +55,8 @@ public final class CombatAchievementBossMilestone extends ClientCompletionMilest
     @Override
     public boolean refresh(Client client) {
         if (boss < 0) {
-            for (int candidate : CombatAchievementData.tasksByBoss(client).keySet()) {
-                if (name.equalsIgnoreCase(CombatAchievementData.bossName(client, candidate))) {
+            for (int candidate : CombatAchievementData.getTasksByBoss(client).keySet()) {
+                if (name.equalsIgnoreCase(CombatAchievementData.getBossName(client, candidate))) {
                     boss = candidate;
                     break;
                 }
@@ -66,7 +66,7 @@ public final class CombatAchievementBossMilestone extends ClientCompletionMilest
             }
         }
         if (tasks == null || tasks.isEmpty()) {
-            tasks = CombatAchievementData.taskIds(client, boss);
+            tasks = CombatAchievementData.getTaskIds(client, boss);
         }
         long done = tasks.stream().filter(task -> CombatAchievementData.isComplete(client, task)).count();
         return update(done, tasks.size(), done > 0);

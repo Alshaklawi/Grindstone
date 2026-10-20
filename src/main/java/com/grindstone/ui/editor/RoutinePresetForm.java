@@ -71,10 +71,10 @@ public final class RoutinePresetForm extends JPanel {
         }
         return selected;
     }
-    public MilestoneMetadata metadata(Milestone goal, long now) {
+    public MilestoneMetadata getMetadata(Milestone goal, long now) {
         Row row = rows.stream().filter(value -> value.goal == goal).findFirst().orElseThrow(IllegalArgumentException::new);
         MilestoneMetadata metadata = new MilestoneMetadata();
-        metadata.recurring().configure((RepeatSchedule) schedule.getSelectedItem(), ((Number) row.target.getValue()).longValue(), now);
+        metadata.getRecurring().configure((RepeatSchedule) schedule.getSelectedItem(), ((Number) row.target.getValue()).longValue(), now);
         return metadata;
     }
     /**

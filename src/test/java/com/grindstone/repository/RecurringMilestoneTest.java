@@ -40,10 +40,10 @@ public class RecurringMilestoneTest {
     @Test
     public void usesUtcCalendarBoundaries() {
         long now = time("2026-10-21T12:00:00Z");
-        assertEquals(time("2026-10-21T00:00:00Z"), RepeatSchedule.DAILY.start(now));
-        assertEquals(time("2026-10-19T00:00:00Z"), RepeatSchedule.WEEKLY.start(now));
-        assertEquals(time("2026-11-01T00:00:00Z"), RepeatSchedule.MONTHLY.next(RepeatSchedule.MONTHLY.start(now)));
-        assertEquals(time("2028-03-01T00:00:00Z"), RepeatSchedule.MONTHLY.next(time("2028-02-01T00:00:00Z")));
+        assertEquals(time("2026-10-21T00:00:00Z"), RepeatSchedule.DAILY.getPeriodStart(now));
+        assertEquals(time("2026-10-19T00:00:00Z"), RepeatSchedule.WEEKLY.getPeriodStart(now));
+        assertEquals(time("2026-11-01T00:00:00Z"), RepeatSchedule.MONTHLY.getNextReset(RepeatSchedule.MONTHLY.getPeriodStart(now)));
+        assertEquals(time("2028-03-01T00:00:00Z"), RepeatSchedule.MONTHLY.getNextReset(time("2028-02-01T00:00:00Z")));
     }
     @Test
     public void resetsManualProgressAndKeepsObservedCompletion() {
@@ -66,7 +66,7 @@ public class RecurringMilestoneTest {
         GrindstoneProfile profile = TestProfiles.populated(42);
         CustomMilestone goal = new CustomMilestone("Daily", "", MilestoneCategory.OTHER, 2, 5);
         profile.replace(Collections.singletonList(goal));
-        RecurringMilestone recurring = profile.metadata(goal).recurring();
+        RecurringMilestone recurring = profile.getMetadata(goal).getRecurring();
         long now = time("2026-10-19T10:00:00Z");
         recurring.configure(RepeatSchedule.DAILY, 5, now);
         recurring.observe(goal, now);
@@ -74,7 +74,7 @@ public class RecurringMilestoneTest {
         assertEquals(2, recurring.getHistory().size());
         assertEquals("Not observed", recurring.getHistory().get(1).getOutcome());
         GrindstoneProfile loaded = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
-        RecurringMilestone restored = loaded.metadata(loaded.getGoals().get(0)).recurring();
+        RecurringMilestone restored = loaded.getMetadata(loaded.getGoals().get(0)).getRecurring();
         assertEquals(RepeatSchedule.DAILY, restored.getSchedule());
         assertEquals(2, restored.getHistory().size());
         assertEquals(recurring.getBaselineAt(), restored.getBaselineAt());
@@ -125,13 +125,13 @@ public class RecurringMilestoneTest {
         GrindstoneProfile profile = TestProfiles.populated(42);
         CustomMilestone goal = new CustomMilestone("Daily", "", MilestoneCategory.OTHER, 2, 5);
         profile.replace(Collections.singletonList(goal));
-        RecurringMilestone recurring = profile.metadata(goal).recurring();
+        RecurringMilestone recurring = profile.getMetadata(goal).getRecurring();
         long now = time("2026-10-19T10:00:00Z");
         recurring.configure(RepeatSchedule.DAILY, 5, now);
         recurring.observe(goal, now);
         recurring.observe(goal, time("2026-10-20T10:00:00Z"));
         GrindstoneProfile restored = TestProfiles.REPOSITORY.importBackup(TestProfiles.REPOSITORY.exportBackup(profile), 99);
-        RecurringMilestone transferred = restored.metadata(restored.getGoals().get(0)).recurring();
+        RecurringMilestone transferred = restored.getMetadata(restored.getGoals().get(0)).getRecurring();
         assertEquals(RepeatSchedule.DAILY, transferred.getSchedule());
         assertEquals(5, transferred.getTarget());
         assertEquals(0, transferred.getBaselineAt());

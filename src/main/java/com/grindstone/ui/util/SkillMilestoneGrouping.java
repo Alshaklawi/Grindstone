@@ -20,7 +20,7 @@ public final class SkillMilestoneGrouping {
     private SkillMilestoneGrouping() {
     }
 
-    public static Skill skill(Milestone goal) {
+    public static Skill getSkill(Milestone goal) {
         if (goal instanceof SessionExperienceMilestone) {
             SessionExperienceMilestone session = (SessionExperienceMilestone) goal;
             return session.isTotal() ? null : session.getSkill();
@@ -31,7 +31,7 @@ public final class SkillMilestoneGrouping {
     public static <T> List<List<T>> group(List<T> rows, Function<T, Milestone> goal) {
         Map<Object, List<T>> groups = new LinkedHashMap<>();
         for (T row : rows) {
-            Skill skill = skill(goal.apply(row));
+            Skill skill = getSkill(goal.apply(row));
             groups.computeIfAbsent(skill == null ? new Object() : skill, key -> new ArrayList<>()).add(row);
         }
         return new ArrayList<>(groups.values());

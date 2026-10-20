@@ -116,7 +116,7 @@ public final class MilestoneCreationDialog extends JDialog {
     }
 
     private void fitToForm() {
-        Rectangle bounds = DialogPlacement.usableBounds(getOwner());
+        Rectangle bounds = DialogPlacement.getUsableBounds(getOwner());
         Dimension desired = form.getPreferredSize();
         scroll.setPreferredSize(new Dimension(desired.width, Math.min(desired.height, Math.max(180, bounds.height - 230))));
         pack();
@@ -128,7 +128,7 @@ public final class MilestoneCreationDialog extends JDialog {
         try {
             Milestone candidate = form.createGoal();
             if (form.isReviewEnabled()) {
-                JTextArea preview = new JTextArea(form.reviewText(candidate), 12, 38);
+                JTextArea preview = new JTextArea(form.getReviewText(candidate), 12, 38);
                 preview.setFont(UiTypography.BODY);
                 preview.setEditable(false);
                 preview.setLineWrap(true);

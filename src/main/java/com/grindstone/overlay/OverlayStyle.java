@@ -74,7 +74,7 @@ public final class OverlayStyle {
         return text.substring(0, end) + "...";
     }
 
-    public static String countdown(long resetAt, long now) {
+    public static String formatCountdown(long resetAt, long now) {
         long seconds = Math.max(0, (resetAt - now + 999) / 1000);
         long days = seconds / 86_400;
         long hours = seconds / 3600 % 24;

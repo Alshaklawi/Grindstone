@@ -15,12 +15,12 @@ import static org.junit.Assert.*;
 public class ItemVariantsTest {
     @Test
     public void resolvesNotedAndPlaceholderIdsToTheirNormalItem() {
-        assertEquals(ItemID.DRAGON_PICKAXE, ItemVariants.normalId(100_001, 1, ItemID.DRAGON_PICKAXE, -1, -1));
-        assertEquals(ItemID.DRAGON_PICKAXE, ItemVariants.normalId(100_002, -1, -1, 1, ItemID.DRAGON_PICKAXE));
-        assertEquals(ItemID.DRAGON_PICKAXE, ItemVariants.normalId(ItemID.DRAGON_PICKAXE, -1, 100_001, -1, 100_002));
-        assertEquals(-1, ItemVariants.normalId(100_001, 1, -1, -1, -1));
-        assertEquals(-1, ItemVariants.normalId(100_002, -1, -1, 1, -1));
-        assertEquals(-1, ItemVariants.normalId(-1, -1, -1, -1, -1));
+        assertEquals(ItemID.DRAGON_PICKAXE, ItemVariants.getNormalId(100_001, 1, ItemID.DRAGON_PICKAXE, -1, -1));
+        assertEquals(ItemID.DRAGON_PICKAXE, ItemVariants.getNormalId(100_002, -1, -1, 1, ItemID.DRAGON_PICKAXE));
+        assertEquals(ItemID.DRAGON_PICKAXE, ItemVariants.getNormalId(ItemID.DRAGON_PICKAXE, -1, 100_001, -1, 100_002));
+        assertEquals(-1, ItemVariants.getNormalId(100_001, 1, -1, -1, -1));
+        assertEquals(-1, ItemVariants.getNormalId(100_002, -1, -1, 1, -1));
+        assertEquals(-1, ItemVariants.getNormalId(-1, -1, -1, -1, -1));
     }
 
     @Test
@@ -28,10 +28,10 @@ public class ItemVariantsTest {
         PlayerItemStorage storage = new PlayerItemStorage();
         int note = 100_001;
         int placeholder = 100_002;
-        storage.replace(InventoryID.INV, new Item[]{new Item(ItemID.DRAGON_PICKAXE, 2), new Item(note, 3)}, id -> ItemVariants.normalId(id, id == note ? 1 : -1, ItemID.DRAGON_PICKAXE, -1, -1));
+        storage.replace(InventoryID.INV, new Item[]{new Item(ItemID.DRAGON_PICKAXE, 2), new Item(note, 3)}, id -> ItemVariants.getNormalId(id, id == note ? 1 : -1, ItemID.DRAGON_PICKAXE, -1, -1));
         storage.replace(InventoryID.BANK, new Item[]{new Item(ItemID.DRAGON_PICKAXE, 4), new Item(placeholder, 1)}, id -> id == placeholder ? -1 : id);
-        assertEquals(9, storage.quantity(ItemID.DRAGON_PICKAXE));
-        assertEquals(0, storage.quantity(note));
-        assertEquals(0, storage.quantity(placeholder));
+        assertEquals(9, storage.getQuantity(ItemID.DRAGON_PICKAXE));
+        assertEquals(0, storage.getQuantity(note));
+        assertEquals(0, storage.getQuantity(placeholder));
     }
 }

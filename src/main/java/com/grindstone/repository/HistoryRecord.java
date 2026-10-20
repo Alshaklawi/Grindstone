@@ -42,24 +42,24 @@ public final class HistoryRecord {
     public boolean matches(String query, RepeatSchedule repeat, long from, long to) {
         return (repeat == null || schedule == repeat) && (query == null || (title + " " + outcome).toLowerCase(Locale.ROOT).contains(query.toLowerCase(Locale.ROOT).trim())) && (end == 0 || end > from) && start < to;
     }
-    public static List<HistoryRecord> snapshot(GrindstoneProfile profile, Function<Milestone, String> title) {
+    public static List<HistoryRecord> createSnapshot(GrindstoneProfile profile, Function<Milestone, String> title) {
         List<HistoryRecord> records = new ArrayList<>();
         for (Milestone goal : profile.getGoals()) {
-            MilestoneMetadata metadata = profile.metadata(goal);
+            MilestoneMetadata metadata = profile.getMetadata(goal);
             String name = title.apply(goal);
             append(records, metadata, name, metadata.getId());
         }
-        for (GrindstoneProfile.ArchivedHistory archived : profile.archivedHistory()) {
+        for (GrindstoneProfile.ArchivedHistory archived : profile.getArchivedHistory()) {
             append(records, archived.getMetadata(), archived.getTitle() + " (archived)", "");
         }
         records.sort(Comparator.comparingLong((HistoryRecord value) -> value.start).reversed());
         return records;
     }
     private static void append(List<HistoryRecord> records, MilestoneMetadata metadata, String name, String id) {
-        RecurringMilestone recurring = metadata.recurring();
+        RecurringMilestone recurring = metadata.getRecurring();
         if (recurring.isActive()) {
             long start = recurring.getStart();
-            records.add(new HistoryRecord(id, name, recurring.getSchedule(), start, recurring.getBaselineAt() == 0 ? 0 : recurring.getSchedule().next(start), recurring.getBaselineAt() == 0 ? null : recurring.getProgress(), recurring.getTarget(), recurring.getBaselineAt() == 0 ? "Waiting for data" : recurring.getCompletedAt() > 0 ? "Completed · current period" : "Current period", recurring.getBaselineAt(), recurring.getLastObservedAt(), recurring.getCompletedAt(), false));
+            records.add(new HistoryRecord(id, name, recurring.getSchedule(), start, recurring.getBaselineAt() == 0 ? 0 : recurring.getSchedule().getNextReset(start), recurring.getBaselineAt() == 0 ? null : recurring.getProgress(), recurring.getTarget(), recurring.getBaselineAt() == 0 ? "Waiting for data" : recurring.getCompletedAt() > 0 ? "Completed · current period" : "Current period", recurring.getBaselineAt(), recurring.getLastObservedAt(), recurring.getCompletedAt(), false));
         }
         for (RecurringMilestone.Period period : recurring.getHistory()) {
             records.add(new HistoryRecord(id, name, period.getSchedule(), period.getStart(), period.getEnd(), period.getBaselineAt() == 0 ? null : period.getProgress(), period.getTarget(), period.getOutcome(), period.getBaselineAt(), period.getLastObservedAt(), period.getCompletedAt(), false));

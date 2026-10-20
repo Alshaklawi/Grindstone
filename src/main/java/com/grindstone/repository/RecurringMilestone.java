@@ -109,9 +109,9 @@ public final class RecurringMilestone {
         if (!isActive() || !supports(goal) || now <= 0 || now < lastObservedAt) {
             return;
         }
-        long periodStart = schedule.start(now);
+        long periodStart = schedule.getPeriodStart(now);
         if (baselineAt > 0 && periodStart > start) {
-            long previousEnd = schedule.next(start);
+            long previousEnd = schedule.getNextReset(start);
             archive(previousEnd, completedAt > 0 ? "Completed" : "Incomplete · last observed");
             if (periodStart > previousEnd) {
                 append(new Period(schedule, previousEnd, periodStart, 0, target, 0, 0, 0, "Not observed"));

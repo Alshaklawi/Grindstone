@@ -28,13 +28,13 @@ public class PossessedItemMilestoneTest {
     public void snapshotHeaderUpdatesWithoutOpeningTheBankAndResetsOnLogout() {
         Instant now = Instant.parse("2026-10-19T12:34:56Z");
         PlayerItemStorage storage = new PlayerItemStorage(Clock.fixed(now, ZoneOffset.UTC));
-        assertEquals("Last snapshot: —", storage.snapshotLabel());
+        assertEquals("Last snapshot: —", storage.getSnapshotLabel());
         put(storage, InventoryID.INV, ItemID.COINS, 10);
         String time = DateTimeFormatter.ofPattern("HH:mm:ss z", Locale.ROOT).withZone(ZoneId.systemDefault()).format(now);
-        assertEquals("Last snapshot: " + time, storage.snapshotLabel());
+        assertEquals("Last snapshot: " + time, storage.getSnapshotLabel());
         assertFalse(storage.hasBankSnapshot());
         storage.reset();
-        assertEquals("Last snapshot: —", storage.snapshotLabel());
+        assertEquals("Last snapshot: —", storage.getSnapshotLabel());
     }
 
     @Test
@@ -43,8 +43,8 @@ public class PossessedItemMilestoneTest {
         put(storage, InventoryID.BANK, ItemID.COINS, 2_000_000_000);
         put(storage, InventoryID.INV, ItemID.COINS, 1_000_000_000);
         put(storage, InventoryID.LOOTING_BAG, ItemID.COINS, 500_000_000);
-        assertEquals(3_500_000_000L, storage.quantity(ItemID.COINS));
-        assertEquals(3, storage.breakdown(ItemID.COINS).size());
+        assertEquals(3_500_000_000L, storage.getQuantity(ItemID.COINS));
+        assertEquals(3, storage.getBreakdown(ItemID.COINS).size());
     }
     @Test
     public void equipmentAndSpecializedStorageAreIncluded() {
@@ -58,7 +58,7 @@ public class PossessedItemMilestoneTest {
         put(storage, InventoryID.PREPOT_DEVICE_INV, ItemID.DRAGON_PICKAXE, 7);
         put(storage, InventoryID.DEATH_PERMANENT, ItemID.DRAGON_PICKAXE, 8);
         put(storage, InventoryID.SAILING_BOAT_1_CARGOHOLD, ItemID.DRAGON_PICKAXE, 9);
-        assertEquals(45, storage.quantity(ItemID.DRAGON_PICKAXE));
+        assertEquals(45, storage.getQuantity(ItemID.DRAGON_PICKAXE));
     }
     @Test
     public void snapshotsReplaceRatherThanAccumulateAndTransfersKeepTheTotal() {
@@ -67,9 +67,9 @@ public class PossessedItemMilestoneTest {
         put(storage, InventoryID.INV, ItemID.COINS, 10);
         put(storage, InventoryID.BANK, ItemID.COINS, 90);
         put(storage, InventoryID.INV, ItemID.COINS, 20);
-        assertEquals(110, storage.quantity(ItemID.COINS));
+        assertEquals(110, storage.getQuantity(ItemID.COINS));
         storage.replace(InventoryID.BANK, new Item[0], id -> id);
-        assertEquals(20, storage.quantity(ItemID.COINS));
+        assertEquals(20, storage.getQuantity(ItemID.COINS));
     }
     @Test
     public void notesAreCombinedAndPlaceholdersOrInvalidSlotsAreNotCounted() {
@@ -77,9 +77,9 @@ public class PossessedItemMilestoneTest {
         int note = 100_001;
         int placeholder = 100_002;
         storage.replace(InventoryID.BANK, new Item[]{ new Item(ItemID.DRAGON_PICKAXE, 2), new Item(note, 3), new Item(placeholder, 5), new Item(-1, 10), new Item(ItemID.COINS, 0), null}, id -> id == note ? ItemID.DRAGON_PICKAXE : id == placeholder ? -1 : id);
-        assertEquals(5, storage.quantity(ItemID.DRAGON_PICKAXE));
-        assertEquals(0, storage.quantity(note));
-        assertEquals(0, storage.quantity(placeholder));
+        assertEquals(5, storage.getQuantity(ItemID.DRAGON_PICKAXE));
+        assertEquals(0, storage.getQuantity(note));
+        assertEquals(0, storage.getQuantity(placeholder));
     }
     @Test
     public void collectionLogAndSharedStorageDoNotInventOwnedItems() {
@@ -88,7 +88,7 @@ public class PossessedItemMilestoneTest {
         put(storage, InventoryID.INV_GROUP_TEMP, ItemID.COINS, 1000);
         put(storage, InventoryID.RAIDS_SHAREDSTORAGE, ItemID.COINS, 1000);
         put(storage, InventoryID.INV_PLAYER_SNAPSHOT, ItemID.COINS, 1000);
-        assertEquals(0, storage.quantity(ItemID.COINS));
+        assertEquals(0, storage.getQuantity(ItemID.COINS));
     }
     @Test
     public void coinCoffersUseCorrectUnitsAndAreNotAccumulatedTwice() {
@@ -100,9 +100,9 @@ public class PossessedItemMilestoneTest {
         IntUnaryOperator varps = id -> id == VarPlayerID.SCAR_ESSENCEMINE_COFFER ? 300 : 0;
         storage.refreshCoinValues(varbits, varps);
         storage.refreshCoinValues(varbits, varps);
-        assertEquals(15_600, storage.quantity(ItemID.COINS));
+        assertEquals(15_600, storage.getQuantity(ItemID.COINS));
         storage.refreshCoinValues(id -> -1, id -> -1);
-        assertEquals(0, storage.quantity(ItemID.COINS));
+        assertEquals(0, storage.getQuantity(ItemID.COINS));
     }
     @Test
     public void goalCanCompleteThenRegressWhenThePlayerSpendsItems() {
@@ -128,15 +128,15 @@ public class PossessedItemMilestoneTest {
         IntUnaryOperator values = id -> id == VarbitID.RUNE_POUCH_TYPE_1 ? 1
                 : id == VarbitID.RUNE_POUCH_QUANTITY_1 ? 150 : 0;
         storage.refreshRuneValues(values, type -> ItemID.DRAGON_PICKAXE);
-        assertEquals(0, storage.quantity(ItemID.DRAGON_PICKAXE));
+        assertEquals(0, storage.getQuantity(ItemID.DRAGON_PICKAXE));
         put(storage, InventoryID.INV, ItemID.BH_RUNE_POUCH, 1);
         storage.refreshRuneValues(values, type -> ItemID.DRAGON_PICKAXE);
-        assertEquals(150, storage.quantity(ItemID.DRAGON_PICKAXE));
+        assertEquals(150, storage.getQuantity(ItemID.DRAGON_PICKAXE));
         storage.refreshRuneValues(values, type -> ItemID.DRAGON_PICKAXE);
-        assertEquals(150, storage.quantity(ItemID.DRAGON_PICKAXE));
+        assertEquals(150, storage.getQuantity(ItemID.DRAGON_PICKAXE));
         storage.replace(InventoryID.INV, new Item[0], id -> id);
         storage.refreshRuneValues(values, type -> ItemID.DRAGON_PICKAXE);
-        assertEquals(0, storage.quantity(ItemID.DRAGON_PICKAXE));
+        assertEquals(0, storage.getQuantity(ItemID.DRAGON_PICKAXE));
     }
     @Test
     public void profileSavesOnlyTheTargetAndKeepsDifferentItemsSeparate() {
@@ -153,7 +153,7 @@ public class PossessedItemMilestoneTest {
         PossessedItemMilestone saved = (PossessedItemMilestone) restored.getGoals().get(0);
         assertEquals(3_000_000_000L, saved.getAmount());
         assertEquals(0, saved.getProgressCurrent());
-        assertEquals(0, restored.getPlayerStorage().quantity(ItemID.COINS));
+        assertEquals(0, restored.getPlayerStorage().getQuantity(ItemID.COINS));
     }
     @Test
     public void unknownBankIsExplicitAndSnapshotsResetBetweenLogins() {
@@ -162,7 +162,7 @@ public class PossessedItemMilestoneTest {
         put(storage, InventoryID.BANK, ItemID.COINS, 100);
         assertFalse(storage.describe(ItemID.COINS).contains("Open your bank"));
         storage.reset();
-        assertEquals(0, storage.quantity(ItemID.COINS));
+        assertEquals(0, storage.getQuantity(ItemID.COINS));
         assertTrue(storage.describe(ItemID.COINS).contains("Open your bank"));
     }
     @Test(expected = IllegalArgumentException.class)
