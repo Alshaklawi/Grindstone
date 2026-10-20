@@ -956,7 +956,8 @@ public class GrindstonePanel extends PluginPanel {
             }
             Map<String, String> snapshotStatuses = new LinkedHashMap<>();
             Map<String, String> snapshotTips = new LinkedHashMap<>();
-            prepareSnapshotStatuses(currentProfile, snapshotStatuses, snapshotTips);
+            Set<String> missingSnapshots = new LinkedHashSet<>();
+            prepareSnapshotStatuses(currentProfile, snapshotStatuses, snapshotTips, missingSnapshots);
             long dueCount = currentProfile == null || !config.showDeadlineReminders() ? 0 : currentProfile.getGoals().stream().filter(goal -> {
                 MilestoneMetadata metadata = currentProfile.getMetadata(goal);
                 return metadata.isDeadlineReminder() && metadata.getDeadlineAt() > 0 && metadata.getDeadlineAt() - System.currentTimeMillis() <= 86_400_000L && (metadata.getRecurring().isActive() ? metadata.getRecurring().getStatus() : goal.getStatus()) != MilestoneStatus.COMPLETE;
@@ -976,7 +977,7 @@ public class GrindstonePanel extends PluginPanel {
                     return;
                 }
 
-                snapshots.updateSnapshots(snapshotStatuses, snapshotTips);
+                snapshots.updateSnapshots(snapshotStatuses, snapshotTips, missingSnapshots);
                 snapshots.setVisible(config.showUpdateStatus());
                 catchUpText = capturedCatchUp;
                 catchUpButton.setText("Since last seen - " + catchUp.size() + " updated");
@@ -993,12 +994,15 @@ public class GrindstonePanel extends PluginPanel {
         });
     }
 
-    private void prepareSnapshotStatuses(GrindstoneProfile active, Map<String, String> statuses, Map<String, String> tips) {
+    private void prepareSnapshotStatuses(GrindstoneProfile active, Map<String, String> statuses, Map<String, String> tips, Set<String> missing) {
         Map<PlayerStorageSource, Instant> seen = active == null ? Collections.emptyMap() : active.getPlayerStorage().getLastSeen();
         DateTimeFormatter time = DateTimeFormatter.ofPattern("MMM d, HH:mm").withZone(ZoneId.systemDefault());
         for (PlayerStorageSource source : new PlayerStorageSource[]{PlayerStorageSource.INVENTORY, PlayerStorageSource.EQUIPMENT, PlayerStorageSource.BANK}) {
             Instant captured = seen.get(source);
-            statuses.put(source.toString(), captured == null ? "Not loaded" : "Captured");
+            statuses.put(source.toString(), captured == null ? "Not loaded" : time.format(captured));
+            if (captured == null) {
+                missing.add(source.toString());
+            }
             String refresh = source == PlayerStorageSource.BANK ? "Open your bank to refresh its contents." : "Updated automatically while logged in.";
             tips.put(source.toString(), "<html>" + refresh + "<br>" + (captured == null ? "No data captured this login." : "Captured " + time.format(captured) + ".") + "<br>Only this character's known contents are counted.</html>");
         }
@@ -1007,11 +1011,15 @@ public class GrindstonePanel extends PluginPanel {
         int total = live && client.getVarpValue(VarPlayerID.COLLECTION_COUNT_MAX) > 0 ? client.getVarpValue(VarPlayerID.COLLECTION_COUNT) : -1;
         boolean complete = active != null && active.getCollectionLogHistory().hasSnapshot();
         boolean current = complete && (total < 0 || known == total);
-        String logStatus = total >= 0 && known > total ? known + " known · mismatch" : current ? known + " unlocks" : known > 0 || total >= 0 ? known + (total < 0 ? " known" : " / " + total) + " · partial" : "Not loaded";
+        String logStatus = total >= 0 && known > total ? known + " known · mismatch" : current ? time.format(Instant.ofEpochMilli(active.getCollectionLogHistory().getSnapshotAt())) : known > 0 || total >= 0 ? known + (total < 0 ? " known" : " / " + total) + " · partial" : "Not loaded";
         statuses.put("Collection log", logStatus);
+        if (!current) {
+            missing.add("Collection log");
+        }
         String captured = complete ? "<br>Last full capture: " + time.format(Instant.ofEpochMilli(active.getCollectionLogHistory().getSnapshotAt())) + "." : "<br>No full snapshot yet; collection milestones remain unavailable.";
-        tips.put("Collection log", "<html>Open your in-game collection log to capture available unlocks.<br>" + (current ? "Full snapshot verified against the game's total." : "Incomplete data: " + known + " known unlocks" + (total < 0 ? "." : " out of " + total + ".") + "<br>The game may not expose every unlock just by opening the log.<br>Its Search interface can expose further collection data.") + captured + "<br>Reopen after playing on another device.</html>");
+        tips.put("Collection log", "<html>Open your in-game collection log to capture available unlocks.<br>" + (current ? "Full snapshot verified: " + known + " unlocks." : "Incomplete data: " + known + " known unlocks" + (total < 0 ? "." : " out of " + total + ".") + "<br>The game may not expose every unlock just by opening the log.<br>Its Search interface can expose further collection data.") + captured + "<br>Reopen after playing on another device.</html>");
         int loaded = 0;
+        Instant latestOther = null;
         StringBuilder other = new StringBuilder("<html>Open each storage in game to refresh it. Captures last for this login.");
         for (PlayerStorageSource source : PlayerStorageSource.values()) {
             if (source == PlayerStorageSource.INVENTORY || source == PlayerStorageSource.EQUIPMENT || source == PlayerStorageSource.BANK) {
@@ -1020,10 +1028,16 @@ public class GrindstonePanel extends PluginPanel {
             Instant capturedAt = seen.get(source);
             if (capturedAt != null) {
                 loaded++;
+                if (latestOther == null || capturedAt.isAfter(latestOther)) {
+                    latestOther = capturedAt;
+                }
             }
             other.append("<br>").append(HtmlUtils.escape(source.toString())).append(": ").append(capturedAt == null ? "Not loaded" : time.format(capturedAt));
         }
-        statuses.put("Other storage", loaded + " captured");
+        statuses.put("Other storage", latestOther == null ? "Not loaded" : time.format(latestOther));
+        if (loaded < PlayerStorageSource.values().length - 3) {
+            missing.add("Other storage");
+        }
         tips.put("Other storage", other.append("</html>").toString());
     }
 
