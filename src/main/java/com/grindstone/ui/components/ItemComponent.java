@@ -1,6 +1,8 @@
 package com.grindstone.ui.components;
 
 import java.awt.AlphaComposite;
+import java.awt.BasicStroke;
+import java.awt.RenderingHints;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -156,13 +158,14 @@ public class ItemComponent extends JPanel {
         super.paintComponent(graphics);
         Graphics2D g = (Graphics2D) graphics.create();
         try {
-            g.setColor(hovered ? ColorScheme.DARKER_GRAY_HOVER_COLOR : ColorScheme.DARKER_GRAY_COLOR);
-            g.fillRect(0, 0, getWidth(), getHeight());
-            g.setColor(hovered ? ColorScheme.LIGHT_GRAY_COLOR : Boolean.TRUE.equals(obtained) ? ColorScheme.PROGRESS_COMPLETE_COLOR : borderColor);
-            g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g.setColor(hovered ? ColorScheme.DARKER_GRAY_HOVER_COLOR : Boolean.TRUE.equals(obtained) ? new Color(36, 47, 39) : ColorScheme.DARKER_GRAY_COLOR);
+            g.fillRoundRect(0, 0, getWidth(), getHeight(), 6, 6);
+            g.setColor(hovered ? ColorScheme.LIGHT_GRAY_COLOR : Boolean.TRUE.equals(obtained) ? new Color(65, 87, 69) : borderColor);
+            g.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 6, 6);
             if (image != null) {
                 if (Boolean.FALSE.equals(obtained) && !hovered) {
-                    g.setComposite(AlphaComposite.SrcOver.derive(0.35f));
+                    g.setComposite(AlphaComposite.SrcOver.derive(0.55f));
                 }
                 int width = Math.min(IMAGE_WIDTH, image.getWidth());
                 int height = Math.min(IMAGE_HEIGHT, image.getHeight());
@@ -170,13 +173,14 @@ public class ItemComponent extends JPanel {
                 g.setComposite(AlphaComposite.SrcOver);
             }
             if (Boolean.TRUE.equals(obtained)) {
-                g.setColor(ColorScheme.DARKER_GRAY_COLOR);
-                g.fillRect(getWidth() - 13, getHeight() - 11, 11, 9);
-                g.setColor(ColorScheme.PROGRESS_COMPLETE_COLOR);
-                int x = getWidth() - 11;
-                int y = getHeight() - 7;
-                g.drawLine(x, y, x + 2, y + 2);
-                g.drawLine(x + 2, y + 2, x + 7, y - 3);
+                int x = getWidth() - 14;
+                int y = getHeight() - 14;
+                g.setColor(new Color(28, 41, 31));
+                g.fillOval(x, y, 12, 12);
+                g.setColor(new Color(134, 190, 139));
+                g.setStroke(new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                g.drawLine(x + 3, y + 6, x + 5, y + 8);
+                g.drawLine(x + 5, y + 8, x + 9, y + 4);
             }
             if (amount > 1) {
                 g.setFont(AMOUNT_FONT);
