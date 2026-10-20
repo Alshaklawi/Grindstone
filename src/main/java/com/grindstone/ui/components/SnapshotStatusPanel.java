@@ -40,10 +40,10 @@ public final class SnapshotStatusPanel extends JPanel {
     public void updateSnapshots(Map<String, String> statuses, Map<String, String> tips) {
         rows.removeAll();
         statuses.forEach((name, status) -> {
-            JPanel row = new JPanel(new BorderLayout(4, 0));
+            JPanel row = new JPanel(new BorderLayout(3, 0));
             row.setOpaque(false);
             row.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
-            row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
+            row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
             JLabel label = new JLabel(name);
             label.setFont(UiTypography.META);
             label.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
@@ -53,11 +53,17 @@ public final class SnapshotStatusPanel extends JPanel {
             value.setForeground("Not loaded".equals(status) ? ColorScheme.LIGHT_GRAY_COLOR : Color.WHITE);
             value.setToolTipText(tips.get(name));
             row.add(value, BorderLayout.CENTER);
-            JButton info = new JButton("i");
-            info.setFont(UiTypography.META);
-            info.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-            info.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 2));
-            info.setContentAreaFilled(false);
+            JButton info = new JButton("?");
+            info.setFont(UiTypography.BODY);
+            info.setForeground(new Color(255, 198, 80));
+            info.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+            info.setBorder(BorderFactory.createLineBorder(new Color(120, 110, 80)));
+            info.setPreferredSize(new Dimension(20, 20));
+            info.setMinimumSize(new Dimension(20, 20));
+            info.setMaximumSize(new Dimension(20, 20));
+            info.setContentAreaFilled(true);
+            info.setOpaque(true);
+            info.setRolloverEnabled(true);
             info.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             info.setToolTipText(tips.get(name));
             info.getAccessibleContext().setAccessibleName(name + " snapshot information");
