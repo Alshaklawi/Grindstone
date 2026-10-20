@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Getter;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
 import net.runelite.api.gameval.InventoryID;
@@ -18,6 +19,22 @@ import net.runelite.api.gameval.InventoryID;
 public final class CollectionLogHistory {
     private static final DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm z");
     private final Map<Integer, Long> firstSeen = new HashMap<>();
+    @Getter
+    private long snapshotAt;
+    @Getter
+    private int snapshotCount;
+
+    public boolean hasSnapshot() {
+        return snapshotAt > 0;
+    }
+
+    public void restoreSnapshot(long at, int count) {
+        if (at <= 0 || count < 0 || count > firstSeen.size()) {
+            throw new IllegalArgumentException("Invalid collection-log snapshot.");
+        }
+        snapshotAt = at;
+        snapshotCount = count;
+    }
 
     public void observe(ItemContainer container) {
         if (container == null || container.getId() != InventoryID.COLLECTION_TRANSMIT) {

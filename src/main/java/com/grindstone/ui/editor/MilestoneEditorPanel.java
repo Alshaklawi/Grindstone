@@ -107,6 +107,17 @@ public final class MilestoneEditorPanel extends JPanel {
     private final ItemManager itemManager;
     private final boolean editing;
     private boolean updating;
+    private boolean collectionSnapshotAvailable = true;
+
+    public void setCollectionSnapshotAvailable(boolean available) {
+        collectionSnapshotAvailable = available;
+        rebuild();
+    }
+
+    private boolean needsCollectionSnapshot() {
+        int kind = type.getSelectedIndex();
+        return (kind == 6 || kind == 7 || kind == 22) && !collectionSnapshotAvailable;
+    }
     private Map<Milestone, RepeatSchedule> existingGoals;
     private final Map<Integer, Map<String, Supplier<Milestone>>> completionChoices;
 
@@ -207,6 +218,16 @@ public final class MilestoneEditorPanel extends JPanel {
         skillButtons.clear();
         int kind = type.getSelectedIndex();
         repeatForm.setFixedTarget(null);
+        if (needsCollectionSnapshot()) {
+            repeatForm.setVisible(false);
+            setHint("A collection-log snapshot is required. Close this dialog, open your in-game collection log and click Search with an empty search to capture all unlocks. Then reopen Add milestone.");
+            body.add(hint);
+            notifyReadiness();
+            revalidate();
+            repaint();
+            firePropertyChange("formLayout", false, true);
+            return;
+        }
         if (kind == 21) {
             checklistForm.setAlignmentX(LEFT_ALIGNMENT);
             body.add(checklistForm);
@@ -468,6 +489,9 @@ public final class MilestoneEditorPanel extends JPanel {
     }
 
     public boolean isReady() {
+        if (needsCollectionSnapshot()) {
+            return false;
+        }
         return type.getSelectedIndex() == 7 || type.getSelectedIndex() == 16 ? itemPicker.hasSelection()
                 : type.getSelectedIndex() == 8 || type.getSelectedIndex() == 21 || subject.getSelectedValue() != null;
     }
@@ -477,6 +501,9 @@ public final class MilestoneEditorPanel extends JPanel {
     }
 
     public Milestone createGoal() throws ParseException {
+        if (needsCollectionSnapshot()) {
+            throw new IllegalArgumentException("Capture a full collection-log snapshot before adding collection milestones.");
+        }
         if (type.getSelectedIndex() == 21) {
             repeatForm.commit();
             return checklistForm.read();

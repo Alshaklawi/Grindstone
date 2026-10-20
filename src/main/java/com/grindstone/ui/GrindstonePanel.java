@@ -405,6 +405,15 @@ public class GrindstonePanel extends PluginPanel {
         JMenuItem allCollectionPages = new JMenuItem("Add all collection-log pages...");
         allCollectionPages.setToolTipText("Read every page from the client's five collection-log tabs and add missing page milestones.");
         allCollectionPages.addActionListener(event -> addAllCollectionPages());
+        JMenuItem collectionSnapshot = new JMenuItem("Collection-log snapshot...");
+        collectionSnapshot.addActionListener(event -> {
+            GrindstoneProfile active = profile;
+            clientThread.invokeLater(() -> {
+                String status = active == null ? "Log in to capture your collection log." : active.getCollectionLogHistory().hasSnapshot() ? "Last full snapshot: " + Instant.ofEpochMilli(active.getCollectionLogHistory().getSnapshotAt()) + " · " + active.getCollectionLogHistory().getSnapshotCount() + " unlocks." : "No full collection-log snapshot has been captured yet.";
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), status + "\n\nOpen your in-game collection log and click Search with an empty search. Grindstone captures the available unlocks locally. A full snapshot is required before adding collection milestones."));
+            });
+        });
+        moreMenu.add(collectionSnapshot);
         moreMenu.add(allCollectionPages);
         JMenu presets = new JMenu("Add milestone preset");
         presets.setToolTipText("Add a focused milestone pack without replacing existing milestones or edited targets.");
@@ -1856,6 +1865,10 @@ public class GrindstonePanel extends PluginPanel {
             if (profile != active) {
                 return;
             }
+            if (!active.getCollectionLogHistory().hasSnapshot()) {
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), "First open your in-game collection log and click Search with an empty search to capture a full snapshot. Then add collection-log milestones."));
+                return;
+            }
             Map<Integer, String> pages = CollectionLogPages.discover(client);
             SwingUtilities.invokeLater(() -> {
                 if (profile != active) {
@@ -2030,6 +2043,7 @@ public class GrindstonePanel extends PluginPanel {
     private void showAddGoalDialog(GrindstoneProfile active, Map<Integer, Map<String, Supplier<Milestone>>> choices, Map<Milestone, RepeatSchedule> existingGoalsSnapshot, Milestone initialGoal, Set<Integer> obtained) {
         MilestoneEditorPanel form = new MilestoneEditorPanel(itemManager, itemSearchService, choices);
         form.setExistingGoals(existingGoalsSnapshot);
+        form.setCollectionSnapshotAvailable(active.getCollectionLogHistory().hasSnapshot());
         form.hideObtainedCollectionItems(obtained);
         if (initialGoal != null) {
             try {
@@ -2048,6 +2062,10 @@ public class GrindstonePanel extends PluginPanel {
         long periodTarget = form.getRepeatTarget();
         clientThread.invokeLater(() -> {
             if (profile != active) {
+                return;
+            }
+            if (isCollectionLogGoal(candidate) && !active.getCollectionLogHistory().hasSnapshot()) {
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), "A full collection-log snapshot is required before adding collection milestones. Open your collection log and click Search with an empty search."));
                 return;
             }
             Milestone existing = active.findMatchingGoal(candidate, schedule);
@@ -2119,6 +2137,10 @@ public class GrindstonePanel extends PluginPanel {
             if (profile != active || !active.getGoals().contains(goal)) {
                 return;
             }
+            if (isCollectionLogGoal(goal) && !active.getCollectionLogHistory().hasSnapshot()) {
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), "Capture a full collection-log snapshot before editing collection milestones. Open your collection log and click Search with an empty search."));
+                return;
+            }
             Map<Integer, Map<String, Supplier<Milestone>>> choices = CompletionMilestoneChoices.forEditing(client, active.getCollectionLogHistory());
             RepeatSchedule schedule = active.metadata(goal).recurring().getSchedule();
             long periodTarget = active.metadata(goal).recurring().getTarget();
@@ -2127,6 +2149,7 @@ public class GrindstonePanel extends PluginPanel {
                     return;
                 }
                 MilestoneEditorPanel form = new MilestoneEditorPanel(itemManager, itemSearchService, choices, true);
+                form.setCollectionSnapshotAvailable(active.getCollectionLogHistory().hasSnapshot());
                 try {
                     form.loadGoal(goal);
                 } catch (IllegalArgumentException exception) {

@@ -161,6 +161,8 @@ public final class GrindstoneRepository {
         JsonObject observed = new JsonObject();
         profile.getCollectionLogHistory().snapshot().forEach((id, time) -> observed.addProperty(id.toString(), time));
         json.add("collectionLogFirstSeen", observed);
+        json.addProperty("collectionLogSnapshotAt", profile.getCollectionLogHistory().getSnapshotAt());
+        json.addProperty("collectionLogSnapshotCount", profile.getCollectionLogHistory().getSnapshotCount());
 
         return json;
     }
@@ -182,6 +184,20 @@ public final class GrindstoneRepository {
                     }
                     log.debug("Skipping an invalid collection-log observation", exception);
                 }
+            }
+        }
+
+        if (json.has("collectionLogSnapshotAt")) {
+            try {
+                long snapshotAt = json.get("collectionLogSnapshotAt").getAsLong();
+                if (snapshotAt != 0) {
+                    profile.getCollectionLogHistory().restoreSnapshot(snapshotAt, json.get("collectionLogSnapshotCount").getAsInt());
+                }
+            } catch (RuntimeException exception) {
+                if (strict) {
+                    throw new IllegalArgumentException("Invalid collection-log snapshot", exception);
+                }
+                log.debug("Ignoring an invalid collection-log snapshot", exception);
             }
         }
 
@@ -308,6 +324,8 @@ public final class GrindstoneRepository {
         if (!sameAccount) {
             json.remove("archivedHistory");
             json.remove("collectionLogFirstSeen");
+            json.remove("collectionLogSnapshotAt");
+            json.remove("collectionLogSnapshotCount");
             for (JsonElement element : json.getAsJsonArray("goals")) {
                 JsonObject saved = element.getAsJsonObject();
                 if (saved.has("metadata") && saved.get("metadata").isJsonObject()) {

@@ -10,6 +10,7 @@ import com.grindstone.content.diary.DiaryTier;
 import com.grindstone.content.milestone.BaseSkillMilestone;
 import com.grindstone.content.milestone.ClientCompletionMilestone;
 import com.grindstone.content.milestone.Milestone;
+import com.grindstone.content.milestone.MilestoneCategory;
 import com.grindstone.content.milestone.impl.TrackerMilestone;
 import com.grindstone.content.milestone.impl.achievementdiary.AchievementDiaryTierAreaMilestone;
 import com.grindstone.content.milestone.impl.collectionlog.CollectionLogEntryMilestone;
@@ -64,10 +65,13 @@ import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.api.events.MenuOpened;
+import net.runelite.api.events.MenuOptionClicked;
+import net.runelite.api.events.ScriptPreFired;
 import net.runelite.api.events.StatChanged;
 import net.runelite.api.events.VarbitChanged;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.gameval.InventoryID;
+import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
@@ -131,6 +135,9 @@ public class GrindstonePlugin extends Plugin {
     private boolean completionProgressDirty;
     private boolean storageProgressDirty;
     private final Map<String, Integer> combatBossIds = new HashMap<>();
+    private static final int COLLECTION_SEARCH_ITEM_SCRIPT = 4100;
+    private final Set<Integer> collectionSearchItems = new LinkedHashSet<>();
+    private int collectionSearchTick = -1;
     private long lastRecurringRefresh;
     private JsonObject lastSavedSnapshot;
 
@@ -166,6 +173,8 @@ public class GrindstonePlugin extends Plugin {
     @Override
     protected void shutDown() {
         running = false;
+        collectionSearchItems.clear();
+        collectionSearchTick = -1;
         overlayManager.remove(completionOverlay);
         overlayManager.remove(progressOverlay);
         progressOverlay.clear();
@@ -418,6 +427,9 @@ public class GrindstonePlugin extends Plugin {
     }
 
     private boolean canOfferGoal(Milestone goal) {
+        if (goal.getCategory() == MilestoneCategory.COLLECTION_LOG && !profile.getCollectionLogHistory().hasSnapshot()) {
+            return false;
+        }
         goal.refresh(client);
         if (goal instanceof CollectionLogItemMilestone) {
             ((CollectionLogItemMilestone) goal).setHistory(profile.getCollectionLogHistory());
@@ -630,7 +642,67 @@ public class GrindstonePlugin extends Plugin {
     }
 
     @Subscribe
+    public void onMenuOptionClicked(MenuOptionClicked event) {
+        if (hasActivePlayerProfile() && event.getParam1() == InterfaceID.Collection.SEARCH_TOGGLE) {
+            CollectionLogPages.refreshReplacements(client);
+            collectionSearchItems.clear();
+            collectionSearchTick = client.getTickCount();
+        }
+    }
+
+    @Subscribe
+    public void onScriptPreFired(ScriptPreFired event) {
+        if (!hasActivePlayerProfile() || event.getScriptId() != COLLECTION_SEARCH_ITEM_SCRIPT) {
+            return;
+        }
+        Widget collection = client.getWidget(InterfaceID.Collection.UNIVERSE);
+        Object[] arguments = event.getScriptEvent().getArguments();
+        if (collection == null || collection.isHidden() || arguments == null || arguments.length < 2 || !(arguments[1] instanceof Integer)) {
+            return;
+        }
+        if (collectionSearchTick < 0) {
+            CollectionLogPages.refreshReplacements(client);
+        }
+        int item = CollectionLogPages.canonicalItemId((Integer) arguments[1]);
+        if (item > 0) {
+            collectionSearchItems.add(item);
+            collectionSearchTick = client.getTickCount();
+        }
+    }
+
+    private void finishCollectionSnapshot() {
+        if (collectionSearchTick < 0 || client.getTickCount() - collectionSearchTick < 2) {
+            return;
+        }
+        collectionSearchTick = -1;
+        int total = client.getVarpValue(VarPlayerID.COLLECTION_COUNT);
+        int maximum = client.getVarpValue(VarPlayerID.COLLECTION_COUNT_MAX);
+        if (maximum <= 0 || total < 0 || total > maximum || collectionSearchItems.size() != total) {
+            panel.setStorageStatus("Collection-log snapshot incomplete. Clear the collection-log search and try again.");
+            collectionSearchItems.clear();
+            log.debug("Collection-log search did not expose the full total; snapshot not replaced");
+            return;
+        }
+        long now = System.currentTimeMillis();
+        collectionSearchItems.forEach(item -> profile.getCollectionLogHistory().record(item, now));
+        profile.getCollectionLogHistory().restoreSnapshot(now, total);
+        collectionSearchItems.clear();
+        profile.touch();
+        for (Milestone milestone : profile.getGoals()) {
+            if (milestone.getCategory() == MilestoneCategory.COLLECTION_LOG) {
+                milestone.refresh(client);
+                panel.refreshGoal(milestone);
+            }
+        }
+        panel.setStorageStatus("Collection-log snapshot captured: " + total + " unlocks");
+        saveProfile();
+    }
+
+    @Subscribe
     public void onGameTick(GameTick event) {
+        if (hasActivePlayerProfile()) {
+            finishCollectionSnapshot();
+        }
         if (hasActivePlayerProfile() && System.currentTimeMillis() - lastRecurringRefresh >= 30_000) {
             lastRecurringRefresh = System.currentTimeMillis();
             if (profile.getGoals().stream().anyMatch(goal -> profile.metadata(goal).recurring().isActive() || profile.metadata(goal).getDeadlineAt() > 0)) {
@@ -731,6 +803,8 @@ public class GrindstonePlugin extends Plugin {
     }
 
     private void activateProfile(GrindstoneProfile loaded) {
+        collectionSearchItems.clear();
+        collectionSearchTick = -1;
         completionNotifications.reset();
         profile = loaded;
         sessionProfiles.put(loaded.getHash(), loaded);
@@ -751,6 +825,8 @@ public class GrindstonePlugin extends Plugin {
     }
 
     private void onLogout() {
+        collectionSearchItems.clear();
+        collectionSearchTick = -1;
         completionNotifications.reset();
         loadGeneration.incrementAndGet();
         loadingHash = 0;
