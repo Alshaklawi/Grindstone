@@ -4,18 +4,14 @@ import com.grindstone.content.milestone.MilestoneCategory;
 import com.grindstone.ui.util.UiTypography;
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.GridLayout;
-import java.awt.Insets;
 import java.util.function.IntPredicate;
 import javax.swing.BorderFactory;
-import javax.swing.ButtonGroup;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.ImageIcon;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.JToggleButton;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.util.ImageUtil;
 
@@ -31,7 +27,8 @@ public final class MilestoneTypePicker extends JPanel {
     private static final int[][] TYPES = {{0, 1, 2, 3, 4, 18, 19, 20, 27}, {5}, {23}, {24}, {25}, {26}, {22, 29, 6, 7}, {16}, {9, 10, 28}, {11, 12}, {13, 14, 15, 17}, {8, 21}};
     private final JComboBox<String> model;
     private final JComboBox<Integer> selection = new JComboBox<>();
-    private final JToggleButton[] groups = new JToggleButton[GROUPS.length];
+    private final JComboBox<Integer> focus = new JComboBox<>();
+    private final JPanel typeField = new JPanel(new BorderLayout(0, 5));
     private final JLabel description = new JLabel();
     private boolean updating;
     private final IntPredicate available;
@@ -41,32 +38,48 @@ public final class MilestoneTypePicker extends JPanel {
         this.model = model;
         this.available = available;
         setOpaque(false);
-        JPanel focuses = new JPanel(new GridLayout(0, 2, 6, 6));
-        focuses.setOpaque(false);
-        ButtonGroup group = new ButtonGroup();
         for (int i = 0; i < GROUPS.length; i++) {
-            final int index = i;
-            JToggleButton button = new JToggleButton(GROUPS[i], new ImageIcon(ImageUtil.resizeImage(CATEGORIES[i].getIcon().getImage(), 16, 16)));
-            button.setFont(UiTypography.BODY);
-            button.setMargin(new Insets(9, 8, 9, 8));
-            button.setToolTipText(DESCRIPTIONS[i]);
-            button.addActionListener(event -> selectGroup(index));
-            group.add(button);
-            groups[i] = button;
             boolean visible = false;
             for (int kind : TYPES[i]) {
                 visible |= available.test(kind);
             }
             if (visible) {
-                focuses.add(button);
+                focus.addItem(i);
             }
         }
+        ImageIcon[] icons = new ImageIcon[GROUPS.length];
+        for (int i = 0; i < GROUPS.length; i++) {
+            icons[i] = new ImageIcon(ImageUtil.resizeImage(CATEGORIES[i].getIcon().getImage(), 16, 16));
+        }
+        focus.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean selected, boolean focused) {
+                JLabel rendered = (JLabel) super.getListCellRendererComponent(list, value, index, selected, focused);
+                if (value instanceof Integer) {
+                    int category = (Integer) value;
+                    rendered.setText(GROUPS[category]);
+                    rendered.setIcon(icons[category]);
+                    rendered.setIconTextGap(8);
+                }
+                rendered.setFont(UiTypography.BODY);
+                rendered.setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
+                return rendered;
+            }
+        });
+        focus.setMaximumRowCount(GROUPS.length);
+        focus.setToolTipText("Choose what you want to track.");
+        focus.addActionListener(event -> {
+            if (!updating && focus.getSelectedItem() != null) {
+                selectGroup((Integer) focus.getSelectedItem());
+            }
+        });
         JPanel top = new JPanel(new BorderLayout(0, 7));
         top.setOpaque(false);
-        JLabel label = new JLabel("Choose your focus");
+        JLabel label = new JLabel("Category");
         label.setFont(UiTypography.TITLE);
+        label.setLabelFor(focus);
         top.add(label, BorderLayout.NORTH);
-        top.add(focuses, BorderLayout.CENTER);
+        top.add(focus, BorderLayout.CENTER);
         add(top, BorderLayout.NORTH);
         JPanel details = new JPanel(new BorderLayout(0, 7));
         details.setOpaque(false);
@@ -87,11 +100,10 @@ public final class MilestoneTypePicker extends JPanel {
         JLabel typeLabel = new JLabel("Type");
         typeLabel.setLabelFor(selection);
         typeLabel.setFont(UiTypography.BODY);
-        JPanel field = new JPanel(new BorderLayout(0, 5));
-        field.setOpaque(false);
-        field.add(typeLabel, BorderLayout.NORTH);
-        field.add(selection, BorderLayout.CENTER);
-        details.add(field, BorderLayout.CENTER);
+        typeField.setOpaque(false);
+        typeField.add(typeLabel, BorderLayout.NORTH);
+        typeField.add(selection, BorderLayout.CENTER);
+        details.add(typeField, BorderLayout.CENTER);
         add(details, BorderLayout.CENTER);
         selection.addActionListener(event -> {
             if (!updating && selection.getSelectedItem() != null) {
@@ -135,7 +147,7 @@ public final class MilestoneTypePicker extends JPanel {
                 }
                 updating = true;
                 try {
-                    groups[i].setSelected(true);
+                    focus.setSelectedItem(i);
                     description.setText("<html>" + DESCRIPTIONS[i] + "</html>");
                     selection.removeAllItems();
                     for (int option : TYPES[i]) {
@@ -144,6 +156,7 @@ public final class MilestoneTypePicker extends JPanel {
                         }
                     }
                     selection.setSelectedItem(current);
+                    typeField.setVisible(selection.getItemCount() > 1);
                 } finally {
                     updating = false;
                 }

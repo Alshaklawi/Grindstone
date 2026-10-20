@@ -99,6 +99,7 @@ public final class MilestoneEditorPanel extends JPanel {
     };
     private final SkillIconManager skillIcons = new SkillIconManager();
     private final Map<String, JToggleButton> skillButtons = new LinkedHashMap<>();
+    private final JLabel selectedSkill = new JLabel();
     private final JSpinner target = new JSpinner();
     private final JPanel body = new JPanel();
     private final JLabel hint = new JLabel();
@@ -357,8 +358,8 @@ public final class MilestoneEditorPanel extends JPanel {
             if (skill == null) {
                 button.setText("All");
             }
-            button.setPreferredSize(new Dimension(48, 46));
-            button.setMargin(new Insets(6, 4, 6, 4));
+            button.setPreferredSize(new Dimension(44, 38));
+            button.setMargin(new Insets(4, 4, 4, 4));
             button.setToolTipText(name);
             button.getAccessibleContext().setAccessibleName(name);
             button.addActionListener(event -> subject.setSelectedValue(name));
@@ -367,11 +368,18 @@ public final class MilestoneEditorPanel extends JPanel {
             grid.add(button);
         }
         syncSkillSelection();
-        return grid;
+        JPanel picker = new JPanel(new BorderLayout(0, 6));
+        picker.setOpaque(false);
+        selectedSkill.setFont(FontManager.getRunescapeBoldFont());
+        selectedSkill.setForeground(ColorScheme.BRAND_ORANGE);
+        picker.add(selectedSkill, BorderLayout.NORTH);
+        picker.add(grid, BorderLayout.CENTER);
+        return picker;
     }
 
     private void syncSkillSelection() {
         String selected = subject.getSelectedValue();
+        selectedSkill.setText(selected == null ? "Choose a skill" : selected);
         skillButtons.forEach((name, button) -> {
             boolean active = name.equals(selected);
             button.setSelected(active);
