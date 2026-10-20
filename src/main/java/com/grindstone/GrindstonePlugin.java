@@ -751,9 +751,28 @@ public class GrindstonePlugin extends Plugin {
     }
 
     private void observeLoadedCollectionSnapshot() {
+        CollectionLogPages.refreshReplacements(client);
+        Set<Integer> validItems = new LinkedHashSet<>();
+        for (int tab : CollectionLogPages.getTabs(client).keySet()) {
+            for (int item : CollectionLogPages.getTabItemIds(client, tab)) {
+                validItems.add(item);
+            }
+        }
+        int maximum = client.getVarpValue(VarPlayerID.COLLECTION_COUNT_MAX);
+        boolean completeCatalog = maximum > 0 && validItems.size() == maximum;
+        if (profile.getCollectionLogHistory().reconcileItems(completeCatalog ? validItems : null)) {
+            profile.touch();
+            saveProfile();
+        }
+        if (!completeCatalog) {
+            log.debug("Collection-log catalog size {} differs from game maximum {}; retaining unknown observations", validItems.size(), maximum);
+        }
         ItemContainer container = client.getItemContainer(InventoryID.COLLECTION_TRANSMIT);
         if (container != null) {
             profile.getCollectionLogHistory().observe(container);
+        }
+        if (completeCatalog) {
+            profile.getCollectionLogHistory().reconcileItems(validItems);
         }
         captureLoadedCollectionSnapshot();
     }

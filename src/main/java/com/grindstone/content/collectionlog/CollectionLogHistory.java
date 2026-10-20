@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import lombok.Getter;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
@@ -26,6 +27,24 @@ public final class CollectionLogHistory {
 
     public boolean hasSnapshot() {
         return snapshotAt > 0;
+    }
+
+    public boolean reconcileItems(Set<Integer> validItems) {
+        Map<Integer, Long> normalized = new HashMap<>();
+        firstSeen.forEach((item, time) -> {
+            int canonical = CollectionLogPages.getCanonicalItemId(item);
+            if (validItems == null || validItems.contains(canonical)) {
+                normalized.merge(canonical, time, Math::min);
+            }
+        });
+        if (normalized.equals(firstSeen)) {
+            return false;
+        }
+        firstSeen.clear();
+        firstSeen.putAll(normalized);
+        snapshotAt = 0;
+        snapshotCount = 0;
+        return true;
     }
 
     public boolean confirmLoadedSnapshot(int total, int maximum, long now) {
