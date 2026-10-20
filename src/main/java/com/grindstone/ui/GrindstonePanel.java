@@ -193,7 +193,6 @@ public class GrindstonePanel extends PluginPanel {
     private final JPanel header = new JPanel();
     private final JPanel controlsPanel = new JPanel();
     private final JPanel dashboardOverview = new JPanel();
-    private final JPanel dashboardSnapshots = new JPanel(new BorderLayout());
     private final SnapshotStatusPanel snapshots = new SnapshotStatusPanel();
     private final JLabel summaryLabel = new JLabel("No profile loaded");
     private final JLabel progressPercent = new JLabel();
@@ -334,7 +333,6 @@ public class GrindstonePanel extends PluginPanel {
         dashboardToggle.addActionListener(event -> {
             boolean expanded = !dashboardOverview.isVisible();
             dashboardOverview.setVisible(expanded);
-            dashboardSnapshots.setVisible(expanded);
             dashboardToggle.setText(expanded ? "-" : "+");
             dashboardToggle.setToolTipText(expanded ? "Collapse dashboard overview and snapshots" : "Expand dashboard overview and snapshots");
             dashboardToggle.getAccessibleContext().setAccessibleName(expanded ? "Collapse dashboard" : "Expand dashboard");
@@ -380,8 +378,8 @@ public class GrindstonePanel extends PluginPanel {
             JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), new JScrollPane(details), "Since last seen", JOptionPane.INFORMATION_MESSAGE);
         });
         dashboardOverview.add(catchUpButton);
-
-
+        snapshots.setAlignmentX(LEFT_ALIGNMENT);
+        dashboardOverview.add(snapshots);
         header.add(dashboardOverview);
 
         JPanel goalActions = new JPanel(new GridLayout(2, 1, 0, 6));
@@ -474,10 +472,6 @@ public class GrindstonePanel extends PluginPanel {
         }
         header.add(Box.createVerticalStrut(6));
         header.add(navigation);
-        dashboardSnapshots.setOpaque(false);
-        dashboardSnapshots.setAlignmentX(LEFT_ALIGNMENT);
-        dashboardSnapshots.add(snapshots, BorderLayout.CENTER);
-        header.add(dashboardSnapshots);
         undoDeleteButton.setVisible(false);
         undoDeleteButton.setToolTipText("Restore the most recently deleted milestone in this player profile.");
         undoDeleteButton.setAlignmentX(LEFT_ALIGNMENT);
