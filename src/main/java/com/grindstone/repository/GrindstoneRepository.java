@@ -28,7 +28,9 @@ import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import net.runelite.client.util.Filepath;
@@ -182,9 +184,24 @@ public final class GrindstoneRepository {
             json.add("archivedHistory", gson.toJsonTree(profile.getArchivedHistory()));
         }
         JsonObject observed = new JsonObject();
-        profile.getCollectionLogHistory().getSnapshot().forEach((id, time) -> observed.addProperty(id.toString(), time));
+        Map<Long, JsonArray> observationsByTime = new LinkedHashMap<>();
+        new TreeMap<>(profile.getCollectionLogHistory().getSnapshot()).forEach((id, time) -> {
+            observed.addProperty(id.toString(), time);
+            JsonArray group = observationsByTime.computeIfAbsent(time, timestamp -> {
+                JsonArray values = new JsonArray();
+                values.add(timestamp);
+                return values;
+            });
+            group.add(id);
+        });
         if (observed.size() > 0) {
-            json.add("collectionLogFirstSeen", observed);
+            JsonArray groups = new JsonArray();
+            observationsByTime.values().forEach(groups::add);
+            if (groups.toString().length() + 6 < observed.toString().length()) {
+                json.add("collectionLogFirstSeenGroups", groups);
+            } else {
+                json.add("collectionLogFirstSeen", observed);
+            }
         }
         if (profile.getCollectionLogHistory().getSnapshotAt() > 0) {
             json.addProperty("collectionLogSnapshotAt", profile.getCollectionLogHistory().getSnapshotAt());
@@ -265,6 +282,25 @@ public final class GrindstoneRepository {
                         throw new IllegalArgumentException("Invalid collection-log observation", exception);
                     }
                     log.debug("Skipping an invalid collection-log observation", exception);
+                }
+            }
+        }
+        if (json.has("collectionLogFirstSeenGroups")) {
+            for (JsonElement saved : json.getAsJsonArray("collectionLogFirstSeenGroups")) {
+                try {
+                    JsonArray group = saved.getAsJsonArray();
+                    if (group.size() < 2 || group.size() > 10001) {
+                        throw new IllegalArgumentException("Invalid collection-log observation group");
+                    }
+                    long timestamp = group.get(0).getAsLong();
+                    for (int i = 1; i < group.size(); i++) {
+                        profile.getCollectionLogHistory().record(group.get(i).getAsInt(), timestamp);
+                    }
+                } catch (RuntimeException exception) {
+                    if (strict) {
+                        throw new IllegalArgumentException("Invalid collection-log observation group", exception);
+                    }
+                    log.debug("Skipping an invalid collection-log observation group", exception);
                 }
             }
         }
@@ -409,6 +445,7 @@ public final class GrindstoneRepository {
         if (!sameAccount) {
             json.remove("archivedHistory");
             json.remove("collectionLogFirstSeen");
+            json.remove("collectionLogFirstSeenGroups");
             json.remove("storageSnapshots");
             json.remove("collectionLogSnapshotAt");
             json.remove("collectionLogSnapshotCount");
