@@ -43,7 +43,7 @@ public enum TrackerEntry {
     CERBERUS("Cerberus kills", VarPlayerID.TOTAL_CERBERUS_KILLS, MilestoneCategory.BOSSING),
     ABYSSALSIRE("Abyssal Sire kills", VarPlayerID.TOTAL_ABYSSALSIRE_KILLS, MilestoneCategory.BOSSING),
     CATA_BOSS("Skotizo kills", VarPlayerID.TOTAL_CATA_BOSS_KILLS, MilestoneCategory.BOSSING),
-    WINTERTODT("Wintertodt kills", VarPlayerID.TOTAL_WINTERTODT_KILLS, MilestoneCategory.SKILLING),
+    WINTERTODT("Wintertodt kills", VarPlayerID.TOTAL_WINTERTODT_KILLS, MilestoneCategory.MINIGAMES),
     HILLGIANT_BOSS("Obor kills", VarPlayerID.TOTAL_HILLGIANT_BOSS_KILLS, MilestoneCategory.BOSSING),
     CHAMBERS_OF_XERIC("Chambers of Xeric completions", VarPlayerID.TOTAL_COMPLETED_XERICCHAMBERS, MilestoneCategory.RAIDS),
     ZUK("TzKal-Zuk kills", VarPlayerID.TOTAL_ZUK_KILLS, MilestoneCategory.BOSSING),
@@ -67,7 +67,7 @@ public enum TrackerEntry {
     SOUL_WARS_DEATHS("Soul Wars deaths", VarPlayerID.SOUL_WARS_TOTAL_DEATHS, MilestoneCategory.MINIGAMES),
     SOUL_WARS_GAMES("Soul Wars games", VarPlayerID.SOUL_WARS_TOTAL_GAMES, MilestoneCategory.MINIGAMES),
     SOUL_WARS_WINS("Soul Wars wins", VarPlayerID.SOUL_WARS_TOTAL_WINS, MilestoneCategory.MINIGAMES),
-    TEMPOROSS("Tempoross kills", VarPlayerID.TOTAL_TEMPOROSS_KILLS, MilestoneCategory.SKILLING),
+    TEMPOROSS("Tempoross kills", VarPlayerID.TOTAL_TEMPOROSS_KILLS, MilestoneCategory.MINIGAMES),
     THEATREOFBLOOD_HARD("Theatre of Blood: Hard Mode completions", VarPlayerID.TOTAL_COMPLETED_THEATREOFBLOOD_HARD, MilestoneCategory.RAIDS),
     THEATREOFBLOOD_STORY("Theatre of Blood: Entry Mode completions", VarPlayerID.TOTAL_COMPLETED_THEATREOFBLOOD_STORY, MilestoneCategory.RAIDS),
     NEX("Nex kills", VarPlayerID.TOTAL_NEX_KILLS, MilestoneCategory.BOSSING),
@@ -111,7 +111,7 @@ public enum TrackerEntry {
     private static final Map<String, TrackerEntry> BOSS_TRACKERS = new HashMap<>();
     static {
         for (TrackerEntry entry : values()) {
-            if ((entry.category == MilestoneCategory.BOSSING || entry.category == MilestoneCategory.SKILLING) && entry.displayName.endsWith(" kills")) {
+            if ((entry.category == MilestoneCategory.BOSSING || entry.category == MilestoneCategory.SKILLING || entry == WINTERTODT || entry == TEMPOROSS) && entry.displayName.endsWith(" kills")) {
                 BOSS_TRACKERS.put(normalized(entry.displayName.substring(0, entry.displayName.length() - 6)), entry);
             }
         }
