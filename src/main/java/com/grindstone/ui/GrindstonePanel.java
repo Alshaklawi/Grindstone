@@ -419,9 +419,14 @@ public class GrindstonePanel extends PluginPanel {
         viewOptions.add(collapseAll);
         moreMenu.add(viewOptions);
         moreMenu.add(backups);
+        moreMenu.addSeparator();
+        JMenuItem history = new JMenuItem("History...");
+        history.setToolTipText("Browse this account's milestone history by date, schedule, milestone and outcome.");
+        history.addActionListener(event -> showAccountHistory());
+        moreMenu.add(history);
         header.add(Box.createVerticalStrut(8));
         header.add(goalActions);
-        JPanel navigation = new JPanel(new GridLayout(1, 3, 4, 0));
+        JPanel navigation = new JPanel(new GridLayout(1, 2, 4, 0));
         navigation.setOpaque(false);
         navigation.setAlignmentX(LEFT_ALIGNMENT);
         ButtonGroup views = new ButtonGroup();
@@ -437,10 +442,7 @@ public class GrindstonePanel extends PluginPanel {
             todayMode = false;
             render();
         });
-        JButton history = new JButton("History");
-        history.setToolTipText("Browse this account's milestone history by date, schedule, milestone and outcome.");
-        history.addActionListener(event -> showAccountHistory());
-        for (AbstractButton button : new AbstractButton[]{todayButton, allGoalsButton, history}) {
+        for (AbstractButton button : new AbstractButton[]{todayButton, allGoalsButton}) {
             button.setFont(UiTypography.META);
             button.setMargin(new Insets(5, 3, 5, 3));
             navigation.add(button);
