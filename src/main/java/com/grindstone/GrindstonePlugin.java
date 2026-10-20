@@ -64,6 +64,7 @@ import net.runelite.api.MenuEntry;
 import net.runelite.api.Point;
 import net.runelite.api.Quest;
 import net.runelite.api.Skill;
+import net.runelite.api.events.ClientTick;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemContainerChanged;
@@ -142,7 +143,7 @@ public class GrindstonePlugin extends Plugin {
     private boolean storageProgressDirty;
     private final Map<String, Integer> combatBossIds = new HashMap<>();
     private static final int COLLECTION_SEARCH_ITEM_SCRIPT = 4100;
-    private int collectionSearchTick = -1;
+    private boolean collectionCaptureDirty;
     private long lastRecurringRefresh;
     private JsonObject lastSavedSnapshot;
 
@@ -178,7 +179,7 @@ public class GrindstonePlugin extends Plugin {
     @Override
     protected void shutDown() {
         running = false;
-        collectionSearchTick = -1;
+        collectionCaptureDirty = false;
         overlayManager.remove(completionOverlay);
         overlayManager.remove(progressOverlay);
         progressOverlay.clear();
@@ -673,7 +674,7 @@ public class GrindstonePlugin extends Plugin {
 
         profile.getCollectionLogHistory().observe(container);
         if (container.getId() == InventoryID.COLLECTION_TRANSMIT) {
-            collectionSearchTick = client.getTickCount();
+            collectionCaptureDirty = true;
             captureLoadedCollectionSnapshot();
         }
         storageProgressDirty |= profile.getPlayerStorage().observe(client, container);
@@ -706,7 +707,7 @@ public class GrindstonePlugin extends Plugin {
     public void onMenuOptionClicked(MenuOptionClicked event) {
         if (hasActivePlayerProfile() && event.getParam1() == InterfaceID.Collection.SEARCH_TOGGLE) {
             CollectionLogPages.refreshReplacements(client);
-            collectionSearchTick = client.getTickCount();
+            collectionCaptureDirty = true;
         }
     }
 
@@ -719,20 +720,20 @@ public class GrindstonePlugin extends Plugin {
         if (arguments == null || arguments.length < 3 || !(arguments[1] instanceof Integer) || !(arguments[2] instanceof Integer)) {
             return;
         }
-        if (collectionSearchTick < 0) {
+        if (!collectionCaptureDirty) {
             CollectionLogPages.refreshReplacements(client);
         }
         int item = CollectionLogPages.getCanonicalItemId((Integer) arguments[1]);
         if (item > 0 && (Integer) arguments[2] > 0) {
             profile.getCollectionLogHistory().record(item, System.currentTimeMillis());
         }
-        collectionSearchTick = client.getTickCount();
+        collectionCaptureDirty = true;
     }
 
     @Subscribe
     public void onWidgetLoaded(WidgetLoaded event) {
         if (hasActivePlayerProfile() && event.getGroupId() == InterfaceID.Collection.UNIVERSE >>> 16) {
-            collectionSearchTick = client.getTickCount();
+            collectionCaptureDirty = true;
         }
     }
 
@@ -743,7 +744,7 @@ public class GrindstonePlugin extends Plugin {
                 if (hasActivePlayerProfile()) {
                     CollectionLogPages.refreshReplacements(client);
                     observeLoadedCollectionSnapshot();
-                    collectionSearchTick = client.getTickCount();
+                    collectionCaptureDirty = true;
                 }
             });
         }
@@ -775,10 +776,10 @@ public class GrindstonePlugin extends Plugin {
     }
 
     private void finishCollectionSnapshot() {
-        if (collectionSearchTick < 0 || client.getTickCount() - collectionSearchTick < 2) {
+        if (!collectionCaptureDirty) {
             return;
         }
-        collectionSearchTick = -1;
+        collectionCaptureDirty = false;
         observeLoadedCollectionSnapshot();
         profile.touch();
         for (Milestone milestone : profile.getGoals()) {
@@ -792,10 +793,14 @@ public class GrindstonePlugin extends Plugin {
     }
 
     @Subscribe
-    public void onGameTick(GameTick event) {
-        if (hasActivePlayerProfile()) {
+    public void onClientTick(ClientTick event) {
+        if (collectionCaptureDirty && hasActivePlayerProfile()) {
             finishCollectionSnapshot();
         }
+    }
+
+    @Subscribe
+    public void onGameTick(GameTick event) {
         if (hasActivePlayerProfile() && System.currentTimeMillis() - lastRecurringRefresh >= 30_000) {
             lastRecurringRefresh = System.currentTimeMillis();
             if (profile.getGoals().stream().anyMatch(goal -> profile.getMetadata(goal).getRecurring().isActive() || profile.getMetadata(goal).getDeadlineAt() > 0)) {
@@ -899,7 +904,7 @@ public class GrindstonePlugin extends Plugin {
     }
 
     private void activateProfile(GrindstoneProfile loaded) {
-        collectionSearchTick = -1;
+        collectionCaptureDirty = false;
         completionNotifications.reset();
         profile = loaded;
         sessionProfiles.put(loaded.getHash(), loaded);
@@ -921,7 +926,7 @@ public class GrindstonePlugin extends Plugin {
     }
 
     private void onLogout() {
-        collectionSearchTick = -1;
+        collectionCaptureDirty = false;
         completionNotifications.reset();
         loadGeneration.incrementAndGet();
         loadingHash = 0;
