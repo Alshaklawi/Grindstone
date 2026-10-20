@@ -192,6 +192,8 @@ public class GrindstonePanel extends PluginPanel {
     private final JPanel main = new MilestoneListPanel();
     private final JPanel header = new JPanel();
     private final JPanel controlsPanel = new JPanel();
+    private final JPanel dashboardOverview = new JPanel();
+    private final JPanel dashboardSnapshots = new JPanel(new BorderLayout());
     private final SnapshotStatusPanel snapshots = new SnapshotStatusPanel();
     private final JLabel summaryLabel = new JLabel("No profile loaded");
     private final JLabel progressPercent = new JLabel();
@@ -325,9 +327,30 @@ public class GrindstonePanel extends PluginPanel {
         more.putClientProperty("JButton.buttonType", "toolBarButton");
         JPopupMenu moreMenu = new JPopupMenu();
         more.addActionListener(event -> moreMenu.show(more, 0, more.getHeight()));
-        titleRow.add(more, BorderLayout.EAST);
+        JButton dashboardToggle = new JButton("-");
+        styleButton(dashboardToggle);
+        dashboardToggle.setToolTipText("Collapse dashboard overview and snapshots");
+        dashboardToggle.getAccessibleContext().setAccessibleName("Collapse dashboard");
+        dashboardToggle.addActionListener(event -> {
+            boolean expanded = !dashboardOverview.isVisible();
+            dashboardOverview.setVisible(expanded);
+            dashboardSnapshots.setVisible(expanded);
+            dashboardToggle.setText(expanded ? "-" : "+");
+            dashboardToggle.setToolTipText(expanded ? "Collapse dashboard overview and snapshots" : "Expand dashboard overview and snapshots");
+            dashboardToggle.getAccessibleContext().setAccessibleName(expanded ? "Collapse dashboard" : "Expand dashboard");
+            revalidate();
+            repaint();
+        });
+        JPanel titleActions = new JPanel(new GridLayout(1, 2, 4, 0));
+        titleActions.setOpaque(false);
+        titleActions.add(dashboardToggle);
+        titleActions.add(more);
+        titleRow.add(titleActions, BorderLayout.EAST);
         header.add(titleRow);
-        header.add(Box.createVerticalStrut(6));
+        dashboardOverview.setOpaque(false);
+        dashboardOverview.setLayout(new BoxLayout(dashboardOverview, BoxLayout.Y_AXIS));
+        dashboardOverview.setAlignmentX(LEFT_ALIGNMENT);
+        dashboardOverview.add(Box.createVerticalStrut(6));
         JPanel summaryRow = new JPanel(new BorderLayout(6, 0));
         summaryRow.setOpaque(false);
         summaryRow.setAlignmentX(LEFT_ALIGNMENT);
@@ -337,14 +360,14 @@ public class GrindstonePanel extends PluginPanel {
         progressPercent.setToolTipText("Percentage of tracked milestones and routines that are complete.");
         summaryRow.add(summaryLabel, BorderLayout.CENTER);
         summaryRow.add(progressPercent, BorderLayout.EAST);
-        header.add(summaryRow);
-        header.add(Box.createVerticalStrut(8));
-        header.add(overallProgress);
+        dashboardOverview.add(summaryRow);
+        dashboardOverview.add(Box.createVerticalStrut(8));
+        dashboardOverview.add(overallProgress);
         updateStatusLabel.setFont(UiTypography.META);
         updateStatusLabel.setAlignmentX(LEFT_ALIGNMENT);
         updateStatusLabel.setToolTipText("Storage and save messages. See Snapshots for captured game data.");
-        header.add(Box.createVerticalStrut(4));
-        header.add(updateStatusLabel);
+        dashboardOverview.add(Box.createVerticalStrut(4));
+        dashboardOverview.add(updateStatusLabel);
         catchUpButton.setAlignmentX(LEFT_ALIGNMENT);
         catchUpButton.setFont(UiTypography.META);
         catchUpButton.setVisible(false);
@@ -356,8 +379,10 @@ public class GrindstonePanel extends PluginPanel {
             details.setWrapStyleWord(true);
             JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), new JScrollPane(details), "Since last seen", JOptionPane.INFORMATION_MESSAGE);
         });
-        header.add(catchUpButton);
+        dashboardOverview.add(catchUpButton);
 
+
+        header.add(dashboardOverview);
 
         JPanel goalActions = new JPanel(new GridLayout(2, 1, 0, 6));
         goalActions.setOpaque(false);
@@ -449,7 +474,10 @@ public class GrindstonePanel extends PluginPanel {
         }
         header.add(Box.createVerticalStrut(6));
         header.add(navigation);
-        header.add(snapshots);
+        dashboardSnapshots.setOpaque(false);
+        dashboardSnapshots.setAlignmentX(LEFT_ALIGNMENT);
+        dashboardSnapshots.add(snapshots, BorderLayout.CENTER);
+        header.add(dashboardSnapshots);
         undoDeleteButton.setVisible(false);
         undoDeleteButton.setToolTipText("Restore the most recently deleted milestone in this player profile.");
         undoDeleteButton.setAlignmentX(LEFT_ALIGNMENT);
