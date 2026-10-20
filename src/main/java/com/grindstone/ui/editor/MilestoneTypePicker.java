@@ -1,6 +1,6 @@
 package com.grindstone.ui.editor;
 
-import com.grindstone.ui.Icon;
+import com.grindstone.content.milestone.MilestoneCategory;
 import com.grindstone.ui.util.UiTypography;
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -27,7 +27,7 @@ import net.runelite.client.util.ImageUtil;
 public final class MilestoneTypePicker extends JPanel {
     private static final String[] GROUPS = {"Skills", "Bossing", "Raids", "Slayer", "Clue Scrolls", "Minigames", "Collection Log", "Items", "Quests", "Achievement Diary", "Combat Achievements", "Personal"};
     private static final String[] DESCRIPTIONS = {"Build levels, earn experience or track skilling activities.", "Track boss kills, chests and combat challenge completions.", "Track raid completions and their difficulty modes.", "Track Slayer points and normal or Wilderness task streaks.", "Track completed clue scrolls.", "Track minigame games, wins, points and activity counts.", "Track collection-log totals, pages and individual unlocks.", "Track owned item quantities across known personal storage.", "Finish quests, follow a quest series or track quest speedruns.", "Complete achievement diary regions and tiers.", "Work through Combat Achievement tasks and reward tiers.", "Create your own milestone, checklist or repeating routine."};
-    private static final Icon[] ICONS = {Icon.SKILLING, Icon.BOSSING, Icon.BOSSING, Icon.SKILLING, Icon.COLLECTION_LOG, Icon.MINIGAMES, Icon.COLLECTION_LOG, Icon.MAIN, Icon.QUEST, Icon.ACHIEVEMENT_DIARY, Icon.COMBAT_ACHIEVEMENT, Icon.MAIN};
+    private static final MilestoneCategory[] CATEGORIES = {MilestoneCategory.SKILLING, MilestoneCategory.BOSSING, MilestoneCategory.RAIDS, MilestoneCategory.SLAYER, MilestoneCategory.CLUES, MilestoneCategory.MINIGAMES, MilestoneCategory.COLLECTION_LOG, MilestoneCategory.ITEMS, MilestoneCategory.QUEST, MilestoneCategory.ACHIEVEMENT_DIARY, MilestoneCategory.COMBAT_ACHIEVEMENT, MilestoneCategory.OTHER};
     private static final int[][] TYPES = {{0, 1, 2, 3, 4, 18, 19, 20, 27}, {5}, {23}, {24}, {25}, {26}, {22, 6, 7}, {16}, {9, 10, 28}, {11, 12}, {13, 14, 15, 17}, {8, 21}};
     private final JComboBox<String> model;
     private final JComboBox<Integer> selection = new JComboBox<>();
@@ -46,7 +46,7 @@ public final class MilestoneTypePicker extends JPanel {
         ButtonGroup group = new ButtonGroup();
         for (int i = 0; i < GROUPS.length; i++) {
             final int index = i;
-            JToggleButton button = new JToggleButton(GROUPS[i], new ImageIcon(ImageUtil.resizeImage(ICONS[i].getImage(), 16, 16)));
+            JToggleButton button = new JToggleButton(GROUPS[i], new ImageIcon(ImageUtil.resizeImage(CATEGORIES[i].getIcon().getImage(), 16, 16)));
             button.setFont(UiTypography.BODY);
             button.setMargin(new Insets(9, 8, 9, 8));
             button.setToolTipText(DESCRIPTIONS[i]);

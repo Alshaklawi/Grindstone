@@ -11,12 +11,12 @@ import java.util.Locale;
  */
 public enum MilestoneCategory {
     BOSSING("Bossing", Icon.BOSSING),
-    RAIDS("Raids", Icon.BOSSING),
-    SLAYER("Slayer", Icon.BOSSING),
-    CLUES("Clues", Icon.COLLECTION_LOG),
+    RAIDS("Raids", Icon.RAIDS),
+    SLAYER("Slayer", Icon.SLAYER),
+    CLUES("Clues", Icon.CLUES),
     MINIGAMES("Minigames", Icon.MINIGAMES),
     COLLECTION_LOG("Collection Log", Icon.COLLECTION_LOG),
-    ITEMS("Items", Icon.MAIN),
+    ITEMS("Items", Icon.ITEMS),
     SKILLING("Skilling", Icon.SKILLING),
     QUEST("Quests", Icon.QUEST),
     ACHIEVEMENT_DIARY("Achievement Diary", Icon.ACHIEVEMENT_DIARY),

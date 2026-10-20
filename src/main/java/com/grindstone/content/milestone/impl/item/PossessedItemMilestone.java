@@ -64,7 +64,7 @@ public final class PossessedItemMilestone implements Milestone {
     }
     @Override
     public BufferedImage getIcon(Client client) {
-        return itemManager == null ? Icon.MAIN.getImage() : itemManager.getImage(item);
+        return itemManager == null ? Icon.ITEMS.getImage() : itemManager.getImage(item);
     }
     @Override
     public MilestoneCategory getCategory() {

@@ -16,6 +16,10 @@ public enum Icon {
     QUEST("quests_icon.png"),
     COLLECTION_LOG("collection_log_icon.png"),
     BOSSING("bossing.png"),
+    RAIDS("raids_icon.png"),
+    SLAYER("slayer_icon.png"),
+    CLUES("clues_icon.png"),
+    ITEMS("items_icon.png"),
     ACHIEVEMENT_DIARY("achievement_diary_icon.png"),
     COMBAT_ACHIEVEMENT("combat_achievement_icon.png"),
     SKILLING("skilling.png");
