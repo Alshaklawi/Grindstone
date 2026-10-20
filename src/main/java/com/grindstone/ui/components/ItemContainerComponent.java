@@ -3,7 +3,6 @@ package com.grindstone.ui.components;
 import com.grindstone.ui.util.UiTypography;
 import java.awt.BorderLayout;
 import java.awt.Cursor;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.util.ArrayList;
@@ -23,9 +22,6 @@ import net.runelite.client.ui.ColorScheme;
 public class ItemContainerComponent extends JPanel {
     private static final int GAP = 4;
     private final JPanel grid = new JPanel();
-    private final JPanel summary = new JPanel(new BorderLayout(4, 0));
-    private final JLabel unlockedLabel = new JLabel();
-    private final JLabel remainingLabel = new JLabel();
     private final JButton showMore = new JButton();
     private final JLabel emptyLabel = new JLabel("No items to display");
     private final List<ItemComponent> items = new ArrayList<>();
@@ -50,25 +46,9 @@ public class ItemContainerComponent extends JPanel {
             expanded = !expanded;
             refresh();
         });
-        summary.setOpaque(false);
-        summary.setVisible(false);
-        unlockedLabel.setFont(UiTypography.BODY);
-        unlockedLabel.setForeground(new Color(154, 196, 157));
-        remainingLabel.setFont(UiTypography.META);
-        remainingLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-        summary.add(unlockedLabel, BorderLayout.WEST);
-        summary.add(remainingLabel, BorderLayout.EAST);
-        add(summary, BorderLayout.NORTH);
         add(grid, BorderLayout.CENTER);
         add(showMore, BorderLayout.SOUTH);
         refresh();
-    }
-
-    public void setCollectionSummary(long obtained, long total) {
-        summary.setVisible(total > 0);
-        unlockedLabel.setText(obtained + " / " + total + " unlocked");
-        remainingLabel.setText(Math.max(0, total - obtained) + " remaining");
-        revalidate();
     }
 
     public void configure(int itemsPerRow, int maxRows) {
@@ -174,9 +154,6 @@ public class ItemContainerComponent extends JPanel {
         int rows = count == 0 ? 0 : (count + cols - 1) / cols;
         int height = rows == 0 ? emptyLabel.getPreferredSize().height
                 : rows * ItemComponent.CELL_SIZE + Math.max(0, rows - 1) * GAP;
-        if (summary.isVisible()) {
-            height += summary.getPreferredSize().height + 6;
-        }
         if (items.size() > cols * maxRows) {
             height += 6 + showMore.getPreferredSize().height;
         }

@@ -111,8 +111,6 @@ public class CollectionLogEntryMilestone implements Milestone {
         long percentage = total == 0 ? 0 : obtained * 100 / total;
         progressText = obtained + " / " + total + " obtained (" + percentage + "%)";
         Supplier<MilestoneComponent> prepared = Milestone.super.prepare(client, config);
-        long displayedObtained = obtained;
-        long displayedTotal = total;
         String emptyMessage = total == 0 ? "Open the collection log to load items" : obtained >= total ? "All items obtained" : "No items to display";
         return () -> {
             MilestoneComponent component = prepared.get();
@@ -120,7 +118,6 @@ public class CollectionLogEntryMilestone implements Milestone {
             component.setIcon(icon);
             ItemContainerComponent grid = new ItemContainerComponent();
             grid.configure(columns, rows);
-            grid.setCollectionSummary(displayedObtained, displayedTotal);
             grid.setEmptyMessage(emptyMessage);
             List<ItemComponent> components = new ArrayList<>(preparedItems.size());
             for (Supplier<ItemComponent> item : preparedItems) {
