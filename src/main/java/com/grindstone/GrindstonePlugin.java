@@ -928,7 +928,7 @@ public class GrindstonePlugin extends Plugin {
         profile = loaded;
         sessionProfiles.put(loaded.getHash(), loaded);
         loaded.setItemManager(itemManager);
-        loaded.getPlayerStorage().reset();
+        loaded.getPlayerStorage().beginSession();
         loaded.getPlayerStorage().captureLoaded(client);
         loaded.getCollectionLogHistory().observe(client.getItemContainer(InventoryID.COLLECTION_TRANSMIT));
         for (Milestone goal : loaded.getGoals()) {
@@ -952,7 +952,7 @@ public class GrindstonePlugin extends Plugin {
         completionProgressDirty = false;
         storageProgressDirty = false;
         if (profile != null) {
-            profile.getPlayerStorage().reset();
+            profile.getPlayerStorage().beginSession();
         }
         if (config.saveOnLogout()) {
             saveProfile();

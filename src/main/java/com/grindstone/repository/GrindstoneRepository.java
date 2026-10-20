@@ -5,6 +5,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.grindstone.content.storage.PlayerStorageSnapshot;
+import com.grindstone.content.storage.PlayerStorageSource;
 import com.google.gson.JsonParser;
 import com.grindstone.content.collectionlog.CollectionLogEntry;
 import com.grindstone.content.milestone.ClientCompletionMilestone;
@@ -165,7 +167,47 @@ public final class GrindstoneRepository {
         json.addProperty("collectionLogSnapshotAt", profile.getCollectionLogHistory().getSnapshotAt());
         json.addProperty("collectionLogSnapshotCount", profile.getCollectionLogHistory().getSnapshotCount());
 
+        JsonObject storage = new JsonObject();
+        JsonObject containers = new JsonObject();
+        profile.getPlayerStorage().getContainerSnapshots().forEach((source, snapshot) -> containers.add(source.name(), gson.toJsonTree(snapshot)));
+        storage.add("containers", containers);
+        storage.add("variables", gson.toJsonTree(profile.getPlayerStorage().getVariableSnapshots()));
+        json.add("storageSnapshots", storage);
         return json;
+    }
+
+    private void restoreStorageSnapshots(GrindstoneProfile profile, JsonObject json, boolean strict) {
+        if (!json.has("storageSnapshots")) {
+            return;
+        }
+        try {
+            JsonObject storage = json.getAsJsonObject("storageSnapshots");
+            for (String group : new String[]{"containers", "variables"}) {
+                if (!storage.has(group)) {
+                    continue;
+                }
+                for (Map.Entry<String, JsonElement> entry : storage.getAsJsonObject(group).entrySet()) {
+                    try {
+                        PlayerStorageSnapshot snapshot = gson.fromJson(entry.getValue(), PlayerStorageSnapshot.class);
+                        if ("containers".equals(group)) {
+                            profile.getPlayerStorage().restoreContainerSnapshot(PlayerStorageSource.valueOf(entry.getKey()), snapshot);
+                        } else {
+                            profile.getPlayerStorage().restoreVariableSnapshot(entry.getKey(), snapshot);
+                        }
+                    } catch (RuntimeException exception) {
+                        if (strict) {
+                            throw exception;
+                        }
+                        log.debug("Ignoring invalid storage snapshot {}", entry.getKey(), exception);
+                    }
+                }
+            }
+        } catch (RuntimeException exception) {
+            if (strict) {
+                throw new IllegalArgumentException("Invalid storage snapshots", exception);
+            }
+            log.debug("Ignoring invalid storage snapshots", exception);
+        }
     }
 
     public GrindstoneProfile fromJson(JsonObject json) {
@@ -175,6 +217,7 @@ public final class GrindstoneRepository {
     private GrindstoneProfile decode(JsonObject json, boolean strict) {
         long hash = json.get("hash").getAsLong();
         GrindstoneProfile profile = new GrindstoneProfile(hash);
+        restoreStorageSnapshots(profile, json, strict);
         if (json.has("collectionLogFirstSeen") && json.get("collectionLogFirstSeen").isJsonObject()) {
             for (Map.Entry<String, JsonElement> observation : json.getAsJsonObject("collectionLogFirstSeen").entrySet()) {
                 try {
@@ -328,6 +371,7 @@ public final class GrindstoneRepository {
         if (!sameAccount) {
             json.remove("archivedHistory");
             json.remove("collectionLogFirstSeen");
+            json.remove("storageSnapshots");
             json.remove("collectionLogSnapshotAt");
             json.remove("collectionLogSnapshotCount");
             for (JsonElement element : json.getAsJsonArray("goals")) {

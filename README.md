@@ -40,6 +40,8 @@ From your first skill milestone to your next collection-log slot, choose the tar
 | **Items** | Supplies and equipment across known inventory, equipment, bank and supported storage |
 | **Personal milestones** | Custom counters, notes, checklists and linked milestones |
 
+Storage snapshots, including their last-updated dates, are saved per character between sessions. Reopen storage to refresh it after playing on another device.
+
 Before adding collection-log milestones, open your in-game collection log. Grindstone captures loaded unlocks automatically and verifies them against the game’s total. Check **Snapshots** on the dashboard; hover the information buttons for capture status and refresh tips. Refresh the snapshot after playing on another device. Use **Add all collection-log pages** to add missing page milestones.
 
 ## Start your next milestone

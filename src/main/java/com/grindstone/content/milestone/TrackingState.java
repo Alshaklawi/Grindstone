@@ -18,7 +18,7 @@ public enum TrackingState {
     LIVE("Live client read", "Read from the logged-in client. Only data exposed by the client can be tracked."),
     COUNTER("Client-reported counter", "Uses the client's activity total. Some counters require opening the native activity interface or completing that activity to refresh; a client-reported zero is not proof of a fully synchronized server total."),
     WAITING("Waiting for data", "Log in or open the relevant native interface. No confirmed zero is assumed while data is unavailable."),
-    PARTIAL_STORAGE("Partial known storage", "Bank contents have not loaded this login. Counts cover known storage only, not all possible player storage."),
+    PARTIAL_STORAGE("Partial known storage", "No bank snapshot has been saved yet. Counts cover known storage only, not all possible player storage."),
     SNAPSHOT("Known storage snapshot", "Last known personal storage contents, not a live all-storage guarantee. Reopen storage to refresh it."),
     OBSERVED_LOG("Observed unlocks", "Only known collection-log observations are counted. Zero observed does not prove an item is unobtained; open your collection log to refresh known unlocks."),
     LATE_BASELINE("Captured-period gains", "The baseline was captured after the period began. Only gains since that observation are counted; offline progress across a reset cannot be attributed exactly.");

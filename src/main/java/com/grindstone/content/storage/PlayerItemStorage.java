@@ -6,6 +6,8 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.EnumSet;
+import java.util.Set;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -29,6 +31,8 @@ import net.runelite.api.gameval.VarbitID;
  */
 public final class PlayerItemStorage {
     private final Clock clock;
+    private final Set<PlayerStorageSource> loadedThisSession = EnumSet.noneOf(PlayerStorageSource.class);
+    private final Map<String, Instant> variableSeen = new LinkedHashMap<>();
     private final Map<PlayerStorageSource, Instant> lastSeen = new EnumMap<>(PlayerStorageSource.class);
     public PlayerItemStorage() {
         this(Clock.systemUTC());
@@ -46,7 +50,58 @@ public final class PlayerItemStorage {
         variables.clear();
         normalized.clear();
         lastSeen.clear();
+        variableSeen.clear();
+        loadedThisSession.clear();
     }
+    public void beginSession() {
+        loadedThisSession.clear();
+        normalized.clear();
+    }
+
+    public boolean isLoadedThisSession(PlayerStorageSource source) {
+        return loadedThisSession.contains(source);
+    }
+
+    public Map<PlayerStorageSource, PlayerStorageSnapshot> getContainerSnapshots() {
+        Map<PlayerStorageSource, PlayerStorageSnapshot> snapshots = new EnumMap<>(PlayerStorageSource.class);
+        containers.forEach((source, items) -> snapshots.put(source, new PlayerStorageSnapshot(items, lastSeen.get(source).toEpochMilli())));
+        return Collections.unmodifiableMap(snapshots);
+    }
+
+    public Map<String, PlayerStorageSnapshot> getVariableSnapshots() {
+        Map<String, PlayerStorageSnapshot> snapshots = new LinkedHashMap<>();
+        variables.forEach((source, items) -> snapshots.put(source, new PlayerStorageSnapshot(items, variableSeen.get(source).toEpochMilli())));
+        return Collections.unmodifiableMap(snapshots);
+    }
+
+    public void restoreContainerSnapshot(PlayerStorageSource source, PlayerStorageSnapshot snapshot) {
+        Objects.requireNonNull(source);
+        PlayerStorageSnapshot checked = new PlayerStorageSnapshot(snapshot.getItems(), snapshot.getUpdatedAt());
+        Instant updatedAt = Instant.ofEpochMilli(checked.getUpdatedAt());
+        if (!lastSeen.containsKey(source) || updatedAt.isAfter(lastSeen.get(source))) {
+            containers.put(source, new HashMap<>(checked.getItems()));
+            lastSeen.put(source, updatedAt);
+            loadedThisSession.remove(source);
+        }
+    }
+
+    public void restoreVariableSnapshot(String source, PlayerStorageSnapshot snapshot) {
+        if (!Set.of("Rune pouch", "Nightmare Zone coffer", "Last Man Standing coffer", "Blast Furnace coffer", "Miscellania coffer", "Scar essence mine coffer").contains(source)) {
+            throw new IllegalArgumentException("Unknown storage source");
+        }
+        PlayerStorageSnapshot checked = new PlayerStorageSnapshot(snapshot.getItems(), snapshot.getUpdatedAt());
+        Instant updatedAt = Instant.ofEpochMilli(checked.getUpdatedAt());
+        if (!variableSeen.containsKey(source) || updatedAt.isAfter(variableSeen.get(source))) {
+            variables.put(source, new HashMap<>(checked.getItems()));
+            variableSeen.put(source, updatedAt);
+        }
+    }
+
+    public void mergeSnapshots(PlayerItemStorage saved) {
+        saved.getContainerSnapshots().forEach(this::restoreContainerSnapshot);
+        saved.getVariableSnapshots().forEach(this::restoreVariableSnapshot);
+    }
+
     public void captureLoaded(Client client) {
         for (PlayerStorageSource source : PlayerStorageSource.values()) {
             observe(client, client.getItemContainer(source.getContainerId()));
@@ -76,14 +131,15 @@ public final class PlayerItemStorage {
             }
         }
         containers.put(source, counts);
-        lastSeen.put(source, clock.instant());
+        lastSeen.put(source, Instant.ofEpochMilli(clock.millis()));
+        loadedThisSession.add(source);
     }
     public Map<PlayerStorageSource, Instant> getLastSeen() {
         return Collections.unmodifiableMap(new EnumMap<>(lastSeen));
     }
     public String getFreshness() {
         Instant seen = lastSeen.get(PlayerStorageSource.BANK);
-        return seen == null ? "Bank not loaded this login" : "Bank snapshot: " + DateTimeFormatter.ofPattern("HH:mm:ss z", Locale.ROOT).withZone(ZoneId.systemDefault()).format(seen);
+        return seen == null ? "No bank snapshot saved" : "Bank snapshot: " + DateTimeFormatter.ofPattern("HH:mm:ss z", Locale.ROOT).withZone(ZoneId.systemDefault()).format(seen);
     }
     public String getSnapshotLabel() {
         Instant seen = lastSeen.values().stream().max(Instant::compareTo).orElse(null);
@@ -128,6 +184,7 @@ public final class PlayerItemStorage {
             }
         }
         variables.put("Rune pouch", runes);
+        variableSeen.put("Rune pouch", Instant.ofEpochMilli(clock.millis()));
     }
     public void refreshCoinValues(IntUnaryOperator varbits, IntUnaryOperator varps) {
         setCoins("Nightmare Zone coffer", Math.max(0L, varbits.applyAsInt(VarbitID.NZONE_CASH)) * 1000L);
@@ -142,6 +199,7 @@ public final class PlayerItemStorage {
             coins.put(ItemID.COINS, quantity);
         }
         variables.put(source, coins);
+        variableSeen.put(source, Instant.ofEpochMilli(clock.millis()));
     }
     public Map<String, Long> getBreakdown(int item) {
         Map<String, Long> result = new LinkedHashMap<>();
@@ -168,6 +226,6 @@ public final class PlayerItemStorage {
                 .collect(Collectors.joining("; "));
         return (amounts.isEmpty() ? "No items found in known storage." : amounts + ".")
                 + (containers.containsKey(PlayerStorageSource.BANK) ? "" : " Open your bank to include it.")
-                + " Known contents this login only; open other storage to refresh it. Shared storage, GE offers, POH, deathpiles and unexposed storage are excluded.";
+                + " Last known snapshots; reopen storage after playing on another device to refresh contents. Shared storage, GE offers, POH, deathpiles and unexposed storage are excluded.";
     }
 }

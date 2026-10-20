@@ -2,6 +2,7 @@ package com.grindstone.repository;
 import com.grindstone.content.milestone.MilestoneStatus;
 import com.grindstone.content.milestone.impl.item.PossessedItemMilestone;
 import com.grindstone.content.storage.PlayerItemStorage;
+import com.grindstone.content.storage.PlayerStorageSource;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -139,7 +140,7 @@ public class PossessedItemMilestoneTest {
         assertEquals(0, storage.getQuantity(ItemID.DRAGON_PICKAXE));
     }
     @Test
-    public void profileSavesOnlyTheTargetAndKeepsDifferentItemsSeparate() {
+    public void profileSavesTargetsAndStorageSnapshotsAndKeepsDifferentItemsSeparate() {
         GrindstoneProfile profile = TestProfiles.populated(42);
         profile.replace(Collections.emptyList());
         PossessedItemMilestone coins = new PossessedItemMilestone(ItemID.COINS, 3_000_000_000L);
@@ -153,14 +154,22 @@ public class PossessedItemMilestoneTest {
         PossessedItemMilestone saved = (PossessedItemMilestone) restored.getGoals().get(0);
         assertEquals(3_000_000_000L, saved.getAmount());
         assertEquals(0, saved.getProgressCurrent());
-        assertEquals(0, restored.getPlayerStorage().getQuantity(ItemID.COINS));
+        assertEquals(1_500_000_000L, restored.getPlayerStorage().getQuantity(ItemID.COINS));
+        assertEquals(profile.getPlayerStorage().getLastSeen(), restored.getPlayerStorage().getLastSeen());
+        assertFalse(restored.getPlayerStorage().isLoadedThisSession(PlayerStorageSource.BANK));
+        saved.refresh(null);
+        assertEquals(1_500_000_000L, saved.getProgressCurrent());
     }
     @Test
-    public void unknownBankIsExplicitAndSnapshotsResetBetweenLogins() {
+    public void unknownBankIsExplicitAndSavedSnapshotsSurviveNewSessions() {
         PlayerItemStorage storage = new PlayerItemStorage();
         assertTrue(storage.describe(ItemID.COINS).contains("Open your bank"));
         put(storage, InventoryID.BANK, ItemID.COINS, 100);
         assertFalse(storage.describe(ItemID.COINS).contains("Open your bank"));
+        storage.beginSession();
+        assertEquals(100, storage.getQuantity(ItemID.COINS));
+        assertTrue(storage.hasBankSnapshot());
+        assertFalse(storage.isLoadedThisSession(PlayerStorageSource.BANK));
         storage.reset();
         assertEquals(0, storage.getQuantity(ItemID.COINS));
         assertTrue(storage.describe(ItemID.COINS).contains("Open your bank"));

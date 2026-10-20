@@ -1021,7 +1021,7 @@ public class GrindstonePanel extends PluginPanel {
                 missing.add(source.toString());
             }
             String refresh = source == PlayerStorageSource.BANK ? "Open your bank to refresh its contents." : "Updated automatically while logged in.";
-            tips.put(source.toString(), "<html>" + refresh + "<br>" + (captured == null ? "No data captured this login." : "Captured " + time.format(captured) + ".") + "<br>Only this character's known contents are counted.</html>");
+            tips.put(source.toString(), "<html>" + refresh + "<br>" + (captured == null ? "No snapshot saved yet." : "Last updated " + time.format(captured) + (active.getPlayerStorage().isLoadedThisSession(source) ? " this login." : ". Saved from an earlier session; reopen to refresh.")) + "<br>Only this character's known contents are counted.</html>");
         }
         int known = active == null ? 0 : active.getCollectionLogHistory().getKnownUnlockCount();
         boolean live = active != null && client.getGameState() == GameState.LOGGED_IN && client.getAccountHash() == active.getHash();
@@ -1037,7 +1037,7 @@ public class GrindstonePanel extends PluginPanel {
         tips.put("Collection log", "<html>Open your in-game collection log to capture available unlocks.<br>" + (current ? "Full snapshot verified: " + known + " unlocks." : "Incomplete data: " + known + " known unlocks" + (total < 0 ? "." : " out of " + total + ".") + "<br>The game may not expose every unlock just by opening the log.<br>Its Search interface can expose further collection data.") + captured + "<br>Reopen after playing on another device.</html>");
         int loaded = 0;
         Instant latestOther = null;
-        StringBuilder other = new StringBuilder("<html>Open each storage in game to refresh it. Captures last for this login.");
+        StringBuilder other = new StringBuilder("<html>Open each storage in game to refresh it. Last known snapshots are saved between sessions; reopen storage to refresh.");
         for (PlayerStorageSource source : PlayerStorageSource.values()) {
             if (source == PlayerStorageSource.INVENTORY || source == PlayerStorageSource.EQUIPMENT || source == PlayerStorageSource.BANK) {
                 continue;

@@ -352,6 +352,7 @@ public class GrindstoneProfile {
             }
         }
         backup.collectionLogHistory.getSnapshot().forEach(collectionLogHistory::record);
+        playerStorage.mergeSnapshots(backup.playerStorage);
         backup.getArchivedHistory().forEach(this::restoreArchive);
         setItemManager(itemManager);
         return added;
