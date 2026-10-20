@@ -106,6 +106,12 @@ public enum TrackerEntry {
     SLAYER_POINTS("Slayer points", VarbitID.SLAYER_POINTS, true, 1000),
     SLAYER_STREAK("Slayer task streak (normal)", VarbitID.SLAYER_TASKS_COMPLETED, true, 100),
     SLAYER_WILDERNESS_STREAK("Slayer task streak (Wilderness)", VarbitID.SLAYER_WILDERNESS_TASKS_COMPLETED, true, 100),
+    CLUES_BEGINNER("Clue Scrolls (Beginner)", VarPlayerID.COMPLETED_CLUES5, MilestoneCategory.CLUES),
+    CLUES_EASY("Clue Scrolls (Easy)", VarPlayerID.COMPLETED_CLUES, MilestoneCategory.CLUES),
+    CLUES_MEDIUM("Clue Scrolls (Medium)", VarPlayerID.COMPLETED_CLUES1, MilestoneCategory.CLUES),
+    CLUES_HARD("Clue Scrolls (Hard)", VarPlayerID.COMPLETED_CLUES3, MilestoneCategory.CLUES),
+    CLUES_ELITE("Clue Scrolls (Elite)", VarPlayerID.COMPLETED_CLUES4, MilestoneCategory.CLUES),
+    CLUES_MASTER("Clue Scrolls (Master)", VarPlayerID.COMPLETED_CLUES2, MilestoneCategory.CLUES),
     CLUES_TOTAL("Clue scrolls completed", VarPlayerID.COMPLETED_CLUES_TOTAL, MilestoneCategory.CLUES);
     private static final Map<String, TrackerEntry> BOSS_TRACKERS = new HashMap<>();
     static {
@@ -205,7 +211,7 @@ public enum TrackerEntry {
         return Math.max(0, (varbit ? varbits : varps).applyAsInt(id));
     }
     public int getIconItem(Client client) {
-        if (category == MilestoneCategory.SLAYER || this == CLUES_TOTAL) {
+        if (category == MilestoneCategory.SLAYER || category == MilestoneCategory.CLUES) {
             return 0;
         }
         if (representativeItem > 0 || iconResolved || client == null) {
