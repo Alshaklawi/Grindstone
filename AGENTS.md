@@ -5,7 +5,7 @@
 - Use Lombok for straightforward boilerplate; preserve validation, defensive copies and custom behavior.
 - Use explicit imports, same-line opening braces, multiline block contents, one enum entry per line, and one declaration annotation per line. Never wrap solely for line length.
 - Keep only the requested author/Discord/creation-date header on each type. Preserve its actual creation date.
-- Keep commits atomic; separate formatting from behavior changes. Preserve unrelated edits. Do not push unless asked, or commit the local run-plugin.bat script.
+- Automatically commit completed changes in atomic commits; separate formatting from behavior changes. Preserve unrelated edits. Do not push unless asked, or commit the local run-plugin.bat script.
 - Keep README player-facing and concise. Do not add redundant developer notes or checklist documents.
 - Never automate game input or add prohibited gameplay assistance. No reflection, native access, external processes, dynamic code loading or Java serialization.
 - Keep client reads on the client thread and Swing changes on the EDT. Never block the client thread or lifecycle methods; cancel tasks and listeners on shutdown.
