@@ -1,8 +1,8 @@
 package com.grindstone.ui.editor;
 
 import com.grindstone.content.collectionlog.CollectionLogEntry;
-import com.grindstone.content.milestone.Milestone;
 import com.grindstone.content.milestone.ManualMilestone;
+import com.grindstone.content.milestone.Milestone;
 import com.grindstone.content.milestone.impl.ChecklistMilestone;
 import com.grindstone.content.milestone.impl.CustomMilestone;
 import com.grindstone.content.milestone.impl.TrackerMilestone;
@@ -35,7 +35,16 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Supplier;
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
 import net.runelite.api.Skill;
 import net.runelite.api.gameval.ItemID;
 import net.runelite.client.game.ItemManager;
