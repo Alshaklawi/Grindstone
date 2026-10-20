@@ -43,10 +43,15 @@ import net.runelite.client.util.Filepath;
 public final class GrindstoneRepository {
     public static final int MAX_PROFILE_BYTES = 20_000_000;
     private final Gson gson;
+    private final JsonObject metadataDefaults;
+    private final JsonObject recurringDefaults;
 
     @Inject
     public GrindstoneRepository(Gson gson) {
-        this.gson = gson.newBuilder().setPrettyPrinting().create();
+        this.gson = gson;
+        metadataDefaults = gson.toJsonTree(new MilestoneMetadata()).getAsJsonObject();
+        metadataDefaults.remove("id");
+        recurringDefaults = gson.toJsonTree(new RecurringMilestone()).getAsJsonObject();
     }
 
     public GrindstoneProfile load(Filepath directory, long hash) throws IOException {
@@ -102,7 +107,7 @@ public final class GrindstoneRepository {
     public void save(Filepath directory, JsonObject snapshot) throws IOException {
         long hash = snapshot.get("hash").getAsLong();
         requireHash(hash);
-        String text = gson.toJson(snapshot);
+        String text = snapshot.toString();
         if (text.length() > MAX_PROFILE_BYTES || text.getBytes(StandardCharsets.UTF_8).length > MAX_PROFILE_BYTES) {
             throw new IOException("The profile exceeds the save size limit. The previous save has not been changed.");
         }
@@ -154,26 +159,59 @@ public final class GrindstoneRepository {
         for (Milestone goal : profile.getGoals()) {
             JsonObject savedGoal = new JsonObject();
             savedGoal.addProperty("type", SavedMilestoneTypes.nameOf(goal));
-            savedGoal.add("data", gson.toJsonTree(goal));
-            savedGoal.add("metadata", gson.toJsonTree(profile.getMetadata(goal)));
+            JsonObject data = gson.toJsonTree(goal).getAsJsonObject();
+            if (goal instanceof CollectionLogEntryMilestone && data.has("pageStruct")) {
+                data.remove("entry");
+            }
+            savedGoal.add("data", data);
+            JsonObject metadata = gson.toJsonTree(profile.getMetadata(goal)).getAsJsonObject();
+            removeDefaults(metadata, metadataDefaults);
+            if (metadata.has("recurring") && metadata.get("recurring").isJsonObject()) {
+                JsonObject recurring = metadata.getAsJsonObject("recurring");
+                removeDefaults(recurring, recurringDefaults);
+                if (recurring.size() == 0) {
+                    metadata.remove("recurring");
+                }
+            }
+            savedGoal.add("metadata", metadata);
             savedGoals.add(savedGoal);
         }
 
         json.add("goals", savedGoals);
-        json.add("archivedHistory", gson.toJsonTree(profile.getArchivedHistory()));
+        if (!profile.getArchivedHistory().isEmpty()) {
+            json.add("archivedHistory", gson.toJsonTree(profile.getArchivedHistory()));
+        }
         JsonObject observed = new JsonObject();
         profile.getCollectionLogHistory().getSnapshot().forEach((id, time) -> observed.addProperty(id.toString(), time));
-        json.add("collectionLogFirstSeen", observed);
-        json.addProperty("collectionLogSnapshotAt", profile.getCollectionLogHistory().getSnapshotAt());
-        json.addProperty("collectionLogSnapshotCount", profile.getCollectionLogHistory().getSnapshotCount());
+        if (observed.size() > 0) {
+            json.add("collectionLogFirstSeen", observed);
+        }
+        if (profile.getCollectionLogHistory().getSnapshotAt() > 0) {
+            json.addProperty("collectionLogSnapshotAt", profile.getCollectionLogHistory().getSnapshotAt());
+            json.addProperty("collectionLogSnapshotCount", profile.getCollectionLogHistory().getSnapshotCount());
+        }
 
         JsonObject storage = new JsonObject();
         JsonObject containers = new JsonObject();
         profile.getPlayerStorage().getContainerSnapshots().forEach((source, snapshot) -> containers.add(source.name(), gson.toJsonTree(snapshot)));
-        storage.add("containers", containers);
-        storage.add("variables", gson.toJsonTree(profile.getPlayerStorage().getVariableSnapshots()));
-        json.add("storageSnapshots", storage);
+        if (containers.size() > 0) {
+            storage.add("containers", containers);
+        }
+        if (!profile.getPlayerStorage().getVariableSnapshots().isEmpty()) {
+            storage.add("variables", gson.toJsonTree(profile.getPlayerStorage().getVariableSnapshots()));
+        }
+        if (storage.size() > 0) {
+            json.add("storageSnapshots", storage);
+        }
         return json;
+    }
+
+    private static void removeDefaults(JsonObject saved, JsonObject defaults) {
+        for (Map.Entry<String, JsonElement> entry : defaults.entrySet()) {
+            if (entry.getValue().equals(saved.get(entry.getKey()))) {
+                saved.remove(entry.getKey());
+            }
+        }
     }
 
     private void restoreStorageSnapshots(GrindstoneProfile profile, JsonObject json, boolean strict) {
@@ -353,7 +391,7 @@ public final class GrindstoneRepository {
     public String exportBackup(GrindstoneProfile profile) {
         JsonObject snapshot = toJson(profile);
         snapshot.addProperty("backupVersion", 1);
-        return gson.toJson(snapshot);
+        return snapshot.toString();
     }
     public GrindstoneProfile importBackup(String text, long targetHash) {
         if (text == null || text.length() > 5_000_000) {
