@@ -28,6 +28,14 @@ public final class CollectionLogHistory {
         return snapshotAt > 0;
     }
 
+    public boolean confirmLoadedSnapshot(int total, int maximum, long now) {
+        if (maximum <= 0 || total < 0 || total > maximum || firstSeen.size() != total || hasSnapshot() && snapshotCount == total) {
+            return false;
+        }
+        restoreSnapshot(now, total);
+        return true;
+    }
+
     public void restoreSnapshot(long at, int count) {
         if (at <= 0 || count < 0 || count > firstSeen.size()) {
             throw new IllegalArgumentException("Invalid collection-log snapshot.");

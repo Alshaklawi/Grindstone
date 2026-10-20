@@ -66,6 +66,7 @@ import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.api.events.MenuOpened;
 import net.runelite.api.events.MenuOptionClicked;
+import net.runelite.api.events.ScriptPostFired;
 import net.runelite.api.events.ScriptPreFired;
 import net.runelite.api.events.StatChanged;
 import net.runelite.api.events.VarbitChanged;
@@ -615,6 +616,9 @@ public class GrindstonePlugin extends Plugin {
         }
 
         profile.getCollectionLogHistory().observe(container);
+        if (container.getId() == InventoryID.COLLECTION_TRANSMIT) {
+            captureLoadedCollectionSnapshot();
+        }
         storageProgressDirty |= profile.getPlayerStorage().observe(client, container);
 
         for (Milestone goal : profile.getGoals()) {
@@ -670,6 +674,43 @@ public class GrindstonePlugin extends Plugin {
         }
     }
 
+    @Subscribe
+    public void onScriptPostFired(ScriptPostFired event) {
+        if (hasActivePlayerProfile() && event.getScriptId() == 7797) {
+            clientThread.invokeLater(() -> {
+                if (hasActivePlayerProfile()) {
+                    CollectionLogPages.refreshReplacements(client);
+                    observeLoadedCollectionSnapshot();
+                }
+            });
+        }
+    }
+
+    private void observeLoadedCollectionSnapshot() {
+        ItemContainer container = client.getItemContainer(InventoryID.COLLECTION_TRANSMIT);
+        if (container != null) {
+            profile.getCollectionLogHistory().observe(container);
+        }
+        captureLoadedCollectionSnapshot();
+    }
+
+    private void captureLoadedCollectionSnapshot() {
+        if (profile == null) {
+            return;
+        }
+        Widget collection = client.getWidget(InterfaceID.Collection.UNIVERSE);
+        if (client.getItemContainer(InventoryID.COLLECTION_TRANSMIT) == null && (collection == null || collection.isHidden())) {
+            return;
+        }
+        int total = client.getVarpValue(VarPlayerID.COLLECTION_COUNT);
+        int maximum = client.getVarpValue(VarPlayerID.COLLECTION_COUNT_MAX);
+        if (profile.getCollectionLogHistory().confirmLoadedSnapshot(total, maximum, System.currentTimeMillis())) {
+            profile.touch();
+            panel.setStorageStatus("Collection-log snapshot captured: " + total + " unlocks");
+            saveProfile();
+        }
+    }
+
     private void finishCollectionSnapshot() {
         if (collectionSearchTick < 0 || client.getTickCount() - collectionSearchTick < 2) {
             return;
@@ -678,7 +719,7 @@ public class GrindstonePlugin extends Plugin {
         int total = client.getVarpValue(VarPlayerID.COLLECTION_COUNT);
         int maximum = client.getVarpValue(VarPlayerID.COLLECTION_COUNT_MAX);
         if (maximum <= 0 || total < 0 || total > maximum || collectionSearchItems.size() != total) {
-            panel.setStorageStatus("Collection-log snapshot incomplete. Clear the collection-log search and try again.");
+            panel.setStorageStatus("Collection-log data is incomplete. A full snapshot has not been saved.");
             collectionSearchItems.clear();
             log.debug("Collection-log search did not expose the full total; snapshot not replaced");
             return;
@@ -713,6 +754,9 @@ public class GrindstonePlugin extends Plugin {
             return;
         }
         boolean variablesChanged = completionProgressDirty;
+        if (variablesChanged) {
+            captureLoadedCollectionSnapshot();
+        }
         boolean storageChanged = storageProgressDirty;
         completionProgressDirty = false;
         storageProgressDirty = false;
@@ -821,6 +865,7 @@ public class GrindstonePlugin extends Plugin {
         }
         panel.setStorageStatus(null);
         panel.load(loaded);
+        observeLoadedCollectionSnapshot();
         log.debug("Loaded Grindstone profile with {} milestones", loaded.getGoals().size());
     }
 

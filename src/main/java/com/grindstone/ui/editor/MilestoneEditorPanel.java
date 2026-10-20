@@ -218,7 +218,7 @@ public final class MilestoneEditorPanel extends JPanel {
         repeatForm.setFixedTarget(null);
         if (needsCollectionSnapshot()) {
             repeatForm.setVisible(false);
-            setHint("A collection-log snapshot is required. Close this dialog, open your in-game collection log and click Search with an empty search to capture all unlocks. Then reopen Add milestone.");
+            setHint("A full collection-log snapshot is required. Close this dialog and open your in-game collection log. Loaded unlocks are captured automatically. Then reopen Add milestone once the snapshot is complete.");
             body.add(hint);
             notifyReadiness();
             revalidate();
