@@ -700,6 +700,7 @@ public class GrindstonePlugin extends Plugin {
         loaded.getPlayerStorage().captureLoaded(client);
         loaded.getCollectionLogHistory().observe(client.getItemContainer(InventoryID.COLLECTION_TRANSMIT));
         for (Milestone goal : loaded.getGoals()) {
+            loaded.metadata(goal).beginCatchUp();
             if (goal instanceof SessionExperienceMilestone) {
                 ((SessionExperienceMilestone) goal).restart();
             }

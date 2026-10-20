@@ -2,6 +2,10 @@ package com.grindstone.repository;
 import com.grindstone.content.milestone.Milestone;
 import com.grindstone.content.milestone.MilestoneCategory;
 import com.grindstone.content.milestone.MilestoneStatus;
+import com.grindstone.content.milestone.ManualMilestone;
+import com.grindstone.content.milestone.impl.LinkedMilestone;
+import com.grindstone.content.milestone.impl.experience.SessionExperienceMilestone;
+import com.grindstone.content.milestone.impl.item.PossessedItemMilestone;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -31,6 +35,38 @@ public final class MilestoneMetadata {
     private boolean deadlineReminder;
     @Getter
     private long lastObservedAt;
+    private boolean hasLastReading;
+    private long lastObservedCurrent;
+    private long lastObservedTarget;
+    private transient boolean catchUpPending;
+    @Getter
+    private transient String catchUpText;
+
+    public void beginCatchUp() {
+        catchUpPending = hasLastReading;
+        catchUpText = null;
+    }
+
+    public void observeReading(Milestone goal, String title, long now) {
+        if (now <= 0 || goal instanceof ManualMilestone || goal instanceof LinkedMilestone || goal instanceof SessionExperienceMilestone || goal instanceof PossessedItemMilestone || goal.getProgressMaximum() <= 0) {
+            return;
+        }
+        long current = Math.max(0, goal.getProgressCurrent());
+        long target = goal.getProgressMaximum();
+        if (catchUpPending && lastObservedTarget == target) {
+            // Some activity counters load only after their native interface is opened.
+            if (current < lastObservedCurrent) {
+                return;
+            }
+            if (current > lastObservedCurrent) {
+                catchUpText = String.format(Locale.ROOT, "%s: +%,d (%,d to %,d)%s", title, current - lastObservedCurrent, lastObservedCurrent, current, lastObservedCurrent < target && current >= target ? " - target reached" : "");
+            }
+        }
+        catchUpPending = false;
+        hasLastReading = true;
+        lastObservedCurrent = current;
+        lastObservedTarget = target;
+    }
     @Getter
     @Setter
     private MilestoneCategory displayCategory;
@@ -72,6 +108,11 @@ public final class MilestoneMetadata {
         deadlineAt = source.deadlineAt;
         deadlineReminder = source.deadlineReminder;
         lastObservedAt = source.lastObservedAt;
+        hasLastReading = source.hasLastReading;
+        lastObservedCurrent = source.lastObservedCurrent;
+        lastObservedTarget = source.lastObservedTarget;
+        catchUpPending = source.catchUpPending;
+        catchUpText = source.catchUpText;
         displayCategory = source.displayCategory;
         recurring = source.recurring == null ? null : source.recurring.copy();
         completions.addAll(source.completions);
@@ -83,6 +124,7 @@ public final class MilestoneMetadata {
         return Collections.unmodifiableList(completions);
     }
     public boolean observe(Milestone goal, String title, long now) {
+        observeReading(goal, title, now);
         if (now > 0) {
             lastObservedAt = Math.max(lastObservedAt, now);
         }
@@ -96,7 +138,7 @@ public final class MilestoneMetadata {
     public static MilestoneMetadata validated(MilestoneMetadata saved) {
         UUID.fromString(saved.id);
         saved.setDeadline(saved.deadlineAt, saved.deadlineReminder);
-        if (saved.lastObservedAt < 0) {
+        if (saved.lastObservedAt < 0 || saved.lastObservedCurrent < 0 || saved.lastObservedTarget < 0 || saved.hasLastReading && saved.lastObservedTarget == 0) {
             throw new IllegalArgumentException("Invalid last observation.");
         }
         if (saved.recurring != null) {

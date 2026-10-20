@@ -48,6 +48,8 @@ Want to work toward the whole log? Use **Add all collection-log pages** from the
 
 <img src="docs/images/add-goal.png" width="464" alt="Add milestone dialog with six focus groups, searchable skills, target presets and a Slayer level 99 target">
 
+Played on mobile or another computer? Your tracked game progress refreshes when you return to RuneLite. **Since last seen** shows gains compared with a previous saved reading. Open the collection log or relevant activity interface to load missing data. Exact completion times and progress across routine resets cannot be reconstructed.
+
 Start with your own milestones or choose a preset pack from the **…** menu. Customize your sidebar, tracking preferences and alerts in **RuneLite settings → Grindstone**.
 
 ### Right-click to get started faster

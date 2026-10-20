@@ -313,6 +313,9 @@ public final class GrindstoneRepository {
                 if (saved.has("metadata") && saved.get("metadata").isJsonObject()) {
                     JsonObject metadata = saved.getAsJsonObject("metadata");
                     metadata.addProperty("lastObservedAt", 0);
+                    metadata.addProperty("hasLastReading", false);
+                    metadata.addProperty("lastObservedCurrent", 0);
+                    metadata.addProperty("lastObservedTarget", 0);
                     metadata.add("completions", new JsonArray());
                     if (metadata.has("recurring") && metadata.get("recurring").isJsonObject()) {
                         JsonObject recurring = metadata.getAsJsonObject("recurring");

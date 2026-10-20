@@ -200,6 +200,8 @@ public class GrindstonePanel extends PluginPanel {
     private final JLabel progressPercent = new JLabel();
     private final JLabel filterSummary = new JLabel();
     private final JLabel updateStatusLabel = new JLabel();
+    private final JButton catchUpButton = new JButton();
+    private String catchUpText = "";
     private final JLabel resultsLabel = new JLabel();
     private final SegmentedProgressBar overallProgress = new SegmentedProgressBar();
     private final IconTextField searchField = new IconTextField();
@@ -344,6 +346,18 @@ public class GrindstonePanel extends PluginPanel {
         updateStatusLabel.setToolTipText("Latest inventory, equipment or storage snapshot captured this login. This does not mean every storage has been loaded.");
         header.add(Box.createVerticalStrut(4));
         header.add(updateStatusLabel);
+        catchUpButton.setAlignmentX(LEFT_ALIGNMENT);
+        catchUpButton.setFont(UiTypography.META);
+        catchUpButton.setVisible(false);
+        catchUpButton.setToolTipText("Review progress discovered since your previous Grindstone reading, including play on mobile or another computer.");
+        catchUpButton.addActionListener(event -> {
+            JTextArea details = new JTextArea(catchUpText, 12, 36);
+            details.setEditable(false);
+            details.setLineWrap(true);
+            details.setWrapStyleWord(true);
+            JOptionPane.showMessageDialog(DialogPlacement.owner(this), new JScrollPane(details), "Since last seen", JOptionPane.INFORMATION_MESSAGE);
+        });
+        header.add(catchUpButton);
 
         JPanel counters = new JPanel(new GridLayout(2, 2, 4, 4));
         counters.setOpaque(false);
@@ -823,6 +837,9 @@ public class GrindstonePanel extends PluginPanel {
                         progressCurrent = 0;
                         progressMaximum = 0;
                     }
+                    if (loggedIn && tracking != TrackingState.WAITING) {
+                        metadata.observeReading(goal, title, System.currentTimeMillis());
+                    }
                     if (!repeating && tracking != TrackingState.WAITING) {
                         metadata.observe(goal, title, System.currentTimeMillis());
                     }
@@ -982,11 +999,24 @@ public class GrindstonePanel extends PluginPanel {
                 MilestoneMetadata metadata = currentProfile.metadata(goal);
                 return metadata.isDeadlineReminder() && metadata.getDeadlineAt() > 0 && metadata.getDeadlineAt() - System.currentTimeMillis() <= 86_400_000L && (metadata.recurring().isActive() ? metadata.recurring().getStatus() : goal.getStatus()) != MilestoneStatus.COMPLETE;
             }).count();
+            List<String> catchUp = new ArrayList<>();
+            if (currentProfile != null) {
+                for (Milestone goal : currentProfile.getGoals()) {
+                    String reading = currentProfile.metadata(goal).getCatchUpText();
+                    if (reading != null) {
+                        catchUp.add(reading);
+                    }
+                }
+            }
+            String capturedCatchUp = "Progress since the previous Grindstone reading:\n\n" + String.join("\n", catchUp) + "\n\nUpdated from your character's available game data when you returned to RuneLite. Exact achievement times and gains across routine resets cannot be reconstructed. Open the collection log, bank or relevant activity interface to refresh data that is not loaded yet.";
             SwingUtilities.invokeLater(() -> {
                 if (version != renderVersion.get()) {
                     return;
                 }
 
+                catchUpText = capturedCatchUp;
+                catchUpButton.setText("Since last seen - " + catchUp.size() + " updated");
+                catchUpButton.setVisible(!catchUp.isEmpty());
                 updateStatusLabel.setText("<html>" + (storageStatus == null ? "" : HtmlUtils.escape(storageStatus) + "<br>") + (dueCount == 0 ? "" : dueCount + " personal deadline(s) due within 24h / past due<br>") + (config.showUpdateStatus() ? updateText : "") + "</html>");
                 updateStatusLabel.setVisible(config.showUpdateStatus() && currentProfile != null || storageStatus != null || dueCount > 0);
                 updateStatusLabel.setToolTipText("Latest inventory, equipment or storage snapshot captured this login. This does not mean every storage has been loaded.");
