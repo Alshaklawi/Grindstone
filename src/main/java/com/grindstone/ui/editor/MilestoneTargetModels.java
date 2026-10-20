@@ -32,6 +32,19 @@ public final class MilestoneTargetModels {
         return new SpinnerNumberModel(Long.valueOf(goal.getProgressMaximum()), Long.valueOf(minimum), Long.valueOf(maximum), Long.valueOf(1));
     }
 
+    public static SpinnerNumberModel createNextTarget(Milestone goal) {
+        SpinnerNumberModel model = create(goal);
+        long minimum = Math.max(((Number) model.getMinimum()).longValue(), goal.getProgressCurrent() + 1);
+        if (minimum > ((Number) model.getMaximum()).longValue()) {
+            throw new IllegalArgumentException("This milestone is already fully achieved.");
+        }
+        model.setMinimum(minimum);
+        if (((Number) model.getValue()).longValue() < minimum) {
+            model.setValue(minimum);
+        }
+        return model;
+    }
+
     public static void describe(JSpinner spinner) {
         SpinnerNumberModel model = (SpinnerNumberModel) spinner.getModel();
         UiTooltips.set(spinner, String.format(Locale.ROOT, "Target range: %,d to %,d. Type a number or use the arrows. This changes your milestone, not your game stats.", model.getMinimum(), model.getMaximum()));

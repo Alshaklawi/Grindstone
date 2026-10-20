@@ -1778,6 +1778,14 @@ public class GrindstonePanel extends PluginPanel {
             }
         }, importing);
     }
+    private boolean isCompletedQuestOrDiary(Milestone goal) {
+        if (goal.getCategory() != MilestoneCategory.QUEST && goal.getCategory() != MilestoneCategory.ACHIEVEMENT_DIARY) {
+            return false;
+        }
+        goal.refresh(client);
+        return goal.getStatus() == MilestoneStatus.COMPLETE;
+    }
+
     private void addPreset(MilestonePreset preset) {
         GrindstoneProfile active = profile;
         if (active == null) {
@@ -1788,6 +1796,7 @@ public class GrindstonePanel extends PluginPanel {
                 return;
             }
             List<Milestone> goals = preset.createGoals();
+            goals.removeIf(this::isCompletedQuestOrDiary);
             String summary = additionSummary(active, goals, goal -> RepeatSchedule.NONE);
             SwingUtilities.invokeLater(() -> {
                 if (profile != active || JOptionPane.showConfirmDialog(DialogPlacement.owner(this), previewPane(summary), "Preview " + preset, JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
@@ -1799,7 +1808,7 @@ public class GrindstonePanel extends PluginPanel {
                     }
                     List<Milestone> before = new ArrayList<>(active.getGoals());
                     for (Milestone goal : goals) {
-                        if (active.add(goal)) {
+                        if (!isCompletedQuestOrDiary(goal) && active.add(goal)) {
                             goal.refresh(client);
                         }
                     }
@@ -2004,22 +2013,24 @@ public class GrindstonePanel extends PluginPanel {
                 return;
             }
             Map<Integer, Map<String, Supplier<Milestone>>> choices =
-            CompletionMilestoneChoices.create(client);
+            CompletionMilestoneChoices.available(client, active.getCollectionLogHistory());
             Map<Milestone, RepeatSchedule> existing = new LinkedHashMap<>();
             for (Milestone goal : active.getGoals()) {
                 existing.put(goal, active.metadata(goal).recurring().getSchedule());
             }
+            Set<Integer> obtained = new LinkedHashSet<>(active.getCollectionLogHistory().snapshot().keySet());
             SwingUtilities.invokeLater(() -> {
                 if (profile == active) {
-                    showAddGoalDialog(active, choices, existing, initialGoal);
+                    showAddGoalDialog(active, choices, existing, initialGoal, obtained);
                 }
             });
         });
     }
 
-    private void showAddGoalDialog(GrindstoneProfile active, Map<Integer, Map<String, Supplier<Milestone>>> choices, Map<Milestone, RepeatSchedule> existingGoalsSnapshot, Milestone initialGoal) {
+    private void showAddGoalDialog(GrindstoneProfile active, Map<Integer, Map<String, Supplier<Milestone>>> choices, Map<Milestone, RepeatSchedule> existingGoalsSnapshot, Milestone initialGoal, Set<Integer> obtained) {
         MilestoneEditorPanel form = new MilestoneEditorPanel(itemManager, itemSearchService, choices);
         form.setExistingGoals(existingGoalsSnapshot);
+        form.hideObtainedCollectionItems(obtained);
         if (initialGoal != null) {
             try {
                 form.loadGoal(initialGoal);
@@ -2067,6 +2078,16 @@ public class GrindstonePanel extends PluginPanel {
                 });
             } else {
                 candidate.refresh(client);
+                boolean diary = candidate.getCategory() == MilestoneCategory.ACHIEVEMENT_DIARY;
+                boolean quest = candidate.getCategory() == MilestoneCategory.QUEST;
+                if ((diary || quest) && candidate.getStatus() == MilestoneStatus.COMPLETE) {
+                    SwingUtilities.invokeLater(() -> {
+                        if (profile == active) {
+                            JOptionPane.showMessageDialog(DialogPlacement.owner(this), diary ? "This achievement diary is already complete. Choose an unfinished diary to track." : "This quest or quest series is already complete. Choose an unfinished quest to track.");
+                        }
+                    });
+                    return;
+                }
                 configureRepeat(active, candidate, schedule, periodTarget);
                 active.add(candidate, active.metadata(candidate));
                 recordUndo(active, "add milestone", () -> active.remove(candidate), () -> active.getGoals().contains(candidate));

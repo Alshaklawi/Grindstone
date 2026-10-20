@@ -6,6 +6,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.util.function.Consumer;
+import java.util.function.IntPredicate;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
@@ -41,6 +42,7 @@ public final class ItemPickerPanel extends JPanel {
     private Runnable cancelSearch = () -> {
     };
     private boolean updating;
+    private IntPredicate available = id -> true;
     private int queryVersion;
 
     public ItemPickerPanel(ItemLookup service, Consumer<ItemSearchService.Result> onSelection) {
@@ -136,6 +138,9 @@ public final class ItemPickerPanel extends JPanel {
             try {
                 model.clear();
                 for (ItemSearchService.Result item : response.results) {
+                    if (!available.test(item.id)) {
+                        continue;
+                    }
                     model.addElement(item);
                     if (item.id == selectedId) {
                         results.setSelectedValue(item, true);
@@ -144,15 +149,19 @@ public final class ItemPickerPanel extends JPanel {
                         item.image.onLoaded(results::repaint);
                     }
                 }
-                if (response.complete && response.results.size() == 1) {
+                if (response.complete && model.size() == 1) {
                     results.setSelectedIndex(0);
                 }
             } finally {
                 updating = false;
             }
-            setStatus(response.message);
+            setStatus(response.complete && model.isEmpty() && !response.results.isEmpty() ? "Matching items are already unlocked." : response.message);
             select(results.getSelectedValue());
         });
+    }
+
+    public void setAvailableItems(IntPredicate available) {
+        this.available = available;
     }
 
     private void select(ItemSearchService.Result item) {
@@ -171,14 +180,14 @@ public final class ItemPickerPanel extends JPanel {
     }
 
     public int getSelectedItemId() {
-        if (selected == null) {
-            throw new IllegalArgumentException("Search for an item and select its name and icon first.");
+        if (selected == null || !available.test(selected.id)) {
+            throw new IllegalArgumentException("Search for an available item and select its name and icon first.");
         }
         return selected.id;
     }
 
     public boolean hasSelection() {
-        return selected != null;
+        return selected != null && available.test(selected.id);
     }
     public String getSelectedItemName() {
         if (selected == null) {
@@ -198,6 +207,9 @@ public final class ItemPickerPanel extends JPanel {
     }
 
     public void resumeSearch() {
+        if (selected != null && !available.test(selected.id)) {
+            select(null);
+        }
         if (!search.getText().trim().isEmpty() && selected == null) {
             debounce.restart();
         }

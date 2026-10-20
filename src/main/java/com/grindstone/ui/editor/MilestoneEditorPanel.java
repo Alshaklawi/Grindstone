@@ -1,6 +1,7 @@
 package com.grindstone.ui.editor;
 
 import com.grindstone.content.collectionlog.CollectionLogEntry;
+import com.grindstone.content.collectionlog.CollectionLogPages;
 import com.grindstone.content.milestone.ManualMilestone;
 import com.grindstone.content.milestone.Milestone;
 import com.grindstone.content.milestone.impl.ChecklistMilestone;
@@ -31,9 +32,11 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.text.ParseException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -101,6 +104,11 @@ public final class MilestoneEditorPanel extends JPanel {
         this(itemManager, searchService, CompletionMilestoneChoices.create(null));
     }
 
+    public void hideObtainedCollectionItems(Set<Integer> obtained) {
+        Set<Integer> snapshot = new HashSet<>(obtained);
+        itemPicker.setAvailableItems(id -> type.getSelectedIndex() != 7 || !snapshot.contains(CollectionLogPages.canonicalItemId(id)));
+    }
+
     public void setExistingGoals(Map<Milestone, RepeatSchedule> existingGoals) {
         this.existingGoals = new LinkedHashMap<>(existingGoals);
     }
@@ -138,7 +146,7 @@ public final class MilestoneEditorPanel extends JPanel {
         setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         UiTooltips.set(type, "Choose a milestone type. The form will show only the relevant fields.");
         UiTooltips.set(subject, "Choose the skill, activity or collection-log page to track.");
-        add(new MilestoneTypePicker(type), BorderLayout.NORTH);
+        add(new MilestoneTypePicker(type, kind -> !completionChoices.containsKey(kind) || !completionChoices.get(kind).isEmpty()), BorderLayout.NORTH);
         body.setOpaque(false);
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
         add(body, BorderLayout.CENTER);
@@ -258,6 +266,10 @@ public final class MilestoneEditorPanel extends JPanel {
     }
 
     private void populateChoices(int kind) {
+        if (completionChoices.containsKey(kind) && (kind != 6 || !completionChoices.get(kind).isEmpty() || completionChoices.containsKey(0))) {
+            choices.putAll(completionChoices.get(kind));
+            return;
+        }
         if (kind == 20) {
             choices.put("All skills (total gains)", SessionExperienceMilestone::new);
             for (Skill skill : Skill.values()) {
@@ -313,7 +325,8 @@ public final class MilestoneEditorPanel extends JPanel {
             return;
         }
         long previous = target.getValue() instanceof Number ? ((Number) target.getValue()).longValue() : 0;
-        SpinnerNumberModel model = MilestoneTargetModels.create(goal);
+        SpinnerNumberModel model = completionChoices.containsKey(type.getSelectedIndex())
+                ? MilestoneTargetModels.createNextTarget(goal) : MilestoneTargetModels.create(goal);
         if (preserve && previous >= ((Number) model.getMinimum()).longValue() && previous <= ((Number) model.getMaximum()).longValue()) {
             model.setValue(previous);
         }
@@ -331,6 +344,9 @@ public final class MilestoneEditorPanel extends JPanel {
                 : kind == 4 ? new long[]{100_000_000, goal.getProgressMaximum(), maximum}
                 : new long[]{100, 500, 1000};
         for (long value : values) {
+            if (value < ((Number) model.getMinimum()).longValue() || value > maximum) {
+                continue;
+            }
             JButton preset = new JButton(NumberFormats.target(value));
             preset.setToolTipText(String.format(Locale.ROOT, "Set target to %,d", value));
             preset.addActionListener(event -> target.setValue(value));

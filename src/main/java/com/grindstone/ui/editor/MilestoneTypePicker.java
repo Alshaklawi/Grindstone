@@ -6,6 +6,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.util.function.IntPredicate;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListCellRenderer;
@@ -33,10 +34,12 @@ public final class MilestoneTypePicker extends JPanel {
     private final JToggleButton[] groups = new JToggleButton[GROUPS.length];
     private final JLabel description = new JLabel();
     private boolean updating;
+    private final IntPredicate available;
 
-    public MilestoneTypePicker(JComboBox<String> model) {
+    public MilestoneTypePicker(JComboBox<String> model, IntPredicate available) {
         super(new BorderLayout(0, 10));
         this.model = model;
+        this.available = available;
         setOpaque(false);
         JPanel focuses = new JPanel(new GridLayout(2, 3, 6, 6));
         focuses.setOpaque(false);
@@ -50,7 +53,13 @@ public final class MilestoneTypePicker extends JPanel {
             button.addActionListener(event -> selectGroup(index));
             group.add(button);
             groups[i] = button;
-            focuses.add(button);
+            boolean visible = false;
+            for (int kind : TYPES[i]) {
+                visible |= available.test(kind);
+            }
+            if (visible) {
+                focuses.add(button);
+            }
         }
         JPanel top = new JPanel(new BorderLayout(0, 7));
         top.setOpaque(false);
@@ -90,6 +99,14 @@ public final class MilestoneTypePicker extends JPanel {
             }
         });
         model.addActionListener(event -> syncSelection());
+        if (!available.test(model.getSelectedIndex())) {
+            for (int kind = 0; kind < model.getItemCount(); kind++) {
+                if (available.test(kind)) {
+                    model.setSelectedIndex(kind);
+                    break;
+                }
+            }
+        }
         syncSelection();
     }
 
@@ -101,7 +118,12 @@ public final class MilestoneTypePicker extends JPanel {
                 return;
             }
         }
-        model.setSelectedIndex(TYPES[index][0]);
+        for (int kind : TYPES[index]) {
+            if (available.test(kind)) {
+                model.setSelectedIndex(kind);
+                return;
+            }
+        }
     }
 
     private void syncSelection() {
@@ -117,7 +139,9 @@ public final class MilestoneTypePicker extends JPanel {
                     description.setText("<html>" + DESCRIPTIONS[i] + "</html>");
                     selection.removeAllItems();
                     for (int option : TYPES[i]) {
-                        selection.addItem(option);
+                        if (available.test(option)) {
+                            selection.addItem(option);
+                        }
                     }
                     selection.setSelectedItem(current);
                 } finally {
