@@ -55,6 +55,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.swing.SwingUtilities;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
@@ -120,7 +121,7 @@ public class GrindstonePlugin extends Plugin {
     private ClientThread clientThread;
 
     @Inject
-    private GrindstonePanel panel;
+    private Provider<GrindstonePanel> panelProvider;
     @Inject
     private GrindstoneRepository repository;
     @Inject
@@ -135,6 +136,7 @@ public class GrindstonePlugin extends Plugin {
     private OverlayManager overlayManager;
 
     private NavigationButton navigationButton;
+    private GrindstonePanel panel;
     private volatile GrindstoneProfile profile;
     private final Map<Long, GrindstoneProfile> sessionProfiles = new ConcurrentHashMap<>();
     private final AtomicInteger loadGeneration = new AtomicInteger();
@@ -150,6 +152,9 @@ public class GrindstonePlugin extends Plugin {
 
     @Override
     protected void startUp() {
+        if (panel == null) {
+            panel = panelProvider.get();
+        }
         running = true;
         lastSavedSnapshot = null;
         completionNotifications.stop();

@@ -2,8 +2,6 @@ package com.grindstone;
 
 import net.runelite.client.RuneLite;
 import net.runelite.client.externalplugins.ExternalPluginManager;
-import net.runelite.client.ui.laf.RuneLiteLAF;
-import javax.swing.SwingUtilities;
 
 /**
  * @author Ayman Yassen
@@ -12,11 +10,6 @@ import javax.swing.SwingUtilities;
  */
 public class GrindstonePluginTest {
     public static void main(String[] args) throws Exception {
-        SwingUtilities.invokeAndWait(() -> {
-            if (!RuneLiteLAF.setup()) {
-                throw new IllegalStateException("Unable to install the RuneLite look and feel");
-            }
-        });
         ExternalPluginManager.loadBuiltin(GrindstonePlugin.class);
         RuneLite.main(args);
     }

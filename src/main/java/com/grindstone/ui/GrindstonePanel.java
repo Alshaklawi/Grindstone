@@ -123,8 +123,6 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.LookAndFeel;
-import javax.swing.UIManager;
 import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -244,7 +242,6 @@ public class GrindstonePanel extends PluginPanel {
     private final Timer filterRenderTimer = new Timer(150, event -> render());
 
     private volatile GrindstoneProfile profile;
-    private LookAndFeel appliedLookAndFeel;
     private volatile String storageStatus;
     public void setStorageStatus(String status) {
         storageStatus = status;
@@ -294,25 +291,6 @@ public class GrindstonePanel extends PluginPanel {
         render();
     }
 
-    @Override
-    public void onActivate() {
-        if (!SwingUtilities.isEventDispatchThread()) {
-            SwingUtilities.invokeLater(this::onActivate);
-            return;
-        }
-        refreshTheme();
-    }
-
-    private void refreshTheme() {
-        LookAndFeel current = UIManager.getLookAndFeel();
-        if (appliedLookAndFeel != current) {
-            SwingUtilities.updateComponentTreeUI(this);
-            appliedLookAndFeel = current;
-            revalidate();
-            repaint();
-        }
-    }
-
     private void buildHeader() {
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.setBackground(HEADER_COLOR);
@@ -347,10 +325,7 @@ public class GrindstonePanel extends PluginPanel {
         more.setToolTipText("More milestone options");
         more.putClientProperty("JButton.buttonType", "toolBarButton");
         JPopupMenu moreMenu = new JPopupMenu();
-        more.addActionListener(event -> {
-            SwingUtilities.updateComponentTreeUI(moreMenu);
-            moreMenu.show(more, 0, more.getHeight());
-        });
+        more.addActionListener(event -> moreMenu.show(more, 0, more.getHeight()));
         JButton dashboardToggle = new JButton("-");
         styleButton(dashboardToggle);
         dashboardToggle.setToolTipText("Collapse dashboard overview and snapshots");
@@ -786,7 +761,6 @@ public class GrindstonePanel extends PluginPanel {
             undoDeleteButton.setVisible(false);
         });
         renderVersion.incrementAndGet();
-        SwingUtilities.invokeLater(this::refreshTheme);
         render();
     }
 
