@@ -74,6 +74,7 @@ Choose your target and review it before saving. Each shortcut can be switched of
 - **Build a routine.** Create daily, weekly or monthly routines and use **Routines** to see recurring progress and upcoming resets.
 - **Plan ahead.** Add personal deadlines and optional reminders in the sidebar.
 - **Celebrate the finish.** Choose completion popups, local chat messages or optional desktop notifications, then revisit your milestones in **History**.
+- **Remember your routines.** Enable daily, weekly or monthly reminders in Notifications. Choose chat or desktop alerts, the interval, login and reset reminders, numbers, countdowns and chat colours.
 - **Manage your milestones together.** Use bulk actions to organize several milestones, and export a profile backup to keep a local copy.
 
 ## Track progress beside the game
@@ -87,3 +88,9 @@ Completion popups celebrate newly reached targets with a compact card, a complet
 | Daily progress overlay | Completion popup |
 | --- | --- |
 | <img src="docs/images/progress-overlay.png" width="240" alt="Daily routines overlay with progress bars, completed herb runs and a reset countdown"> | <img src="docs/images/completion-popup.png" width="300" alt="Routine completion notification with a checkmark and full progress bar"> |
+
+## Stay on top of routines
+
+In **Grindstone → Notifications**, switch on **Enable routine reminders** and choose daily, weekly or monthly reminders, their interval, and local chat or desktop notifications. Reminders list unfinished tracked routines with exact progress and time until reset. Completed routines are skipped.
+
+Completion chat messages show exact progress, such as **1,250 / 1,000**. Colour and completion numbers can each be switched off.

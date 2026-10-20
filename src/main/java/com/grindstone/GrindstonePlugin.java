@@ -137,7 +137,7 @@ public class GrindstonePlugin extends Plugin {
     protected void startUp() {
         running = true;
         lastSavedSnapshot = null;
-        completionNotifications.reset();
+        completionNotifications.stop();
         overlayManager.add(completionOverlay);
         overlayManager.add(progressOverlay);
         loadGeneration.incrementAndGet();
@@ -168,7 +168,7 @@ public class GrindstonePlugin extends Plugin {
         overlayManager.remove(completionOverlay);
         overlayManager.remove(progressOverlay);
         progressOverlay.clear();
-        completionNotifications.reset();
+        completionNotifications.stop();
         loadGeneration.incrementAndGet();
         loadingHash = 0;
         if (config.saveOnShutdown()) {
@@ -211,7 +211,7 @@ public class GrindstonePlugin extends Plugin {
             return;
         }
         if (!config.enabled()) {
-            completionNotifications.reset();
+            completionNotifications.stop();
             saveProfile();
             loadGeneration.incrementAndGet();
             loadingHash = 0;

@@ -160,8 +160,74 @@ public interface GrindstoneConfig extends Config {
         return 240;
     }
 
-    @ConfigSection(name = "Notifications", description = "Celebrate newly reached personal milestones without repeating alerts on login or refresh.", position = 4)
+    @ConfigSection(name = "Notifications", description = "Control completion messages, colours and reminders for unfinished routines.", position = 4)
     String notificationsSection = NOTIFICATIONS_SECTION;
+
+    @ConfigItem(keyName = "notificationColours", name = "Colourful chat messages", description = "Colour milestone completions and routine reminders in local chat.", section = NOTIFICATIONS_SECTION, position = 4)
+    default boolean notificationColours() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "completionNumbers", name = "Completion progress numbers", description = "Include exact comma-separated current and target numbers in completion messages.", section = NOTIFICATIONS_SECTION, position = 5)
+    default boolean completionNumbers() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "routineReminders", name = "Enable routine reminders", description = "Remind you about unfinished tracked routines while logged in.", section = NOTIFICATIONS_SECTION, position = 6)
+    default boolean routineReminders() {
+        return false;
+    }
+
+    @ConfigItem(keyName = "dailyReminders", name = "Daily reminders", description = "Include unfinished daily routines.", section = NOTIFICATIONS_SECTION, position = 7)
+    default boolean dailyReminders() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "weeklyReminders", name = "Weekly reminders", description = "Include unfinished weekly routines.", section = NOTIFICATIONS_SECTION, position = 8)
+    default boolean weeklyReminders() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "monthlyReminders", name = "Monthly reminders", description = "Include unfinished monthly routines.", section = NOTIFICATIONS_SECTION, position = 9)
+    default boolean monthlyReminders() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "routineReminderChat", name = "Reminder chat messages", description = "Show routine reminders in local chat. Nothing is sent to other players.", section = NOTIFICATIONS_SECTION, position = 10)
+    default boolean routineReminderChat() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "routineReminderOnLogin", name = "Remind when loaded", description = "Remind when routines first load. Reconnecting on the same account does not bypass the reminder interval.", section = NOTIFICATIONS_SECTION, position = 11)
+    default boolean routineReminderOnLogin() {
+        return true;
+    }
+
+    @Range(min = 5, max = 240)
+    @ConfigItem(keyName = "routineReminderMinutes", name = "Reminder interval (minutes)", description = "Minimum time between reminders for each routine schedule while logged in. Only unfinished routines are included.", section = NOTIFICATIONS_SECTION, position = 12)
+    default int routineReminderMinutes() {
+        return 60;
+    }
+
+    @ConfigItem(keyName = "routineReminderNotification", name = "Desktop routine reminders", description = "Optional RuneLite notifications for unfinished routines. The separate reminder chat toggle controls Grindstone chat messages.", section = NOTIFICATIONS_SECTION, position = 13)
+    default Notification routineReminderNotification() {
+        return Notification.OFF;
+    }
+
+    @ConfigItem(keyName = "routineReminderOnReset", name = "Remind after routine reset", description = "Remind about unfinished routines when a new daily, weekly or monthly period starts while logged in.", section = NOTIFICATIONS_SECTION, position = 14)
+    default boolean routineReminderOnReset() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "routineReminderNumbers", name = "Reminder progress numbers", description = "Include exact comma-separated current and target numbers in routine reminders, with XP labelled where applicable.", section = NOTIFICATIONS_SECTION, position = 15)
+    default boolean routineReminderNumbers() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "routineReminderCountdown", name = "Reminder reset countdown", description = "Include the time remaining until the routine's configured UTC reset in reminder messages.", section = NOTIFICATIONS_SECTION, position = 16)
+    default boolean routineReminderCountdown() {
+        return true;
+    }
 
     @ConfigItem(keyName = "completionPopup", name = "Completion popup", description = "Show a non-blocking RuneLite overlay when a personal milestone is newly completed. Already-complete milestones loaded or added are excluded.", section = NOTIFICATIONS_SECTION, position = 0)
     default boolean completionPopup() {
