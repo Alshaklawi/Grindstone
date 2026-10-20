@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.function.IntUnaryOperator;
 import lombok.Getter;
 import net.runelite.api.Client;
-import net.runelite.api.gameval.ItemID;
 import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.api.gameval.VarbitID;
 /**
@@ -55,7 +54,7 @@ public enum TrackerEntry {
     THEATREOFBLOOD("Theatre of Blood completions", VarPlayerID.TOTAL_COMPLETED_THEATREOFBLOOD, MilestoneCategory.RAIDS),
     HYDRABOSS("Alchemical Hydra kills", VarPlayerID.TOTAL_HYDRABOSS_KILLS, MilestoneCategory.BOSSING),
     HESPORI("Hespori kills", VarPlayerID.TOTAL_HESPORI_KILLS, MilestoneCategory.BOSSING),
-    MIMIC("Mimic kills", VarPlayerID.TOTAL_MIMIC_KILLS, MilestoneCategory.BOSSING),
+    MIMIC("Mimic kills", VarPlayerID.TOTAL_MIMIC_KILLS, MilestoneCategory.CLUES),
     SARACHNIS("Sarachnis kills", VarPlayerID.TOTAL_SARACHNIS_KILLS, MilestoneCategory.BOSSING),
     ZALCANO("Zalcano kills", VarPlayerID.TOTAL_ZALCANO_KILLS, MilestoneCategory.SKILLING),
     GAUNTLET("The Gauntlet completions", VarPlayerID.TOTAL_COMPLETED_GAUNTLET, MilestoneCategory.BOSSING),
@@ -111,7 +110,7 @@ public enum TrackerEntry {
     private static final Map<String, TrackerEntry> BOSS_TRACKERS = new HashMap<>();
     static {
         for (TrackerEntry entry : values()) {
-            if ((entry.category == MilestoneCategory.BOSSING || entry.category == MilestoneCategory.SKILLING || entry == WINTERTODT || entry == TEMPOROSS) && entry.displayName.endsWith(" kills")) {
+            if ((entry.category == MilestoneCategory.BOSSING || entry.category == MilestoneCategory.SKILLING || entry == WINTERTODT || entry == TEMPOROSS || entry == MIMIC) && entry.displayName.endsWith(" kills")) {
                 BOSS_TRACKERS.put(normalized(entry.displayName.substring(0, entry.displayName.length() - 6)), entry);
             }
         }
@@ -141,7 +140,6 @@ public enum TrackerEntry {
         this.category = MilestoneCategory.SLAYER;
         this.varbit = varbit;
         this.defaultTarget = defaultTarget;
-        this.representativeItem = ItemID.SLAYER_HELM;
     }
     public boolean isSelectable() {
         return this != SOUL_WARS_DEATHS && this != COLOSSEUM_WAVES;
@@ -174,8 +172,8 @@ public enum TrackerEntry {
         return Math.max(0, (varbit ? varbits : varps).applyAsInt(id));
     }
     public int getIconItem(Client client) {
-        if (this == CLUES_TOTAL) {
-            return ItemID.TRAIL_REWARD_CASKET_MASTER;
+        if (category == MilestoneCategory.SLAYER || this == CLUES_TOTAL) {
+            return 0;
         }
         if (representativeItem > 0 || iconResolved || client == null) {
             return representativeItem;
