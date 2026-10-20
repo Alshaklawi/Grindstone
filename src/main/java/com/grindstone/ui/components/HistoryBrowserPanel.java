@@ -6,7 +6,6 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -38,8 +37,8 @@ public final class HistoryBrowserPanel extends JPanel {
     private final List<HistoryRecord> records;
     private final List<HistoryRecord> shown = new ArrayList<>();
     private final JTextField search = new JTextField();
-    private final JTextField from = new JTextField();
-    private final JTextField to = new JTextField();
+    private final UtcDatePicker from = new UtcDatePicker(null);
+    private final UtcDatePicker to = new UtcDatePicker(null);
     private final JComboBox<String> schedule = new JComboBox<>(new String[]{"All schedules", "Lifetime", "Daily", "Weekly", "Monthly"});
     private final JLabel summary = new JLabel();
     private final DefaultTableModel model = new DefaultTableModel(new String[]{"Milestone", "Schedule", "Period start", "Period end", "Progress", "Target", "Outcome", "Baseline", "Last observed", "Completed"}, 0) {
@@ -59,7 +58,7 @@ public final class HistoryBrowserPanel extends JPanel {
         this.records = new ArrayList<>(records);
         setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
         JPanel filters = new JPanel(new GridLayout(2, 4, 8, 4));
-        for (String label : new String[]{"Search milestones / outcomes", "Schedule", "From (yyyy-mm-dd UTC)", "Through (yyyy-mm-dd UTC)"}) {
+        for (String label : new String[]{"Search milestones / outcomes", "Schedule", "From (UTC)", "Through (UTC)"}) {
             filters.add(new JLabel(label));
         }
         filters.add(search);
@@ -68,7 +67,7 @@ public final class HistoryBrowserPanel extends JPanel {
         filters.add(to);
         search.setToolTipText("Filter milestone titles and period outcomes.");
         from.setToolTipText("Optional inclusive UTC date; periods overlapping this range are included.");
-        to.setToolTipText("Optional inclusive UTC date. Leave blank for no upper date limit.");
+        to.setToolTipText("Optional inclusive UTC date. Clear for no upper date limit.");
         table.setFont(FontManager.getRunescapeFont());
         table.setRowHeight(28);
         table.setAutoCreateRowSorter(true);
@@ -117,8 +116,8 @@ public final class HistoryBrowserPanel extends JPanel {
             }
         };
         search.getDocument().addDocumentListener(listener);
-        from.getDocument().addDocumentListener(listener);
-        to.getDocument().addDocumentListener(listener);
+        from.addPropertyChangeListener("date", event -> filter());
+        to.addPropertyChangeListener("date", event -> filter());
         schedule.addActionListener(event -> filter());
         setPreferredSize(new Dimension(900, 460));
         filter();
@@ -130,13 +129,13 @@ public final class HistoryBrowserPanel extends JPanel {
         long first;
         long last;
         try {
-            first = from.getText().trim().isEmpty() ? 0 : LocalDate.parse(from.getText().trim()).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
-            last = to.getText().trim().isEmpty() ? Long.MAX_VALUE : LocalDate.parse(to.getText().trim()).plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
+            first = from.getDate() == null ? 0 : from.getDate().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
+            last = to.getDate() == null ? Long.MAX_VALUE : to.getDate().plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
             if (last <= first) {
                 throw new IllegalArgumentException();
             }
         } catch (RuntimeException exception) {
-            summary.setText("Enter valid UTC dates with the end on or after the start.");
+            summary.setText("Choose an end date on or after the start date.");
             return;
         }
         RepeatSchedule repeat = schedule.getSelectedIndex() == 0 ? null : RepeatSchedule.values()[schedule.getSelectedIndex() - 1];

@@ -1,14 +1,12 @@
 package com.grindstone.ui.editor;
 
+import com.grindstone.ui.components.UtcDatePicker;
 import java.awt.BorderLayout;
-import java.time.DateTimeException;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.ZoneOffset;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 
 /**
  * @author Ayman Yassen
@@ -16,13 +14,13 @@ import javax.swing.JTextField;
  * @since 10/19/2026
  */
 public final class DeadlineForm extends JPanel {
-    private final JTextField date = new JTextField(20);
+    private final UtcDatePicker date;
     private final JCheckBox reminder = new JCheckBox("Show a header reminder within 24 hours / when overdue");
 
     public DeadlineForm(long deadlineAt, boolean remind) {
         super(new BorderLayout(0, 8));
-        add(new JLabel("Due by the end of this UTC date (YYYY-MM-DD; blank removes it)"), BorderLayout.NORTH);
-        date.setText(deadlineAt == 0 ? "" : Instant.ofEpochMilli(deadlineAt - 1).atZone(ZoneOffset.UTC).toLocalDate().toString());
+        add(new JLabel("Due by the end of this UTC date (Clear removes it)"), BorderLayout.NORTH);
+        date = new UtcDatePicker(deadlineAt == 0 ? null : Instant.ofEpochMilli(deadlineAt - 1).atZone(ZoneOffset.UTC).toLocalDate());
         date.setToolTipText("This is a personal deadline, not a game reset. Missing it never deletes or resets progress.");
         add(date, BorderLayout.CENTER);
         reminder.setSelected(remind);
@@ -32,25 +30,11 @@ public final class DeadlineForm extends JPanel {
     }
 
     public long getDeadlineAt() {
-        return parseDate(date.getText());
+        return date.getDate() == null ? 0 : date.getDate().plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
     }
 
     public boolean isReminderEnabled() {
-        return reminder.isSelected();
+        return date.getDate() != null && reminder.isSelected();
     }
 
-    public static long parseDate(String text) {
-        if (text == null || text.trim().isEmpty()) {
-            return 0;
-        }
-        try {
-            LocalDate due = LocalDate.parse(text.trim());
-            if (due.getYear() < 1970 || due.getYear() > 9998) {
-                throw new IllegalArgumentException("Choose a UTC date from 1970 to 9998.");
-            }
-            return due.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
-        } catch (DateTimeException failure) {
-            throw new IllegalArgumentException("Enter a valid date as YYYY-MM-DD, or leave it blank.", failure);
-        }
-    }
 }
