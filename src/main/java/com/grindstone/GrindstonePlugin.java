@@ -1017,7 +1017,7 @@ public class GrindstonePlugin extends Plugin {
     @Subscribe
     public void onClientShutdown(ClientShutdown event) {
         if (config.saveOnShutdown()) {
-            event.waitFor(saveProfile().thenCompose(ignored -> persistence.sync()));
+            event.waitFor(saveProfile().handle((ignored, failure) -> null).thenCompose(ignored -> persistence.sync()));
         }
     }
 

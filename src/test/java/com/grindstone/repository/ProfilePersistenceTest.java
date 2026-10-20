@@ -91,6 +91,7 @@ public class ProfilePersistenceTest {
         String previous = settings.values.get("first");
         assertEquals(ProfilePersistence.MAX_SYNC_CHARACTERS, previous.length());
         snapshot.addProperty("padding", new String(padding) + "x");
+        snapshot.getAsJsonArray("goals").get(0).getAsJsonObject().getAsJsonObject("metadata").addProperty("pinned", true);
         try {
             persistence.save(snapshot).join();
             fail("An oversized profile must not replace synced data");
@@ -99,6 +100,14 @@ public class ProfilePersistenceTest {
         }
         assertEquals(previous, settings.values.get("first"));
         assertEquals(1, TestProfiles.REPOSITORY.load(root.joinSegment("profiles"), 42).getGoals().size());
+        ProfilePersistence restarted = new ProfilePersistence(TestProfiles.REPOSITORY, Runnable::run, settings);
+        restarted.configure(() -> root);
+        GrindstoneProfile recovered = restarted.load(42).join();
+        assertTrue(recovered.getMetadata(recovered.getGoals().get(0)).isPinned());
+        restarted.save(TestProfiles.REPOSITORY.toJson(recovered)).join();
+        assertFalse(root.joinSegment("profiles").joinSegment("42.sync-pending").exists());
+        GrindstoneProfile synced = TestProfiles.REPOSITORY.readProfile(settings.values.get("first"), 42);
+        assertTrue(synced.getMetadata(synced.getGoals().get(0)).isPinned());
     }
 
     /**

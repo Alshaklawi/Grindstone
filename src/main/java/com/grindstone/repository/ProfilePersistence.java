@@ -80,8 +80,15 @@ public final class ProfilePersistence {
             profileKeys.put(hash, profileKey);
         }
         return enqueue(() -> {
+            Filepath profiles = root.get().joinSegment("profiles");
             if (syncedProfiles != null) {
                 requireProfileKey(profileKey);
+                if (profiles.joinSegment(hash + ".sync-pending").exists()) {
+                    if (!profiles.joinSegment(hash + ".json").exists() && !profiles.joinSegment(hash + ".json.bak").exists()) {
+                        throw new IOException("The pending local profile is missing. Synced data has not been changed.");
+                    }
+                    return repository.load(profiles, hash);
+                }
                 String saved = syncedProfiles.read(profileKey);
                 if (saved != null) {
                     if (saved.length() > MAX_SYNC_CHARACTERS) {
@@ -90,7 +97,7 @@ public final class ProfilePersistence {
                     return repository.readProfile(saved, hash);
                 }
             }
-            GrindstoneProfile loaded = repository.load(root.get().joinSegment("profiles"), hash);
+            GrindstoneProfile loaded = repository.load(profiles, hash);
             if (syncedProfiles != null) {
                 String text = repository.toJson(loaded).toString();
                 if (text.length() <= MAX_SYNC_CHARACTERS) {
@@ -105,14 +112,18 @@ public final class ProfilePersistence {
         Directory root = getDirectory();
         String profileKey = profileKeys.get(snapshot.get("hash").getAsLong());
         return enqueue(() -> {
-            repository.save(root.get().joinSegment("profiles"), snapshot);
+            Filepath profiles = root.get().joinSegment("profiles");
+            Filepath pending = profiles.joinSegment(snapshot.get("hash").getAsLong() + ".sync-pending");
+            String text = snapshot.toString();
+            repository.save(profiles, snapshot);
             if (syncedProfiles != null) {
+                pending.write("1");
                 requireProfileKey(profileKey);
-                String text = snapshot.toString();
                 if (text.length() > MAX_SYNC_CHARACTERS) {
                     throw new SyncLimitException();
                 }
                 syncedProfiles.write(profileKey, text);
+                pending.deleteIfExists();
             }
             return null;
         });
