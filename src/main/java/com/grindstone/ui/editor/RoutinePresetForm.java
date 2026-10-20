@@ -58,7 +58,7 @@ public final class RoutinePresetForm extends JPanel {
         add(row.panel);
         add(Box.createVerticalStrut(6));
     }
-    public List<Milestone> selectedGoals() throws ParseException {
+    public List<Milestone> getSelectedMilestones() throws ParseException {
         List<Milestone> selected = new ArrayList<>();
         for (Row row : rows) {
             if (row.enabled.isSelected()) {

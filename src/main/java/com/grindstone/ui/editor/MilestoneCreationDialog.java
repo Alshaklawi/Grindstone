@@ -126,7 +126,7 @@ public final class MilestoneCreationDialog extends JDialog {
 
     private void submit() {
         try {
-            Milestone candidate = form.createGoal();
+            Milestone candidate = form.createMilestone();
             if (form.isReviewEnabled()) {
                 JTextArea preview = new JTextArea(form.getReviewText(candidate), 12, 38);
                 preview.setFont(UiTypography.BODY);

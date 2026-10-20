@@ -1,12 +1,9 @@
-
 package com.grindstone.repository;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.grindstone.content.storage.PlayerStorageSnapshot;
-import com.grindstone.content.storage.PlayerStorageSource;
 import com.google.gson.JsonParser;
 import com.grindstone.content.collectionlog.CollectionLogEntry;
 import com.grindstone.content.milestone.ClientCompletionMilestone;
@@ -21,14 +18,16 @@ import com.grindstone.content.milestone.impl.experience.SessionExperienceMilesto
 import com.grindstone.content.milestone.impl.experience.SkillExperienceMilestone;
 import com.grindstone.content.milestone.impl.item.PossessedItemMilestone;
 import com.grindstone.content.milestone.impl.level.SkillLevelMilestone;
+import com.grindstone.content.storage.PlayerStorageSnapshot;
+import com.grindstone.content.storage.PlayerStorageSource;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import javax.inject.Inject;

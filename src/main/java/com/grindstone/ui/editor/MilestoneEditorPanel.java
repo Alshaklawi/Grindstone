@@ -155,7 +155,7 @@ public final class MilestoneEditorPanel extends JPanel {
         itemPicker.setAvailableItems(id -> type.getSelectedIndex() != 7 || !snapshot.contains(CollectionLogPages.getCanonicalItemId(id)));
     }
 
-    public void setExistingGoals(Map<Milestone, RepeatSchedule> existingGoals) {
+    public void setExistingMilestones(Map<Milestone, RepeatSchedule> existingGoals) {
         this.existingGoals = new LinkedHashMap<>(existingGoals);
     }
 
@@ -538,7 +538,7 @@ public final class MilestoneEditorPanel extends JPanel {
         firePropertyChange("ready", !isReady(), isReady());
     }
 
-    public Milestone createGoal() throws ParseException {
+    public Milestone createMilestone() throws ParseException {
         if (needsCollectionSnapshot()) {
             throw new IllegalArgumentException("Capture a full collection-log snapshot before adding collection milestones.");
         }
@@ -574,7 +574,7 @@ public final class MilestoneEditorPanel extends JPanel {
     public void stopSearch() {
         itemPicker.stopSearch();
     }
-    public void loadGoal(Milestone goal) {
+    public void loadMilestone(Milestone goal) {
         if (goal instanceof ChecklistMilestone) {
             type.setSelectedIndex(21);
             checklistForm.load((ChecklistMilestone) goal);

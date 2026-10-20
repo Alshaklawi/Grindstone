@@ -15,12 +15,12 @@ import com.grindstone.content.milestone.MilestoneCategory;
 import com.grindstone.content.milestone.impl.TrackerMilestone;
 import com.grindstone.content.milestone.impl.achievementdiary.AchievementDiaryTierAreaMilestone;
 import com.grindstone.content.milestone.impl.collectionlog.CollectionLogEntryMilestone;
-import com.grindstone.content.milestone.impl.collectionlog.CollectionLogTabMilestone;
 import com.grindstone.content.milestone.impl.collectionlog.CollectionLogItemMilestone;
+import com.grindstone.content.milestone.impl.collectionlog.CollectionLogTabMilestone;
 import com.grindstone.content.milestone.impl.combatachievement.CombatAchievementBossMilestone;
 import com.grindstone.content.milestone.impl.combatachievement.CombatAchievementDifficultyMilestone;
-import com.grindstone.content.milestone.impl.combatachievement.CombatAchievementTierMilestone;
 import com.grindstone.content.milestone.impl.combatachievement.CombatAchievementTaskMilestone;
+import com.grindstone.content.milestone.impl.combatachievement.CombatAchievementTierMilestone;
 import com.grindstone.content.milestone.impl.experience.BaseExperienceMilestone;
 import com.grindstone.content.milestone.impl.experience.SessionExperienceMilestone;
 import com.grindstone.content.milestone.impl.experience.SkillExperienceMilestone;
@@ -265,19 +265,19 @@ public class GrindstonePlugin extends Plugin {
             return;
         }
         if (original.getParam1() >>> 16 == InterfaceID.QUESTLIST || original.getParam1() == InterfaceID.SideJournal.QUEST_LIST) {
-            addQuestGoalMenu(original);
+            addQuestMilestoneMenu(original);
             return;
         }
         if (original.getParam1() >>> 16 == InterfaceID.AREA_TASK || original.getParam1() == InterfaceID.SideJournal.TASK_LIST) {
-            addDiaryGoalMenu(original);
+            addDiaryMilestoneMenu(original);
             return;
         }
         if (original.getParam1() >>> 16 == InterfaceID.STATS) {
             if (config.skillGoalMenu() && original.getIdentifier() == 1) {
                 Skill skill = SkillWidgets.getSkillFor(original.getParam1());
                 if (skill != null) {
-                    addSkillGoalOption("Set level milestone", skill.getName(), () -> new SkillLevelMilestone(skill), false);
-                    addSkillGoalOption("Set XP milestone", skill.getName(), () -> new SkillExperienceMilestone(skill), true);
+                    addSkillMilestoneOption("Set level milestone", skill.getName(), () -> new SkillLevelMilestone(skill), false);
+                    addSkillMilestoneOption("Set XP milestone", skill.getName(), () -> new SkillExperienceMilestone(skill), true);
                 }
             }
             return;
@@ -287,7 +287,7 @@ public class GrindstonePlugin extends Plugin {
             return;
         }
         if (original.getParam1() >>> 16 == InterfaceID.CA_TASKS) {
-            addCombatAchievementGoalMenu(original);
+            addCombatAchievementMilestoneMenu(original);
             return;
         }
         if (!config.collectionLogEnabled() || !config.collectionLogGoalMenu() || original.getParam1() >>> 16 != InterfaceID.COLLECTION || !"Check".equals(original.getOption())) {
@@ -304,12 +304,12 @@ public class GrindstonePlugin extends Plugin {
             return;
         }
         if (selectedItem > 0) {
-            if (!canOfferGoal(new CollectionLogItemMilestone(CollectionLogPages.getCanonicalItemId(selectedItem), 1))) {
+            if (!canOfferMilestone(new CollectionLogItemMilestone(CollectionLogPages.getCanonicalItemId(selectedItem), 1))) {
                 return;
             }
         } else {
             for (Map.Entry<Integer, String> page : CollectionLogPages.discover(client).entrySet()) {
-                if (page.getValue().equalsIgnoreCase(selectedName) && !canOfferGoal(new CollectionLogEntryMilestone(itemManager, page.getKey(), page.getValue()))) {
+                if (page.getValue().equalsIgnoreCase(selectedName) && !canOfferMilestone(new CollectionLogEntryMilestone(itemManager, page.getKey(), page.getValue()))) {
                     return;
                 }
             }
@@ -334,12 +334,12 @@ public class GrindstonePlugin extends Plugin {
                         }
                     }
                     if (goal != null) {
-                        openGoalEditor(goal);
+                        openMilestoneEditor(goal);
                     }
                 });
     }
 
-    private String getGoalMenuName(MenuEntry original) {
+    private String getMilestoneMenuName(MenuEntry original) {
         String name = Text.removeTags(original.getTarget()).trim();
         if (name.isEmpty() && original.getWidget() != null) {
             name = Text.removeTags(original.getWidget().getText()).trim();
@@ -357,16 +357,16 @@ public class GrindstonePlugin extends Plugin {
         return false;
     }
 
-    private void addQuestGoalMenu(MenuEntry original) {
+    private void addQuestMilestoneMenu(MenuEntry original) {
         if (!config.questGoalsEnabled() || !config.questGoalMenu()) {
             return;
         }
-        String name = getGoalMenuName(original);
+        String name = getMilestoneMenuName(original);
         for (Quest quest : Quest.values()) {
             if (!quest.getName().equalsIgnoreCase(name)) {
                 continue;
             }
-            if (!canOfferGoal(new QuestMilestone(quest)) || hasMilestoneOption("Set milestone", quest.getName())) {
+            if (!canOfferMilestone(new QuestMilestone(quest)) || hasMilestoneOption("Set milestone", quest.getName())) {
                 return;
             }
             client.getMenu().createMenuEntry(-2)
@@ -376,8 +376,8 @@ public class GrindstonePlugin extends Plugin {
                     .onClick(entry -> {
                         if (hasActivePlayerProfile() && config.questGoalsEnabled() && config.questGoalMenu()) {
                             QuestMilestone goal = new QuestMilestone(quest);
-                            if (canOfferGoal(goal)) {
-                                openGoalEditor(goal);
+                            if (canOfferMilestone(goal)) {
+                                openMilestoneEditor(goal);
                             }
                         }
                     });
@@ -389,11 +389,11 @@ public class GrindstonePlugin extends Plugin {
         return Text.removeTags(text).trim().replaceFirst("(?i)^(?:open|wiki) +", "").replaceFirst("(?i) +(?:diary|journal)$", "").trim();
     }
 
-    private void addDiaryGoalMenu(MenuEntry original) {
+    private void addDiaryMilestoneMenu(MenuEntry original) {
         if (!config.diaryGoalsEnabled() || !config.diaryGoalMenu()) {
             return;
         }
-        String name = getDiaryAreaName(getGoalMenuName(original));
+        String name = getDiaryAreaName(getMilestoneMenuName(original));
         String optionName = getDiaryAreaName(original.getOption());
         for (AchievementDiaryArea area : AchievementDiaryArea.values()) {
             if (!area.toString().equalsIgnoreCase(name) && !area.toString().equalsIgnoreCase(optionName)) {
@@ -401,7 +401,7 @@ public class GrindstonePlugin extends Plugin {
             }
             for (DiaryTier tier : DiaryTier.values()) {
                 String option = "Set " + tier + " milestone";
-                if (!canOfferGoal(new AchievementDiaryTierAreaMilestone(area, tier)) || hasMilestoneOption(option, area.toString())) {
+                if (!canOfferMilestone(new AchievementDiaryTierAreaMilestone(area, tier)) || hasMilestoneOption(option, area.toString())) {
                     continue;
                 }
                 client.getMenu().createMenuEntry(-2)
@@ -411,8 +411,8 @@ public class GrindstonePlugin extends Plugin {
                         .onClick(entry -> {
                             if (hasActivePlayerProfile() && config.diaryGoalsEnabled() && config.diaryGoalMenu()) {
                                 AchievementDiaryTierAreaMilestone goal = new AchievementDiaryTierAreaMilestone(area, tier);
-                                if (canOfferGoal(goal)) {
-                                    openGoalEditor(goal);
+                                if (canOfferMilestone(goal)) {
+                                    openMilestoneEditor(goal);
                                 }
                             }
                         });
@@ -430,14 +430,14 @@ public class GrindstonePlugin extends Plugin {
         if (reward && component != InterfaceID.CaRewards.TIERS_CLICK && component != InterfaceID.CaRewards.TIERS_TABS && component != InterfaceID.CaRewards.TIERS_CONTENT || !reward && component != InterfaceID.CaOverview.CA_BUTTONS_CLICK && component != InterfaceID.CaOverview.CA_BUTTONS) {
             return;
         }
-        String name = (getGoalMenuName(original) + " " + Text.removeTags(original.getOption())).replaceAll("(?i)tasks?|rewards?|tiers?", " ").trim().toLowerCase(Locale.ROOT);
+        String name = (getMilestoneMenuName(original) + " " + Text.removeTags(original.getOption())).replaceAll("(?i)tasks?|rewards?|tiers?", " ").trim().toLowerCase(Locale.ROOT);
         for (CombatAchievementTier tier : CombatAchievementTier.values()) {
             if (!name.matches("(?s).*\\b" + tier.toString().toLowerCase(Locale.ROOT) + "\\b.*")) {
                 continue;
             }
             String target = tier + (reward ? " reward tier" : " tasks");
             Supplier<Milestone> factory = reward ? () -> new CombatAchievementTierMilestone(tier) : () -> new CombatAchievementDifficultyMilestone(tier);
-            if (!canOfferGoal(factory.get()) || hasMilestoneOption("Set milestone", target)) {
+            if (!canOfferMilestone(factory.get()) || hasMilestoneOption("Set milestone", target)) {
                 return;
             }
             client.getMenu().createMenuEntry(-2)
@@ -447,8 +447,8 @@ public class GrindstonePlugin extends Plugin {
                     .onClick(entry -> {
                         if (hasActivePlayerProfile() && config.combatAchievementGoalsEnabled() && config.combatAchievementGoalMenu()) {
                             Milestone goal = factory.get();
-                            if (canOfferGoal(goal)) {
-                                openGoalEditor(goal);
+                            if (canOfferMilestone(goal)) {
+                                openMilestoneEditor(goal);
                             }
                         }
                     });
@@ -456,7 +456,7 @@ public class GrindstonePlugin extends Plugin {
         }
     }
 
-    private void addCombatAchievementGoalMenu(MenuEntry original) {
+    private void addCombatAchievementMilestoneMenu(MenuEntry original) {
         if (!config.combatAchievementGoalsEnabled() || !config.combatAchievementGoalMenu() || !"Expand".equals(original.getOption()) && !"Collapse".equals(original.getOption())) {
             return;
         }
@@ -466,7 +466,7 @@ public class GrindstonePlugin extends Plugin {
         }
         boolean available = CombatAchievementData.getTasks(client).values().stream()
                 .filter(task -> Text.removeTags(task.getName()).trim().equalsIgnoreCase(selectedName))
-                .anyMatch(task -> canOfferGoal(new CombatAchievementTaskMilestone(task.getId(), task.getName(), task.getDescription())));
+                .anyMatch(task -> canOfferMilestone(new CombatAchievementTaskMilestone(task.getId(), task.getName(), task.getDescription())));
         if (!available) {
             return;
         }
@@ -480,14 +480,14 @@ public class GrindstonePlugin extends Plugin {
                     }
                     for (CombatAchievementData.Task task : CombatAchievementData.getTasks(client).values()) {
                         if (Text.removeTags(task.getName()).trim().equalsIgnoreCase(selectedName)) {
-                            openGoalEditor(new CombatAchievementTaskMilestone(task.getId(), task.getName(), task.getDescription()));
+                            openMilestoneEditor(new CombatAchievementTaskMilestone(task.getId(), task.getName(), task.getDescription()));
                             return;
                         }
                     }
                 });
     }
 
-    private boolean canOfferGoal(Milestone goal) {
+    private boolean canOfferMilestone(Milestone goal) {
         if (goal.getCategory() == MilestoneCategory.COLLECTION_LOG && !profile.getCollectionLogHistory().hasSnapshot()) {
             return false;
         }
@@ -505,14 +505,14 @@ public class GrindstonePlugin extends Plugin {
         return CompletionMilestoneChoices.hasRemainingTarget(goal);
     }
 
-    private void openGoalEditor(Milestone selection) {
-        if (!canOfferGoal(selection)) {
+    private void openMilestoneEditor(Milestone selection) {
+        if (!canOfferMilestone(selection)) {
             return;
         }
         GrindstoneProfile active = profile;
         SwingUtilities.invokeLater(() -> {
             if (running && config.enabled() && profile == active) {
-                panel.showAddGoalDialog(selection);
+                panel.showAddMilestoneDialog(selection);
             }
         });
     }
@@ -530,24 +530,24 @@ public class GrindstonePlugin extends Plugin {
                 break;
             }
         }
-        if (config.combatLevelGoalMenu() && config.levelGoalsEnabled() && canOfferGoal(new CombatLevelMilestone()) && isMouseOverWidget(InterfaceID.CombatInterface.LEVEL) && !hasMilestoneOption("Set combat milestone", "Combat level")) {
+        if (config.combatLevelGoalMenu() && config.levelGoalsEnabled() && canOfferMilestone(new CombatLevelMilestone()) && isMouseOverWidget(InterfaceID.CombatInterface.LEVEL) && !hasMilestoneOption("Set combat milestone", "Combat level")) {
             client.getMenu().createMenuEntry(-1)
                     .setOption("Set combat milestone")
                     .setTarget("Combat level")
                     .setType(MenuAction.RUNELITE_LOW_PRIORITY)
                     .onClick(entry -> {
                         if (hasActivePlayerProfile() && config.combatLevelGoalMenu() && config.levelGoalsEnabled()) {
-                            openGoalEditor(new CombatLevelMilestone());
+                            openMilestoneEditor(new CombatLevelMilestone());
                         }
                     });
         }
         if (!config.skillGoalMenu() || !isMouseOverWidget(InterfaceID.Stats.TOTAL)) {
             return;
         }
-        addSkillGoalOption("Set total level milestone", "All skills", TotalLevelMilestone::new, false);
-        addSkillGoalOption("Set total XP milestone", "All skills", TotalExperienceMilestone::new, true);
-        addSkillGoalOption("Set base level milestone", "All skills", BaseLevelMilestone::new, false);
-        addSkillGoalOption("Set base XP milestone", "All skills", BaseExperienceMilestone::new, true);
+        addSkillMilestoneOption("Set total level milestone", "All skills", TotalLevelMilestone::new, false);
+        addSkillMilestoneOption("Set total XP milestone", "All skills", TotalExperienceMilestone::new, true);
+        addSkillMilestoneOption("Set base level milestone", "All skills", BaseLevelMilestone::new, false);
+        addSkillMilestoneOption("Set base XP milestone", "All skills", BaseExperienceMilestone::new, true);
     }
 
     private boolean isMouseOverWidget(int componentId) {
@@ -556,11 +556,11 @@ public class GrindstonePlugin extends Plugin {
         return widget != null && !widget.isHidden() && widget.getBounds().contains(mouse.getX(), mouse.getY());
     }
 
-    private void addSkillGoalOption(String label, String target, Supplier<Milestone> factory, boolean experience) {
+    private void addSkillMilestoneOption(String label, String target, Supplier<Milestone> factory, boolean experience) {
         if ((experience ? !config.experienceGoalsEnabled() : !config.levelGoalsEnabled()) || hasMilestoneOption(label, target)) {
             return;
         }
-        if (!canOfferGoal(factory.get())) {
+        if (!canOfferMilestone(factory.get())) {
             return;
         }
         client.getMenu().createMenuEntry(-1)
@@ -569,7 +569,7 @@ public class GrindstonePlugin extends Plugin {
                 .setType(MenuAction.RUNELITE_LOW_PRIORITY)
                 .onClick(entry -> {
                     if (hasActivePlayerProfile() && config.skillGoalMenu() && (experience ? config.experienceGoalsEnabled() : config.levelGoalsEnabled())) {
-                        openGoalEditor(factory.get());
+                        openMilestoneEditor(factory.get());
                     }
                 });
     }
@@ -589,7 +589,7 @@ public class GrindstonePlugin extends Plugin {
                 .setType(MenuAction.RUNELITE_LOW_PRIORITY)
                 .onClick(entry -> {
                     if (hasActivePlayerProfile() && config.bossGoalMenu() && config.trackerGoalsEnabled()) {
-                        openGoalEditor(new TrackerMilestone(tracker, tracker.getDefaultTarget()));
+                        openMilestoneEditor(new TrackerMilestone(tracker, tracker.getDefaultTarget()));
                     }
                 });
     }
@@ -620,7 +620,7 @@ public class GrindstonePlugin extends Plugin {
         }
         final String selectedName = name;
         final int selectedBoss = boss;
-        if (!canOfferGoal(new CombatAchievementBossMilestone(selectedBoss, selectedName))) {
+        if (!canOfferMilestone(new CombatAchievementBossMilestone(selectedBoss, selectedName))) {
             return;
         }
         for (MenuEntry entry : client.getMenu().getMenuEntries()) {
@@ -634,7 +634,7 @@ public class GrindstonePlugin extends Plugin {
                 .setType(MenuAction.RUNELITE_LOW_PRIORITY)
                 .onClick(entry -> {
                     if (hasActivePlayerProfile() && config.bossGoalMenu() && config.combatAchievementGoalsEnabled()) {
-                        openGoalEditor(new CombatAchievementBossMilestone(selectedBoss, selectedName));
+                        openMilestoneEditor(new CombatAchievementBossMilestone(selectedBoss, selectedName));
                     }
                 });
     }
@@ -691,7 +691,7 @@ public class GrindstonePlugin extends Plugin {
             }
 
             goal.onItemContainerUpdated(client, container);
-            panel.refreshGoal(goal);
+            panel.refreshMilestone(goal);
         }
     }
 
@@ -704,7 +704,7 @@ public class GrindstonePlugin extends Plugin {
         completionProgressDirty = true;
         for (Milestone goal : profile.getGoals()) {
             if (goal instanceof TrackerMilestone && goal.refresh(client)) {
-                panel.refreshGoal(goal);
+                panel.refreshMilestone(goal);
             }
         }
     }
@@ -810,7 +810,7 @@ public class GrindstonePlugin extends Plugin {
         for (Milestone milestone : profile.getGoals()) {
             if (milestone.getCategory() == MilestoneCategory.COLLECTION_LOG) {
                 milestone.refresh(client);
-                panel.refreshGoal(milestone);
+                panel.refreshMilestone(milestone);
             }
         }
         panel.refreshAll();

@@ -162,10 +162,10 @@ public final class BulkMilestoneForm extends JPanel {
     }
 
     private void updateCount() {
-        count.setText(selectedGoals().size() + " selected / " + table.getRowCount() + " visible");
+        count.setText(getSelectedMilestones().size() + " selected / " + table.getRowCount() + " visible");
     }
 
-    public List<Milestone> selectedGoals() {
+    public List<Milestone> getSelectedMilestones() {
         List<Milestone> result = new ArrayList<>();
         for (int i = 0; i < model.getRowCount(); i++) {
             if (Boolean.TRUE.equals(model.getValueAt(i, 0))) {
