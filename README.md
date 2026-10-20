@@ -1,6 +1,6 @@
 # Grindstone
 
-[![Version](https://img.shields.io/badge/version-1.1.0-gold)](https://github.com/Alshaklawi/Grindstone)
+[![Version](https://img.shields.io/badge/version-1.1.1-gold)](https://github.com/Alshaklawi/Grindstone)
 [![Installs](https://img.shields.io/endpoint?url=https%3A%2F%2Fapi.runelite.net%2Fpluginhub%2Fshields%2Finstalls%2Fplugin%2Fgrindstone)](https://runelite.net/plugin-hub/show/grindstone)
 [![Plugin Rank](https://img.shields.io/endpoint?url=https%3A%2F%2Fapi.runelite.net%2Fpluginhub%2Fshields%2Frank%2Fplugin%2Fgrindstone)](https://runelite.net/plugin-hub/show/grindstone)
 [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=github)](https://github.com/sponsors/Alshaklawi)
@@ -66,8 +66,8 @@ Add a milestone straight from the game interface with the subject already select
 | --- | --- |
 | A skill or Total level | **Set level milestone**, **Set XP milestone**, or a total/base target |
 | Combat level in Combat Options | **Set combat milestone** |
-| A quest | **Track quest** |
-| An achievement diary region | **Track Easy/Medium/Hard/Elite diary** |
+| A quest | **Set milestone** |
+| An achievement diary region | **Set Easy/Medium/Hard/Elite milestone** |
 | A collection-log item or page | **Track unlock** or **Track page** |
 | A Combat Achievement task | **Track task** |
 | A Combat Achievements boss entry | **Track boss achievements** |
@@ -78,7 +78,7 @@ Choose your target and review it before saving. Each shortcut can be switched of
 ## Keep your priorities in focus
 
 - **Put your next milestone first.** Pin milestones and group them by category or skill.
-- **Find what matters now.** Search your milestones, filter the list or select a dashboard status counter.
+- **Find what matters now.** Search your milestones and filter by status, category, type or schedule.
 - **Build a routine.** Create daily, weekly or monthly routines and use **Routines** to see recurring progress and upcoming resets.
 - **Plan ahead.** Add personal deadlines and optional reminders in the sidebar.
 - **Celebrate the finish.** Choose completion popups, local chat messages or optional desktop notifications, then revisit your milestones in **History**.
@@ -87,7 +87,7 @@ Choose your target and review it before saving. Each shortcut can be switched of
 
 ## Track progress beside the game
 
-Open **… → Progress overlay** to follow **Daily routines**, **All routines**, **Milestones**, **Pinned**, or **All tracked** while the sidebar is closed. Progress bars show what is left, completed routines stay checked off, and daily routines show their next reset.
+Enable **RuneLite settings → Grindstone → Progress overlay** to follow **Daily routines**, **All routines**, **Milestones**, **Pinned**, or **All tracked** while the sidebar is closed. Progress bars show what is left, completed routines stay checked off, and daily routines show their next reset.
 
 Hold **Alt** and drag the tracker to move it. Adjust its width, entry limit, progress bars and completed routines in **RuneLite settings → Grindstone → Progress overlay**.
 
