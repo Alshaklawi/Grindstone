@@ -70,6 +70,7 @@ import net.runelite.api.events.ScriptPostFired;
 import net.runelite.api.events.ScriptPreFired;
 import net.runelite.api.events.StatChanged;
 import net.runelite.api.events.VarbitChanged;
+import net.runelite.api.events.WidgetLoaded;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.gameval.InventoryID;
 import net.runelite.api.gameval.VarPlayerID;
@@ -137,7 +138,6 @@ public class GrindstonePlugin extends Plugin {
     private boolean storageProgressDirty;
     private final Map<String, Integer> combatBossIds = new HashMap<>();
     private static final int COLLECTION_SEARCH_ITEM_SCRIPT = 4100;
-    private final Set<Integer> collectionSearchItems = new LinkedHashSet<>();
     private int collectionSearchTick = -1;
     private long lastRecurringRefresh;
     private JsonObject lastSavedSnapshot;
@@ -174,7 +174,6 @@ public class GrindstonePlugin extends Plugin {
     @Override
     protected void shutDown() {
         running = false;
-        collectionSearchItems.clear();
         collectionSearchTick = -1;
         overlayManager.remove(completionOverlay);
         overlayManager.remove(progressOverlay);
@@ -617,6 +616,7 @@ public class GrindstonePlugin extends Plugin {
 
         profile.getCollectionLogHistory().observe(container);
         if (container.getId() == InventoryID.COLLECTION_TRANSMIT) {
+            collectionSearchTick = client.getTickCount();
             captureLoadedCollectionSnapshot();
         }
         storageProgressDirty |= profile.getPlayerStorage().observe(client, container);
@@ -649,7 +649,6 @@ public class GrindstonePlugin extends Plugin {
     public void onMenuOptionClicked(MenuOptionClicked event) {
         if (hasActivePlayerProfile() && event.getParam1() == InterfaceID.Collection.SEARCH_TOGGLE) {
             CollectionLogPages.refreshReplacements(client);
-            collectionSearchItems.clear();
             collectionSearchTick = client.getTickCount();
         }
     }
@@ -659,17 +658,23 @@ public class GrindstonePlugin extends Plugin {
         if (!hasActivePlayerProfile() || event.getScriptId() != COLLECTION_SEARCH_ITEM_SCRIPT) {
             return;
         }
-        Widget collection = client.getWidget(InterfaceID.Collection.UNIVERSE);
         Object[] arguments = event.getScriptEvent().getArguments();
-        if (collection == null || collection.isHidden() || arguments == null || arguments.length < 2 || !(arguments[1] instanceof Integer)) {
+        if (arguments == null || arguments.length < 3 || !(arguments[1] instanceof Integer) || !(arguments[2] instanceof Integer)) {
             return;
         }
         if (collectionSearchTick < 0) {
             CollectionLogPages.refreshReplacements(client);
         }
         int item = CollectionLogPages.getCanonicalItemId((Integer) arguments[1]);
-        if (item > 0) {
-            collectionSearchItems.add(item);
+        if (item > 0 && (Integer) arguments[2] > 0) {
+            profile.getCollectionLogHistory().record(item, System.currentTimeMillis());
+        }
+        collectionSearchTick = client.getTickCount();
+    }
+
+    @Subscribe
+    public void onWidgetLoaded(WidgetLoaded event) {
+        if (hasActivePlayerProfile() && event.getGroupId() == InterfaceID.Collection.UNIVERSE >>> 16) {
             collectionSearchTick = client.getTickCount();
         }
     }
@@ -681,6 +686,7 @@ public class GrindstonePlugin extends Plugin {
                 if (hasActivePlayerProfile()) {
                     CollectionLogPages.refreshReplacements(client);
                     observeLoadedCollectionSnapshot();
+                    collectionSearchTick = client.getTickCount();
                 }
             });
         }
@@ -706,7 +712,7 @@ public class GrindstonePlugin extends Plugin {
         int maximum = client.getVarpValue(VarPlayerID.COLLECTION_COUNT_MAX);
         if (profile.getCollectionLogHistory().confirmLoadedSnapshot(total, maximum, System.currentTimeMillis())) {
             profile.touch();
-            panel.setStorageStatus("Collection-log snapshot captured: " + total + " unlocks");
+            panel.refreshAll();
             saveProfile();
         }
     }
@@ -716,18 +722,7 @@ public class GrindstonePlugin extends Plugin {
             return;
         }
         collectionSearchTick = -1;
-        int total = client.getVarpValue(VarPlayerID.COLLECTION_COUNT);
-        int maximum = client.getVarpValue(VarPlayerID.COLLECTION_COUNT_MAX);
-        if (maximum <= 0 || total < 0 || total > maximum || collectionSearchItems.size() != total) {
-            panel.setStorageStatus("Collection-log data is incomplete. A full snapshot has not been saved.");
-            collectionSearchItems.clear();
-            log.debug("Collection-log search did not expose the full total; snapshot not replaced");
-            return;
-        }
-        long now = System.currentTimeMillis();
-        collectionSearchItems.forEach(item -> profile.getCollectionLogHistory().record(item, now));
-        profile.getCollectionLogHistory().restoreSnapshot(now, total);
-        collectionSearchItems.clear();
+        observeLoadedCollectionSnapshot();
         profile.touch();
         for (Milestone milestone : profile.getGoals()) {
             if (milestone.getCategory() == MilestoneCategory.COLLECTION_LOG) {
@@ -735,7 +730,7 @@ public class GrindstonePlugin extends Plugin {
                 panel.refreshGoal(milestone);
             }
         }
-        panel.setStorageStatus("Collection-log snapshot captured: " + total + " unlocks");
+        panel.refreshAll();
         saveProfile();
     }
 
@@ -847,7 +842,6 @@ public class GrindstonePlugin extends Plugin {
     }
 
     private void activateProfile(GrindstoneProfile loaded) {
-        collectionSearchItems.clear();
         collectionSearchTick = -1;
         completionNotifications.reset();
         profile = loaded;
@@ -870,7 +864,6 @@ public class GrindstonePlugin extends Plugin {
     }
 
     private void onLogout() {
-        collectionSearchItems.clear();
         collectionSearchTick = -1;
         completionNotifications.reset();
         loadGeneration.incrementAndGet();
