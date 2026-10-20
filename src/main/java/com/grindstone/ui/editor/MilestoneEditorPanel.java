@@ -21,6 +21,7 @@ import com.grindstone.content.milestone.impl.level.TotalLevelMilestone;
 import com.grindstone.content.tracker.TrackerEntry;
 import com.grindstone.repository.GrindstoneProfile;
 import com.grindstone.repository.RepeatSchedule;
+import com.grindstone.ui.Icon;
 import com.grindstone.ui.components.SearchableList;
 import com.grindstone.ui.item.ItemLookup;
 import com.grindstone.ui.item.ItemPickerPanel;
@@ -30,6 +31,7 @@ import com.grindstone.util.NumberFormats;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.awt.Insets;
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.HashSet;
@@ -41,16 +43,20 @@ import java.util.function.Supplier;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
+import javax.swing.JToggleButton;
 import javax.swing.SpinnerNumberModel;
 import net.runelite.api.Skill;
 import net.runelite.api.gameval.ItemID;
 import net.runelite.client.game.ItemManager;
+import net.runelite.client.game.SkillIconManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 
@@ -89,6 +95,8 @@ public final class MilestoneEditorPanel extends JPanel {
             return factory == null ? "" : factory.get().getCategory().getDisplayName();
         }
     };
+    private final SkillIconManager skillIcons = new SkillIconManager();
+    private final Map<String, JToggleButton> skillButtons = new LinkedHashMap<>();
     private final JSpinner target = new JSpinner();
     private final JPanel body = new JPanel();
     private final JLabel hint = new JLabel();
@@ -189,6 +197,7 @@ public final class MilestoneEditorPanel extends JPanel {
         itemPicker.stopSearch();
         body.removeAll();
         choices.clear();
+        skillButtons.clear();
         int kind = type.getSelectedIndex();
         repeatForm.setFixedTarget(null);
         if (kind == 21) {
@@ -227,7 +236,8 @@ public final class MilestoneEditorPanel extends JPanel {
             subject.setItems(choices.keySet());
             updating = false;
             if (kind < 2 || kind == 5 || kind == 6 || kind >= 9 && kind < 18 || kind == 20) {
-                body.add(field(kind >= 9 ? "Track" : kind == 5 ? "Activity" : kind == 6 ? "Collection-log page" : "Skill", subject));
+                boolean skillSelection = kind == 0 || kind == 1 || kind == 20;
+                body.add(field(skillSelection ? "Skill" : kind >= 9 ? "Track" : kind == 5 ? "Activity" : "Collection-log page", skillSelection ? createSkillPicker() : subject));
                 body.add(Box.createVerticalStrut(12));
             }
             Milestone sample = choices.isEmpty() ? null : choices.values().iterator().next().get();
@@ -263,6 +273,45 @@ public final class MilestoneEditorPanel extends JPanel {
         revalidate();
         repaint();
         firePropertyChange("formLayout", false, true);
+    }
+
+    private JPanel createSkillPicker() {
+        JPanel grid = new JPanel(new GridLayout(0, 6, 6, 6));
+        grid.setOpaque(false);
+        ButtonGroup group = new ButtonGroup();
+        for (String name : choices.keySet()) {
+            Skill skill = null;
+            for (Skill candidate : Skill.values()) {
+                if (candidate.getName().equals(name)) {
+                    skill = candidate;
+                    break;
+                }
+            }
+            JToggleButton button = new JToggleButton(new ImageIcon(skill == null ? Icon.SKILLING.getImage() : skillIcons.getSkillImage(skill)));
+            if (skill == null) {
+                button.setText("All");
+            }
+            button.setPreferredSize(new Dimension(48, 46));
+            button.setMargin(new Insets(6, 4, 6, 4));
+            button.setToolTipText(name);
+            button.getAccessibleContext().setAccessibleName(name);
+            button.addActionListener(event -> subject.setSelectedValue(name));
+            group.add(button);
+            skillButtons.put(name, button);
+            grid.add(button);
+        }
+        syncSkillSelection();
+        return grid;
+    }
+
+    private void syncSkillSelection() {
+        String selected = subject.getSelectedValue();
+        skillButtons.forEach((name, button) -> {
+            boolean active = name.equals(selected);
+            button.setSelected(active);
+            button.setBackground(active ? ColorScheme.DARK_GRAY_COLOR : ColorScheme.DARKER_GRAY_COLOR);
+            button.setBorder(BorderFactory.createLineBorder(active ? ColorScheme.BRAND_ORANGE : ColorScheme.MEDIUM_GRAY_COLOR, 2));
+        });
     }
 
     private void populateChoices(int kind) {
@@ -356,6 +405,7 @@ public final class MilestoneEditorPanel extends JPanel {
 
     private void onSubjectSelected(String value) {
         if (!updating) {
+            syncSkillSelection();
             configureTarget(true);
             updatePreview();
             notifyReadiness();
