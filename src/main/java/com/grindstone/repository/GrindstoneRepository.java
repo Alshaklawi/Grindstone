@@ -7,17 +7,17 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.grindstone.content.collectionlog.CollectionLogEntry;
-import com.grindstone.content.goal.ClientCompletionGoal;
-import com.grindstone.content.goal.Goal;
-import com.grindstone.content.goal.impl.ChecklistGoal;
-import com.grindstone.content.goal.impl.CustomGoal;
-import com.grindstone.content.goal.impl.LinkedGoal;
-import com.grindstone.content.goal.impl.TrackerGoal;
-import com.grindstone.content.goal.impl.collectionlog.CollectionLogEntryGoal;
-import com.grindstone.content.goal.impl.experience.SessionExperienceGoal;
-import com.grindstone.content.goal.impl.experience.SkillExperienceGoal;
-import com.grindstone.content.goal.impl.item.PossessedItemGoal;
-import com.grindstone.content.goal.impl.level.SkillLevelGoal;
+import com.grindstone.content.milestone.ClientCompletionMilestone;
+import com.grindstone.content.milestone.Milestone;
+import com.grindstone.content.milestone.impl.ChecklistMilestone;
+import com.grindstone.content.milestone.impl.CustomMilestone;
+import com.grindstone.content.milestone.impl.LinkedMilestone;
+import com.grindstone.content.milestone.impl.TrackerMilestone;
+import com.grindstone.content.milestone.impl.collectionlog.CollectionLogEntryMilestone;
+import com.grindstone.content.milestone.impl.experience.SessionExperienceMilestone;
+import com.grindstone.content.milestone.impl.experience.SkillExperienceMilestone;
+import com.grindstone.content.milestone.impl.item.PossessedItemMilestone;
+import com.grindstone.content.milestone.impl.level.SkillLevelMilestone;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
@@ -148,9 +148,9 @@ public final class GrindstoneRepository {
 
         JsonArray savedGoals = new JsonArray();
 
-        for (Goal goal : profile.getGoals()) {
+        for (Milestone goal : profile.getGoals()) {
             JsonObject savedGoal = new JsonObject();
-            savedGoal.addProperty("type", SavedGoalTypes.nameOf(goal));
+            savedGoal.addProperty("type", SavedMilestoneTypes.nameOf(goal));
             savedGoal.add("data", gson.toJsonTree(goal));
             savedGoal.add("metadata", gson.toJsonTree(profile.metadata(goal)));
             savedGoals.add(savedGoal);
@@ -189,22 +189,22 @@ public final class GrindstoneRepository {
             return profile;
         }
 
-        List<Goal> goals = new ArrayList<>();
+        List<Milestone> goals = new ArrayList<>();
         JsonArray savedGoals = json.getAsJsonArray("goals");
 
         for (JsonElement element : savedGoals) {
             try {
                 JsonObject savedGoal = element.getAsJsonObject();
                 JsonElement data = savedGoal.get("data");
-                Class<? extends Goal> type = SavedGoalTypes.fromTag(savedGoal);
+                Class<? extends Milestone> type = SavedMilestoneTypes.fromTag(savedGoal);
                 if (type == null || data == null || !data.isJsonObject()) {
                     continue;
                 }
-                Goal goal;
-                if (type == CollectionLogEntryGoal.class) {
+                Milestone goal;
+                if (type == CollectionLogEntryMilestone.class) {
                     JsonObject page = data.getAsJsonObject();
                     if (page.has("pageStruct")) {
-                        goal = new CollectionLogEntryGoal(null, page.get("pageStruct").getAsInt(), page.get("pageName").getAsString());
+                        goal = new CollectionLogEntryMilestone(null, page.get("pageStruct").getAsInt(), page.get("pageName").getAsString());
                     } else {
                         JsonElement entryElement = data.getAsJsonObject().get("entry");
                         if (entryElement == null || entryElement.isJsonNull()) {
@@ -214,32 +214,32 @@ public final class GrindstoneRepository {
                         if (entry == null) {
                             continue;
                         }
-                        goal = new CollectionLogEntryGoal(null, entry);
+                        goal = new CollectionLogEntryMilestone(null, entry);
                     }
-                } else if (type == CustomGoal.class) {
-                    CustomGoal saved = gson.fromJson(data, CustomGoal.class);
-                    goal = new CustomGoal(saved.getId(), saved.getTitle(null), saved.getDescription(), saved.getCategory(), saved.getProgressCurrent(), saved.getProgressMaximum());
-                } else if (type == PossessedItemGoal.class) {
-                    PossessedItemGoal saved = gson.fromJson(data, PossessedItemGoal.class);
-                    goal = new PossessedItemGoal(saved.getItem(), saved.getAmount());
+                } else if (type == CustomMilestone.class) {
+                    CustomMilestone saved = gson.fromJson(data, CustomMilestone.class);
+                    goal = new CustomMilestone(saved.getId(), saved.getTitle(null), saved.getDescription(), saved.getCategory(), saved.getProgressCurrent(), saved.getProgressMaximum());
+                } else if (type == PossessedItemMilestone.class) {
+                    PossessedItemMilestone saved = gson.fromJson(data, PossessedItemMilestone.class);
+                    goal = new PossessedItemMilestone(saved.getItem(), saved.getAmount());
                 } else {
                     goal = gson.fromJson(data, type);
                 }
 
                 if (goal != null) {
-                    if (goal instanceof ChecklistGoal) {
-                        ((ChecklistGoal) goal).validate();
+                    if (goal instanceof ChecklistMilestone) {
+                        ((ChecklistMilestone) goal).validate();
                     }
-                    if (goal instanceof SessionExperienceGoal) {
-                        ((SessionExperienceGoal) goal).validate();
+                    if (goal instanceof SessionExperienceMilestone) {
+                        ((SessionExperienceMilestone) goal).validate();
                     }
-                    if (goal instanceof LinkedGoal) {
-                        ((LinkedGoal) goal).validate();
+                    if (goal instanceof LinkedMilestone) {
+                        ((LinkedMilestone) goal).validate();
                     }
-                    if (goal instanceof ClientCompletionGoal) {
-                        ((ClientCompletionGoal) goal).selectionKey();
+                    if (goal instanceof ClientCompletionMilestone) {
+                        ((ClientCompletionMilestone) goal).selectionKey();
                     }
-                    if (goal instanceof SkillLevelGoal && ((SkillLevelGoal) goal).getSkill() == null || goal instanceof SkillExperienceGoal && ((SkillExperienceGoal) goal).getSkill() == null || goal instanceof TrackerGoal && ((TrackerGoal) goal).getTracker() == null) {
+                    if (goal instanceof SkillLevelMilestone && ((SkillLevelMilestone) goal).getSkill() == null || goal instanceof SkillExperienceMilestone && ((SkillExperienceMilestone) goal).getSkill() == null || goal instanceof TrackerMilestone && ((TrackerMilestone) goal).getTracker() == null) {
                         continue;
                     }
                     if (goal.supportsTarget()) {
@@ -248,7 +248,7 @@ public final class GrindstoneRepository {
                     goals.add(goal);
                     if (savedGoal.has("metadata")) {
                         try {
-                            profile.restoreMetadata(goal, gson.fromJson(savedGoal.get("metadata"), GoalMetadata.class));
+                            profile.restoreMetadata(goal, gson.fromJson(savedGoal.get("metadata"), MilestoneMetadata.class));
                         } catch (RuntimeException exception) {
                             if (strict) {
                                 throw new IllegalArgumentException("Invalid milestone metadata", exception);
@@ -322,10 +322,10 @@ public final class GrindstoneRepository {
                         recurring.add("history", new JsonArray());
                     }
                 }
-                if (SavedGoalTypes.fromTag(saved) == CustomGoal.class) {
+                if (SavedMilestoneTypes.fromTag(saved) == CustomMilestone.class) {
                     saved.getAsJsonObject("data").addProperty("current", 0);
                 }
-                if (SavedGoalTypes.fromTag(saved) == ChecklistGoal.class) {
+                if (SavedMilestoneTypes.fromTag(saved) == ChecklistMilestone.class) {
                     JsonObject data = saved.getAsJsonObject("data");
                     JsonArray cleared = new JsonArray();
                     for (JsonElement ignored : data.getAsJsonArray("checked")) {
@@ -333,7 +333,7 @@ public final class GrindstoneRepository {
                     }
                     data.add("checked", cleared);
                 }
-                if (SavedGoalTypes.fromTag(saved) == LinkedGoal.class) {
+                if (SavedMilestoneTypes.fromTag(saved) == LinkedMilestone.class) {
                     JsonObject data = saved.getAsJsonObject("data");
                     if (data.has("achieved")) {
                         JsonArray cleared = new JsonArray();

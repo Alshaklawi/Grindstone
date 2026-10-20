@@ -1,19 +1,19 @@
 package com.grindstone.repository;
 
 import com.grindstone.content.collectionlog.CollectionLogHistory;
-import com.grindstone.content.goal.ClientCompletionGoal;
-import com.grindstone.content.goal.Goal;
-import com.grindstone.content.goal.impl.ChecklistGoal;
-import com.grindstone.content.goal.impl.CustomGoal;
-import com.grindstone.content.goal.impl.LinkedGoal;
-import com.grindstone.content.goal.impl.TrackerGoal;
-import com.grindstone.content.goal.impl.collectionlog.CollectionLogEntryGoal;
-import com.grindstone.content.goal.impl.collectionlog.CollectionLogItemGoal;
-import com.grindstone.content.goal.impl.combatachievement.CombatAchievementBossGoal;
-import com.grindstone.content.goal.impl.experience.SessionExperienceGoal;
-import com.grindstone.content.goal.impl.experience.SkillExperienceGoal;
-import com.grindstone.content.goal.impl.item.PossessedItemGoal;
-import com.grindstone.content.goal.impl.level.SkillLevelGoal;
+import com.grindstone.content.milestone.ClientCompletionMilestone;
+import com.grindstone.content.milestone.Milestone;
+import com.grindstone.content.milestone.impl.ChecklistMilestone;
+import com.grindstone.content.milestone.impl.CustomMilestone;
+import com.grindstone.content.milestone.impl.LinkedMilestone;
+import com.grindstone.content.milestone.impl.TrackerMilestone;
+import com.grindstone.content.milestone.impl.collectionlog.CollectionLogEntryMilestone;
+import com.grindstone.content.milestone.impl.collectionlog.CollectionLogItemMilestone;
+import com.grindstone.content.milestone.impl.combatachievement.CombatAchievementBossMilestone;
+import com.grindstone.content.milestone.impl.experience.SessionExperienceMilestone;
+import com.grindstone.content.milestone.impl.experience.SkillExperienceMilestone;
+import com.grindstone.content.milestone.impl.item.PossessedItemMilestone;
+import com.grindstone.content.milestone.impl.level.SkillLevelMilestone;
 import com.grindstone.content.storage.PlayerItemStorage;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,8 +38,8 @@ import net.runelite.client.game.ItemManager;
 public class GrindstoneProfile {
     @Getter
     private final long hash;
-    private final List<Goal> goals = new ArrayList<>();
-    private final transient Map<Goal, GoalMetadata> metadata = new IdentityHashMap<>();
+    private final List<Milestone> goals = new ArrayList<>();
+    private final transient Map<Milestone, MilestoneMetadata> metadata = new IdentityHashMap<>();
     private transient long revision;
     private final Map<String, ArchivedHistory> archivedHistory = new LinkedHashMap<>();
     public Collection<ArchivedHistory> archivedHistory() {
@@ -49,7 +49,7 @@ public class GrindstoneProfile {
         if (history == null || history.title == null || history.title.length() > 300) {
             throw new IllegalArgumentException("Invalid archived history");
         }
-        GoalMetadata.validated(history.metadata);
+        MilestoneMetadata.validated(history.metadata);
         if (goals.stream().noneMatch(goal -> metadata(goal).getId().equals(history.metadata.getId()))) {
             archivedHistory.putIfAbsent(history.metadata.getId(), history);
         }
@@ -65,13 +65,13 @@ public class GrindstoneProfile {
             if (history == null || history.title == null || history.title.length() > 300) {
                 throw new IllegalArgumentException("Invalid archived history.");
             }
-            GoalMetadata.validated(history.metadata);
+            MilestoneMetadata.validated(history.metadata);
         }
         archivedHistory.clear();
         histories.forEach(this::restoreArchive);
     }
-    private void archive(Goal goal) {
-        GoalMetadata saved = metadata(goal).copy();
+    private void archive(Milestone goal) {
+        MilestoneMetadata saved = metadata(goal).copy();
         if (saved.getCompletions().isEmpty() && saved.recurring().getHistory().isEmpty() && saved.recurring().getBaselineAt() == 0) {
             return;
         }
@@ -87,14 +87,14 @@ public class GrindstoneProfile {
     public void touch() {
         revision++;
     }
-    public Consumer<Goal> snapshotEdit(Goal original) {
-        GoalMetadata saved = metadata(original).copy();
+    public Consumer<Milestone> snapshotEdit(Milestone original) {
+        MilestoneMetadata saved = metadata(original).copy();
         RepeatSchedule previousSchedule = saved.recurring().getSchedule();
         long undoWindow = previousSchedule.start(System.currentTimeMillis());
         long target = original.getProgressMaximum();
-        CustomGoal custom = original instanceof CustomGoal ? (CustomGoal) original : null;
-        CustomGoal manual = custom == null ? null : new CustomGoal(custom.getId(), custom.getTitle(null), custom.getDescription(), custom.getCategory(), custom.getProgressCurrent(), target);
-        ChecklistGoal checklist = original instanceof ChecklistGoal ? (ChecklistGoal) original : null;
+        CustomMilestone custom = original instanceof CustomMilestone ? (CustomMilestone) original : null;
+        CustomMilestone manual = custom == null ? null : new CustomMilestone(custom.getId(), custom.getTitle(null), custom.getDescription(), custom.getCategory(), custom.getProgressCurrent(), target);
+        ChecklistMilestone checklist = original instanceof ChecklistMilestone ? (ChecklistMilestone) original : null;
         boolean[] savedChecks = checklist == null ? null : checklist.getChecks();
         return replacement -> {
             if (previousSchedule != RepeatSchedule.NONE && previousSchedule.start(System.currentTimeMillis()) != undoWindow) {
@@ -122,16 +122,16 @@ public class GrindstoneProfile {
             touch();
         };
     }
-    public GoalMetadata metadata(Goal goal) {
-        return metadata.computeIfAbsent(goal, ignored -> new GoalMetadata());
+    public MilestoneMetadata metadata(Milestone goal) {
+        return metadata.computeIfAbsent(goal, ignored -> new MilestoneMetadata());
     }
-    public void restoreMetadata(Goal goal, GoalMetadata saved) {
-        metadata.put(goal, GoalMetadata.validated(saved));
+    public void restoreMetadata(Milestone goal, MilestoneMetadata saved) {
+        metadata.put(goal, MilestoneMetadata.validated(saved));
     }
     public void observeRecurring(Client client, long now) {
-        for (Goal goal : goals) {
-            RecurringGoal recurring = metadata(goal).recurring();
-            if (recurring.isActive() && RecurringGoal.supports(goal)) {
+        for (Milestone goal : goals) {
+            RecurringMilestone recurring = metadata(goal).recurring();
+            if (recurring.isActive() && RecurringMilestone.supports(goal)) {
                 goal.refresh(client);
                 recurring.observe(goal, now);
             }
@@ -139,15 +139,15 @@ public class GrindstoneProfile {
         updateLinkedGoals(client != null && client.getGameState() == GameState.LOGGED_IN && client.getLocalPlayer() != null && client.getAccountHash() == hash);
     }
     public void updateLinkedGoals(boolean loggedIn) {
-        Map<String, Goal> sources = new HashMap<>();
-        for (Goal goal : goals) {
-            if (!(goal instanceof LinkedGoal)) {
+        Map<String, Milestone> sources = new HashMap<>();
+        for (Milestone goal : goals) {
+            if (!(goal instanceof LinkedMilestone)) {
                 sources.put(metadata(goal).getId(), goal);
             }
         }
-        for (Goal goal : goals) {
-            if (goal instanceof LinkedGoal) {
-                ((LinkedGoal) goal).update(this, loggedIn, sources);
+        for (Milestone goal : goals) {
+            if (goal instanceof LinkedMilestone) {
+                ((LinkedMilestone) goal).update(this, loggedIn, sources);
             }
         }
     }
@@ -168,36 +168,36 @@ public class GrindstoneProfile {
 
     public void setItemManager(ItemManager itemManager) {
         this.itemManager = itemManager;
-        for (Goal goal : goals) {
+        for (Milestone goal : goals) {
             attachCollectionData(goal);
         }
     }
 
-    private void attachCollectionData(Goal goal) {
-        if (goal instanceof TrackerGoal) {
-            ((TrackerGoal) goal).setItemManager(itemManager);
+    private void attachCollectionData(Milestone goal) {
+        if (goal instanceof TrackerMilestone) {
+            ((TrackerMilestone) goal).setItemManager(itemManager);
         }
-        if (goal instanceof PossessedItemGoal) {
-            ((PossessedItemGoal) goal).attach(playerStorage, itemManager);
+        if (goal instanceof PossessedItemMilestone) {
+            ((PossessedItemMilestone) goal).attach(playerStorage, itemManager);
         }
-        if (goal instanceof CollectionLogEntryGoal) {
-            CollectionLogEntryGoal entry = (CollectionLogEntryGoal) goal;
+        if (goal instanceof CollectionLogEntryMilestone) {
+            CollectionLogEntryMilestone entry = (CollectionLogEntryMilestone) goal;
             entry.setItemManager(itemManager);
             entry.setHistory(collectionLogHistory);
-        } else if (goal instanceof CollectionLogItemGoal) {
-            CollectionLogItemGoal item = (CollectionLogItemGoal) goal;
+        } else if (goal instanceof CollectionLogItemMilestone) {
+            CollectionLogItemMilestone item = (CollectionLogItemMilestone) goal;
             item.setItemManager(itemManager);
             item.setHistory(collectionLogHistory);
         }
     }
 
-    public boolean add(Goal goal) {
-        return add(goal, new GoalMetadata());
+    public boolean add(Milestone goal) {
+        return add(goal, new MilestoneMetadata());
     }
 
-    public boolean add(Goal goal, GoalMetadata details) {
+    public boolean add(Milestone goal, MilestoneMetadata details) {
         Objects.requireNonNull(goal, "goal");
-        GoalMetadata.validated(details);
+        MilestoneMetadata.validated(details);
         if (findMatchingGoal(goal, details.recurring().getSchedule()) != null) {
             return false;
         }
@@ -208,67 +208,67 @@ public class GrindstoneProfile {
         return goals.add(goal);
     }
 
-    public Goal findMatchingGoal(Goal candidate) {
+    public Milestone findMatchingGoal(Milestone candidate) {
         return findMatchingGoal(candidate, RepeatSchedule.NONE);
     }
 
-    public Goal findMatchingGoal(Goal candidate, RepeatSchedule schedule) {
+    public Milestone findMatchingGoal(Milestone candidate, RepeatSchedule schedule) {
         return goals.stream().filter(goal -> sameGoal(goal, candidate) && metadata(goal).recurring().getSchedule() == schedule).findFirst().orElse(null);
     }
 
-    private static boolean sameGoal(Goal left, Goal right) {
+    private static boolean sameGoal(Milestone left, Milestone right) {
         if (left.getClass() != right.getClass()) {
             return false;
         }
-        if (left instanceof CombatAchievementBossGoal) {
-            return ((CombatAchievementBossGoal) left).matches((CombatAchievementBossGoal) right);
+        if (left instanceof CombatAchievementBossMilestone) {
+            return ((CombatAchievementBossMilestone) left).matches((CombatAchievementBossMilestone) right);
         }
-        if (left instanceof PossessedItemGoal) {
-            return ((PossessedItemGoal) left).getItem()
-            == ((PossessedItemGoal) right).getItem();
+        if (left instanceof PossessedItemMilestone) {
+            return ((PossessedItemMilestone) left).getItem()
+            == ((PossessedItemMilestone) right).getItem();
         }
-        if (left instanceof ClientCompletionGoal) {
-            return ((ClientCompletionGoal) left).selectionKey()
-                    .equals(((ClientCompletionGoal) right).selectionKey());
+        if (left instanceof ClientCompletionMilestone) {
+            return ((ClientCompletionMilestone) left).selectionKey()
+                    .equals(((ClientCompletionMilestone) right).selectionKey());
         }
-        if (left instanceof CustomGoal) {
-            return ((CustomGoal) left).getId().equals(((CustomGoal) right).getId());
+        if (left instanceof CustomMilestone) {
+            return ((CustomMilestone) left).getId().equals(((CustomMilestone) right).getId());
         }
-        if (left instanceof ChecklistGoal) {
-            return ((ChecklistGoal) left).getId().equals(((ChecklistGoal) right).getId());
+        if (left instanceof ChecklistMilestone) {
+            return ((ChecklistMilestone) left).getId().equals(((ChecklistMilestone) right).getId());
         }
-        if (left instanceof LinkedGoal) {
-            return ((LinkedGoal) left).getId().equals(((LinkedGoal) right).getId());
+        if (left instanceof LinkedMilestone) {
+            return ((LinkedMilestone) left).getId().equals(((LinkedMilestone) right).getId());
         }
-        if (left instanceof SkillLevelGoal) {
-            return ((SkillLevelGoal) left).getSkill() == ((SkillLevelGoal) right).getSkill();
+        if (left instanceof SkillLevelMilestone) {
+            return ((SkillLevelMilestone) left).getSkill() == ((SkillLevelMilestone) right).getSkill();
         }
-        if (left instanceof SkillExperienceGoal) {
-            return ((SkillExperienceGoal) left).getSkill() == ((SkillExperienceGoal) right).getSkill();
+        if (left instanceof SkillExperienceMilestone) {
+            return ((SkillExperienceMilestone) left).getSkill() == ((SkillExperienceMilestone) right).getSkill();
         }
-        if (left instanceof SessionExperienceGoal) {
-            SessionExperienceGoal first = (SessionExperienceGoal) left;
-            SessionExperienceGoal second = (SessionExperienceGoal) right;
+        if (left instanceof SessionExperienceMilestone) {
+            SessionExperienceMilestone first = (SessionExperienceMilestone) left;
+            SessionExperienceMilestone second = (SessionExperienceMilestone) right;
             return first.isTotal() == second.isTotal() && first.getSkill() == second.getSkill();
         }
-        if (left instanceof TrackerGoal) {
-            return ((TrackerGoal) left).getTracker() == ((TrackerGoal) right).getTracker();
+        if (left instanceof TrackerMilestone) {
+            return ((TrackerMilestone) left).getTracker() == ((TrackerMilestone) right).getTracker();
         }
-        if (left instanceof CollectionLogEntryGoal) {
-            return ((CollectionLogEntryGoal) left).getPageStruct() == ((CollectionLogEntryGoal) right).getPageStruct();
+        if (left instanceof CollectionLogEntryMilestone) {
+            return ((CollectionLogEntryMilestone) left).getPageStruct() == ((CollectionLogEntryMilestone) right).getPageStruct();
         }
-        if (left instanceof CollectionLogItemGoal) {
-            return ((CollectionLogItemGoal) left).getItem() == ((CollectionLogItemGoal) right).getItem();
+        if (left instanceof CollectionLogItemMilestone) {
+            return ((CollectionLogItemMilestone) left).getItem() == ((CollectionLogItemMilestone) right).getItem();
         }
         return true;
     }
-    public static boolean sameSelection(Goal left, Goal right) {
+    public static boolean sameSelection(Milestone left, Milestone right) {
         return sameGoal(left, right);
     }
-    public boolean replaceGoal(Goal original, Goal replacement) {
+    public boolean replaceGoal(Milestone original, Milestone replacement) {
         return replaceGoal(original, replacement, metadata(original).recurring().getSchedule());
     }
-    public boolean replaceGoal(Goal original, Goal replacement, RepeatSchedule schedule) {
+    public boolean replaceGoal(Milestone original, Milestone replacement, RepeatSchedule schedule) {
         if (original == replacement) {
             return goals.contains(original);
         }
@@ -276,18 +276,18 @@ public class GrindstoneProfile {
         if (index < 0) {
             return false;
         }
-        for (Goal goal : goals) {
+        for (Milestone goal : goals) {
             if (goal != original && sameGoal(goal, replacement) && metadata(goal).recurring().getSchedule() == schedule) {
                 throw new IllegalArgumentException("That tracker and schedule are already tracked. Edit the existing milestone instead.");
             }
         }
-        GoalMetadata old = metadata(original);
+        MilestoneMetadata old = metadata(original);
         if (!sameGoal(original, replacement)) {
             archive(original);
         }
-        GoalMetadata next = sameGoal(original, replacement) ? old : new GoalMetadata();
-        if (sameGoal(original, replacement) && original instanceof SessionExperienceGoal) {
-            ((SessionExperienceGoal) replacement).copyReadingsFrom((SessionExperienceGoal) original);
+        MilestoneMetadata next = sameGoal(original, replacement) ? old : new MilestoneMetadata();
+        if (sameGoal(original, replacement) && original instanceof SessionExperienceMilestone) {
+            ((SessionExperienceMilestone) replacement).copyReadingsFrom((SessionExperienceMilestone) original);
         }
         next.setPinned(old.isPinned());
         attachCollectionData(replacement);
@@ -299,16 +299,16 @@ public class GrindstoneProfile {
     }
 
     public void validateReferences() {
-        Map<String, Goal> byId = new HashMap<>();
-        for (Goal goal : goals) {
+        Map<String, Milestone> byId = new HashMap<>();
+        for (Milestone goal : goals) {
             if (byId.put(metadata(goal).getId(), goal) != null) {
                 throw new IllegalArgumentException("Duplicate milestone metadata ID.");
             }
         }
-        for (Goal goal : goals) {
-            if (goal instanceof LinkedGoal) {
-                for (String source : ((LinkedGoal) goal).getSources()) {
-                    if (byId.get(source) instanceof LinkedGoal) {
+        for (Milestone goal : goals) {
+            if (goal instanceof LinkedMilestone) {
+                for (String source : ((LinkedMilestone) goal).getSources()) {
+                    if (byId.get(source) instanceof LinkedMilestone) {
                         throw new IllegalArgumentException("Linked milestones cannot reference other linked milestones.");
                     }
                 }
@@ -316,7 +316,7 @@ public class GrindstoneProfile {
         }
     }
 
-    public boolean remove(Goal goal) {
+    public boolean remove(Milestone goal) {
         if (goals.contains(goal)) {
             archive(goal);
         }
@@ -332,13 +332,13 @@ public class GrindstoneProfile {
         }
         int added = 0;
         Map<String, String> mapping = new HashMap<>();
-        for (Goal goal : backup.getGoals()) {
-            Goal existing = findMatchingGoal(goal, backup.metadata(goal).recurring().getSchedule());
+        for (Milestone goal : backup.getGoals()) {
+            Milestone existing = findMatchingGoal(goal, backup.metadata(goal).recurring().getSchedule());
             mapping.put(backup.metadata(goal).getId(), existing == null ? backup.metadata(goal).getId() : metadata(existing).getId());
         }
-        for (Goal goal : backup.getGoals()) {
-            if (goal instanceof LinkedGoal && findMatchingGoal(goal) == null) {
-                ((LinkedGoal) goal).remapSources(mapping);
+        for (Milestone goal : backup.getGoals()) {
+            if (goal instanceof LinkedMilestone && findMatchingGoal(goal) == null) {
+                ((LinkedMilestone) goal).remapSources(mapping);
             }
             if (add(goal, backup.metadata(goal))) {
                 added++;
@@ -350,11 +350,11 @@ public class GrindstoneProfile {
         return added;
     }
 
-    public List<Goal> getGoals() {
+    public List<Milestone> getGoals() {
         return Collections.unmodifiableList(goals);
     }
 
-    public void replace(List<Goal> goals) {
+    public void replace(List<Milestone> goals) {
         this.goals.clear();
         this.goals.addAll(goals);
         this.goals.forEach(this::attachCollectionData);
@@ -367,15 +367,15 @@ public class GrindstoneProfile {
      */
     public static final class ArchivedHistory {
         private final String title;
-        private final GoalMetadata metadata;
-        private ArchivedHistory(String title, GoalMetadata metadata) {
+        private final MilestoneMetadata metadata;
+        private ArchivedHistory(String title, MilestoneMetadata metadata) {
             this.title = title;
             this.metadata = metadata;
         }
         public String getTitle() {
             return title;
         }
-        public GoalMetadata getMetadata() {
+        public MilestoneMetadata getMetadata() {
             return metadata;
         }
     }

@@ -1,7 +1,7 @@
 package com.grindstone.repository;
 
-import com.grindstone.content.goal.GoalCategory;
-import com.grindstone.content.goal.impl.CustomGoal;
+import com.grindstone.content.milestone.MilestoneCategory;
+import com.grindstone.content.milestone.impl.CustomMilestone;
 import net.runelite.http.api.RuneLiteAPI;
 
 /**
@@ -17,7 +17,7 @@ public final class TestProfiles {
 
     public static GrindstoneProfile populated(long hash) {
         GrindstoneProfile profile = new GrindstoneProfile(hash);
-        profile.add(new CustomGoal("Saved goal", "Player notes", GoalCategory.OTHER, 3, 10));
+        profile.add(new CustomMilestone("Saved goal", "Player notes", MilestoneCategory.OTHER, 3, 10));
         return profile;
     }
 }

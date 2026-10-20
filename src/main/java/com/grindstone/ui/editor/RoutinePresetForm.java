@@ -1,13 +1,13 @@
 package com.grindstone.ui.editor;
 
-import com.grindstone.content.goal.Goal;
-import com.grindstone.content.goal.GoalCategory;
-import com.grindstone.content.goal.impl.CustomGoal;
-import com.grindstone.content.goal.impl.TrackerGoal;
-import com.grindstone.content.goal.impl.experience.SkillExperienceGoal;
-import com.grindstone.content.goal.impl.experience.TotalExperienceGoal;
+import com.grindstone.content.milestone.Milestone;
+import com.grindstone.content.milestone.MilestoneCategory;
+import com.grindstone.content.milestone.impl.CustomMilestone;
+import com.grindstone.content.milestone.impl.TrackerMilestone;
+import com.grindstone.content.milestone.impl.experience.SkillExperienceMilestone;
+import com.grindstone.content.milestone.impl.experience.TotalExperienceMilestone;
 import com.grindstone.content.tracker.TrackerEntry;
-import com.grindstone.repository.GoalMetadata;
+import com.grindstone.repository.MilestoneMetadata;
 import com.grindstone.repository.RepeatSchedule;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -37,33 +37,33 @@ public final class RoutinePresetForm extends JPanel {
         add(schedule);
         add(Box.createVerticalStrut(8));
         if (weekly) {
-            addRow(new TotalExperienceGoal(), 1_000_000);
-            addRow(new TrackerGoal(TrackerEntry.WINTERTODT, 1), 10);
-            addRow(new TrackerGoal(TrackerEntry.CORPOREAL_BEAST, 1), 5);
+            addRow(new TotalExperienceMilestone(), 1_000_000);
+            addRow(new TrackerMilestone(TrackerEntry.WINTERTODT, 1), 10);
+            addRow(new TrackerMilestone(TrackerEntry.CORPOREAL_BEAST, 1), 5);
         } else {
-            addRow(new SkillExperienceGoal(Skill.WOODCUTTING), 100_000);
-            addRow(new SkillExperienceGoal(Skill.FISHING), 50_000);
-            addRow(new TrackerGoal(TrackerEntry.WINTERTODT, 1), 3);
+            addRow(new SkillExperienceMilestone(Skill.WOODCUTTING), 100_000);
+            addRow(new SkillExperienceMilestone(Skill.FISHING), 50_000);
+            addRow(new TrackerMilestone(TrackerEntry.WINTERTODT, 1), 3);
         }
         String id = UUID.nameUUIDFromBytes(("grindstone-routine-" + weekly).getBytes(StandardCharsets.UTF_8)).toString();
-        addRow(new CustomGoal(id, "Personal challenge", "Edit this routine to describe your own activity.", GoalCategory.OTHER, 0, 1), 1);
+        addRow(new CustomMilestone(id, "Personal challenge", "Edit this routine to describe your own activity.", MilestoneCategory.OTHER, 0, 1), 1);
         JLabel note = new JLabel("<html>Existing tracker/schedule matches are skipped, not overwritten.<br>Targets count gains per UTC period. You can edit each milestone afterward.</html>");
         note.setFont(FontManager.getRunescapeSmallFont());
         add(Box.createVerticalStrut(8));
         add(note);
     }
-    private void addRow(Goal goal, long target) {
+    private void addRow(Milestone goal, long target) {
         Row row = new Row(goal, target);
         rows.add(row);
         add(row.panel);
         add(Box.createVerticalStrut(6));
     }
-    public List<Goal> selectedGoals() throws ParseException {
-        List<Goal> selected = new ArrayList<>();
+    public List<Milestone> selectedGoals() throws ParseException {
+        List<Milestone> selected = new ArrayList<>();
         for (Row row : rows) {
             if (row.enabled.isSelected()) {
                 row.target.commitEdit();
-                if (row.goal instanceof CustomGoal) {
+                if (row.goal instanceof CustomMilestone) {
                     row.goal.setTarget(((Number) row.target.getValue()).longValue());
                 }
                 selected.add(row.goal);
@@ -71,9 +71,9 @@ public final class RoutinePresetForm extends JPanel {
         }
         return selected;
     }
-    public GoalMetadata metadata(Goal goal, long now) {
+    public MilestoneMetadata metadata(Milestone goal, long now) {
         Row row = rows.stream().filter(value -> value.goal == goal).findFirst().orElseThrow(IllegalArgumentException::new);
-        GoalMetadata metadata = new GoalMetadata();
+        MilestoneMetadata metadata = new MilestoneMetadata();
         metadata.recurring().configure((RepeatSchedule) schedule.getSelectedItem(), ((Number) row.target.getValue()).longValue(), now);
         return metadata;
     }
@@ -83,11 +83,11 @@ public final class RoutinePresetForm extends JPanel {
      * @since 10/19/2026
      */
     private static final class Row {
-        private final Goal goal;
+        private final Milestone goal;
         private final JPanel panel = new JPanel(new BorderLayout(8, 0));
         private final JCheckBox enabled;
         private final JSpinner target;
-        private Row(Goal goal, long target) {
+        private Row(Milestone goal, long target) {
             this.goal = goal;
             enabled = new JCheckBox(goal.getTitle(null), true);
             enabled.setFont(FontManager.getRunescapeFont());

@@ -3,58 +3,58 @@ package com.grindstone.ui;
 import com.grindstone.config.GrindstoneConfig;
 import com.grindstone.config.ProgressOverlayView;
 import com.grindstone.content.collectionlog.CollectionLogPages;
-import com.grindstone.content.goal.BaseSkillGoal;
-import com.grindstone.content.goal.Goal;
-import com.grindstone.content.goal.GoalCategory;
-import com.grindstone.content.goal.GoalPreset;
-import com.grindstone.content.goal.GoalStatus;
-import com.grindstone.content.goal.ManualGoal;
-import com.grindstone.content.goal.TrackingState;
-import com.grindstone.content.goal.impl.ChecklistGoal;
-import com.grindstone.content.goal.impl.CustomGoal;
-import com.grindstone.content.goal.impl.LinkedGoal;
-import com.grindstone.content.goal.impl.TrackerGoal;
-import com.grindstone.content.goal.impl.collectionlog.CollectionLogEntryGoal;
-import com.grindstone.content.goal.impl.collectionlog.CollectionLogItemGoal;
-import com.grindstone.content.goal.impl.experience.BaseExperienceGoal;
-import com.grindstone.content.goal.impl.experience.SessionExperienceGoal;
-import com.grindstone.content.goal.impl.experience.SkillExperienceGoal;
-import com.grindstone.content.goal.impl.experience.TotalExperienceGoal;
-import com.grindstone.content.goal.impl.item.PossessedItemGoal;
-import com.grindstone.content.goal.impl.level.BaseLevelGoal;
-import com.grindstone.content.goal.impl.level.CombatLevelGoal;
-import com.grindstone.content.goal.impl.level.SkillLevelGoal;
-import com.grindstone.content.goal.impl.level.TotalLevelGoal;
-import com.grindstone.notification.GoalCompletionNotifications;
+import com.grindstone.content.milestone.BaseSkillMilestone;
+import com.grindstone.content.milestone.Milestone;
+import com.grindstone.content.milestone.MilestoneCategory;
+import com.grindstone.content.milestone.MilestonePreset;
+import com.grindstone.content.milestone.MilestoneStatus;
+import com.grindstone.content.milestone.ManualMilestone;
+import com.grindstone.content.milestone.TrackingState;
+import com.grindstone.content.milestone.impl.ChecklistMilestone;
+import com.grindstone.content.milestone.impl.CustomMilestone;
+import com.grindstone.content.milestone.impl.LinkedMilestone;
+import com.grindstone.content.milestone.impl.TrackerMilestone;
+import com.grindstone.content.milestone.impl.collectionlog.CollectionLogEntryMilestone;
+import com.grindstone.content.milestone.impl.collectionlog.CollectionLogItemMilestone;
+import com.grindstone.content.milestone.impl.experience.BaseExperienceMilestone;
+import com.grindstone.content.milestone.impl.experience.SessionExperienceMilestone;
+import com.grindstone.content.milestone.impl.experience.SkillExperienceMilestone;
+import com.grindstone.content.milestone.impl.experience.TotalExperienceMilestone;
+import com.grindstone.content.milestone.impl.item.PossessedItemMilestone;
+import com.grindstone.content.milestone.impl.level.BaseLevelMilestone;
+import com.grindstone.content.milestone.impl.level.CombatLevelMilestone;
+import com.grindstone.content.milestone.impl.level.SkillLevelMilestone;
+import com.grindstone.content.milestone.impl.level.TotalLevelMilestone;
+import com.grindstone.notification.MilestoneCompletionNotifications;
 import com.grindstone.overlay.GrindstoneProgressOverlay;
 import com.grindstone.overlay.ProgressOverlayEntry;
-import com.grindstone.repository.BulkGoalAction;
-import com.grindstone.repository.BulkGoalChanges;
-import com.grindstone.repository.GoalMetadata;
-import com.grindstone.repository.GoalUndo;
+import com.grindstone.repository.BulkMilestoneAction;
+import com.grindstone.repository.BulkMilestoneChanges;
+import com.grindstone.repository.MilestoneMetadata;
+import com.grindstone.repository.MilestoneUndo;
 import com.grindstone.repository.GrindstoneProfile;
 import com.grindstone.repository.HistoryRecord;
-import com.grindstone.repository.RecurringGoal;
+import com.grindstone.repository.RecurringMilestone;
 import com.grindstone.repository.RepeatSchedule;
 import com.grindstone.ui.components.ContentHeightPanel;
-import com.grindstone.ui.components.GoalComponent;
-import com.grindstone.ui.components.GoalHistoryPanel;
-import com.grindstone.ui.components.GoalListPanel;
+import com.grindstone.ui.components.MilestoneComponent;
+import com.grindstone.ui.components.MilestoneHistoryPanel;
+import com.grindstone.ui.components.MilestoneListPanel;
 import com.grindstone.ui.components.HistoryBrowserPanel;
 import com.grindstone.ui.components.SegmentedProgressBar;
-import com.grindstone.ui.editor.BulkGoalForm;
-import com.grindstone.ui.editor.CompletionGoalChoices;
-import com.grindstone.ui.editor.CustomGoalForm;
+import com.grindstone.ui.editor.BulkMilestoneForm;
+import com.grindstone.ui.editor.CompletionMilestoneChoices;
+import com.grindstone.ui.editor.CustomMilestoneForm;
 import com.grindstone.ui.editor.DeadlineForm;
-import com.grindstone.ui.editor.GoalCreationDialog;
-import com.grindstone.ui.editor.GoalEditorPanel;
-import com.grindstone.ui.editor.LinkedGoalForm;
-import com.grindstone.ui.editor.RepeatGoalForm;
+import com.grindstone.ui.editor.MilestoneCreationDialog;
+import com.grindstone.ui.editor.MilestoneEditorPanel;
+import com.grindstone.ui.editor.LinkedMilestoneForm;
+import com.grindstone.ui.editor.RepeatMilestoneForm;
 import com.grindstone.ui.editor.RoutinePresetForm;
 import com.grindstone.ui.item.ItemSearchService;
 import com.grindstone.ui.util.DialogPlacement;
-import com.grindstone.ui.util.GoalCardCache;
-import com.grindstone.ui.util.SkillGoalGrouping;
+import com.grindstone.ui.util.MilestoneCardCache;
+import com.grindstone.ui.util.SkillMilestoneGrouping;
 import com.grindstone.ui.util.UiTooltips;
 import com.grindstone.ui.util.UiTypography;
 import com.grindstone.util.HtmlUtils;
@@ -150,7 +150,7 @@ public class GrindstonePanel extends PluginPanel {
     @Inject
     private ConfigManager configManager;
     @Inject
-    private GoalCompletionNotifications completionNotifications;
+    private MilestoneCompletionNotifications completionNotifications;
     @Inject
     private ProfileBackupActions backupActions;
     private static final String ALL_CATEGORIES = "All categories";
@@ -193,7 +193,7 @@ public class GrindstonePanel extends PluginPanel {
     @Inject
     private ItemSearchService itemSearchService;
 
-    private final JPanel main = new GoalListPanel();
+    private final JPanel main = new MilestoneListPanel();
     private final JPanel header = new JPanel();
     private final JPanel controlsPanel = new JPanel();
     private final JLabel summaryLabel = new JLabel("No profile loaded");
@@ -220,20 +220,20 @@ public class GrindstonePanel extends PluginPanel {
     private final JToggleButton allGoalsButton = new JToggleButton("All", true);
     private boolean todayMode;
     private String pendingReveal;
-    private List<GoalView> preparedGoals = new ArrayList<>();
-    private final GoalCardCache<GoalView> cardCache = new GoalCardCache<>();
+    private List<MilestoneView> preparedGoals = new ArrayList<>();
+    private final MilestoneCardCache<MilestoneView> cardCache = new MilestoneCardCache<>();
     private List<?> layoutKey;
-    private final Map<Goal, GoalComponent> displayedCards = new IdentityHashMap<>();
+    private final Map<Milestone, MilestoneComponent> displayedCards = new IdentityHashMap<>();
     private final Map<RepeatSchedule, JButton> repeatHeadings = new LinkedHashMap<>();
     private JPanel routineOverview;
     private JLabel routineTitle;
     private JLabel routineDue;
     private SegmentedProgressBar routineProgress;
     private final Component routineGap = Box.createVerticalStrut(12);
-    private final GoalUndo undo = new GoalUndo();
+    private final MilestoneUndo undo = new MilestoneUndo();
     private final JScrollPane scrollPane;
 
-    private final Map<GoalCategory, Boolean> collapsedCategories = new LinkedHashMap<>();
+    private final Map<MilestoneCategory, Boolean> collapsedCategories = new LinkedHashMap<>();
     private final Map<RepeatSchedule, Boolean> collapsedRepeats = new LinkedHashMap<>();
     private final AtomicInteger renderVersion = new AtomicInteger();
     private final AtomicBoolean renderQueued = new AtomicBoolean();
@@ -348,9 +348,9 @@ public class GrindstonePanel extends PluginPanel {
         JPanel counters = new JPanel(new GridLayout(2, 2, 4, 4));
         counters.setOpaque(false);
         counters.setAlignmentX(LEFT_ALIGNMENT);
-        newGoalsButton.setForeground(SegmentedProgressBar.colorFor(GoalStatus.NOT_STARTED));
-        activeGoalsButton.setForeground(SegmentedProgressBar.colorFor(GoalStatus.IN_PROGRESS));
-        completeGoalsButton.setForeground(SegmentedProgressBar.colorFor(GoalStatus.COMPLETE));
+        newGoalsButton.setForeground(SegmentedProgressBar.colorFor(MilestoneStatus.NOT_STARTED));
+        activeGoalsButton.setForeground(SegmentedProgressBar.colorFor(MilestoneStatus.IN_PROGRESS));
+        completeGoalsButton.setForeground(SegmentedProgressBar.colorFor(MilestoneStatus.COMPLETE));
         newGoalsButton.setToolTipText("Show not-started milestones. Click again to show all statuses.");
         activeGoalsButton.setToolTipText("Show in-progress milestones. Click again to show all statuses.");
         completeGoalsButton.setToolTipText("Show completed milestones, including hidden completions. Click again to show all statuses.");
@@ -394,7 +394,7 @@ public class GrindstonePanel extends PluginPanel {
         moreMenu.add(allCollectionPages);
         JMenu presets = new JMenu("Add milestone preset");
         presets.setToolTipText("Add a focused milestone pack without replacing existing milestones or edited targets.");
-        for (GoalPreset preset : GoalPreset.values()) {
+        for (MilestonePreset preset : MilestonePreset.values()) {
             JMenuItem option = new JMenuItem(preset.toString());
             option.addActionListener(event -> addPreset(preset));
             presets.add(option);
@@ -723,7 +723,7 @@ public class GrindstonePanel extends PluginPanel {
     }
 
     private void setAllCategoriesCollapsed(boolean collapsed) {
-        for (GoalCategory category : GoalCategory.values()) {
+        for (MilestoneCategory category : MilestoneCategory.values()) {
             collapsedCategories.put(category, collapsed);
         }
         for (RepeatSchedule schedule : RepeatSchedule.values()) {
@@ -775,7 +775,7 @@ public class GrindstonePanel extends PluginPanel {
             renderQueued.set(false);
             int version = renderVersion.incrementAndGet();
             GrindstoneProfile currentProfile = profile;
-            List<Supplier<GoalView>> preparedViews = new ArrayList<>();
+            List<Supplier<MilestoneView>> preparedViews = new ArrayList<>();
             List<ProgressOverlayEntry> overlayEntries = new ArrayList<>();
             boolean loggedIn = currentProfile != null && client.getGameState() == GameState.LOGGED_IN && client.getLocalPlayer() != null && currentProfile.getHash() == client.getAccountHash();
             boolean captureOverlay = loggedIn && config.progressOverlayEnabled();
@@ -786,25 +786,25 @@ public class GrindstonePanel extends PluginPanel {
                     currentProfile.observeRecurring(client, System.currentTimeMillis());
                     completionNotifications.observe(currentProfile);
                 }
-                for (Goal goal : currentProfile.getGoals()) {
-                    if (!config.linkedGoalsEnabled() && goal instanceof LinkedGoal) {
+                for (Milestone goal : currentProfile.getGoals()) {
+                    if (!config.linkedGoalsEnabled() && goal instanceof LinkedMilestone) {
                         continue;
                     }
-                    if (goal == null || (!config.collectionLogEnabled() && isCollectionLogGoal(goal)) || (!config.levelGoalsEnabled() && isLevelGoal(goal)) || (!config.experienceGoalsEnabled() && isExperienceGoal(goal)) || (!config.trackerGoalsEnabled() && goal instanceof TrackerGoal) || (!config.questGoalsEnabled() && goal.getCategory() == GoalCategory.QUEST) || (!config.diaryGoalsEnabled() && goal.getCategory() == GoalCategory.ACHIEVEMENT_DIARY) || (!config.combatAchievementGoalsEnabled() && goal.getCategory() == GoalCategory.COMBAT_ACHIEVEMENT) || (!config.ownedItemGoalsEnabled() && goal instanceof PossessedItemGoal) || (!config.customGoalsEnabled() && goal instanceof ManualGoal)) {
+                    if (goal == null || (!config.collectionLogEnabled() && isCollectionLogGoal(goal)) || (!config.levelGoalsEnabled() && isLevelGoal(goal)) || (!config.experienceGoalsEnabled() && isExperienceGoal(goal)) || (!config.trackerGoalsEnabled() && goal instanceof TrackerMilestone) || (!config.questGoalsEnabled() && goal.getCategory() == MilestoneCategory.QUEST) || (!config.diaryGoalsEnabled() && goal.getCategory() == MilestoneCategory.ACHIEVEMENT_DIARY) || (!config.combatAchievementGoalsEnabled() && goal.getCategory() == MilestoneCategory.COMBAT_ACHIEVEMENT) || (!config.ownedItemGoalsEnabled() && goal instanceof PossessedItemMilestone) || (!config.customGoalsEnabled() && goal instanceof ManualMilestone)) {
                         continue;
                     }
 
                     String title = safeTitle(goal);
-                    GoalMetadata metadata = currentProfile.metadata(goal);
-                    RecurringGoal recurring = metadata.recurring();
-                    boolean repeating = recurring.isActive() && RecurringGoal.supports(goal);
+                    MilestoneMetadata metadata = currentProfile.metadata(goal);
+                    RecurringMilestone recurring = metadata.recurring();
+                    boolean repeating = recurring.isActive() && RecurringMilestone.supports(goal);
                     TrackingState tracking = TrackingState.of(goal, recurring, client.getGameState() == GameState.LOGGED_IN && client.getLocalPlayer() != null && client.getAccountHash() == currentProfile.getHash(), currentProfile.getPlayerStorage().hasBankSnapshot());
                     List<?> key = Arrays.asList(currentProfile, metadata, title, goal.getDescription(), goal.getProgressCurrent(), goal.getProgressMaximum(), goal.getStatus(), recurring.getSchedule(), recurring.getProgress(), recurring.getTarget(), recurring.getBaselineAt(), recurring.getStart(), metadata.isPinned(), metadata.isCollapsed(config.collapseDetailsByDefault()), metadata.getCompletions().size(), tracking, config.showGoalIcons(), config.showProgressBar(), config.maxProgressChunks(), config.showCompletionHistory(), config.showActivityIcons(), config.itemsPerRow(), config.maxItemRows(), config.showTrackingState(), config.showObtainedItems(), config.showItemTooltips());
-                    if (goal instanceof ChecklistGoal) {
-                        key = Arrays.asList(key, Arrays.hashCode(((ChecklistGoal) goal).getChecks()));
+                    if (goal instanceof ChecklistMilestone) {
+                        key = Arrays.asList(key, Arrays.hashCode(((ChecklistMilestone) goal).getChecks()));
                     }
                     key = Arrays.asList(key, metadata.getDeadlineAt(), metadata.getDeadlineAt() > 0 && System.currentTimeMillis() >= metadata.getDeadlineAt(), metadata.getDisplayCategory());
-                    GoalView cached = cardCache.get(goal, key);
+                    MilestoneView cached = cardCache.get(goal, key);
                     if (cached != null && tracking != TrackingState.WAITING && goal.getProgressMaximum() > 0) {
                         if (captureOverlay) {
                             overlayEntries.add(new ProgressOverlayEntry(title, repeating ? recurring.getSchedule() : RepeatSchedule.NONE, repeating ? recurring.getProgress() : goal.getProgressCurrent(), repeating ? recurring.getTarget() : goal.getProgressMaximum(), isComplete(repeating ? recurring.getStatus() : goal.getStatus()), true, metadata.isPinned()));
@@ -812,38 +812,38 @@ public class GrindstonePanel extends PluginPanel {
                         preparedViews.add(() -> cached);
                         continue;
                     }
-                    Supplier<GoalComponent> preparedCard = goal.prepare(client, config);
+                    Supplier<MilestoneComponent> preparedCard = goal.prepare(client, config);
                     tracking = TrackingState.of(goal, recurring, client.getGameState() == GameState.LOGGED_IN && client.getLocalPlayer() != null && client.getAccountHash() == currentProfile.getHash(), currentProfile.getPlayerStorage().hasBankSnapshot());
                     TrackingState displayTracking = tracking;
-                    GoalStatus status = repeating ? recurring.getStatus() : goal.getStatus();
+                    MilestoneStatus status = repeating ? recurring.getStatus() : goal.getStatus();
                     long progressCurrent = repeating ? recurring.getProgress() : goal.getProgressCurrent();
                     long progressMaximum = repeating ? recurring.getTarget() : goal.getProgressMaximum();
                     if (tracking == TrackingState.WAITING) {
-                        status = GoalStatus.NOT_STARTED;
+                        status = MilestoneStatus.NOT_STARTED;
                         progressCurrent = 0;
                         progressMaximum = 0;
                     }
                     if (!repeating && tracking != TrackingState.WAITING) {
                         metadata.observe(goal, title, System.currentTimeMillis());
                     }
-                    GoalMetadata displayMetadata = metadata.copy();
-                    RecurringGoal displayRecurring = displayMetadata.recurring();
-                    GoalCategory category = safeCategory(goal);
+                    MilestoneMetadata displayMetadata = metadata.copy();
+                    RecurringMilestone displayRecurring = displayMetadata.recurring();
+                    MilestoneCategory category = safeCategory(goal);
                     boolean hasProgress = goal.hasProgress();
                     String sourceDetail = goal.getCardDescription().isEmpty() ? goal.getDescription() : "";
                     long shownCurrent = progressCurrent;
                     long shownMaximum = progressMaximum;
-                    GoalStatus shownStatus = status;
+                    MilestoneStatus shownStatus = status;
                     if (captureOverlay) {
                         overlayEntries.add(new ProgressOverlayEntry(title, repeating ? recurring.getSchedule() : RepeatSchedule.NONE, shownCurrent, shownMaximum, isComplete(shownStatus), tracking != TrackingState.WAITING, metadata.isPinned()));
                     }
-                    List<String> steps = goal instanceof ChecklistGoal ? new ArrayList<>(((ChecklistGoal) goal).getSteps()) : new ArrayList<>();
-                    boolean[] checks = goal instanceof ChecklistGoal ? ((ChecklistGoal) goal).getChecks().clone() : new boolean[0];
+                    List<String> steps = goal instanceof ChecklistMilestone ? new ArrayList<>(((ChecklistMilestone) goal).getSteps()) : new ArrayList<>();
+                    boolean[] checks = goal instanceof ChecklistMilestone ? ((ChecklistMilestone) goal).getChecks().clone() : new boolean[0];
                     List<?> cacheKey = key;
                     preparedViews.add(() -> {
-                        GoalComponent component = preparedCard.get();
-                        if (goal instanceof ChecklistGoal) {
-                            ChecklistGoal checklist = (ChecklistGoal) goal;
+                        MilestoneComponent component = preparedCard.get();
+                        if (goal instanceof ChecklistMilestone) {
+                            ChecklistMilestone checklist = (ChecklistMilestone) goal;
                             boolean[] checked = checks;
                             RepeatSchedule openedSchedule = displayRecurring.getSchedule();
                             long openedPeriod = openedSchedule.start(System.currentTimeMillis());
@@ -859,7 +859,7 @@ public class GrindstonePanel extends PluginPanel {
                                     boolean selected = check.isSelected();
                                     clientThread.invokeLater(() -> {
                                         if (profile == currentProfile && currentProfile.getGoals().contains(goal) && currentProfile.metadata(goal).recurring().getSchedule() == openedSchedule && openedSchedule.start(System.currentTimeMillis()) == openedPeriod) {
-                                            Consumer<Goal> restore = currentProfile.snapshotEdit(goal);
+                                            Consumer<Milestone> restore = currentProfile.snapshotEdit(goal);
                                             checklist.setChecked(index, selected);
                                             currentProfile.touch();
                                             recordGoalUndo(currentProfile, goal, "checklist step", () -> restore.accept(goal));
@@ -912,8 +912,8 @@ public class GrindstonePanel extends PluginPanel {
                         component.setMaximumProgressChunks(config.maxProgressChunks());
                         component.setGoalActions(event -> editGoal(currentProfile, goal, title), event -> deleteGoal(currentProfile, goal, title));
                         component.addGoalAction("Set deadline...", "Set a personal UTC deadline and optional reminder in Grindstone's header.", event -> editDeadline(currentProfile, goal));
-                        if (goal instanceof CustomGoal) {
-                            CustomGoal custom = (CustomGoal) goal;
+                        if (goal instanceof CustomMilestone) {
+                            CustomMilestone custom = (CustomMilestone) goal;
                             long shownTarget = shownMaximum;
                             component.setManualActions(shownCurrent, shownTarget, () -> changeManualProgress(currentProfile, custom, value -> Math.min(custom.getProgressMaximum(), value + 1)), () -> changeManualProgress(currentProfile, custom, value -> value >= custom.getProgressMaximum() ? 0 : 1), () -> promptManualProgress(currentProfile, custom, shownCurrent, shownTarget));
                         }
@@ -933,7 +933,7 @@ public class GrindstonePanel extends PluginPanel {
                                 if (profile != currentProfile || !currentProfile.getGoals().contains(goal)) {
                                     return;
                                 }
-                                Supplier<GoalHistoryPanel> history = GoalHistoryPanel.snapshot(currentProfile.metadata(goal));
+                                Supplier<MilestoneHistoryPanel> history = MilestoneHistoryPanel.snapshot(currentProfile.metadata(goal));
                                 SwingUtilities.invokeLater(() -> {
                                     if (profile == currentProfile) {
                                         JOptionPane.showMessageDialog(DialogPlacement.owner(this), history.get(), title + " — history", JOptionPane.PLAIN_MESSAGE);
@@ -941,18 +941,18 @@ public class GrindstonePanel extends PluginPanel {
                                 });
                             }));
                         }
-                        if (RecurringGoal.supports(goal)) {
+                        if (RecurringMilestone.supports(goal)) {
                             component.addGoalAction(repeating ? "Routine schedule..." : "Make routine...", "Choose a daily, weekly or monthly routine, or return to a one-time milestone.", event -> editRepeat(currentProfile, goal, repeatSchedule, repeatTarget));
                         }
                         if (repeating) {
                             component.addGoalAction("Restart current period...", "Archive observed progress and capture a fresh baseline. Game progress is never reset.", event -> restartPeriod(currentProfile, goal));
                         }
-                        if (goal instanceof SessionExperienceGoal) {
+                        if (goal instanceof SessionExperienceMilestone) {
                             component.addGoalAction("Restart session XP...", "Clear only this milestone's observed login gains and capture the current XP as its new baseline.", event -> {
                                 if (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), "Reset this milestone's session XP progress? Your game XP and saved completion history are unchanged.", "Restart session milestone", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
                                     clientThread.invokeLater(() -> {
                                         if (profile == currentProfile && currentProfile.getGoals().contains(goal) && hasClientProfile(currentProfile)) {
-                                            ((SessionExperienceGoal) goal).restart();
+                                            ((SessionExperienceMilestone) goal).restart();
                                             goal.refresh(client);
                                             currentProfile.touch();
                                             refreshAll();
@@ -961,9 +961,9 @@ public class GrindstonePanel extends PluginPanel {
                                 }
                             });
                         }
-                        component.setAchievementNote(repeating ? displayRecurring.getSchedule() + " · " + (displayRecurring.getBaselineAt() == 0 ? "Baseline pending" : "This period") : config.showCompletionHistory() && !displayMetadata.getCompletions().isEmpty() && shownStatus != GoalStatus.COMPLETE ? "Previously reached · now incomplete" : null);
+                        component.setAchievementNote(repeating ? displayRecurring.getSchedule() + " · " + (displayRecurring.getBaselineAt() == 0 ? "Baseline pending" : "This period") : config.showCompletionHistory() && !displayMetadata.getCompletions().isEmpty() && shownStatus != MilestoneStatus.COMPLETE ? "Previously reached · now incomplete" : null);
 
-                        GoalView view = new GoalView(goal, component, title, category, shownStatus, hasProgress, shownCurrent, shownMaximum);
+                        MilestoneView view = new MilestoneView(goal, component, title, category, shownStatus, hasProgress, shownCurrent, shownMaximum);
                         cardCache.put(goal, cacheKey, view);
                         return view;
                     });
@@ -979,8 +979,8 @@ public class GrindstonePanel extends PluginPanel {
             }
             String updateText = currentProfile == null ? "" : HtmlUtils.escape(currentProfile.getPlayerStorage().snapshotLabel());
             long dueCount = currentProfile == null || !config.showDeadlineReminders() ? 0 : currentProfile.getGoals().stream().filter(goal -> {
-                GoalMetadata metadata = currentProfile.metadata(goal);
-                return metadata.isDeadlineReminder() && metadata.getDeadlineAt() > 0 && metadata.getDeadlineAt() - System.currentTimeMillis() <= 86_400_000L && (metadata.recurring().isActive() ? metadata.recurring().getStatus() : goal.getStatus()) != GoalStatus.COMPLETE;
+                MilestoneMetadata metadata = currentProfile.metadata(goal);
+                return metadata.isDeadlineReminder() && metadata.getDeadlineAt() > 0 && metadata.getDeadlineAt() - System.currentTimeMillis() <= 86_400_000L && (metadata.recurring().isActive() ? metadata.recurring().getStatus() : goal.getStatus()) != MilestoneStatus.COMPLETE;
             }).count();
             SwingUtilities.invokeLater(() -> {
                 if (version != renderVersion.get()) {
@@ -990,8 +990,8 @@ public class GrindstonePanel extends PluginPanel {
                 updateStatusLabel.setText("<html>" + (storageStatus == null ? "" : HtmlUtils.escape(storageStatus) + "<br>") + (dueCount == 0 ? "" : dueCount + " personal deadline(s) due within 24h / past due<br>") + (config.showUpdateStatus() ? updateText : "") + "</html>");
                 updateStatusLabel.setVisible(config.showUpdateStatus() && currentProfile != null || storageStatus != null || dueCount > 0);
                 updateStatusLabel.setToolTipText("Latest inventory, equipment or storage snapshot captured this login. This does not mean every storage has been loaded.");
-                List<GoalView> allGoals = new ArrayList<>(preparedViews.size());
-                for (Supplier<GoalView> prepared : preparedViews) {
+                List<MilestoneView> allGoals = new ArrayList<>(preparedViews.size());
+                for (Supplier<MilestoneView> prepared : preparedViews) {
                     allGoals.add(prepared.get());
                 }
                 renderPrepared(currentProfile, allGoals);
@@ -999,7 +999,7 @@ public class GrindstonePanel extends PluginPanel {
         });
     }
 
-    private void renderPrepared(GrindstoneProfile currentProfile, List<GoalView> allGoals) {
+    private void renderPrepared(GrindstoneProfile currentProfile, List<MilestoneView> allGoals) {
         if (currentProfile == null) {
             main.removeAll();
             layoutKey = null;
@@ -1024,25 +1024,25 @@ public class GrindstonePanel extends PluginPanel {
         updateCategoryOptions(allGoals);
         updateSummary(allGoals);
 
-        List<GoalView> filteredGoals = filterGoals(allGoals);
+        List<MilestoneView> filteredGoals = filterGoals(allGoals);
         if (todayMode) {
             filteredGoals.removeIf(view -> view.component.getClientProperty("grindstone.repeat") == RepeatSchedule.NONE);
         }
         sortGoals(filteredGoals);
         if (todayMode) {
-            filteredGoals.sort(Comparator.comparingLong((GoalView view) -> nextReset(view)).thenComparing(view -> isComplete(view.status)));
+            filteredGoals.sort(Comparator.comparingLong((MilestoneView view) -> nextReset(view)).thenComparing(view -> isComplete(view.status)));
         }
         resultsLabel.setText("Showing " + filteredGoals.size() + " of " + allGoals.size());
         resultsLabel.setToolTipText("Milestones matching your search, filters and visibility settings.");
 
         List<Object> rows = new ArrayList<>();
-        for (GoalView view : filteredGoals) {
+        for (MilestoneView view : filteredGoals) {
             rows.add(Arrays.asList(view.goal, view.category, view.component.getClientProperty("grindstone.repeat"), view.component.getClientProperty("grindstone.pinned")));
         }
         List<?> nextLayout = Arrays.asList(currentProfile, todayMode, config.showTodayOverview(), config.categorizedGoals(), config.groupRecurringGoals(), config.groupSkillGoals(), config.showPinnedSection(), new LinkedHashMap<>(collapsedCategories), new LinkedHashMap<>(collapsedRepeats), rows, allGoals.size());
         if (nextLayout.equals(layoutKey)) {
-            for (GoalView view : filteredGoals) {
-                GoalComponent previous = displayedCards.put(view.goal, view.component);
+            for (MilestoneView view : filteredGoals) {
+                MilestoneComponent previous = displayedCards.put(view.goal, view.component);
                 if (previous != null && previous != view.component && previous.getParent() != null) {
                     Container parent = previous.getParent();
                     int index = Arrays.asList(parent.getComponents()).indexOf(previous);
@@ -1054,8 +1054,8 @@ public class GrindstonePanel extends PluginPanel {
                 }
             }
             for (Map.Entry<RepeatSchedule, JButton> entry : repeatHeadings.entrySet()) {
-                List<GoalView> repeats = new ArrayList<>();
-                for (GoalView view : filteredGoals) {
+                List<MilestoneView> repeats = new ArrayList<>();
+                for (MilestoneView view : filteredGoals) {
                     if (view.component.getClientProperty("grindstone.repeat") == entry.getKey() && !(config.showPinnedSection() && Boolean.TRUE.equals(view.component.getClientProperty("grindstone.pinned")))) {
                         repeats.add(view);
                     }
@@ -1072,7 +1072,7 @@ public class GrindstonePanel extends PluginPanel {
         main.removeAll();
         displayedCards.clear();
         repeatHeadings.clear();
-        for (GoalView view : filteredGoals) {
+        for (MilestoneView view : filteredGoals) {
             displayedCards.put(view.goal, view.component);
         }
         if (todayMode || config.showTodayOverview()) {
@@ -1091,9 +1091,9 @@ public class GrindstonePanel extends PluginPanel {
             return;
         }
 
-        List<GoalView> pinnedGoals = new ArrayList<>();
-        List<GoalView> remainingGoals = new ArrayList<>();
-        for (GoalView view : filteredGoals) {
+        List<MilestoneView> pinnedGoals = new ArrayList<>();
+        List<MilestoneView> remainingGoals = new ArrayList<>();
+        for (MilestoneView view : filteredGoals) {
             if (config.showPinnedSection() && Boolean.TRUE.equals(view.component.getClientProperty("grindstone.pinned"))) {
                 pinnedGoals.add(view);
             } else {
@@ -1106,7 +1106,7 @@ public class GrindstonePanel extends PluginPanel {
             pinnedHeading.setAlignmentX(LEFT_ALIGNMENT);
             main.add(pinnedHeading);
             main.add(Box.createVerticalStrut(8));
-            for (GoalView view : pinnedGoals) {
+            for (MilestoneView view : pinnedGoals) {
                 view.component.setAlignmentX(LEFT_ALIGNMENT);
                 main.add(view.component);
                 main.add(Box.createVerticalStrut(12));
@@ -1117,8 +1117,8 @@ public class GrindstonePanel extends PluginPanel {
                 if (schedule == RepeatSchedule.NONE) {
                     continue;
                 }
-                List<GoalView> repeats = new ArrayList<>();
-                for (GoalView view : remainingGoals) {
+                List<MilestoneView> repeats = new ArrayList<>();
+                for (MilestoneView view : remainingGoals) {
                     if (view.component.getClientProperty("grindstone.repeat") == schedule) {
                         repeats.add(view);
                     }
@@ -1131,7 +1131,7 @@ public class GrindstonePanel extends PluginPanel {
             }
         }
         if (!config.categorizedGoals()) {
-            for (GoalView view : remainingGoals) {
+            for (MilestoneView view : remainingGoals) {
                 view.component.setAlignmentX(LEFT_ALIGNMENT);
                 main.add(view.component);
                 main.add(Box.createVerticalStrut(12));
@@ -1139,9 +1139,9 @@ public class GrindstonePanel extends PluginPanel {
             refreshPanel();
             return;
         }
-        Map<GoalCategory, List<GoalView>> groupedGoals = groupGoals(remainingGoals);
+        Map<MilestoneCategory, List<MilestoneView>> groupedGoals = groupGoals(remainingGoals);
 
-        for (Map.Entry<GoalCategory, List<GoalView>> entry : groupedGoals.entrySet()) {
+        for (Map.Entry<MilestoneCategory, List<MilestoneView>> entry : groupedGoals.entrySet()) {
             addCategorySection(entry.getKey(), entry.getValue());
             main.add(Box.createVerticalStrut(10));
         }
@@ -1150,9 +1150,9 @@ public class GrindstonePanel extends PluginPanel {
         revealPrepared(allGoals);
     }
 
-    private void addTodayOverview(List<GoalView> goals) {
-        List<GoalView> recurring = new ArrayList<>();
-        for (GoalView view : goals) {
+    private void addTodayOverview(List<MilestoneView> goals) {
+        List<MilestoneView> recurring = new ArrayList<>();
+        for (MilestoneView view : goals) {
             if (view.component.getClientProperty("grindstone.repeat") != RepeatSchedule.NONE) {
                 recurring.add(view);
             }
@@ -1210,24 +1210,24 @@ public class GrindstonePanel extends PluginPanel {
         main.add(routineGap, 1);
     }
 
-    private long nextReset(GoalView view) {
+    private long nextReset(MilestoneView view) {
         RepeatSchedule schedule = (RepeatSchedule) view.component.getClientProperty("grindstone.repeat");
         return schedule == RepeatSchedule.NONE ? Long.MAX_VALUE : schedule.next(schedule.start(System.currentTimeMillis()));
     }
 
-    private void updateSummary(List<GoalView> goals) {
+    private void updateSummary(List<MilestoneView> goals) {
         int completed = 0;
         int active = 0;
         int notStarted = 0;
         int known = 0;
 
-        for (GoalView view : goals) {
+        for (MilestoneView view : goals) {
             if (!Boolean.TRUE.equals(view.component.getClientProperty("grindstone.ready"))) {
                 continue;
             }
             if (isComplete(view.status)) {
                 completed++;
-            } else if (view.status == GoalStatus.IN_PROGRESS) {
+            } else if (view.status == MilestoneStatus.IN_PROGRESS) {
                 active++;
             } else {
                 notStarted++;
@@ -1239,7 +1239,7 @@ public class GrindstonePanel extends PluginPanel {
         overallProgress.setVisible(!goals.isEmpty());
         overallProgress.setMaximumChunks(config.maxProgressChunks());
         overallProgress.setProgress(completed, goals.size());
-        overallProgress.setStatus(!goals.isEmpty() && completed == goals.size() ? GoalStatus.COMPLETE : active > 0 || completed > 0 ? GoalStatus.IN_PROGRESS : GoalStatus.NOT_STARTED);
+        overallProgress.setStatus(!goals.isEmpty() && completed == goals.size() ? MilestoneStatus.COMPLETE : active > 0 || completed > 0 ? MilestoneStatus.IN_PROGRESS : MilestoneStatus.NOT_STARTED);
         summaryLabel.setText(goals.isEmpty() ? "Create your first milestone" : completed + " of " + goals.size() + " completed");
         summaryLabel.setToolTipText("Overview of all enabled milestones, independent of search and filters.");
         progressPercent.setText(percentage + "%");
@@ -1251,8 +1251,8 @@ public class GrindstonePanel extends PluginPanel {
         syncQuickStatus();
     }
 
-    private List<GoalView> filterGoals(List<GoalView> goals) {
-        List<GoalView> filtered = new ArrayList<>();
+    private List<MilestoneView> filterGoals(List<MilestoneView> goals) {
+        List<MilestoneView> filtered = new ArrayList<>();
         String query = searchField.getText().trim().toLowerCase(Locale.ROOT);
         String selectedCategory = (String) categoryFilter.getSelectedItem();
         String selectedStatus = (String) statusFilter.getSelectedItem();
@@ -1297,7 +1297,7 @@ public class GrindstonePanel extends PluginPanel {
         filterSummary.setText("<html><div style='width: 190px'>" + HtmlUtils.escape(selectionText) + "</div></html>");
         filterSummary.setToolTipText(selectionText);
 
-        for (GoalView view : goals) {
+        for (MilestoneView view : goals) {
             RepeatSchedule schedule = (RepeatSchedule) view.component.getClientProperty("grindstone.repeat");
             if (isComplete(view.status) && schedule == RepeatSchedule.NONE && !COMPLETE.equals(selectedStatus)) {
                 continue;
@@ -1348,7 +1348,7 @@ public class GrindstonePanel extends PluginPanel {
         return ONE_OFF.equals(selected) ? actual == RepeatSchedule.NONE : actual != RepeatSchedule.NONE && actual.name().equalsIgnoreCase(selected);
     }
 
-    static boolean matchesStatus(GoalStatus status, String selected, boolean hideCompleted, boolean ready) {
+    static boolean matchesStatus(MilestoneStatus status, String selected, boolean hideCompleted, boolean ready) {
         if (WAITING.equals(selected)) {
             return !ready;
         }
@@ -1358,21 +1358,21 @@ public class GrindstonePanel extends PluginPanel {
         return matchesStatus(status, selected, hideCompleted);
     }
 
-    static boolean matchesType(Goal goal, GoalStatus status, String selectedType, long deadline, long now) {
+    static boolean matchesType(Milestone goal, MilestoneStatus status, String selectedType, long deadline, long now) {
         if (CUSTOM.equals(selectedType)) {
-            return goal instanceof ManualGoal;
+            return goal instanceof ManualMilestone;
         }
         if (AUTOMATIC.equals(selectedType)) {
-            return !(goal instanceof ManualGoal) && !(goal instanceof LinkedGoal);
+            return !(goal instanceof ManualMilestone) && !(goal instanceof LinkedMilestone);
         }
         if (LINKED.equals(selectedType)) {
-            return goal instanceof LinkedGoal;
+            return goal instanceof LinkedMilestone;
         }
         if (BASE.equals(selectedType)) {
-            return goal instanceof BaseSkillGoal;
+            return goal instanceof BaseSkillMilestone;
         }
         if (SESSION.equals(selectedType)) {
-            return goal instanceof SessionExperienceGoal;
+            return goal instanceof SessionExperienceMilestone;
         }
         if (DEADLINES.equals(selectedType)) {
             return deadline > 0;
@@ -1383,13 +1383,13 @@ public class GrindstonePanel extends PluginPanel {
         return true;
     }
 
-    static boolean matchesStatus(GoalStatus status, String selectedStatus, boolean hideCompleted) {
+    static boolean matchesStatus(MilestoneStatus status, String selectedStatus, boolean hideCompleted) {
         if (selectedStatus == null || ALL_STATUSES.equals(selectedStatus)) {
-            return !hideCompleted || status != GoalStatus.COMPLETE;
+            return !hideCompleted || status != MilestoneStatus.COMPLETE;
         }
 
         if (UNFINISHED.equals(selectedStatus)) {
-            return status != GoalStatus.COMPLETE;
+            return status != MilestoneStatus.COMPLETE;
         }
 
         String value = status == null ? "" : status.name();
@@ -1409,25 +1409,25 @@ public class GrindstonePanel extends PluginPanel {
         return true;
     }
 
-    private void sortGoals(List<GoalView> goals) {
+    private void sortGoals(List<MilestoneView> goals) {
         String sort = (String) sortFilter.getSelectedItem();
 
         if (SORT_NAME_DESC.equals(sort)) {
-            goals.sort(Comparator.comparing((GoalView view) -> view.title, String.CASE_INSENSITIVE_ORDER).reversed());
+            goals.sort(Comparator.comparing((MilestoneView view) -> view.title, String.CASE_INSENSITIVE_ORDER).reversed());
         } else if (SORT_CLOSEST.equals(sort)) {
-            goals.sort(Comparator.comparing((GoalView view) -> isComplete(view.status)) .thenComparing(Comparator.comparingDouble(GrindstonePanel::getProgressRatio).reversed()) .thenComparing(view -> view.title, String.CASE_INSENSITIVE_ORDER));
+            goals.sort(Comparator.comparing((MilestoneView view) -> isComplete(view.status)) .thenComparing(Comparator.comparingDouble(GrindstonePanel::getProgressRatio).reversed()) .thenComparing(view -> view.title, String.CASE_INSENSITIVE_ORDER));
         } else if (SORT_PROGRESS_DESC.equals(sort)) {
             goals.sort(Comparator.comparingDouble(GrindstonePanel::getProgressRatio).reversed() .thenComparing(view -> view.title, String.CASE_INSENSITIVE_ORDER));
         } else if (SORT_PROGRESS_ASC.equals(sort)) {
             goals.sort(Comparator.comparingDouble(GrindstonePanel::getProgressRatio) .thenComparing(view -> view.title, String.CASE_INSENSITIVE_ORDER));
         } else if (SORT_STATUS.equals(sort)) {
-            goals.sort(Comparator.comparingInt((GoalView view) -> getStatusOrder(view.status)) .thenComparing(view -> view.title, String.CASE_INSENSITIVE_ORDER));
+            goals.sort(Comparator.comparingInt((MilestoneView view) -> getStatusOrder(view.status)) .thenComparing(view -> view.title, String.CASE_INSENSITIVE_ORDER));
         } else {
-            goals.sort(Comparator.comparing((GoalView view) -> view.title, String.CASE_INSENSITIVE_ORDER));
+            goals.sort(Comparator.comparing((MilestoneView view) -> view.title, String.CASE_INSENSITIVE_ORDER));
         }
     }
 
-    private static double getProgressRatio(GoalView view) {
+    private static double getProgressRatio(MilestoneView view) {
         if (!view.hasProgress || view.progressMaximum <= 0) {
             return isComplete(view.status) ? 1.0 : 0.0;
         }
@@ -1436,34 +1436,34 @@ public class GrindstonePanel extends PluginPanel {
         return current / (double) view.progressMaximum;
     }
 
-    private static int getStatusOrder(GoalStatus status) {
-        if (status == GoalStatus.IN_PROGRESS) {
+    private static int getStatusOrder(MilestoneStatus status) {
+        if (status == MilestoneStatus.IN_PROGRESS) {
             return 0;
         }
 
-        if (status == GoalStatus.NOT_STARTED) {
+        if (status == MilestoneStatus.NOT_STARTED) {
             return 1;
         }
 
         return 2;
     }
 
-    private Map<GoalCategory, List<GoalView>> groupGoals(List<GoalView> goals) {
-        Map<GoalCategory, List<GoalView>> grouped = new LinkedHashMap<>();
+    private Map<MilestoneCategory, List<MilestoneView>> groupGoals(List<MilestoneView> goals) {
+        Map<MilestoneCategory, List<MilestoneView>> grouped = new LinkedHashMap<>();
 
-        for (GoalView view : goals) {
+        for (MilestoneView view : goals) {
             grouped.computeIfAbsent(view.category, key -> new ArrayList<>()).add(view);
         }
 
         return grouped;
     }
 
-    private void updateCategoryOptions(List<GoalView> goals) {
+    private void updateCategoryOptions(List<MilestoneView> goals) {
         String previous = (String) categoryFilter.getSelectedItem();
         Set<String> categories = new LinkedHashSet<>();
         categories.add(ALL_CATEGORIES);
 
-        for (GoalView view : goals) {
+        for (MilestoneView view : goals) {
             categories.add(view.category.getDisplayName());
         }
 
@@ -1476,7 +1476,7 @@ public class GrindstonePanel extends PluginPanel {
         }
     }
 
-    private void addRepeatSection(RepeatSchedule schedule, List<GoalView> goals) {
+    private void addRepeatSection(RepeatSchedule schedule, List<MilestoneView> goals) {
         boolean collapsed = Boolean.TRUE.equals(collapsedRepeats.get(schedule));
         JButton heading = new JButton();
         updateRepeatHeading(schedule, goals, heading);
@@ -1493,14 +1493,14 @@ public class GrindstonePanel extends PluginPanel {
         main.add(heading);
         main.add(Box.createVerticalStrut(8));
         if (!collapsed) {
-            for (GoalView view : goals) {
+            for (MilestoneView view : goals) {
                 view.component.setAlignmentX(LEFT_ALIGNMENT);
                 main.add(view.component);
                 main.add(Box.createVerticalStrut(12));
             }
         }
     }
-    private void updateRepeatHeading(RepeatSchedule schedule, List<GoalView> goals, JButton heading) {
+    private void updateRepeatHeading(RepeatSchedule schedule, List<MilestoneView> goals, JButton heading) {
         boolean collapsed = Boolean.TRUE.equals(collapsedRepeats.get(schedule));
         long now = System.currentTimeMillis();
         long minutes = Math.max(1, (schedule.next(schedule.start(now)) - now + 59_999) / 60_000);
@@ -1509,7 +1509,7 @@ public class GrindstonePanel extends PluginPanel {
         heading.setText("<html>" + (collapsed ? "▶ " : "▼ ") + schedule + " · " + completed + "/" + goals.size() + "<br>Resets in " + countdown + " (UTC)</html>");
     }
 
-    private void addCategorySection(GoalCategory category, List<GoalView> goals) {
+    private void addCategorySection(MilestoneCategory category, List<MilestoneView> goals) {
         boolean collapsed = Boolean.TRUE.equals(collapsedCategories.get(category));
 
         JPanel categorySection = new ContentHeightPanel();
@@ -1604,7 +1604,7 @@ public class GrindstonePanel extends PluginPanel {
             goalsPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 6, 0));
             goalsPanel.setAlignmentX(LEFT_ALIGNMENT);
 
-            for (List<GoalView> group : config.groupSkillGoals() ? SkillGoalGrouping.group(goals, view -> view.goal) : goals.stream().map(Collections::singletonList).collect(Collectors.toList())) {
+            for (List<MilestoneView> group : config.groupSkillGoals() ? SkillMilestoneGrouping.group(goals, view -> view.goal) : goals.stream().map(Collections::singletonList).collect(Collectors.toList())) {
                 if (goalsPanel.getComponentCount() > 0) {
                     goalsPanel.add(Box.createVerticalStrut(12));
                 }
@@ -1618,12 +1618,12 @@ public class GrindstonePanel extends PluginPanel {
                 skillGroup.setBackground(ColorScheme.DARKER_GRAY_COLOR);
                 skillGroup.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(ColorScheme.MEDIUM_GRAY_COLOR), BorderFactory.createEmptyBorder(6, 4, 4, 4)));
                 skillGroup.setAlignmentX(LEFT_ALIGNMENT);
-                JLabel heading = new JLabel(SkillGoalGrouping.skill(group.get(0).goal).getName());
+                JLabel heading = new JLabel(SkillMilestoneGrouping.skill(group.get(0).goal).getName());
                 heading.setFont(UiTypography.TITLE);
                 heading.setBorder(BorderFactory.createEmptyBorder(0, 5, 6, 0));
                 heading.setToolTipText("Related milestones for this skill. Each target keeps its own progress, actions and history.");
                 skillGroup.add(heading);
-                for (GoalView view : group) {
+                for (MilestoneView view : group) {
                     view.component.setAlignmentX(LEFT_ALIGNMENT);
                     skillGroup.add(view.component);
                     skillGroup.add(Box.createVerticalStrut(4));
@@ -1659,13 +1659,13 @@ public class GrindstonePanel extends PluginPanel {
         emptyPanel.add(messageLabel);
         main.add(emptyPanel);
     }
-    private void editRepeat(GrindstoneProfile active, Goal goal, RepeatSchedule schedule, long target) {
+    private void editRepeat(GrindstoneProfile active, Milestone goal, RepeatSchedule schedule, long target) {
         if (active == null || profile != active) {
             return;
         }
-        RepeatGoalForm form = new RepeatGoalForm();
+        RepeatMilestoneForm form = new RepeatMilestoneForm();
         form.load(schedule, target);
-        if (goal instanceof ChecklistGoal) {
+        if (goal instanceof ChecklistMilestone) {
             form.setFixedTarget(goal.getProgressMaximum());
         }
         while (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), form, "Repeat schedule", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
@@ -1678,12 +1678,12 @@ public class GrindstonePanel extends PluginPanel {
                 }
                 clientThread.invokeLater(() -> {
                     if (profile == active && active.getGoals().contains(goal)) {
-                        Goal collision = active.findMatchingGoal(goal, selected);
+                        Milestone collision = active.findMatchingGoal(goal, selected);
                         if (collision != null && collision != goal) {
                             SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), "That tracker already has a milestone with this schedule."));
                             return;
                         }
-                        Consumer<Goal> restore = active.snapshotEdit(goal);
+                        Consumer<Milestone> restore = active.snapshotEdit(goal);
                         configureRepeat(active, goal, selected, selectedTarget);
                         active.touch();
                         recordGoalUndo(active, goal, "schedule change", () -> restore.accept(goal));
@@ -1696,7 +1696,7 @@ public class GrindstonePanel extends PluginPanel {
             }
         }
     }
-    private void restartPeriod(GrindstoneProfile active, Goal goal) {
+    private void restartPeriod(GrindstoneProfile active, Milestone goal) {
         if (profile != active || JOptionPane.showConfirmDialog(DialogPlacement.owner(this), "Archive the current observed period and capture a fresh baseline?\nCustom progress resets to zero. Your game progress is unaffected.\nUndo is available until a later edit or scheduled reset.", "Restart current period", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
             return;
         }
@@ -1704,14 +1704,14 @@ public class GrindstonePanel extends PluginPanel {
             if (profile != active || !active.getGoals().contains(goal)) {
                 return;
             }
-            RecurringGoal recurring = active.metadata(goal).recurring();
+            RecurringMilestone recurring = active.metadata(goal).recurring();
             if (!recurring.isActive()) {
                 return;
             }
-            Consumer<Goal> restore = active.snapshotEdit(goal);
+            Consumer<Milestone> restore = active.snapshotEdit(goal);
             recurring.restart(System.currentTimeMillis());
-            if (goal instanceof ManualGoal) {
-                ((ManualGoal) goal).resetProgress();
+            if (goal instanceof ManualMilestone) {
+                ((ManualMilestone) goal).resetProgress();
             }
             active.touch();
             recordGoalUndo(active, goal, "period restart", () -> restore.accept(goal));
@@ -1719,21 +1719,21 @@ public class GrindstonePanel extends PluginPanel {
         });
     }
 
-    private void configureRepeat(GrindstoneProfile active, Goal goal, RepeatSchedule schedule, long target) {
-        if (!RecurringGoal.supports(goal)) {
+    private void configureRepeat(GrindstoneProfile active, Milestone goal, RepeatSchedule schedule, long target) {
+        if (!RecurringMilestone.supports(goal)) {
             return;
         }
-        RecurringGoal recurring = active.metadata(goal).recurring();
-        if (goal instanceof ChecklistGoal) {
+        RecurringMilestone recurring = active.metadata(goal).recurring();
+        if (goal instanceof ChecklistMilestone) {
             target = goal.getProgressMaximum();
             if (schedule != RepeatSchedule.NONE && (recurring.getSchedule() != schedule || recurring.getTarget() != target)) {
-                ((ChecklistGoal) goal).resetProgress();
+                ((ChecklistMilestone) goal).resetProgress();
             }
         }
         boolean newSchedule = recurring.getSchedule() != schedule;
         recurring.configure(schedule, target, System.currentTimeMillis());
-        if (goal instanceof CustomGoal && schedule != RepeatSchedule.NONE) {
-            CustomGoal custom = (CustomGoal) goal;
+        if (goal instanceof CustomMilestone && schedule != RepeatSchedule.NONE) {
+            CustomMilestone custom = (CustomMilestone) goal;
             custom.update(custom.getTitle(null), custom.getDescription(), custom.getCategory(), newSchedule ? 0 : Math.min(custom.getProgressCurrent(), target), target);
         }
     }
@@ -1741,14 +1741,14 @@ public class GrindstonePanel extends PluginPanel {
         GrindstoneProfile active = profile;
         backupActions.show(this, active, () -> profile == active, () -> {
             if (profile == active) {
-                for (Goal goal : active.getGoals()) {
+                for (Milestone goal : active.getGoals()) {
                     goal.refresh(client);
                 }
                 render();
             }
         }, importing);
     }
-    private void addPreset(GoalPreset preset) {
+    private void addPreset(MilestonePreset preset) {
         GrindstoneProfile active = profile;
         if (active == null) {
             return;
@@ -1757,7 +1757,7 @@ public class GrindstonePanel extends PluginPanel {
             if (profile != active) {
                 return;
             }
-            List<Goal> goals = preset.createGoals();
+            List<Milestone> goals = preset.createGoals();
             String summary = additionSummary(active, goals, goal -> RepeatSchedule.NONE);
             SwingUtilities.invokeLater(() -> {
                 if (profile != active || JOptionPane.showConfirmDialog(DialogPlacement.owner(this), previewPane(summary), "Preview " + preset, JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
@@ -1767,8 +1767,8 @@ public class GrindstonePanel extends PluginPanel {
                     if (profile != active) {
                         return;
                     }
-                    List<Goal> before = new ArrayList<>(active.getGoals());
-                    for (Goal goal : goals) {
+                    List<Milestone> before = new ArrayList<>(active.getGoals());
+                    for (Milestone goal : goals) {
                         if (active.add(goal)) {
                             goal.refresh(client);
                         }
@@ -1781,10 +1781,10 @@ public class GrindstonePanel extends PluginPanel {
     }
 
 
-    private String additionSummary(GrindstoneProfile active, List<Goal> candidates, Function<Goal, RepeatSchedule> schedule) {
+    private String additionSummary(GrindstoneProfile active, List<Milestone> candidates, Function<Milestone, RepeatSchedule> schedule) {
         StringBuilder rows = new StringBuilder();
         int missing = 0;
-        for (Goal goal : candidates) {
+        for (Milestone goal : candidates) {
             RepeatSchedule repeat = schedule.apply(goal);
             boolean exists = active.findMatchingGoal(goal, repeat) != null;
             if (!exists) {
@@ -1833,8 +1833,8 @@ public class GrindstonePanel extends PluginPanel {
                     if (profile != active) {
                         return;
                     }
-                    List<Goal> before = new ArrayList<>(active.getGoals());
-                    pages.forEach((id, name) -> active.add(new CollectionLogEntryGoal(itemManager, id, name)));
+                    List<Milestone> before = new ArrayList<>(active.getGoals());
+                    pages.forEach((id, name) -> active.add(new CollectionLogEntryMilestone(itemManager, id, name)));
                     recordAddedUndo(active, before, "collection pages");
                     render();
                 });
@@ -1850,17 +1850,17 @@ public class GrindstonePanel extends PluginPanel {
         RoutinePresetForm form = new RoutinePresetForm(weekly);
         while (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), form, "Preview recurring routine", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
             try {
-                List<Goal> selected = form.selectedGoals();
-                Map<Goal, GoalMetadata> metadata = new IdentityHashMap<>();
-                for (Goal goal : selected) {
+                List<Milestone> selected = form.selectedGoals();
+                Map<Milestone, MilestoneMetadata> metadata = new IdentityHashMap<>();
+                for (Milestone goal : selected) {
                     metadata.put(goal, form.metadata(goal, System.currentTimeMillis()));
                 }
                 clientThread.invokeLater(() -> {
                     if (profile != active) {
                         return;
                     }
-                    List<Goal> before = new ArrayList<>(active.getGoals());
-                    for (Goal goal : selected) {
+                    List<Milestone> before = new ArrayList<>(active.getGoals());
+                    for (Milestone goal : selected) {
                         if (active.add(goal, metadata.get(goal))) {
                             goal.refresh(client);
                         }
@@ -1881,8 +1881,8 @@ public class GrindstonePanel extends PluginPanel {
         }
     }
 
-    private void recordAddedUndo(GrindstoneProfile active, List<Goal> before, String label) {
-        List<Goal> added = new ArrayList<>(active.getGoals());
+    private void recordAddedUndo(GrindstoneProfile active, List<Milestone> before, String label) {
+        List<Milestone> added = new ArrayList<>(active.getGoals());
         added.removeAll(before);
         if (added.isEmpty()) {
             return;
@@ -1923,12 +1923,12 @@ public class GrindstonePanel extends PluginPanel {
             if (profile != active) {
                 return;
             }
-            Goal goal = active.getGoals().stream().filter(value -> active.metadata(value).getId().equals(id)).findFirst().orElse(null);
+            Milestone goal = active.getGoals().stream().filter(value -> active.metadata(value).getId().equals(id)).findFirst().orElse(null);
             if (goal == null) {
                 return;
             }
             String title = safeTitle(goal);
-            boolean complete = active.metadata(goal).recurring().isActive() ? active.metadata(goal).recurring().getStatus() == GoalStatus.COMPLETE : goal.getStatus() == GoalStatus.COMPLETE;
+            boolean complete = active.metadata(goal).recurring().isActive() ? active.metadata(goal).recurring().getStatus() == MilestoneStatus.COMPLETE : goal.getStatus() == MilestoneStatus.COMPLETE;
             SwingUtilities.invokeLater(() -> {
                 if (profile != active) {
                     return;
@@ -1944,13 +1944,13 @@ public class GrindstonePanel extends PluginPanel {
         });
     }
 
-    private void revealPrepared(List<GoalView> goals) {
+    private void revealPrepared(List<MilestoneView> goals) {
         if (pendingReveal == null) {
             return;
         }
         String id = pendingReveal;
         pendingReveal = null;
-        for (GoalView view : goals) {
+        for (MilestoneView view : goals) {
             if (id.equals(view.component.getClientProperty("grindstone.id")) && main.isAncestorOf(view.component)) {
                 SwingUtilities.invokeLater(() -> view.component.scrollRectToVisible(new Rectangle(0, 0, view.component.getWidth(), view.component.getHeight())));
                 return;
@@ -1963,7 +1963,7 @@ public class GrindstonePanel extends PluginPanel {
         showAddGoalDialog(null);
     }
 
-    public void showAddGoalDialog(Goal initialGoal) {
+    public void showAddGoalDialog(Milestone initialGoal) {
         GrindstoneProfile active = profile;
         if (active == null) {
             JOptionPane.showMessageDialog(DialogPlacement.owner(this), "Log in to add milestones to your player profile.");
@@ -1973,10 +1973,10 @@ public class GrindstonePanel extends PluginPanel {
             if (profile != active || client.getGameState() != GameState.LOGGED_IN) {
                 return;
             }
-            Map<Integer, Map<String, Supplier<Goal>>> choices =
-            CompletionGoalChoices.create(client);
-            Map<Goal, RepeatSchedule> existing = new LinkedHashMap<>();
-            for (Goal goal : active.getGoals()) {
+            Map<Integer, Map<String, Supplier<Milestone>>> choices =
+            CompletionMilestoneChoices.create(client);
+            Map<Milestone, RepeatSchedule> existing = new LinkedHashMap<>();
+            for (Milestone goal : active.getGoals()) {
                 existing.put(goal, active.metadata(goal).recurring().getSchedule());
             }
             SwingUtilities.invokeLater(() -> {
@@ -1987,8 +1987,8 @@ public class GrindstonePanel extends PluginPanel {
         });
     }
 
-    private void showAddGoalDialog(GrindstoneProfile active, Map<Integer, Map<String, Supplier<Goal>>> choices, Map<Goal, RepeatSchedule> existingGoalsSnapshot, Goal initialGoal) {
-        GoalEditorPanel form = new GoalEditorPanel(itemManager, itemSearchService, choices);
+    private void showAddGoalDialog(GrindstoneProfile active, Map<Integer, Map<String, Supplier<Milestone>>> choices, Map<Milestone, RepeatSchedule> existingGoalsSnapshot, Milestone initialGoal) {
+        MilestoneEditorPanel form = new MilestoneEditorPanel(itemManager, itemSearchService, choices);
         form.setExistingGoals(existingGoalsSnapshot);
         if (initialGoal != null) {
             try {
@@ -1999,7 +1999,7 @@ public class GrindstonePanel extends PluginPanel {
                 return;
             }
         }
-        Goal candidate = GoalCreationDialog.showDialog(this, form);
+        Milestone candidate = MilestoneCreationDialog.showDialog(this, form);
         if (candidate == null) {
             return;
         }
@@ -2009,7 +2009,7 @@ public class GrindstonePanel extends PluginPanel {
             if (profile != active) {
                 return;
             }
-            Goal existing = active.findMatchingGoal(candidate, schedule);
+            Milestone existing = active.findMatchingGoal(candidate, schedule);
             if (existing != null) {
                 String title = safeTitle(existing);
                 long oldTarget = existing.getProgressMaximum();
@@ -2022,7 +2022,7 @@ public class GrindstonePanel extends PluginPanel {
                         if (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), title + " is already tracked.\nUpdate its target from " + String.format(Locale.ROOT, "%,d to %,d?", oldTarget, newTarget) + "\nRepeat: " + schedule + (schedule == RepeatSchedule.NONE ? " (lifetime tracking)" : String.format(Locale.ROOT, " · %,d per period", periodTarget)) + "\nChanging repeat settings archives the current observed period.", "Update existing milestone", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION) {
                             clientThread.invokeLater(() -> {
                                 if (profile == active && active.getGoals().contains(existing)) {
-                                    Consumer<Goal> restore = active.snapshotEdit(existing);
+                                    Consumer<Milestone> restore = active.snapshotEdit(existing);
                                     existing.setTarget(newTarget);
                                     configureRepeat(active, existing, schedule, periodTarget);
                                     active.touch();
@@ -2052,30 +2052,30 @@ public class GrindstonePanel extends PluginPanel {
         });
     }
 
-    private void editGoal(GrindstoneProfile active, Goal goal, String title) {
+    private void editGoal(GrindstoneProfile active, Milestone goal, String title) {
         if (profile != active) {
             return;
         }
-        if (goal instanceof LinkedGoal) {
-            editLinkedGoal(active, (LinkedGoal) goal);
+        if (goal instanceof LinkedMilestone) {
+            editLinkedGoal(active, (LinkedMilestone) goal);
             return;
         }
-        if (goal instanceof CustomGoal) {
-            editCustomGoal(active, (CustomGoal) goal, title);
+        if (goal instanceof CustomMilestone) {
+            editCustomGoal(active, (CustomMilestone) goal, title);
             return;
         }
         clientThread.invokeLater(() -> {
             if (profile != active || !active.getGoals().contains(goal)) {
                 return;
             }
-            Map<Integer, Map<String, Supplier<Goal>>> choices = CompletionGoalChoices.create(client);
+            Map<Integer, Map<String, Supplier<Milestone>>> choices = CompletionMilestoneChoices.create(client);
             RepeatSchedule schedule = active.metadata(goal).recurring().getSchedule();
             long periodTarget = active.metadata(goal).recurring().getTarget();
             SwingUtilities.invokeLater(() -> {
                 if (profile != active) {
                     return;
                 }
-                GoalEditorPanel form = new GoalEditorPanel(itemManager, itemSearchService, choices);
+                MilestoneEditorPanel form = new MilestoneEditorPanel(itemManager, itemSearchService, choices);
                 try {
                     form.loadGoal(goal);
                 } catch (IllegalArgumentException exception) {
@@ -2084,7 +2084,7 @@ public class GrindstonePanel extends PluginPanel {
                     return;
                 }
                 form.loadRepeat(schedule, periodTarget);
-                Goal replacement = GoalCreationDialog.showDialog(this, form, "Edit " + title, "Save changes");
+                Milestone replacement = MilestoneCreationDialog.showDialog(this, form, "Edit " + title, "Save changes");
                 if (replacement == null) {
                     return;
                 }
@@ -2098,7 +2098,7 @@ public class GrindstonePanel extends PluginPanel {
                         return;
                     }
                     try {
-                        Consumer<Goal> restore = active.snapshotEdit(goal);
+                        Consumer<Milestone> restore = active.snapshotEdit(goal);
                         if (active.replaceGoal(goal, replacement, selectedSchedule)) {
                             replacement.refresh(client);
                             configureRepeat(active, replacement, selectedSchedule, selectedTarget);
@@ -2117,7 +2117,7 @@ public class GrindstonePanel extends PluginPanel {
         });
     }
 
-    private void editLinkedGoal(GrindstoneProfile active, LinkedGoal original) {
+    private void editLinkedGoal(GrindstoneProfile active, LinkedMilestone original) {
         if (active == null || profile != active) {
             return;
         }
@@ -2125,24 +2125,24 @@ public class GrindstonePanel extends PluginPanel {
             if (profile != active || original != null && !active.getGoals().contains(original)) {
                 return;
             }
-            List<LinkedGoalForm.Choice> sources = new ArrayList<>();
-            for (Goal goal : active.getGoals()) {
-                if (!(goal instanceof LinkedGoal)) {
-                    GoalMetadata metadata = active.metadata(goal);
+            List<LinkedMilestoneForm.Choice> sources = new ArrayList<>();
+            for (Milestone goal : active.getGoals()) {
+                if (!(goal instanceof LinkedMilestone)) {
+                    MilestoneMetadata metadata = active.metadata(goal);
                     boolean recurring = metadata.recurring().isActive();
-                    sources.add(new LinkedGoalForm.Choice(metadata.getId(), safeTitle(goal) + (recurring ? " · " + metadata.recurring().getSchedule() : ""), recurring ? metadata.recurring().getTarget() : goal.getProgressMaximum(), goal instanceof CollectionLogItemGoal, recurring || !metadata.recurring().getHistory().isEmpty()));
+                    sources.add(new LinkedMilestoneForm.Choice(metadata.getId(), safeTitle(goal) + (recurring ? " · " + metadata.recurring().getSchedule() : ""), recurring ? metadata.recurring().getTarget() : goal.getProgressMaximum(), goal instanceof CollectionLogItemMilestone, recurring || !metadata.recurring().getHistory().isEmpty()));
                 }
             }
             SwingUtilities.invokeLater(() -> {
                 if (profile != active) {
                     return;
                 }
-                LinkedGoalForm form = new LinkedGoalForm(sources, original);
+                LinkedMilestoneForm form = new LinkedMilestoneForm(sources, original);
                 JScrollPane scroll = new JScrollPane(form);
                 scroll.setPreferredSize(new Dimension(520, 570));
                 while (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), scroll, original == null ? "Add linked milestone" : "Edit linked milestone", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
                     try {
-                        LinkedGoal candidate = form.read();
+                        LinkedMilestone candidate = form.read();
                         if (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), previewPane(candidate.getTitle(null) + "\n" + candidate.getMode() + " · " + candidate.getSources().size() + " source(s)\nTargets: " + Arrays.toString(candidate.getTargets()) + "\nMissing sources remain unavailable; this never performs game actions."), "Preview linked milestone", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
                             continue;
                         }
@@ -2154,7 +2154,7 @@ public class GrindstonePanel extends PluginPanel {
                                 active.add(candidate);
                                 recordUndo(active, "add linked milestone", () -> active.remove(candidate), () -> active.getGoals().contains(candidate));
                             } else {
-                                Consumer<Goal> restore = active.snapshotEdit(original);
+                                Consumer<Milestone> restore = active.snapshotEdit(original);
                                 active.replaceGoal(original, candidate);
                                 recordGoalUndo(active, candidate, "edit linked milestone", () -> restore.accept(candidate));
                             }
@@ -2184,30 +2184,30 @@ public class GrindstonePanel extends PluginPanel {
                 return;
             }
             long revision = active.revision();
-            List<BulkGoalForm.Row> rows = new ArrayList<>();
-            for (Goal goal : active.getGoals()) {
-                GoalMetadata metadata = active.metadata(goal);
-                rows.add(new BulkGoalForm.Row(goal, safeTitle(goal), safeCategory(goal), metadata.recurring().getSchedule()));
+            List<BulkMilestoneForm.Row> rows = new ArrayList<>();
+            for (Milestone goal : active.getGoals()) {
+                MilestoneMetadata metadata = active.metadata(goal);
+                rows.add(new BulkMilestoneForm.Row(goal, safeTitle(goal), safeCategory(goal), metadata.recurring().getSchedule()));
             }
             SwingUtilities.invokeLater(() -> {
                 if (profile != active) {
                     return;
                 }
-                BulkGoalForm form = new BulkGoalForm(rows);
+                BulkMilestoneForm form = new BulkMilestoneForm(rows);
                 while (profile == active && JOptionPane.showConfirmDialog(DialogPlacement.owner(this), form, "Manage milestones", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
                     try {
-                        List<Goal> selected = form.selectedGoals();
+                        List<Milestone> selected = form.selectedGoals();
                         if (selected.isEmpty()) {
                             throw new IllegalArgumentException("Tick at least one milestone first.");
                         }
-                        BulkGoalAction action = form.getAction();
-                        GoalCategory category = form.getCategory();
+                        BulkMilestoneAction action = form.getAction();
+                        MilestoneCategory category = form.getCategory();
                         RepeatSchedule schedule = form.getSchedule();
-                        long target = action == BulkGoalAction.SCHEDULE ? form.getPeriodTarget() : 1;
+                        long target = action == BulkMilestoneAction.SCHEDULE ? form.getPeriodTarget() : 1;
                         long deadlineAt = form.getDeadlineAt();
                         boolean reminder = form.isReminderEnabled();
-                        String details = action == BulkGoalAction.CATEGORY ? "\nCategory: " + category.getDisplayName() : action == BulkGoalAction.SCHEDULE ? "\nRepeat: " + schedule + " · target " + target + "\nChecklists require all their steps. Active manual progress resets when its period settings change." : action == BulkGoalAction.DEADLINE ? "\n" + (deadlineAt == 0 ? "Remove deadlines" : "Due by end of " + Instant.ofEpochMilli(deadlineAt - 1).atZone(ZoneOffset.UTC).toLocalDate() + " UTC") : "";
-                        if (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), action + " · " + selected.size() + " milestones?" + details + (action == BulkGoalAction.DELETE ? "\nDeleting source milestones can make linked milestones unavailable.\nObserved history is archived." : "") + "\nThe action is validated before changes. One-step undo is available until a later edit or relevant reset.", "Preview bulk action", JOptionPane.OK_CANCEL_OPTION, action == BulkGoalAction.DELETE ? JOptionPane.WARNING_MESSAGE : JOptionPane.QUESTION_MESSAGE) != JOptionPane.OK_OPTION) {
+                        String details = action == BulkMilestoneAction.CATEGORY ? "\nCategory: " + category.getDisplayName() : action == BulkMilestoneAction.SCHEDULE ? "\nRepeat: " + schedule + " · target " + target + "\nChecklists require all their steps. Active manual progress resets when its period settings change." : action == BulkMilestoneAction.DEADLINE ? "\n" + (deadlineAt == 0 ? "Remove deadlines" : "Due by end of " + Instant.ofEpochMilli(deadlineAt - 1).atZone(ZoneOffset.UTC).toLocalDate() + " UTC") : "";
+                        if (JOptionPane.showConfirmDialog(DialogPlacement.owner(this), action + " · " + selected.size() + " milestones?" + details + (action == BulkMilestoneAction.DELETE ? "\nDeleting source milestones can make linked milestones unavailable.\nObserved history is archived." : "") + "\nThe action is validated before changes. One-step undo is available until a later edit or relevant reset.", "Preview bulk action", JOptionPane.OK_CANCEL_OPTION, action == BulkMilestoneAction.DELETE ? JOptionPane.WARNING_MESSAGE : JOptionPane.QUESTION_MESSAGE) != JOptionPane.OK_OPTION) {
                             continue;
                         }
                         clientThread.invokeLater(() -> {
@@ -2218,7 +2218,7 @@ public class GrindstonePanel extends PluginPanel {
                                 if (active.revision() != revision) {
                                     throw new IllegalArgumentException("Milestones changed while this manager was open. No changes applied; reopen it to review the current milestones.");
                                 }
-                                BulkGoalChanges.Change change = BulkGoalChanges.apply(active, selected, action, category, schedule, target, deadlineAt, reminder, System.currentTimeMillis());
+                                BulkMilestoneChanges.Change change = BulkMilestoneChanges.apply(active, selected, action, category, schedule, target, deadlineAt, reminder, System.currentTimeMillis());
                                 recordUndo(active, "bulk " + action, change.undo, change.allowed);
                                 render();
                             } catch (IllegalArgumentException failure) {
@@ -2243,7 +2243,7 @@ public class GrindstonePanel extends PluginPanel {
             if (profile != active) {
                 return;
             }
-            List<Goal> selected = new ArrayList<>(active.getGoals());
+            List<Milestone> selected = new ArrayList<>(active.getGoals());
             long revision = active.revision();
             if (selected.isEmpty()) {
                 SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), "There are no milestones to clear."));
@@ -2261,7 +2261,7 @@ public class GrindstonePanel extends PluginPanel {
                         SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), "Milestones changed while confirmation was open. Nothing was cleared; try again."));
                         return;
                     }
-                    BulkGoalChanges.Change change = BulkGoalChanges.apply(active, selected, BulkGoalAction.DELETE, null, RepeatSchedule.NONE, 1, 0, false, System.currentTimeMillis());
+                    BulkMilestoneChanges.Change change = BulkMilestoneChanges.apply(active, selected, BulkMilestoneAction.DELETE, null, RepeatSchedule.NONE, 1, 0, false, System.currentTimeMillis());
                     recordUndo(active, "clear all milestones", change.undo, change.allowed);
                     render();
                 });
@@ -2269,7 +2269,7 @@ public class GrindstonePanel extends PluginPanel {
         });
     }
 
-    private void editDeadline(GrindstoneProfile active, Goal goal) {
+    private void editDeadline(GrindstoneProfile active, Milestone goal) {
         if (active == null || profile != active) {
             return;
         }
@@ -2277,7 +2277,7 @@ public class GrindstonePanel extends PluginPanel {
             if (profile != active || !active.getGoals().contains(goal)) {
                 return;
             }
-            GoalMetadata metadata = active.metadata(goal);
+            MilestoneMetadata metadata = active.metadata(goal);
             long originalDeadline = metadata.getDeadlineAt();
             boolean originalReminder = metadata.isDeadlineReminder();
             SwingUtilities.invokeLater(() -> {
@@ -2288,7 +2288,7 @@ public class GrindstonePanel extends PluginPanel {
                         boolean reminder = form.isReminderEnabled();
                         clientThread.invokeLater(() -> {
                             if (profile == active && active.getGoals().contains(goal) && active.metadata(goal).getDeadlineAt() == originalDeadline && active.metadata(goal).isDeadlineReminder() == originalReminder) {
-                                Consumer<Goal> restore = active.snapshotEdit(goal);
+                                Consumer<Milestone> restore = active.snapshotEdit(goal);
                                 active.metadata(goal).setDeadline(deadlineAt, reminder);
                                 active.touch();
                                 recordGoalUndo(active, goal, "deadline", () -> restore.accept(goal));
@@ -2304,12 +2304,12 @@ public class GrindstonePanel extends PluginPanel {
         });
     }
 
-    private void editCustomGoal(GrindstoneProfile active, CustomGoal goal, String title) {
+    private void editCustomGoal(GrindstoneProfile active, CustomMilestone goal, String title) {
         RepeatSchedule openedSchedule = active.metadata(goal).recurring().getSchedule();
         long openedPeriod = openedSchedule.start(System.currentTimeMillis());
-        CustomGoalForm form = new CustomGoalForm();
+        CustomMilestoneForm form = new CustomMilestoneForm();
         form.load(goal);
-        RepeatGoalForm repeat = new RepeatGoalForm();
+        RepeatMilestoneForm repeat = new RepeatMilestoneForm();
         repeat.load(active.metadata(goal).recurring().getSchedule(), active.metadata(goal).recurring().getTarget());
         form.setRecurring(repeat.getSchedule() != RepeatSchedule.NONE);
         repeat.addScheduleListener(() -> form.setRecurring(repeat.getSchedule() != RepeatSchedule.NONE));
@@ -2321,7 +2321,7 @@ public class GrindstonePanel extends PluginPanel {
                 repeat.commit();
                 RepeatSchedule schedule = repeat.getSchedule();
                 long periodTarget = repeat.getTarget();
-                CustomGoal draft = form.read(schedule == RepeatSchedule.NONE ? 0 : periodTarget);
+                CustomMilestone draft = form.read(schedule == RepeatSchedule.NONE ? 0 : periodTarget);
                 if (!confirmEdit(title, goal, draft, active.metadata(goal).recurring().getSchedule(), schedule, active.metadata(goal).recurring().getTarget(), periodTarget)) {
                     return;
                 }
@@ -2332,12 +2332,12 @@ public class GrindstonePanel extends PluginPanel {
                             render();
                             return;
                         }
-                        Goal collision = active.findMatchingGoal(goal, schedule);
+                        Milestone collision = active.findMatchingGoal(goal, schedule);
                         if (collision != null && collision != goal) {
                             SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.owner(this), "That personal milestone already has this schedule."));
                             return;
                         }
-                        Consumer<Goal> restore = active.snapshotEdit(goal);
+                        Consumer<Milestone> restore = active.snapshotEdit(goal);
                         goal.update(draft.getTitle(null), draft.getDescription(), draft.getCategory(), draft.getProgressCurrent(), draft.getProgressMaximum());
                         configureRepeat(active, goal, schedule, periodTarget);
                         active.touch();
@@ -2352,7 +2352,7 @@ public class GrindstonePanel extends PluginPanel {
         }
     }
 
-    private boolean confirmEdit(String title, Goal original, Goal replacement, RepeatSchedule before, RepeatSchedule after, long previousTarget, long nextTarget) {
+    private boolean confirmEdit(String title, Milestone original, Milestone replacement, RepeatSchedule before, RepeatSchedule after, long previousTarget, long nextTarget) {
         String summary = title + " → " + replacement.getTitle(null) + "\nTarget: " + String.format(Locale.ROOT, "%,d → %,d", original.getProgressMaximum(), replacement.getProgressMaximum()) + "\nRepeat: " + before + " → " + after + "\nPeriod target: " + String.format(Locale.ROOT, "%,d → %,d", previousTarget, nextTarget) + "\n\nChanged subjects retain old observations in account history.\nChanged repeat settings archive the current observed period.\nUndo expires after a later edit or period reset.";
         JTextArea preview = new JTextArea(summary, 10, 38);
         preview.setEditable(false);
@@ -2362,7 +2362,7 @@ public class GrindstonePanel extends PluginPanel {
         return JOptionPane.showConfirmDialog(DialogPlacement.owner(this), new JScrollPane(preview), "Preview milestone changes", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION;
     }
 
-    private void deleteGoal(GrindstoneProfile active, Goal goal, String title) {
+    private void deleteGoal(GrindstoneProfile active, Milestone goal, String title) {
         if (profile != active || JOptionPane.showConfirmDialog(DialogPlacement.owner(this), "Remove " + title + " from your milestones?\nYour game progress is unaffected.", "Delete milestone", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
             return;
         }
@@ -2395,13 +2395,13 @@ public class GrindstonePanel extends PluginPanel {
         });
     }
 
-    private void recordGoalUndo(GrindstoneProfile active, Goal goal, String label, Runnable action) {
+    private void recordGoalUndo(GrindstoneProfile active, Milestone goal, String label, Runnable action) {
         RepeatSchedule schedule = active.metadata(goal).recurring().getSchedule();
         long period = schedule.start(System.currentTimeMillis());
         recordUndo(active, label, action, () -> active.getGoals().contains(goal) && (schedule == RepeatSchedule.NONE || schedule.start(System.currentTimeMillis()) == period));
     }
 
-    private void promptManualProgress(GrindstoneProfile active, CustomGoal goal, long current, long target) {
+    private void promptManualProgress(GrindstoneProfile active, CustomMilestone goal, long current, long target) {
         RepeatSchedule schedule = active.metadata(goal).recurring().getSchedule();
         long window = schedule.start(System.currentTimeMillis());
         JSpinner value = new JSpinner(new SpinnerNumberModel(current, 0L, target, 1L));
@@ -2423,13 +2423,13 @@ public class GrindstonePanel extends PluginPanel {
         }
     }
 
-    private void changeManualProgress(GrindstoneProfile active, CustomGoal goal, LongUnaryOperator change) {
+    private void changeManualProgress(GrindstoneProfile active, CustomMilestone goal, LongUnaryOperator change) {
         clientThread.invokeLater(() -> {
             if (profile != active || !active.getGoals().contains(goal)) {
                 return;
             }
             long now = System.currentTimeMillis();
-            RecurringGoal recurring = active.metadata(goal).recurring();
+            RecurringMilestone recurring = active.metadata(goal).recurring();
             if (recurring.isActive()) {
                 recurring.observe(goal, now);
             }
@@ -2441,7 +2441,7 @@ public class GrindstonePanel extends PluginPanel {
                 render();
                 return;
             }
-            Consumer<Goal> restore = active.snapshotEdit(goal);
+            Consumer<Milestone> restore = active.snapshotEdit(goal);
             goal.update(goal.getTitle(null), goal.getDescription(), goal.getCategory(), Math.min(requested, goal.getProgressMaximum()), goal.getProgressMaximum());
             if (recurring.isActive()) {
                 recurring.observe(goal, now);
@@ -2454,33 +2454,33 @@ public class GrindstonePanel extends PluginPanel {
         });
     }
 
-    private String safeTitle(Goal goal) {
+    private String safeTitle(Milestone goal) {
         String title = goal.getTitle(client);
         return title == null ? "" : title;
     }
 
-    private GoalCategory safeCategory(Goal goal) {
+    private MilestoneCategory safeCategory(Milestone goal) {
         if (profile != null && profile.metadata(goal).getDisplayCategory() != null) {
             return profile.metadata(goal).getDisplayCategory();
         }
-        GoalCategory category = goal.getCategory();
-        return category == null ? GoalCategory.OTHER : category;
+        MilestoneCategory category = goal.getCategory();
+        return category == null ? MilestoneCategory.OTHER : category;
     }
 
-    private static boolean isComplete(GoalStatus status) {
+    private static boolean isComplete(MilestoneStatus status) {
         return status != null && ("COMPLETE".equalsIgnoreCase(status.name()) || "COMPLETED".equalsIgnoreCase(status.name()));
     }
 
-    private boolean isCollectionLogGoal(Goal goal) {
-        return goal instanceof CollectionLogEntryGoal || goal instanceof CollectionLogItemGoal;
+    private boolean isCollectionLogGoal(Milestone goal) {
+        return goal instanceof CollectionLogEntryMilestone || goal instanceof CollectionLogItemMilestone;
     }
 
-    private boolean isLevelGoal(Goal goal) {
-        return goal instanceof SkillLevelGoal || goal instanceof CombatLevelGoal || goal instanceof TotalLevelGoal || goal instanceof BaseLevelGoal;
+    private boolean isLevelGoal(Milestone goal) {
+        return goal instanceof SkillLevelMilestone || goal instanceof CombatLevelMilestone || goal instanceof TotalLevelMilestone || goal instanceof BaseLevelMilestone;
     }
 
-    private boolean isExperienceGoal(Goal goal) {
-        return goal instanceof SkillExperienceGoal || goal instanceof TotalExperienceGoal || goal instanceof BaseExperienceGoal || goal instanceof SessionExperienceGoal;
+    private boolean isExperienceGoal(Milestone goal) {
+        return goal instanceof SkillExperienceMilestone || goal instanceof TotalExperienceMilestone || goal instanceof BaseExperienceMilestone || goal instanceof SessionExperienceMilestone;
     }
 
 
@@ -2494,7 +2494,7 @@ public class GrindstonePanel extends PluginPanel {
         repaint();
         revealPrepared(preparedGoals);
     }
-    public void refreshGoal(Goal goal) {
+    public void refreshGoal(Milestone goal) {
         if (goal == null) {
             return;
         }
@@ -2503,7 +2503,7 @@ public class GrindstonePanel extends PluginPanel {
         render();
     }
 
-    public void refreshCategory(GoalCategory category) {
+    public void refreshCategory(MilestoneCategory category) {
         if (category == null) {
             return;
         }
@@ -2524,17 +2524,17 @@ public class GrindstonePanel extends PluginPanel {
      * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
      * @since 10/18/2026
      */
-    private static final class GoalView {
-        private final Goal goal;
-        private final GoalComponent component;
+    private static final class MilestoneView {
+        private final Milestone goal;
+        private final MilestoneComponent component;
         private final String title;
-        private final GoalCategory category;
-        private final GoalStatus status;
+        private final MilestoneCategory category;
+        private final MilestoneStatus status;
         private final boolean hasProgress;
         private final long progressCurrent;
         private final long progressMaximum;
 
-        private GoalView(Goal goal, GoalComponent component, String title, GoalCategory category, GoalStatus status, boolean hasProgress, long progressCurrent, long progressMaximum) {
+        private MilestoneView(Milestone goal, MilestoneComponent component, String title, MilestoneCategory category, MilestoneStatus status, boolean hasProgress, long progressCurrent, long progressMaximum) {
             this.goal = goal;
             this.component = component;
             this.title = title;

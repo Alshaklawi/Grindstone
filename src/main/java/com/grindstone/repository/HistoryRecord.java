@@ -1,6 +1,6 @@
 package com.grindstone.repository;
 
-import com.grindstone.content.goal.Goal;
+import com.grindstone.content.milestone.Milestone;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -42,10 +42,10 @@ public final class HistoryRecord {
     public boolean matches(String query, RepeatSchedule repeat, long from, long to) {
         return (repeat == null || schedule == repeat) && (query == null || (title + " " + outcome).toLowerCase(Locale.ROOT).contains(query.toLowerCase(Locale.ROOT).trim())) && (end == 0 || end > from) && start < to;
     }
-    public static List<HistoryRecord> snapshot(GrindstoneProfile profile, Function<Goal, String> title) {
+    public static List<HistoryRecord> snapshot(GrindstoneProfile profile, Function<Milestone, String> title) {
         List<HistoryRecord> records = new ArrayList<>();
-        for (Goal goal : profile.getGoals()) {
-            GoalMetadata metadata = profile.metadata(goal);
+        for (Milestone goal : profile.getGoals()) {
+            MilestoneMetadata metadata = profile.metadata(goal);
             String name = title.apply(goal);
             append(records, metadata, name, metadata.getId());
         }
@@ -55,16 +55,16 @@ public final class HistoryRecord {
         records.sort(Comparator.comparingLong((HistoryRecord value) -> value.start).reversed());
         return records;
     }
-    private static void append(List<HistoryRecord> records, GoalMetadata metadata, String name, String id) {
-        RecurringGoal recurring = metadata.recurring();
+    private static void append(List<HistoryRecord> records, MilestoneMetadata metadata, String name, String id) {
+        RecurringMilestone recurring = metadata.recurring();
         if (recurring.isActive()) {
             long start = recurring.getStart();
             records.add(new HistoryRecord(id, name, recurring.getSchedule(), start, recurring.getBaselineAt() == 0 ? 0 : recurring.getSchedule().next(start), recurring.getBaselineAt() == 0 ? null : recurring.getProgress(), recurring.getTarget(), recurring.getBaselineAt() == 0 ? "Waiting for data" : recurring.getCompletedAt() > 0 ? "Completed · current period" : "Current period", recurring.getBaselineAt(), recurring.getLastObservedAt(), recurring.getCompletedAt(), false));
         }
-        for (RecurringGoal.Period period : recurring.getHistory()) {
+        for (RecurringMilestone.Period period : recurring.getHistory()) {
             records.add(new HistoryRecord(id, name, period.getSchedule(), period.getStart(), period.getEnd(), period.getBaselineAt() == 0 ? null : period.getProgress(), period.getTarget(), period.getOutcome(), period.getBaselineAt(), period.getLastObservedAt(), period.getCompletedAt(), false));
         }
-        for (GoalMetadata.Completion completion : metadata.getCompletions()) {
+        for (MilestoneMetadata.Completion completion : metadata.getCompletions()) {
             records.add(new HistoryRecord(id, completion.getTitle(), RepeatSchedule.NONE, completion.getObservedAt(), completion.getObservedAt() + 1, completion.getTarget(), completion.getTarget(), "Lifetime target reached", 0, completion.getObservedAt(), completion.getObservedAt(), true));
         }
     }

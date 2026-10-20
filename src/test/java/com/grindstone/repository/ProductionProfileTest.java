@@ -1,7 +1,7 @@
 package com.grindstone.repository;
 
-import com.grindstone.content.goal.GoalCategory;
-import com.grindstone.content.goal.impl.CustomGoal;
+import com.grindstone.content.milestone.MilestoneCategory;
+import com.grindstone.content.milestone.impl.CustomMilestone;
 import com.google.gson.JsonObject;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -23,7 +23,7 @@ public class ProductionProfileTest {
     @Test
     public void savedPlayerGoalsAndMetadataRemainIntact() {
         GrindstoneProfile profile = new GrindstoneProfile(42);
-        CustomGoal goal = new CustomGoal("My routine", "My notes", GoalCategory.OTHER, 3, 10);
+        CustomMilestone goal = new CustomMilestone("My routine", "My notes", MilestoneCategory.OTHER, 3, 10);
         profile.add(goal);
         profile.metadata(goal).setPinned(true);
         JsonObject saved = TestProfiles.REPOSITORY.toJson(profile);

@@ -1,6 +1,6 @@
 package com.grindstone.ui.components;
 
-import com.grindstone.content.goal.GoalStatus;
+import com.grindstone.content.milestone.MilestoneStatus;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Insets;
@@ -40,16 +40,16 @@ public final class SegmentedProgressBar extends JProgressBar {
         setBorderPainted(false);
         setStringPainted(false);
         setBackground(ColorScheme.MEDIUM_GRAY_COLOR);
-        setStatus(GoalStatus.NOT_STARTED);
+        setStatus(MilestoneStatus.NOT_STARTED);
     }
 
-    public void setStatus(GoalStatus status) {
+    public void setStatus(MilestoneStatus status) {
         setForeground(colorFor(status));
     }
 
-    public static Color colorFor(GoalStatus status) {
-        return status == GoalStatus.COMPLETE ? ColorScheme.PROGRESS_COMPLETE_COLOR
-                : status == GoalStatus.IN_PROGRESS ? ColorScheme.PROGRESS_INPROGRESS_COLOR
+    public static Color colorFor(MilestoneStatus status) {
+        return status == MilestoneStatus.COMPLETE ? ColorScheme.PROGRESS_COMPLETE_COLOR
+                : status == MilestoneStatus.IN_PROGRESS ? ColorScheme.PROGRESS_INPROGRESS_COLOR
                 : ColorScheme.LIGHT_GRAY_COLOR;
     }
 
