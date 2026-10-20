@@ -141,7 +141,38 @@ public enum TrackerEntry {
         this.defaultTarget = defaultTarget;
     }
     public String getDisplayName() {
-        return category == MilestoneCategory.BOSSING ? displayName.replaceFirst(" kills$", "") : displayName;
+        switch (this) {
+            case LMS_SCORE:
+                return "Last Man Standing (Score)";
+            case SOUL_WARS_KILLS:
+                return "Soul Wars (Kills)";
+            case SOUL_WARS_DEATHS:
+                return "Soul Wars (Deaths)";
+            case SOUL_WARS_GAMES:
+                return "Soul Wars (Games)";
+            case SOUL_WARS_WINS:
+                return "Soul Wars (Wins)";
+            case GOTR:
+                return "Guardians of the Rift";
+            case MIXOLOGY_ORDERS:
+                return "Mastering Mixology (Orders)";
+            case SLAYER_POINTS:
+                return "Slayer (Points)";
+            case SLAYER_STREAK:
+                return "Slayer (Normal Task Streak)";
+            case SLAYER_WILDERNESS_STREAK:
+                return "Slayer (Wilderness Task Streak)";
+            case CLUES_TOTAL:
+                return "Clue Scrolls (Total)";
+            case COLOSSEUM_WAVES:
+                return "Fortis Colosseum (Waves)";
+            case DOM_LEVELS:
+                return "Doom of Mokhaiotl (Delve Levels)";
+            case PERILOUS_MOONS:
+                return "Moons of Peril";
+            default:
+                return displayName.replaceFirst("(?: kills| completions| chests)$", "").replaceFirst(": (.+)$", " ($1)");
+        }
     }
     public boolean isSelectable() {
         return this != SOUL_WARS_DEATHS && this != COLOSSEUM_WAVES;
