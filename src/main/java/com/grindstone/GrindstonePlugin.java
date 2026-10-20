@@ -50,6 +50,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
@@ -988,7 +989,8 @@ public class GrindstonePlugin extends Plugin {
                             lastSavedSnapshot = null;
                         }
                         if (running && profile == active) {
-                            panel.setStorageStatus(failure == null ? null : "Save failed · previous file retained");
+                            Throwable cause = failure instanceof CompletionException ? failure.getCause() : failure;
+                            panel.setStorageStatus(failure == null ? null : cause instanceof ProfilePersistence.SyncLimitException ? "Profile too large to sync · local copy saved" : "Profile save failed · check RuneLite logs");
                         }
                     });
                 });
@@ -1015,7 +1017,7 @@ public class GrindstonePlugin extends Plugin {
     @Subscribe
     public void onClientShutdown(ClientShutdown event) {
         if (config.saveOnShutdown()) {
-            event.waitFor(saveProfile());
+            event.waitFor(saveProfile().thenCompose(ignored -> persistence.sync()));
         }
     }
 

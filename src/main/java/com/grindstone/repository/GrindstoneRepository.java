@@ -76,8 +76,12 @@ public final class GrindstoneRepository {
     }
 
     public GrindstoneProfile readProfile(Filepath file, long hash) throws IOException {
+        return readProfile(readText(file, MAX_PROFILE_BYTES), hash);
+    }
+
+    public GrindstoneProfile readProfile(String text, long hash) throws IOException {
         requireHash(hash);
-        JsonObject json = new JsonParser().parse(readText(file, MAX_PROFILE_BYTES)).getAsJsonObject();
+        JsonObject json = new JsonParser().parse(text).getAsJsonObject();
         if (!json.has("hash") || json.get("hash").getAsLong() != hash || !json.has("goals") || !json.get("goals").isJsonArray() || json.getAsJsonArray("goals").size() > 5000) {
             throw new IOException("This profile does not belong to the current account or has invalid milestone data.");
         }

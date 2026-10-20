@@ -9,6 +9,8 @@
 
 Keep every Old School RuneScape grind in sight. Grindstone brings your skills, boss kills, collection log and personal milestones together in one RuneLite sidebar, with progress bars, item previews and completion alerts.
 
+Sign in to the same RuneLite account on each computer to sync your character's milestones, history and snapshots. Existing local saves migrate automatically; local recovery copies and manual profile backups remain available. RuneLite handles cloud transfers on its normal sync schedule.
+
 ## A clearer view of your next milestone
 
 Keep your priorities close and your progress easy to follow. Pin the grinds you care about, see what is already complete, and choose your next target without leaving RuneLite.
