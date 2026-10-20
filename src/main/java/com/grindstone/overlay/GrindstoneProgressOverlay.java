@@ -77,17 +77,17 @@ public final class GrindstoneProgressOverlay extends Overlay {
             }
             previous = entry.getSchedule();
         }
-        int height = 62 + current.entries.size() * (current.bars ? 44 : 35) + sections * 18 + (current.total > current.entries.size() ? 19 : 0);
+        int height = 70 + current.entries.size() * (current.bars ? 44 : 35) + sections * 18 + (current.total > current.entries.size() ? 19 : 0);
         Graphics2D card = (Graphics2D) graphics.create();
         try {
             OverlayStyle.frame(card, current.width, height, OverlayStyle.GOLD);
-            card.drawImage(Icon.MAIN.getImage(), 6, 6, 20, 20, null);
+            card.drawImage(Icon.MAIN.getImage(), 12, 12, 20, 20, null);
             card.setFont(FontManager.getRunescapeSmallFont());
             card.setColor(OverlayStyle.MUTED);
-            card.drawString("GRINDSTONE", 34, 16);
+            card.drawString("GRINDSTONE", 40, 20);
             card.setFont(FontManager.getRunescapeBoldFont());
             card.setColor(OverlayStyle.TEXT);
-            card.drawString(current.view.getTitle(), 34, 32);
+            card.drawString(current.view.getTitle(), 40, 36);
             card.setFont(FontManager.getRunescapeSmallFont());
             card.setColor(OverlayStyle.MUTED);
             long now = System.currentTimeMillis();
@@ -97,17 +97,17 @@ public final class GrindstoneProgressOverlay extends Overlay {
             } else if (current.view == ProgressOverlayView.DAILY) {
                 summary += " · resets in " + OverlayStyle.formatCountdown(RepeatSchedule.DAILY.getNextReset(RepeatSchedule.DAILY.getPeriodStart(now)), now);
             }
-            card.drawString(OverlayStyle.fit(summary, card.getFontMetrics(), current.width - 12), 6, 48);
+            card.drawString(OverlayStyle.fit(summary, card.getFontMetrics(), current.width - 28), 13, 54);
             card.setColor(new Color(80, 83, 88, 100));
-            card.drawLine(6, 56, current.width - 6, 56);
-            int y = 64;
+            card.drawLine(12, 62, current.width - 16, 62);
+            int y = 72;
             previous = null;
             for (ProgressOverlayEntry entry : current.entries) {
                 if (current.grouped && previous != entry.getSchedule()) {
                     card.setFont(FontManager.getRunescapeSmallFont());
                     card.setColor(OverlayStyle.GOLD);
                     String section = entry.getSchedule() == RepeatSchedule.NONE ? "MILESTONES" : entry.getSchedule().toString().toUpperCase(Locale.ROOT);
-                    card.drawString(section, 6, y + 8);
+                    card.drawString(section, 13, y + 8);
                     y += 18;
                 }
                 renderEntry(card, entry, current.width, y, current.bars);
@@ -117,7 +117,7 @@ public final class GrindstoneProgressOverlay extends Overlay {
             if (current.total > current.entries.size()) {
                 card.setFont(FontManager.getRunescapeSmallFont());
                 card.setColor(OverlayStyle.MUTED);
-                card.drawString((current.total - current.entries.size()) + " more in the sidebar", 6, y + 8);
+                card.drawString((current.total - current.entries.size()) + " more in the sidebar", 13, y + 8);
             }
         } finally {
             card.dispose();
@@ -128,24 +128,24 @@ public final class GrindstoneProgressOverlay extends Overlay {
     private static void renderEntry(Graphics2D graphics, ProgressOverlayEntry entry, int width, int y, boolean bars) {
         Color accent = entry.isComplete() ? OverlayStyle.GREEN : entry.isReady() ? OverlayStyle.GOLD : OverlayStyle.MUTED;
         if (entry.isComplete()) {
-            OverlayStyle.check(graphics, 6, y + 1, accent);
+            OverlayStyle.check(graphics, 13, y + 1, accent);
         } else {
             graphics.setColor(accent);
-            graphics.fillOval(8, y + 3, 5, 5);
+            graphics.fillOval(15, y + 3, 5, 5);
         }
         graphics.setFont(FontManager.getRunescapeBoldFont());
         graphics.setColor(entry.isComplete() ? OverlayStyle.GREEN : OverlayStyle.TEXT);
-        graphics.drawString(OverlayStyle.fit(entry.getTitle(), graphics.getFontMetrics(), width - 28), 21, y + 10);
+        graphics.drawString(OverlayStyle.fit(entry.getTitle(), graphics.getFontMetrics(), width - 46), 28, y + 10);
         graphics.setFont(FontManager.getRunescapeSmallFont());
         graphics.setColor(OverlayStyle.MUTED);
         String progress = entry.isReady() ? entry.getTarget() > 0 ? NumberFormats.formatExperience(entry.getCurrent()) + " / " + NumberFormats.formatExperience(entry.getTarget()) : entry.isComplete() ? "Complete" : "In progress" : "Waiting for client data";
-        graphics.drawString(OverlayStyle.fit(progress, graphics.getFontMetrics(), width - 64), 21, y + 24);
+        graphics.drawString(OverlayStyle.fit(progress, graphics.getFontMetrics(), width - 80), 28, y + 24);
         double ratio = entry.getTarget() <= 0 ? 0 : Math.min(1, entry.getCurrent() / (double) entry.getTarget());
         String percentage = entry.isReady() && entry.getTarget() > 0 ? Math.round(ratio * 100) + "%" : "";
         graphics.setColor(accent);
-        graphics.drawString(percentage, width - 6 - graphics.getFontMetrics().stringWidth(percentage), y + 24);
+        graphics.drawString(percentage, width - 16 - graphics.getFontMetrics().stringWidth(percentage), y + 24);
         if (bars) {
-            OverlayStyle.progress(graphics, 21, y + 31, width - 27, entry.isReady() ? ratio : 0, accent);
+            OverlayStyle.progress(graphics, 28, y + 31, width - 44, entry.isReady() ? ratio : 0, accent);
         }
     }
 
