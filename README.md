@@ -33,7 +33,9 @@ From your first skill milestone to your next collection-log slot, choose the tar
 | --- | --- |
 | **Levels & XP** | Skill levels, session XP, total level and XP, combat level, and base level and XP |
 | **Bosses & activities** | Kill counts, raid and minigame completions, Slayer points and task streaks |
-| **Quests & achievements** | Quests, quest series, diary tiers and Combat Achievements |
+| **Quests** | Individual quests and quest series |
+| **Achievement Diary** | Diary regions and tiers |
+| **Combat Achievements** | Boss tasks, difficulties and reward tiers |
 | **Collection log** | Total unlock targets, individual unlocks or entire pages, with item previews and obtained progress |
 | **Item quantities** | Supplies and equipment across known inventory, equipment, bank and supported storage |
 | **Personal milestones** | Custom counters, notes, checklists and linked milestones |

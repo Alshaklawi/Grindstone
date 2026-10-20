@@ -67,7 +67,7 @@ import net.runelite.client.ui.FontManager;
  * @since 10/18/2026
  */
 public final class MilestoneEditorPanel extends JPanel {
-    private final JComboBox<String> type = new JComboBox<>(new String[]{ "Skill level", "Skill experience", "Combat level", "Total level", "Total experience", "Activity tracker", "Collection log", "Collection item", "Custom milestone", "Quest", "Quest series", "Diary region & tier", "Diary tier (all regions)", "Combat achievements: boss", "Combat achievements: reward tier", "Combat achievements: difficulty tasks", "Owned item quantity", "Combat achievement task", "Base level (all skills)", "Base experience (all skills)", "Session experience", "Personal checklist / routine", "Total collection-log unlocks"});
+    private final JComboBox<String> type = new JComboBox<>(new String[]{ "Skill level", "Skill experience", "Combat level", "Total level", "Total experience", "Activity tracker", "Collection log", "Collection item", "Custom milestone", "Quest", "Quest series", "Achievement diary region & tier", "Achievement diary tier (all regions)", "Combat achievements: boss", "Combat achievements: reward tier", "Combat achievements: difficulty tasks", "Owned item quantity", "Combat achievement task", "Base level (all skills)", "Base experience (all skills)", "Session experience", "Personal checklist / routine", "Total collection-log unlocks"});
     private final ChecklistMilestoneForm checklistForm = new ChecklistMilestoneForm();
     private final CustomMilestoneForm customForm = new CustomMilestoneForm();
     private final RepeatMilestoneForm repeatForm = new RepeatMilestoneForm();
