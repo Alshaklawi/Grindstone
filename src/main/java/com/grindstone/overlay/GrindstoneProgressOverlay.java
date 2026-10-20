@@ -108,7 +108,7 @@ public final class GrindstoneProgressOverlay extends Overlay {
                 if (current.grouped && previous != entry.getSchedule()) {
                     card.setFont(FontManager.getRunescapeSmallFont());
                     card.setColor(OverlayStyle.GOLD);
-                    String section = entry.getSchedule() == RepeatSchedule.NONE ? "MILESTONES" : entry.getSchedule().toString().toUpperCase(Locale.ROOT);
+                    String section = entry.getSchedule() == RepeatSchedule.NONE ? "Milestones" : entry.getSchedule().toString();
                     card.drawString(section, 10, y + 11);
                     card.setColor(DIVIDER);
                     int lineStart = 18 + card.getFontMetrics().stringWidth(section);
