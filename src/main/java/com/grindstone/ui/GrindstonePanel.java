@@ -2523,7 +2523,7 @@ public class GrindstonePanel extends PluginPanel {
     }
 
     private boolean isCollectionLogGoal(Milestone goal) {
-        return goal instanceof CollectionLogEntryMilestone || goal instanceof CollectionLogItemMilestone;
+        return goal.getCategory() == MilestoneCategory.COLLECTION_LOG;
     }
 
     private boolean isLevelGoal(Milestone goal) {

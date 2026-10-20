@@ -66,7 +66,7 @@ import net.runelite.client.ui.FontManager;
  * @since 10/18/2026
  */
 public final class MilestoneEditorPanel extends JPanel {
-    private final JComboBox<String> type = new JComboBox<>(new String[]{ "Skill level", "Skill experience", "Combat level", "Total level", "Total experience", "Activity tracker", "Collection log", "Collection item", "Custom milestone", "Quest", "Quest series", "Diary region & tier", "Diary tier (all regions)", "Combat achievements: boss", "Combat achievements: reward tier", "Combat achievements: difficulty tasks", "Owned item quantity", "Combat achievement task", "Base level (all skills)", "Base experience (all skills)", "Session experience", "Personal checklist / routine"});
+    private final JComboBox<String> type = new JComboBox<>(new String[]{ "Skill level", "Skill experience", "Combat level", "Total level", "Total experience", "Activity tracker", "Collection log", "Collection item", "Custom milestone", "Quest", "Quest series", "Diary region & tier", "Diary tier (all regions)", "Combat achievements: boss", "Combat achievements: reward tier", "Combat achievements: difficulty tasks", "Owned item quantity", "Combat achievement task", "Base level (all skills)", "Base experience (all skills)", "Session experience", "Personal checklist / routine", "Total collection-log unlocks"});
     private final ChecklistMilestoneForm checklistForm = new ChecklistMilestoneForm();
     private final CustomMilestoneForm customForm = new CustomMilestoneForm();
     private final RepeatMilestoneForm repeatForm = new RepeatMilestoneForm();
@@ -243,7 +243,7 @@ public final class MilestoneEditorPanel extends JPanel {
             Milestone sample = choices.isEmpty() ? null : choices.values().iterator().next().get();
             if (sample != null && sample.supportsTarget()) {
                 configureTarget(false);
-                JPanel targetField = field(kind == 1 || kind == 4 || kind == 19 || kind == 20 ? "Target experience" : kind == 5 ? "Target amount" : "Target level", target);
+                JPanel targetField = field(kind == 1 || kind == 4 || kind == 19 || kind == 20 ? "Target experience" : kind == 5 ? "Target amount" : kind == 22 ? "Target unlocks" : "Target level", target);
                 targetField.add(presets, BorderLayout.SOUTH);
                 presets.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
                 body.add(targetField);
@@ -252,6 +252,9 @@ public final class MilestoneEditorPanel extends JPanel {
             updatePreview();
             body.add(preview);
             setHint(kind >= 9 ? (choices.isEmpty() ? "Client data is not ready. Log in and reopen this dialog." : "Progress reads your logged-in character automatically. Completion milestones have no manual target.") : kind == 6 ? "Open your in-game collection log to refresh unlocks. Each item keeps its first-seen date." : kind == 5 ? "Progress reads your character's activity count automatically." : kind == 1 || kind == 4 ? "Progress reads your character's real experience automatically." : "Uses real levels. Temporary boosts do not advance level milestones.");
+            if (kind == 22) {
+                setHint("Counts total collection-log unlocks across all pages. Open your collection log if the total has not loaded. Each unlock counts once; duplicate item quantities do not add progress.");
+            }
             if (kind == 18 || kind == 19) {
                 setHint("Every skill must reach this target. The bar shows your lowest " + (kind == 18 ? "real skill level; temporary boosts do not count." : "skill XP, not total or average experience."));
             }
@@ -386,6 +389,7 @@ public final class MilestoneEditorPanel extends JPanel {
         int kind = type.getSelectedIndex();
         long maximum = ((Number) model.getMaximum()).longValue();
         long[] values = kind == 0 || kind == 18 ? new long[]{50, 75, 99}
+                : kind == 22 ? new long[]{100, 500, 1000}
                 : kind == 20 ? new long[]{10_000, 100_000, 1_000_000}
                 : kind == 1 || kind == 19 ? new long[]{1_000_000, SkillExperienceMilestone.LEVEL_99_EXPERIENCE, maximum}
                 : kind == 2 ? new long[]{70, 100, 126}

@@ -1,5 +1,6 @@
 package com.grindstone.ui.editor;
 
+import com.grindstone.content.milestone.impl.collectionlog.CollectionLogTotalMilestone;
 import com.grindstone.content.collectionlog.CollectionLogHistory;
 import com.grindstone.content.collectionlog.CollectionLogPages;
 import com.grindstone.content.combatachievement.CombatAchievementData;
@@ -109,6 +110,8 @@ public final class CompletionMilestoneChoices {
 
     public static Map<Integer, Map<String, Supplier<Milestone>>> create(Client client) {
         Map<Integer, Map<String, Supplier<Milestone>>> types = new LinkedHashMap<>();
+        types.put(22, new LinkedHashMap<>());
+        types.get(22).put("Total collection-log unlocks", CollectionLogTotalMilestone::new);
         types.put(6, new TreeMap<>());
         types.put(17, new TreeMap<>());
         CombatAchievementData.tasks(client).forEach((id, task) -> types.get(17).put(task.getName() + " (" + task.getTier() + ")", () -> new CombatAchievementTaskMilestone(id, task.getName(), task.getDescription())));

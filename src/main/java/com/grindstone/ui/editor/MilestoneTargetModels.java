@@ -1,4 +1,5 @@
 package com.grindstone.ui.editor;
+import com.grindstone.content.milestone.impl.collectionlog.CollectionLogTotalMilestone;
 import com.grindstone.content.milestone.Milestone;
 import com.grindstone.content.milestone.impl.experience.BaseExperienceMilestone;
 import com.grindstone.content.milestone.impl.experience.SessionExperienceMilestone;
@@ -26,6 +27,12 @@ public final class MilestoneTargetModels {
         if (goal instanceof SessionExperienceMilestone) {
             long cap = ((SessionExperienceMilestone) goal).isTotal() ? Skill.values().length * 200_000_000L : 200_000_000L;
             return new SpinnerNumberModel(Long.valueOf(goal.getProgressMaximum()), Long.valueOf(1), Long.valueOf(cap), Long.valueOf(1));
+        }
+        if (goal instanceof CollectionLogTotalMilestone) {
+            int knownMaximum = ((CollectionLogTotalMilestone) goal).getCollectionMaximum();
+            long cap = knownMaximum > 0 ? knownMaximum : Integer.MAX_VALUE;
+            long value = Math.min(goal.getProgressMaximum(), cap);
+            return new SpinnerNumberModel(Long.valueOf(value), Long.valueOf(1), Long.valueOf(cap), Long.valueOf(1));
         }
         long minimum = goal instanceof CombatLevelMilestone ? 3 : 1;
         long maximum = goal instanceof SkillLevelMilestone || goal instanceof BaseLevelMilestone ? 99 : goal instanceof CombatLevelMilestone ? 126 : goal instanceof TotalLevelMilestone ? Skill.values().length * 99L : goal instanceof SkillExperienceMilestone || goal instanceof BaseExperienceMilestone ? 200_000_000L : goal instanceof TotalExperienceMilestone ? Skill.values().length * 200_000_000L : goal instanceof PossessedItemMilestone ? PossessedItemMilestone.MAX_TARGET : Integer.MAX_VALUE;

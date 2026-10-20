@@ -1,5 +1,6 @@
 package com.grindstone.content.milestone;
 
+import com.grindstone.content.milestone.impl.collectionlog.CollectionLogTotalMilestone;
 import com.grindstone.content.milestone.impl.LinkedMilestone;
 import com.grindstone.content.milestone.impl.TrackerMilestone;
 import com.grindstone.content.milestone.impl.item.PossessedItemMilestone;
@@ -38,6 +39,9 @@ public enum TrackingState {
         }
         if (goal instanceof ManualMilestone) {
             return MANUAL;
+        }
+        if (goal instanceof CollectionLogTotalMilestone) {
+            return loggedIn && ((CollectionLogTotalMilestone) goal).isLoaded() ? LIVE : WAITING;
         }
         if (!loggedIn || recurring.isActive() && recurring.getBaselineAt() == 0 || goal instanceof ClientCompletionMilestone && goal.getProgressMaximum() == 0 || goal.getCategory() == MilestoneCategory.COLLECTION_LOG && goal.getProgressMaximum() == 0) {
             return WAITING;

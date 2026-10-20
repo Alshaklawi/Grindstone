@@ -28,7 +28,7 @@ public final class MilestoneTypePicker extends JPanel {
     private static final String[] GROUPS = {"Skills", "Activities", "Collection", "Quests", "Achievements", "Personal"};
     private static final String[] DESCRIPTIONS = {"Build levels, earn experience or raise your base stats.", "Track boss kills, raids, Slayer, clues and minigames.", "Complete your collection log or work towards an item stack.", "Finish a quest or follow an entire quest series.", "Work through diaries and Combat Achievements.", "Create your own milestone, checklist or repeating routine."};
     private static final Icon[] ICONS = {Icon.SKILLING, Icon.BOSSING, Icon.COLLECTION_LOG, Icon.QUEST, Icon.COMBAT_ACHIEVEMENT, Icon.MAIN};
-    private static final int[][] TYPES = {{0, 1, 2, 3, 4, 18, 19, 20}, {5}, {6, 7, 16}, {9, 10}, {11, 12, 13, 14, 15, 17}, {8, 21}};
+    private static final int[][] TYPES = {{0, 1, 2, 3, 4, 18, 19, 20}, {5}, {22, 6, 7, 16}, {9, 10}, {11, 12, 13, 14, 15, 17}, {8, 21}};
     private final JComboBox<String> model;
     private final JComboBox<Integer> selection = new JComboBox<>();
     private final JToggleButton[] groups = new JToggleButton[GROUPS.length];

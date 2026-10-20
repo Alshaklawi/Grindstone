@@ -1,4 +1,5 @@
 package com.grindstone.repository;
+import com.grindstone.content.milestone.impl.collectionlog.CollectionLogTotalMilestone;
 import com.google.gson.JsonObject;
 import com.grindstone.content.milestone.Milestone;
 import com.grindstone.content.milestone.impl.ChecklistMilestone;
@@ -54,6 +55,7 @@ final class SavedMilestoneTypes {
         register(types, TotalExperienceMilestone.class, "total-xp");
         register(types, CollectionLogEntryMilestone.class, "collection-page");
         register(types, CollectionLogItemMilestone.class, "collection-item");
+        register(types, CollectionLogTotalMilestone.class, "collection-total");
         register(types, QuestMilestone.class, "quest");
         register(types, QuestSeriesMilestone.class, "quest-series");
         register(types, AchievementDiaryTierMilestone.class, "diary-tier");
