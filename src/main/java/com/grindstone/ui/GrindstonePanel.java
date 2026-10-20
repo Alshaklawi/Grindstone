@@ -358,23 +358,12 @@ public class GrindstonePanel extends PluginPanel {
 
         header.add(snapshots);
 
-        JPanel goalActions = new JPanel(new GridLayout(2, 1, 0, 5));
+        JPanel goalActions = new JPanel(new GridLayout(2, 1, 0, 6));
         goalActions.setOpaque(false);
         goalActions.setAlignmentX(LEFT_ALIGNMENT);
-        goalActions.setMaximumSize(new Dimension(Integer.MAX_VALUE, 65));
-        JButton addGoal = new JButton("+ Add milestone");
-        styleButton(addGoal);
-        addGoal.setIcon(new ImageIcon(ImageUtil.resizeImage(Icon.MAIN.getImage(), 16, 16)));
-        addGoal.setIconTextGap(7);
-        addGoal.setFont(UiTypography.TITLE);
-        addGoal.setToolTipText("Create an automatic tracker or a custom milestone with manual progress.");
-        addGoal.addActionListener(event -> showAddGoalDialog());
-        goalActions.add(addGoal);
-        JButton addLinked = new JButton("+ Linked milestone");
-        styleButton(addLinked);
-        addLinked.setToolTipText("Create a checklist, any-of milestone, milestone ladder, collection subset, recorded achievement, repeat count or prerequisite milestone from existing trackers.");
-        addLinked.addActionListener(event -> editLinkedGoal(profile, null));
-        goalActions.add(addLinked);
+        goalActions.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
+        goalActions.add(createMilestoneActionButton("Add milestone", "Create an automatic tracker or a custom milestone with manual progress.", () -> showAddGoalDialog()));
+        goalActions.add(createMilestoneActionButton("Link milestones", "Combine existing trackers into a linked milestone.", () -> editLinkedGoal(profile, null)));
         JMenuItem allCollectionPages = new JMenuItem("Add all collection-log pages...");
         allCollectionPages.setToolTipText("Read every page from the client's five collection-log tabs and add missing page milestones.");
         allCollectionPages.addActionListener(event -> addAllCollectionPages());
@@ -464,6 +453,18 @@ public class GrindstonePanel extends PluginPanel {
         undoDeleteButton.addActionListener(event -> undoDelete());
         header.add(Box.createVerticalStrut(4));
         header.add(undoDeleteButton);
+    }
+
+    private JButton createMilestoneActionButton(String title, String tooltip, Runnable action) {
+        JButton button = new JButton("+  " + title);
+        styleButton(button);
+        button.setFont(UiTypography.TITLE);
+        button.setHorizontalAlignment(SwingConstants.LEFT);
+        button.setMargin(new Insets(8, 12, 8, 12));
+        button.setPreferredSize(new Dimension(200, 32));
+        button.setToolTipText(tooltip);
+        button.addActionListener(event -> action.run());
+        return button;
     }
 
     private JPanel createStatusCounters() {
