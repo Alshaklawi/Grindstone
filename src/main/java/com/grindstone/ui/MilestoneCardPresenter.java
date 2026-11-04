@@ -223,13 +223,16 @@ final class MilestoneCardPresenter {
                 long repeatTarget = displayRecurring.getTarget();
                 boolean pinned = displayMetadata.isPinned();
                 component.putClientProperty("grindstone.pinned", pinned);
-                component.addGoalAction(pinned ? "Unpin" : "Pin", "Pinned milestones appear first, while still respecting your search and filters.", event -> clientThread.invokeLater(() -> {
+                Runnable togglePin = () -> clientThread.invokeLater(() -> {
                     if (support.isCurrentProfile(currentProfile) && currentProfile.getGoals().contains(goal)) {
-                        currentProfile.getMetadata(goal).setPinned(!pinned);
+                        MilestoneMetadata currentMetadata = currentProfile.getMetadata(goal);
+                        currentMetadata.setPinned(!currentMetadata.isPinned());
                         currentProfile.touch();
                         support.render();
                     }
-                }));
+                });
+                component.setPinAction(pinned, togglePin);
+                component.addGoalAction(pinned ? "Unpin" : "Pin", "Pinned milestones appear first, while still respecting your search and filters.", event -> togglePin.run());
                 if (config.showCompletionHistory()) {
                     component.addGoalAction("History...", "View recurring periods, progress, outcomes and first-observed completion dates.", event -> clientThread.invokeLater(() -> {
                         if (!support.isCurrentProfile(currentProfile) || !currentProfile.getGoals().contains(goal)) {

@@ -5,13 +5,17 @@ import com.grindstone.content.milestone.MilestoneStatus;
 import com.grindstone.ui.util.UiTypography;
 import com.grindstone.util.HtmlUtils;
 import java.awt.BorderLayout;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.ActionListener;
+import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 import java.util.Locale;
 import java.util.Objects;
@@ -27,10 +31,12 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTextArea;
+import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
 import lombok.Getter;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.util.AsyncBufferedImage;
+import net.runelite.client.util.ImageUtil;
 
 /**
  * @author Ayman Yassen
@@ -41,6 +47,10 @@ public class MilestoneComponent extends JPanel {
     private static final Color CARD_COLOR = ColorScheme.DARKER_GRAY_COLOR;
     private static final Color TEXT_COLOR = ColorScheme.TEXT_COLOR;
     private static final Color MUTED_COLOR = ColorScheme.LIGHT_GRAY_COLOR;
+    private static final ImageIcon PIN_ICON = createPinIcon(false);
+    private static final ImageIcon PINNED_ICON = createPinIcon(true);
+    private static final ImageIcon COLLAPSED_ICON = new ImageIcon(ImageUtil.loadImageResource(MilestoneComponent.class, "/util/arrow_right.png"));
+    private static final ImageIcon EXPANDED_ICON = new ImageIcon(ImageUtil.rotateImage((BufferedImage) COLLAPSED_ICON.getImage(), Math.PI / 2));
 
     private final JPanel header = new JPanel(new BorderLayout(8, 0));
     private final JPanel headerText = new JPanel();
@@ -98,8 +108,9 @@ public class MilestoneComponent extends JPanel {
         manualControls.add(set);
         manualControls.setVisible(true);
     }
-    private final JButton expandButton = new JButton("−");
+    private final JButton expandButton = new JButton(EXPANDED_ICON);
     private final JButton editButton = new JButton("...");
+    private final JToggleButton pinButton = new JToggleButton(PIN_ICON);
     private final JPanel headerActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
 
     private String title = "";
@@ -166,6 +177,13 @@ public class MilestoneComponent extends JPanel {
         editButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         editButton.setVisible(false);
 
+        pinButton.putClientProperty("JButton.buttonType", "toolBarButton");
+        pinButton.setSelectedIcon(PINNED_ICON);
+        pinButton.setRolloverEnabled(true);
+        pinButton.setMargin(new Insets(0, 3, 0, 3));
+        pinButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        pinButton.setVisible(false);
+
         headerText.add(titleLabel);
         headerText.add(requiredQuantityLabel);
         headerText.add(trackingNoteLabel);
@@ -184,6 +202,7 @@ public class MilestoneComponent extends JPanel {
         header.add(iconLabel, BorderLayout.WEST);
         header.add(headerText, BorderLayout.CENTER);
         headerActions.setOpaque(false);
+        headerActions.add(pinButton);
         headerActions.add(editButton);
         headerActions.add(expandButton);
 
@@ -271,6 +290,58 @@ public class MilestoneComponent extends JPanel {
         text.setAlignmentX(LEFT_ALIGNMENT);
         content.add(text);
         expandButton.setVisible(true);
+    }
+
+    private static ImageIcon createPinIcon(boolean pinned) {
+        BufferedImage image = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D graphics = image.createGraphics();
+        try {
+            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            graphics.setStroke(new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            graphics.setColor(pinned ? ColorScheme.PROGRESS_INPROGRESS_COLOR : MUTED_COLOR);
+            graphics.rotate(Math.PI / 4, 8, 8);
+            Path2D pin = new Path2D.Double();
+            pin.moveTo(5, 2.5);
+            pin.lineTo(11, 2.5);
+            pin.lineTo(10.5, 4);
+            pin.lineTo(10.5, 7);
+            pin.lineTo(13, 10);
+            pin.lineTo(3, 10);
+            pin.lineTo(5.5, 7);
+            pin.lineTo(5.5, 4);
+            pin.closePath();
+            if (pinned) {
+                graphics.fill(pin);
+            }
+            graphics.draw(pin);
+            graphics.drawLine(8, 10, 8, 14);
+        } finally {
+            graphics.dispose();
+        }
+        return new ImageIcon(image);
+    }
+
+    public void setPinAction(boolean pinned, Runnable action) {
+        for (ActionListener listener : pinButton.getActionListeners()) {
+            pinButton.removeActionListener(listener);
+        }
+        pinButton.setSelected(pinned);
+        updatePinButton();
+        if (action != null) {
+            pinButton.addActionListener(event -> {
+                updatePinButton();
+                action.run();
+            });
+        }
+        pinButton.setVisible(action != null);
+        revalidate();
+        repaint();
+    }
+
+    private void updatePinButton() {
+        String action = pinButton.isSelected() ? "Unpin milestone" : "Pin milestone";
+        pinButton.setToolTipText(action);
+        pinButton.getAccessibleContext().setAccessibleName(action);
     }
 
     public void setEditAction(ActionListener action) {
@@ -405,7 +476,7 @@ public class MilestoneComponent extends JPanel {
         this.expanded = expanded;
         content.setVisible(expanded);
         footer.setVisible(true);
-        expandButton.setText(expanded ? "−" : "+");
+        expandButton.setIcon(expanded ? EXPANDED_ICON : COLLAPSED_ICON);
         expandButton.setToolTipText(expanded ? "Collapse milestone details" : "Expand milestone details");
         if (expansionListener != null) {
             expansionListener.accept(expanded);
@@ -423,7 +494,7 @@ public class MilestoneComponent extends JPanel {
         updateProgress();
         content.setVisible(expanded);
         footer.setVisible(true);
-        expandButton.setText(expanded ? "−" : "+");
+        expandButton.setIcon(expanded ? EXPANDED_ICON : COLLAPSED_ICON);
         progressBar.setVisible(progressBarVisible);
     }
 
