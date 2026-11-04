@@ -25,7 +25,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Consumer;
 import lombok.Getter;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
@@ -75,19 +74,6 @@ public class GrindstoneProfile {
             archivedHistory.remove(archivedHistory.keySet().iterator().next());
         }
     }
-    public void restoreArchiveSnapshot(Collection<ArchivedHistory> histories) {
-        if (histories.size() > 500) {
-            throw new IllegalArgumentException("Too many archived histories.");
-        }
-        for (ArchivedHistory history : histories) {
-            if (history == null || history.title == null || history.title.length() > 300) {
-                throw new IllegalArgumentException("Invalid archived history.");
-            }
-            MilestoneMetadata.validated(history.metadata);
-        }
-        archivedHistory.clear();
-        histories.forEach(this::restoreArchive);
-    }
     private void archive(Milestone goal) {
         MilestoneMetadata saved = getMetadata(goal).copy();
         if (saved.getCompletions().isEmpty() && saved.getRecurring().getHistory().isEmpty() && saved.getRecurring().getBaselineAt() == 0) {
@@ -105,41 +91,6 @@ public class GrindstoneProfile {
     public void touch() {
         revision++;
         markDirty();
-    }
-    public Consumer<Milestone> snapshotEdit(Milestone original) {
-        MilestoneMetadata saved = getMetadata(original).copy();
-        RepeatSchedule previousSchedule = saved.getRecurring().getSchedule();
-        long undoWindow = previousSchedule.getPeriodStart(System.currentTimeMillis());
-        long target = original.getProgressMaximum();
-        CustomMilestone custom = original instanceof CustomMilestone ? (CustomMilestone) original : null;
-        CustomMilestone manual = custom == null ? null : new CustomMilestone(custom.getId(), custom.getTitle(null), custom.getDescription(), custom.getCategory(), custom.getProgressCurrent(), target);
-        ChecklistMilestone checklist = original instanceof ChecklistMilestone ? (ChecklistMilestone) original : null;
-        boolean[] savedChecks = checklist == null ? null : checklist.getChecks();
-        return replacement -> {
-            if (previousSchedule != RepeatSchedule.NONE && previousSchedule.getPeriodStart(System.currentTimeMillis()) != undoWindow) {
-                throw new IllegalStateException("The previous period has reset.");
-            }
-            int index = goals.indexOf(replacement);
-            if (index < 0) {
-                throw new IllegalStateException("The edited milestone no longer exists.");
-            }
-            if (custom != null) {
-                custom.update(manual.getTitle(null), manual.getDescription(), manual.getCategory(), manual.getProgressCurrent(), manual.getProgressMaximum());
-            } else if (original.supportsTarget()) {
-                original.setTarget(target);
-            }
-            if (checklist != null) {
-                checklist.restoreChecks(savedChecks);
-            }
-            goals.set(index, original);
-            if (original != replacement) {
-                metadata.remove(replacement);
-            }
-            metadata.put(original, saved);
-            archivedHistory.remove(saved.getId());
-            attachCollectionData(original);
-            touch();
-        };
     }
     public MilestoneMetadata getMetadata(Milestone goal) {
         return metadata.computeIfAbsent(goal, ignored -> new MilestoneMetadata());

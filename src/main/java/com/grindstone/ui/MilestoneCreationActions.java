@@ -76,13 +76,11 @@ public final class MilestoneCreationActions {
                     if (support.getProfile() != active) {
                         return;
                     }
-                    List<Milestone> before = new ArrayList<>(active.getGoals());
                     for (Milestone goal : goals) {
                         if (!isCompletedQuestOrDiary(goal) && active.add(goal)) {
                             goal.refresh(support.getClient());
                         }
                     }
-                    support.recordAddedUndo(active, before, "preset");
                     support.render();
                 });
             });
@@ -104,7 +102,7 @@ public final class MilestoneCreationActions {
             }
             rows.append('\n');
         }
-        return missing + " new milestones · " + (candidates.size() - missing) + " existing matches kept\nExisting targets and schedules are never overwritten. Additions can be undone.\n\n" + rows;
+        return missing + " new milestones · " + (candidates.size() - missing) + " existing matches kept\nExisting targets and schedules are never overwritten.\n\n" + rows;
     }
 
     public void addAllCollectionPages() {
@@ -136,9 +134,7 @@ public final class MilestoneCreationActions {
                     if (support.getProfile() != active) {
                         return;
                     }
-                    List<Milestone> before = new ArrayList<>(active.getGoals());
                     pages.forEach((id, name) -> active.add(new CollectionLogEntryMilestone(itemManager, id, name)));
-                    support.recordAddedUndo(active, before, "collection pages");
                     support.render();
                 });
             });
@@ -168,7 +164,6 @@ public final class MilestoneCreationActions {
                             goal.refresh(support.getClient());
                         }
                     }
-                    support.recordAddedUndo(active, before, "routine");
                     support.render();
                     int count = active.getGoals().size() - before.size();
                     SwingUtilities.invokeLater(() -> {
@@ -258,11 +253,9 @@ public final class MilestoneCreationActions {
                         if (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), title + " is already tracked.\nUpdate its target from " + String.format(Locale.ROOT, "%,d to %,d?", oldTarget, newTarget) + "\nRepeat: " + schedule + (schedule == RepeatSchedule.NONE ? " (lifetime tracking)" : String.format(Locale.ROOT, " · %,d per period", periodTarget)) + "\nChanging repeat settings archives the current observed period.", "Update existing milestone", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION) {
                             support.getClientThread().invokeLater(() -> {
                                 if (support.getProfile() == active && active.getGoals().contains(existing)) {
-                                    Consumer<Milestone> restore = active.snapshotEdit(existing);
                                     existing.setTarget(newTarget);
                                     support.configureRepeat(active, existing, schedule, periodTarget);
                                     active.touch();
-                                    support.recordMilestoneUndo(active, existing, "edit", () -> restore.accept(existing));
                                     support.render();
                                 }
                             });
@@ -285,7 +278,6 @@ public final class MilestoneCreationActions {
                 }
                 support.configureRepeat(active, candidate, schedule, periodTarget);
                 active.add(candidate, active.getMetadata(candidate));
-                support.recordUndo(active, "add milestone", () -> active.remove(candidate), () -> active.getGoals().contains(candidate));
                 SwingUtilities.invokeLater(() -> {
                     if (support.getProfile() != active) {
                         return;

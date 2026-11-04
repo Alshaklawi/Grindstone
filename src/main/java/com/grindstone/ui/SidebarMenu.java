@@ -56,7 +56,7 @@ public final class SidebarMenu {
         manage.addActionListener(event -> bulk.showBulkManager());
         milestoneActions.add(manage);
         JMenuItem clearMilestones = new JMenuItem("Clear all milestones...");
-        clearMilestones.setToolTipText("Remove all milestones from this profile, including hidden milestones. Confirmation and undo are available.");
+        clearMilestones.setToolTipText("Remove all milestones from this profile, including hidden milestones. Confirmation is required.");
         clearMilestones.addActionListener(event -> bulk.clearAllMilestones());
         milestoneActions.addSeparator();
         milestoneActions.add(clearMilestones);

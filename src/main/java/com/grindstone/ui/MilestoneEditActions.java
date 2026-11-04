@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.LongUnaryOperator;
 import java.util.function.Supplier;
 import javax.swing.JOptionPane;
@@ -69,7 +68,7 @@ public final class MilestoneEditActions {
                 form.commit();
                 RepeatSchedule selected = form.getSchedule();
                 long selectedTarget = form.getTarget();
-                if ((schedule != selected || target != selectedTarget) && JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), "Repeat: " + schedule + " → " + selected + "\nPeriod target: " + target + " → " + selectedTarget + "\nThe current observed period will be archived. Undo is available until a later edit or reset.", "Preview schedule change", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
+                if ((schedule != selected || target != selectedTarget) && JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), "Repeat: " + schedule + " → " + selected + "\nPeriod target: " + target + " → " + selectedTarget + "\nThe current observed period will be archived.", "Preview schedule change", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
                     return;
                 }
                 support.getClientThread().invokeLater(() -> {
@@ -79,10 +78,8 @@ public final class MilestoneEditActions {
                             SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(support.getOwner()), "That tracker already has a milestone with this schedule."));
                             return;
                         }
-                        Consumer<Milestone> restore = active.snapshotEdit(goal);
                         support.configureRepeat(active, goal, selected, selectedTarget);
                         active.touch();
-                        support.recordMilestoneUndo(active, goal, "schedule change", () -> restore.accept(goal));
                         support.render();
                     }
                 });
@@ -94,7 +91,7 @@ public final class MilestoneEditActions {
     }
 
     public void restartPeriod(GrindstoneProfile active, Milestone goal) {
-        if (support.getProfile() != active || JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), "Archive the current observed period and capture a fresh baseline?\nCustom progress resets to zero. Your game progress is unaffected.\nUndo is available until a later edit or scheduled reset.", "Restart current period", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
+        if (support.getProfile() != active || JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), "Archive the current observed period and capture a fresh baseline?\nCustom progress resets to zero. Your game progress is unaffected.", "Restart current period", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
             return;
         }
         support.getClientThread().invokeLater(() -> {
@@ -105,13 +102,11 @@ public final class MilestoneEditActions {
             if (!recurring.isActive()) {
                 return;
             }
-            Consumer<Milestone> restore = active.snapshotEdit(goal);
             recurring.restart(System.currentTimeMillis());
             if (goal instanceof ManualMilestone) {
                 ((ManualMilestone) goal).resetProgress();
             }
             active.touch();
-            support.recordMilestoneUndo(active, goal, "period restart", () -> restore.accept(goal));
             support.render();
         });
     }
@@ -167,11 +162,9 @@ public final class MilestoneEditActions {
                         return;
                     }
                     try {
-                        Consumer<Milestone> restore = active.snapshotEdit(goal);
                         if (active.replaceGoal(goal, replacement, selectedSchedule)) {
                             replacement.refresh(support.getClient());
                             support.configureRepeat(active, replacement, selectedSchedule, selectedTarget);
-                            support.recordMilestoneUndo(active, replacement, "edit", () -> restore.accept(replacement));
                             support.render();
                         }
                     } catch (IllegalArgumentException exception) {
@@ -221,11 +214,8 @@ public final class MilestoneEditActions {
                             }
                             if (original == null) {
                                 active.add(candidate);
-                                support.recordUndo(active, "add linked milestone", () -> active.remove(candidate), () -> active.getGoals().contains(candidate));
                             } else {
-                                Consumer<Milestone> restore = active.snapshotEdit(original);
                                 active.replaceGoal(original, candidate);
-                                support.recordMilestoneUndo(active, candidate, "edit linked milestone", () -> restore.accept(candidate));
                             }
                             active.updateLinkedGoals(support.hasClientProfile(active));
                             support.render();
@@ -258,10 +248,8 @@ public final class MilestoneEditActions {
                         boolean reminder = form.isReminderEnabled();
                         support.getClientThread().invokeLater(() -> {
                             if (support.getProfile() == active && active.getGoals().contains(goal) && active.getMetadata(goal).getDeadlineAt() == originalDeadline && active.getMetadata(goal).isDeadlineReminder() == originalReminder) {
-                                Consumer<Milestone> restore = active.snapshotEdit(goal);
                                 active.getMetadata(goal).setDeadline(deadlineAt, reminder);
                                 active.touch();
-                                support.recordMilestoneUndo(active, goal, "deadline", () -> restore.accept(goal));
                                 support.render();
                             }
                         });
@@ -307,11 +295,9 @@ public final class MilestoneEditActions {
                             SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(support.getOwner()), "That personal milestone already has this schedule."));
                             return;
                         }
-                        Consumer<Milestone> restore = active.snapshotEdit(goal);
                         goal.update(draft.getTitle(null), draft.getDescription(), draft.getCategory(), draft.getProgressCurrent(), draft.getProgressMaximum());
                         support.configureRepeat(active, goal, schedule, periodTarget);
                         active.touch();
-                        support.recordMilestoneUndo(active, goal, "edit", () -> restore.accept(goal));
                         support.render();
                     }
                 });
@@ -323,7 +309,7 @@ public final class MilestoneEditActions {
     }
 
     private boolean confirmEdit(String title, Milestone original, Milestone replacement, RepeatSchedule before, RepeatSchedule after, long previousTarget, long nextTarget) {
-        String summary = title + " → " + replacement.getTitle(null) + "\nTarget: " + String.format(Locale.ROOT, "%,d → %,d", original.getProgressMaximum(), replacement.getProgressMaximum()) + "\nRepeat: " + before + " → " + after + "\nPeriod target: " + String.format(Locale.ROOT, "%,d → %,d", previousTarget, nextTarget) + "\n\nChanged subjects retain old observations in account history.\nChanged repeat settings archive the current observed period.\nUndo expires after a later edit or period reset.";
+        String summary = title + " → " + replacement.getTitle(null) + "\nTarget: " + String.format(Locale.ROOT, "%,d → %,d", original.getProgressMaximum(), replacement.getProgressMaximum()) + "\nRepeat: " + before + " → " + after + "\nPeriod target: " + String.format(Locale.ROOT, "%,d → %,d", previousTarget, nextTarget) + "\n\nChanged subjects retain old observations in account history.\nChanged repeat settings archive the current observed period.";
         JTextArea preview = new JTextArea(summary, 10, 38);
         preview.setEditable(false);
         preview.setLineWrap(true);
@@ -338,7 +324,6 @@ public final class MilestoneEditActions {
         }
         support.getClientThread().invokeLater(() -> {
             if (support.getProfile() == active && active.remove(goal)) {
-                support.recordUndo(active, "delete", () -> active.add(goal, active.getMetadata(goal)), () -> active.findMatchingGoal(goal, active.getMetadata(goal).getRecurring().getSchedule()) == null);
                 support.render();
             }
         });
@@ -384,7 +369,6 @@ public final class MilestoneEditActions {
                 support.render();
                 return;
             }
-            Consumer<Milestone> restore = active.snapshotEdit(goal);
             goal.update(goal.getTitle(null), goal.getDescription(), goal.getCategory(), Math.min(requested, goal.getProgressMaximum()), goal.getProgressMaximum());
             if (recurring.isActive()) {
                 recurring.observe(goal, now);
@@ -392,7 +376,6 @@ public final class MilestoneEditActions {
                 active.getMetadata(goal).observe(goal, goal.getTitle(null), now);
             }
             active.touch();
-            support.recordMilestoneUndo(active, goal, "progress", () -> restore.accept(goal));
             support.render();
         });
     }

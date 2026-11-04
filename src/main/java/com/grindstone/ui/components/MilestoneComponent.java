@@ -86,7 +86,7 @@ public class MilestoneComponent extends JPanel {
             plus.setFont(UiTypography.BODY);
             plus.setMargin(new Insets(4, 5, 4, 5));
             plus.setEnabled(current < target);
-            plus.setToolTipText("Add one to this personal milestone's progress. Undo is available in the header.");
+            plus.setToolTipText("Add one to this personal milestone's progress.");
             plus.addActionListener(event -> increment.run());
             manualControls.add(plus);
         }
@@ -298,7 +298,7 @@ public class MilestoneComponent extends JPanel {
             menu.add(editTarget);
         }
         JMenuItem remove = new JMenuItem("Delete...");
-        remove.setToolTipText("Remove this milestone after confirmation. Game progress is unaffected; Undo restores the last deletion.");
+        remove.setToolTipText("Remove this milestone after confirmation. Game progress is unaffected.");
         remove.addActionListener(delete);
         menu.add(remove);
         setEditAction(event -> menu.show(editButton, 0, editButton.getHeight()));

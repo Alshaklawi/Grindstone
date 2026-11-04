@@ -37,7 +37,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
@@ -163,10 +162,8 @@ final class MilestoneCardPresenter {
                             boolean selected = check.isSelected();
                             clientThread.invokeLater(() -> {
                                 if (support.isCurrentProfile(currentProfile) && currentProfile.getGoals().contains(goal) && currentProfile.getMetadata(goal).getRecurring().getSchedule() == openedSchedule && openedSchedule.getPeriodStart(System.currentTimeMillis()) == openedPeriod) {
-                                    Consumer<Milestone> restore = currentProfile.snapshotEdit(goal);
                                     checklist.setChecked(index, selected);
                                     currentProfile.touch();
-                                    support.recordMilestoneUndo(currentProfile, goal, "checklist step", () -> restore.accept(goal));
                                 }
                                 support.render();
                             });

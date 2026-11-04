@@ -51,6 +51,7 @@ import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -84,6 +85,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
@@ -97,6 +99,7 @@ import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
 import net.runelite.client.ui.components.FlatTextField;
 import net.runelite.client.ui.components.IconTextField;
+import net.runelite.client.util.ImageUtil;
 
 /**
  * @author Ayman Yassen
@@ -116,6 +119,8 @@ public class GrindstonePanel extends PluginPanel {
     private static final Color INPUT_COLOR = ColorScheme.CONTROL_COLOR;
     private static final Color TEXT_COLOR = ColorScheme.TEXT_COLOR;
     private static final Color MUTED_COLOR = ColorScheme.LIGHT_GRAY_COLOR;
+    private static final ImageIcon DATA_COLLAPSED_ICON = new ImageIcon(ImageUtil.loadImageResource(GrindstonePanel.class, "/util/arrow_right.png"));
+    private static final ImageIcon DATA_EXPANDED_ICON = new ImageIcon(ImageUtil.rotateImage((BufferedImage) DATA_COLLAPSED_ICON.getImage(), Math.PI / 2));
 
     private final MilestoneActionSupport actionSupport;
     private final MilestoneCreationActions creationActions;
@@ -160,10 +165,9 @@ public class GrindstonePanel extends PluginPanel {
     private final Map<String, Integer> statusCounts = new LinkedHashMap<>();
     private final JButton filtersToggle = new JButton("Filters");
     private final JButton clearFiltersButton = new JButton("Clear");
-    private final JButton undoDeleteButton = new JButton("Undo delete");
     private final JToggleButton todayButton = new JToggleButton("Routines");
     private final JToggleButton allMilestonesButton = new JToggleButton("All", true);
-    private final JButton dashboardToggle = new JButton("Data +");
+    private final JButton dashboardToggle = new JButton("Data");
     private JScrollPane filterScroll;
     private SidebarViewControls viewControls;
     private GrindstoneProfile viewProfile;
@@ -190,7 +194,7 @@ public class GrindstonePanel extends PluginPanel {
         this.client = client;
         this.clientThread = clientThread;
         this.config = config;
-        actionSupport = new MilestoneActionSupport(this, client, clientThread, () -> profile, this::render, undoDeleteButton);
+        actionSupport = new MilestoneActionSupport(this, client, clientThread, () -> profile, this::render);
         editActions = new MilestoneEditActions(actionSupport, itemManager, itemSearchService);
         creationActions = new MilestoneCreationActions(actionSupport, itemManager, itemSearchService, category -> {
             collapsedCategories.put(category, false);
@@ -267,6 +271,7 @@ public class GrindstonePanel extends PluginPanel {
         dashboardToggle.setFont(UiTypography.META);
         dashboardToggle.putClientProperty("JButton.buttonType", "toolBarButton");
         dashboardToggle.setMargin(new Insets(2, 4, 2, 4));
+        dashboardToggle.setHorizontalTextPosition(SwingConstants.LEFT);
         dashboardToggle.addActionListener(event -> {
             dashboardOverview.setVisible(!dashboardOverview.isVisible());
             updateDashboardToggle();
@@ -347,18 +352,11 @@ public class GrindstonePanel extends PluginPanel {
         }
         header.add(Box.createVerticalStrut(10));
         header.add(navigation);
-        undoDeleteButton.setVisible(false);
-        undoDeleteButton.setToolTipText("Restore the most recently deleted milestone in this player profile.");
-        undoDeleteButton.setAlignmentX(LEFT_ALIGNMENT);
-        styleButton(undoDeleteButton);
-        undoDeleteButton.addActionListener(event -> actionSupport.undoLastChange());
-        header.add(Box.createVerticalStrut(4));
-        header.add(undoDeleteButton);
     }
 
     private void updateDashboardToggle() {
         boolean expanded = dashboardOverview.isVisible();
-        dashboardToggle.setText(expanded ? "Data -" : "Data +");
+        dashboardToggle.setIcon(expanded ? DATA_EXPANDED_ICON : DATA_COLLAPSED_ICON);
         dashboardToggle.setToolTipText(expanded ? "Hide captured game data" : "Show captured game data and refresh instructions");
         dashboardToggle.getAccessibleContext().setAccessibleName(expanded ? "Hide game data" : "Show game data");
     }
@@ -617,7 +615,6 @@ public class GrindstonePanel extends PluginPanel {
             } finally {
                 updatingFilters = false;
             }
-            actionSupport.clearUndo();
         });
         renderVersion.incrementAndGet();
         render();
@@ -632,9 +629,6 @@ public class GrindstonePanel extends PluginPanel {
         listRenderer.clearPendingReveal();
         backupActions.cancel();
         profile = null;
-        SwingUtilities.invokeLater(() -> {
-            actionSupport.clearUndo();
-        });
         renderVersion.incrementAndGet();
         render();
     }

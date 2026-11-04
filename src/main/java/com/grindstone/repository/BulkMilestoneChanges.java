@@ -5,13 +5,8 @@ import com.grindstone.content.milestone.MilestoneCategory;
 import com.grindstone.content.milestone.ManualMilestone;
 import com.grindstone.content.milestone.impl.ChecklistMilestone;
 import com.grindstone.content.milestone.impl.CustomMilestone;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
 
 /**
  * @author Ayman Yassen
@@ -22,7 +17,7 @@ public final class BulkMilestoneChanges {
     private BulkMilestoneChanges() {
     }
 
-    public static Change apply(GrindstoneProfile profile, List<Milestone> selected, BulkMilestoneAction action, MilestoneCategory category, RepeatSchedule schedule, long target, long deadlineAt, boolean reminder, long now) {
+    public static void apply(GrindstoneProfile profile, List<Milestone> selected, BulkMilestoneAction action, MilestoneCategory category, RepeatSchedule schedule, long target, long deadlineAt, boolean reminder, long now) {
         if (selected.isEmpty() || selected.size() > 5000 || new HashSet<>(selected).size() != selected.size() || !profile.getGoals().containsAll(selected) || action == null || now <= 0) {
             throw new IllegalArgumentException("Select existing milestones before applying a bulk action.");
         }
@@ -50,20 +45,6 @@ public final class BulkMilestoneChanges {
                         throw new IllegalArgumentException("Two selected milestones would share the same subject and schedule. No milestones were changed.");
                     }
                 }
-            }
-        }
-        List<Milestone> originalOrder = new ArrayList<>(profile.getGoals());
-        List<GrindstoneProfile.ArchivedHistory> originalArchives = new ArrayList<>(profile.getArchivedHistory());
-        Map<Milestone, MilestoneMetadata> metadata = new LinkedHashMap<>();
-        Map<Milestone, Consumer<Milestone>> restore = new LinkedHashMap<>();
-        Map<RepeatSchedule, Long> periods = new LinkedHashMap<>();
-        for (Milestone goal : selected) {
-            MilestoneMetadata saved = profile.getMetadata(goal).copy();
-            metadata.put(goal, saved);
-            restore.put(goal, profile.snapshotEdit(goal));
-            RepeatSchedule previous = saved.getRecurring().getSchedule();
-            if (previous != RepeatSchedule.NONE) {
-                periods.put(previous, previous.getPeriodStart(now));
             }
         }
         for (Milestone goal : selected) {
@@ -102,44 +83,6 @@ public final class BulkMilestoneChanges {
                     throw new IllegalArgumentException("Unsupported bulk action.");
             }
         }
-        for (Milestone goal : selected) {
-            RepeatSchedule current = profile.getMetadata(goal).getRecurring().getSchedule();
-            if (current != RepeatSchedule.NONE) {
-                periods.put(current, current.getPeriodStart(now));
-            }
-        }
         profile.touch();
-        BooleanSupplier allowed = () -> periods.entrySet().stream().allMatch(entry -> entry.getKey().getPeriodStart(System.currentTimeMillis()) == entry.getValue());
-        Runnable undo = () -> {
-            if (!allowed.getAsBoolean()) {
-                throw new IllegalStateException("A recurring period reset; this bulk edit can no longer be undone.");
-            }
-            if (action == BulkMilestoneAction.DELETE) {
-                for (Milestone goal : selected) {
-                    profile.add(goal, metadata.get(goal));
-                }
-                profile.replace(originalOrder);
-                profile.restoreArchiveSnapshot(originalArchives);
-            } else {
-                restore.forEach((goal, operation) -> operation.accept(goal));
-            }
-            profile.touch();
-        };
-        return new Change(undo, allowed);
-    }
-
-    /**
-     * @author Ayman Yassen
-     * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
-     * @since 10/19/2026
-     */
-    public static final class Change {
-        public final Runnable undo;
-        public final BooleanSupplier allowed;
-
-        private Change(Runnable undo, BooleanSupplier allowed) {
-            this.undo = undo;
-            this.allowed = allowed;
-        }
     }
 }
