@@ -134,21 +134,21 @@ public final class ProfilePersistence {
 
     public CompletableFuture<Void> save(JsonObject snapshot) {
         Directory root = getDirectory();
-        String profileKey = profileKeys.get(snapshot.get("hash").getAsLong());
+        long hash = snapshot.get("hash").getAsLong();
+        String profileKey = profileKeys.get(hash);
         return enqueue(() -> {
             Filepath profiles = root.get().joinSegment("profiles");
-            Filepath pending = profiles.joinSegment(snapshot.get("hash").getAsLong() + ".sync-pending");
-            String text = snapshot.toString();
-            repository.save(profiles, snapshot);
+            Filepath pending = profiles.joinSegment(hash + ".sync-pending");
+            String text = repository.save(profiles, snapshot);
             if (syncedProfiles != null) {
                 JsonObject marker = new JsonObject();
-                marker.add("base", expectedRemote.get(snapshot.get("hash").getAsLong()) == null ? JsonNull.INSTANCE : new JsonPrimitive(expectedRemote.get(snapshot.get("hash").getAsLong())));
+                marker.add("base", expectedRemote.get(hash) == null ? JsonNull.INSTANCE : new JsonPrimitive(expectedRemote.get(hash)));
                 pending.write(marker.toString());
                 requireProfileKey(profileKey);
                 if (text.length() > MAX_SYNC_CHARACTERS) {
                     throw new SyncLimitException();
                 }
-                publish(snapshot.get("hash").getAsLong(), profileKey, text);
+                publish(hash, profileKey, text);
                 pending.deleteIfExists();
             }
             return null;
@@ -223,11 +223,11 @@ public final class ProfilePersistence {
             if (remote != null) {
                 profiles.joinSegment(hash + ".recovery-sync-" + timestamp + ".json").write(remote);
             }
-            repository.save(profiles, captured);
+            String text = repository.save(profiles, captured);
             if (syncedProfiles != null) {
                 expectedRemote.put(hash, remote);
-                if (captured.toString().length() <= MAX_SYNC_CHARACTERS) {
-                    publish(hash, key, captured.toString());
+                if (text.length() <= MAX_SYNC_CHARACTERS) {
+                    publish(hash, key, text);
                 } else {
                     JsonObject marker = new JsonObject();
                     marker.add("base", remote == null ? JsonNull.INSTANCE : new JsonPrimitive(remote));

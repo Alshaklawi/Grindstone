@@ -110,7 +110,7 @@ public final class GrindstoneRepository {
         return text.toString();
     }
 
-    public void save(Filepath directory, JsonObject snapshot) throws IOException {
+    public String save(Filepath directory, JsonObject snapshot) throws IOException {
         long hash = snapshot.get("hash").getAsLong();
         requireHash(hash);
         String text = snapshot.toString();
@@ -149,6 +149,7 @@ public final class GrindstoneRepository {
                 log.debug("Unable to remove an unused Grindstone save temporary file", cleanupFailure);
             }
         }
+        return text;
     }
 
     private static void requireHash(long hash) {
@@ -220,8 +221,9 @@ public final class GrindstoneRepository {
         if (containers.size() > 0) {
             storage.add("containers", containers);
         }
-        if (!profile.getPlayerStorage().getVariableSnapshots().isEmpty()) {
-            storage.add("variables", gson.toJsonTree(profile.getPlayerStorage().getVariableSnapshots()));
+        Map<String, PlayerStorageSnapshot> variables = profile.getPlayerStorage().getVariableSnapshots();
+        if (!variables.isEmpty()) {
+            storage.add("variables", gson.toJsonTree(variables));
         }
         if (storage.size() > 0) {
             json.add("storageSnapshots", storage);

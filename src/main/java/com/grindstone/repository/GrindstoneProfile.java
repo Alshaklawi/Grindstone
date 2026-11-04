@@ -50,6 +50,7 @@ public class GrindstoneProfile {
     }
 
     private final List<Milestone> goals = new ArrayList<>();
+    private final transient List<Milestone> goalsView = Collections.unmodifiableList(goals);
     private final transient Map<Milestone, MilestoneMetadata> metadata = new IdentityHashMap<>();
     private transient long revision;
     @Getter
@@ -161,14 +162,17 @@ public class GrindstoneProfile {
         updateLinkedGoals(client != null && client.getGameState() == GameState.LOGGED_IN && client.getLocalPlayer() != null && client.getAccountHash() == hash);
     }
     public void updateLinkedGoals(boolean loggedIn) {
-        Map<String, Milestone> sources = new HashMap<>();
-        for (Milestone goal : goals) {
-            if (!(goal instanceof LinkedMilestone)) {
-                sources.put(getMetadata(goal).getId(), goal);
-            }
-        }
+        Map<String, Milestone> sources = null;
         for (Milestone goal : goals) {
             if (goal instanceof LinkedMilestone) {
+                if (sources == null) {
+                    sources = new HashMap<>();
+                    for (Milestone source : goals) {
+                        if (!(source instanceof LinkedMilestone)) {
+                            sources.put(getMetadata(source).getId(), source);
+                        }
+                    }
+                }
                 ((LinkedMilestone) goal).update(this, loggedIn, sources);
             }
         }
@@ -388,7 +392,7 @@ public class GrindstoneProfile {
     }
 
     public List<Milestone> getGoals() {
-        return Collections.unmodifiableList(goals);
+        return goalsView;
     }
 
     public void replace(List<Milestone> goals) {

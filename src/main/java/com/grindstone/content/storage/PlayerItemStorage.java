@@ -226,7 +226,14 @@ public final class PlayerItemStorage {
         return result;
     }
     public long getQuantity(int item) {
-        return getBreakdown(item).values().stream().mapToLong(Long::longValue).sum();
+        long quantity = 0;
+        for (Map<Integer, Long> counts : containers.values()) {
+            quantity += counts.getOrDefault(item, 0L);
+        }
+        for (Map<Integer, Long> counts : variables.values()) {
+            quantity += counts.getOrDefault(item, 0L);
+        }
+        return quantity;
     }
     public String describe(int item) {
         String amounts = getBreakdown(item).entrySet().stream()
