@@ -75,6 +75,7 @@ public enum TrackerEntry {
     TOMBSOFAMASCUT_ENTRY("Tombs of Amascut: Entry Mode completions", VarPlayerID.TOTAL_COMPLETED_TOMBSOFAMASCUT_ENTRY, MilestoneCategory.RAIDS),
     TOMBSOFAMASCUT("Tombs of Amascut completions", VarPlayerID.TOTAL_COMPLETED_TOMBSOFAMASCUT, MilestoneCategory.RAIDS),
     TOMBSOFAMASCUT_EXPERT("Tombs of Amascut: Expert Mode completions", VarPlayerID.TOTAL_COMPLETED_TOMBSOFAMASCUT_EXPERT, MilestoneCategory.RAIDS),
+    THE_FRACTURED_ARCHIVE("The Fractured Archive completions", VarPlayerID.TOTAL_COMPLETED_THEFRACTUREDARCHIVE, MilestoneCategory.RAIDS),
     MUSPAH("Phantom Muspah kills", VarPlayerID.TOTAL_MUSPAH_KILLS, MilestoneCategory.BOSSING),
     ARTIO("Artio kills", VarPlayerID.TOTAL_ARTIO_KILLS, MilestoneCategory.BOSSING),
     SPINDEL("Spindel kills", VarPlayerID.TOTAL_SPINDEL_KILLS, MilestoneCategory.BOSSING),
