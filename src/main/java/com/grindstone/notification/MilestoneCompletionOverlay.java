@@ -14,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.LongSupplier;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -21,6 +22,7 @@ import lombok.Value;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
+import net.runelite.client.util.AsyncBufferedImage;
 
 /**
  * @author Ayman Yassen
@@ -120,6 +122,11 @@ public final class MilestoneCompletionOverlay extends Overlay {
         BufferedImage image = new BufferedImage(WIDTH, getHeight(entries.size()), BufferedImage.TYPE_INT_ARGB);
         Popup next = new Popup(entries, routinesOnly, now, Math.max(3, Math.min(15, config.completionPopupSeconds())) * 1_000_000_000L, image, config.completionPopupAnimations(), preview);
         renderContent(next);
+        for (CompletionOverlayEntry entry : entries.subList(0, Math.min(3, entries.size()))) {
+            if (entry.getIcon() instanceof AsyncBufferedImage) {
+                ((AsyncBufferedImage) entry.getIcon()).onLoaded(() -> next.iconDirty.set(true));
+            }
+        }
         return next;
     }
 
@@ -129,6 +136,9 @@ public final class MilestoneCompletionOverlay extends Overlay {
         Popup current = advancePopup(now);
         if (current == null) {
             return null;
+        }
+        if (current.iconDirty.getAndSet(false)) {
+            renderContent(current);
         }
         long age = Math.max(0, now - current.startedAt);
         int height = current.image.getHeight();
@@ -232,6 +242,7 @@ public final class MilestoneCompletionOverlay extends Overlay {
      */
     @Value
     private static class Popup {
+        private final AtomicBoolean iconDirty = new AtomicBoolean();
         List<CompletionOverlayEntry> entries;
         boolean routinesOnly;
         long startedAt;
