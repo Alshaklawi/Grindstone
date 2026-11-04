@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import java.util.function.IntFunction;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.swing.SwingUtilities;
@@ -31,15 +32,19 @@ public final class ItemSearchService implements ItemLookup {
     private static final int RESULT_LIMIT = 50;
     private final Client client;
     private final ClientThread clientThread;
-    private final ItemManager itemManager;
+    private final IntFunction<AsyncBufferedImage> images;
     private final List<Result> index = new ArrayList<>();
     private int nextItemId;
 
     @Inject
     public ItemSearchService(Client client, ClientThread clientThread, ItemManager itemManager) {
+        this(client, clientThread, itemManager::getImage);
+    }
+
+    ItemSearchService(Client client, ClientThread clientThread, IntFunction<AsyncBufferedImage> images) {
         this.client = client;
         this.clientThread = clientThread;
-        this.itemManager = itemManager;
+        this.images = images;
     }
 
     private static void deliver(AtomicBoolean cancelled, Consumer<Response> callback, Response response) {
@@ -63,8 +68,12 @@ public final class ItemSearchService implements ItemLookup {
     }
 
     static boolean matchesName(String name, String query) {
+        return matchesName(name, query.trim().toLowerCase(Locale.ROOT).split("\\s+"));
+    }
+
+    private static boolean matchesName(String name, String[] words) {
         String normalized = name.toLowerCase(Locale.ROOT);
-        for (String word : query.trim().toLowerCase(Locale.ROOT).split("\\s+")) {
+        for (String word : words) {
             if (!normalized.contains(word)) {
                 return false;
             }
@@ -82,7 +91,9 @@ public final class ItemSearchService implements ItemLookup {
         AtomicBoolean cancelled = new AtomicBoolean();
         String query = text == null ? "" : text.trim().toLowerCase(Locale.ROOT);
         List<Result> matches = new ArrayList<>();
-        AtomicBoolean initialized = new AtomicBoolean();
+        String[] words = query.split("\\s+");
+        boolean idQuery = isIdQuery(query);
+        int[] scanned = {0};
         int[] batches = {0};
         clientThread.invokeLater(() -> {
             if (cancelled.get()) {
@@ -92,7 +103,7 @@ public final class ItemSearchService implements ItemLookup {
                 deliver(cancelled, callback, new Response(new ArrayList<>(), "Log in to search client items.", true));
                 return true;
             }
-            if (isIdQuery(query)) {
+            if (idQuery) {
                 int id = parseId(query);
                 if (id <= 0 || id >= client.getItemCount()) {
                     deliver(cancelled, callback, new Response(new ArrayList<>(), "No item exists for that ID.", true));
@@ -110,13 +121,6 @@ public final class ItemSearchService implements ItemLookup {
                 deliver(cancelled, callback, new Response(new ArrayList<>(), "Enter at least 2 letters, or an item ID.", true));
                 return true;
             }
-            if (!initialized.getAndSet(true)) {
-                for (Result result : index) {
-                    if (matchesName(result.name, query)) {
-                        matches.add(result);
-                    }
-                }
-            }
             int end = Math.min(client.getItemCount(), nextItemId + BATCH_SIZE);
             int start = nextItemId;
             long deadline = System.nanoTime() + 3_000_000L;
@@ -124,12 +128,16 @@ public final class ItemSearchService implements ItemLookup {
                 Result result = readItem(nextItemId++, false);
                 if (result != null) {
                     index.add(result);
-                    if (matchesName(result.name, query)) {
-                        matches.add(result);
-                    }
                 }
             }
-            boolean complete = nextItemId >= client.getItemCount();
+            int scanStart = scanned[0];
+            while (scanned[0] < index.size() && (scanned[0] == scanStart || System.nanoTime() < deadline)) {
+                Result result = index.get(scanned[0]++);
+                if (matchesName(result.name, words)) {
+                    matches.add(result);
+                }
+            }
+            boolean complete = nextItemId >= client.getItemCount() && scanned[0] >= index.size();
             if (complete || batches[0]++ % 8 == 0) {
                 List<Result> ordered = new ArrayList<>(matches);
                 ordered.sort(Comparator.comparingInt((Result result) -> rank(result.name, query)) .thenComparing(result -> result.name, String.CASE_INSENSITIVE_ORDER) .thenComparingInt(result -> result.id));
@@ -180,7 +188,7 @@ public final class ItemSearchService implements ItemLookup {
     }
 
     private Result withImage(Result result) {
-        return new Result(result.id, result.name, itemManager.getImage(result.id));
+        return new Result(result.id, result.name, images.apply(result.id));
     }
 
     /**
