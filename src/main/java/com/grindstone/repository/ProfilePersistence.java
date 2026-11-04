@@ -118,7 +118,7 @@ public final class ProfilePersistence {
                     }
                     GrindstoneProfile loaded = repository.readProfile(saved, hash);
                     repository.save(profiles, repository.toJson(loaded));
-                                return loaded;
+                    return loaded;
                 }
             }
             GrindstoneProfile loaded = repository.load(profiles, hash);
