@@ -2,7 +2,6 @@ package com.grindstone.notification;
 
 import com.grindstone.config.GrindstoneConfig;
 import com.grindstone.overlay.OverlayStyle;
-import com.grindstone.ui.Icon;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -13,7 +12,6 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.Value;
-import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -26,7 +24,7 @@ import net.runelite.client.util.Text;
  */
 @Singleton
 public final class MilestoneCompletionOverlay extends Overlay {
-    private static final int WIDTH = 300;
+    private static final int WIDTH = 320;
     private final GrindstoneConfig config;
     private volatile Popup popup;
 
@@ -77,39 +75,32 @@ public final class MilestoneCompletionOverlay extends Overlay {
             return null;
         }
         int shown = Math.min(3, current.titles.size());
-        int height = 100 + shown * 20 + (current.titles.size() > shown ? 18 : 0);
+        int height = 58 + shown * 22 + (current.titles.size() > shown ? 20 : 0);
         float alpha = (float) Math.max(0, Math.min(1, Math.min(age / 160_000_000.0, (current.duration - age) / 450_000_000.0)));
         Graphics2D card = (Graphics2D) graphics.create();
         try {
             card.setComposite(AlphaComposite.SrcOver.derive(alpha));
             OverlayStyle.frame(card, WIDTH, height, OverlayStyle.GREEN);
-            card.drawImage(Icon.MAIN.getImage(), 15, 16, 22, 22, null);
-            card.setFont(FontManager.getRunescapeSmallFont());
+            card.setColor(new Color(98, 205, 174, 25));
+            card.fillRoundRect(12, 12, 28, 28, 8, 8);
+            OverlayStyle.check(card, 21, 22, OverlayStyle.GREEN);
+            card.setFont(OverlayStyle.SMALL_FONT);
             card.setColor(OverlayStyle.MUTED);
-            card.drawString("GRINDSTONE", 46, 23);
-            card.setFont(FontManager.getRunescapeBoldFont());
-            card.setColor(OverlayStyle.GOLD);
-            String heading = current.titles.size() == 1 ? current.routinesOnly ? "Routine complete!" : "Milestone reached!" : current.titles.size() + " targets reached!";
-            card.drawString(heading, 46, 40);
-            card.setColor(new Color(37, 69, 49));
-            card.fillOval(WIDTH - 40, 16, 23, 23);
-            OverlayStyle.check(card, WIDTH - 33, 23, OverlayStyle.GREEN);
-            card.setColor(new Color(80, 83, 88, 100));
-            card.drawLine(14, 49, WIDTH - 18, 49);
-            card.setFont(FontManager.getRunescapeBoldFont());
+            card.drawString("GRINDSTONE", 50, 22);
+            card.setFont(OverlayStyle.HEADING_FONT);
+            card.setColor(OverlayStyle.GREEN);
+            String heading = current.titles.size() == 1 ? current.routinesOnly ? "Routine complete" : "Milestone reached" : current.titles.size() + (current.routinesOnly ? " routines complete" : " milestones reached");
+            card.drawString(heading, 50, 37);
+            card.setFont(OverlayStyle.TITLE_FONT);
             card.setColor(OverlayStyle.TEXT);
             for (int index = 0; index < shown; index++) {
-                card.drawString(OverlayStyle.fit(current.titles.get(index), card.getFontMetrics(), WIDTH - 32), 15, 68 + index * 20);
+                card.drawString(OverlayStyle.fit(current.titles.get(index), card.getFontMetrics(), WIDTH - 24), 12, 68 + index * 22);
             }
-            card.setFont(FontManager.getRunescapeSmallFont());
+            card.setFont(OverlayStyle.SMALL_FONT);
             if (current.titles.size() > shown) {
                 card.setColor(OverlayStyle.MUTED);
-                card.drawString("And " + (current.titles.size() - shown) + " more", 15, 68 + shown * 20);
+                card.drawString("And " + (current.titles.size() - shown) + " more in the sidebar", 12, 68 + shown * 22);
             }
-            card.setColor(OverlayStyle.GREEN);
-            card.drawString("Complete", 15, height - 29);
-            card.drawString("100%", WIDTH - 18 - card.getFontMetrics().stringWidth("100%"), height - 29);
-            OverlayStyle.progress(card, 15, height - 19, WIDTH - 34, 1, OverlayStyle.GREEN);
         } finally {
             card.dispose();
         }
