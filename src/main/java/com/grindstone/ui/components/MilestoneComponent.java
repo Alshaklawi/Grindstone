@@ -33,6 +33,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JTextArea;
 import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import lombok.Getter;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.util.AsyncBufferedImage;
@@ -47,6 +48,7 @@ public class MilestoneComponent extends JPanel {
     private static final Color CARD_COLOR = ColorScheme.DARKER_GRAY_COLOR;
     private static final Color TEXT_COLOR = ColorScheme.TEXT_COLOR;
     private static final Color MUTED_COLOR = ColorScheme.LIGHT_GRAY_COLOR;
+    private static final int ICON_SIZE = 16;
     private static final ImageIcon PIN_ICON = createPinIcon(false);
     private static final ImageIcon PINNED_ICON = createPinIcon(true);
     private static final ImageIcon COLLAPSED_ICON = new ImageIcon(ImageUtil.loadImageResource(MilestoneComponent.class, "/util/arrow_right.png"));
@@ -161,7 +163,7 @@ public class MilestoneComponent extends JPanel {
         achievementNoteLabel.setAlignmentX(LEFT_ALIGNMENT);
 
         iconLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        iconLabel.setPreferredSize(new Dimension(24, 24));
+        iconLabel.setPreferredSize(new Dimension(ICON_SIZE, ICON_SIZE));
 
         expandButton.putClientProperty("JButton.buttonType", "toolBarButton");
         expandButton.setToolTipText("Collapse milestone details");
@@ -408,14 +410,29 @@ public class MilestoneComponent extends JPanel {
         }
 
         this.icon = icon;
-        iconLabel.setIcon(icon == null ? null : new ImageIcon(icon));
-        iconLabel.setPreferredSize(new Dimension(icon == null ? 24 : Math.max(24, icon.getWidth()), icon == null ? 24 : Math.max(24, icon.getHeight())));
+        updateIconImage();
         if (icon instanceof AsyncBufferedImage) {
-            ((AsyncBufferedImage) icon).addTo(iconLabel);
+            ((AsyncBufferedImage) icon).onLoaded(() -> SwingUtilities.invokeLater(() -> {
+                if (this.icon == icon) {
+                    updateIconImage();
+                    iconLabel.repaint();
+                }
+            }));
         }
         iconLabel.setVisible(iconVisible && icon != null);
         revalidate();
         repaint();
+    }
+
+    private void updateIconImage() {
+        if (icon == null) {
+            iconLabel.setIcon(null);
+            return;
+        }
+        double scale = Math.min(1, ICON_SIZE / (double) Math.max(icon.getWidth(), icon.getHeight()));
+        int width = Math.max(1, (int) Math.round(icon.getWidth() * scale));
+        int height = Math.max(1, (int) Math.round(icon.getHeight() * scale));
+        iconLabel.setIcon(new ImageIcon(ImageUtil.resizeImage(icon, width, height)));
     }
 
     public void setProgress(long current, long maximum, String text) {
@@ -489,7 +506,7 @@ public class MilestoneComponent extends JPanel {
         titleLabel.setText(title);
         titleLabel.setToolTipText(title);
         iconLabel.setToolTipText(title);
-        iconLabel.setIcon(icon == null ? null : new ImageIcon(icon));
+        updateIconImage();
         iconLabel.setVisible(iconVisible && icon != null);
         updateProgress();
         content.setVisible(expanded);
