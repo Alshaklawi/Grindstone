@@ -821,7 +821,7 @@ public class GrindstonePanel extends PluginPanel {
                     MilestoneView cached = cardCache.get(goal, key);
                     if (cached != null && tracking != TrackingState.WAITING && goal.getProgressMaximum() > 0) {
                         if (captureOverlay) {
-                            overlayEntries.add(new ProgressOverlayEntry(title, repeating ? recurring.getSchedule() : RepeatSchedule.NONE, repeating ? recurring.getProgress() : goal.getProgressCurrent(), repeating ? recurring.getTarget() : goal.getProgressMaximum(), isComplete(repeating ? recurring.getStatus() : goal.getStatus()), true, metadata.isPinned()));
+                            overlayEntries.add(new ProgressOverlayEntry(title, repeating ? recurring.getSchedule() : RepeatSchedule.NONE, repeating ? recurring.getProgress() : goal.getProgressCurrent(), repeating ? recurring.getTarget() : goal.getProgressMaximum(), isComplete(repeating ? recurring.getStatus() : goal.getStatus()), true, metadata.isPinned(), goal.getIcon(client)));
                         }
                         preparedViews.add(() -> cached);
                         continue;
@@ -852,7 +852,7 @@ public class GrindstonePanel extends PluginPanel {
                     long shownMaximum = progressMaximum;
                     MilestoneStatus shownStatus = status;
                     if (captureOverlay) {
-                        overlayEntries.add(new ProgressOverlayEntry(title, repeating ? recurring.getSchedule() : RepeatSchedule.NONE, shownCurrent, shownMaximum, isComplete(shownStatus), tracking != TrackingState.WAITING, metadata.isPinned()));
+                        overlayEntries.add(new ProgressOverlayEntry(title, repeating ? recurring.getSchedule() : RepeatSchedule.NONE, shownCurrent, shownMaximum, isComplete(shownStatus), tracking != TrackingState.WAITING, metadata.isPinned(), goal.getIcon(client)));
                     }
                     List<String> steps = goal instanceof ChecklistMilestone ? new ArrayList<>(((ChecklistMilestone) goal).getSteps()) : new ArrayList<>();
                     boolean[] checks = goal instanceof ChecklistMilestone ? ((ChecklistMilestone) goal).getChecks().clone() : new boolean[0];

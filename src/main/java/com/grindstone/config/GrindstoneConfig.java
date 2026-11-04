@@ -160,6 +160,16 @@ public interface GrindstoneConfig extends Config {
         return 240;
     }
 
+    @ConfigItem(keyName = "progressOverlayTheme", name = "Style", description = "Choose Classic, Slate, Guild or Focus for the progress tracker.", section = OVERLAY_SECTION, position = 6)
+    default OverlayTheme progressOverlayTheme() {
+        return OverlayTheme.CLASSIC;
+    }
+
+    @ConfigItem(keyName = "completionPopupTheme", name = "Popup style", description = "Choose the completion popup's style independently of the progress tracker.", section = NOTIFICATIONS_SECTION, position = 17)
+    default OverlayTheme completionPopupTheme() {
+        return OverlayTheme.CLASSIC;
+    }
+
     @ConfigSection(name = "Notifications", description = "Control completion messages, colours and reminders for unfinished routines.", position = 4)
     String notificationsSection = NOTIFICATIONS_SECTION;
 

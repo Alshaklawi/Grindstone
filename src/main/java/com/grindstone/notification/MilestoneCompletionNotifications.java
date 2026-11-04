@@ -59,7 +59,7 @@ public final class MilestoneCompletionNotifications {
         }
         reminders.observe(active);
         Set<String> ids = new HashSet<>();
-        List<String> completed = new ArrayList<>();
+        List<CompletionOverlayEntry> completed = new ArrayList<>();
         List<String> details = new ArrayList<>();
         List<String> headings = new ArrayList<>();
         int routineCompletions = 0;
@@ -78,9 +78,10 @@ public final class MilestoneCompletionNotifications {
             if (transitions.observe(id, cycle, complete)) {
                 String title = NotificationMessages.formatTitle(goal.getTitle(client));
                 String label = (repeating ? recurring.getSchedule() + ": " : "") + title;
-                completed.add(label);
+                String progress = config.completionNumbers() ? NotificationMessages.formatProgress(goal, repeating ? recurring.getProgress() : goal.getProgressCurrent(), target) : "";
+                completed.add(new CompletionOverlayEntry(label, progress.isEmpty() ? "" : progress.substring(2, progress.length() - 1), config.completionPopup() ? goal.getIcon(client) : null));
                 headings.add(repeating ? "Routine complete" : "Milestone complete");
-                details.add(label + (config.completionNumbers() ? NotificationMessages.formatProgress(goal, repeating ? recurring.getProgress() : goal.getProgressCurrent(), target) : ""));
+                details.add(label + progress);
                 if (repeating) {
                     routineCompletions++;
                 }

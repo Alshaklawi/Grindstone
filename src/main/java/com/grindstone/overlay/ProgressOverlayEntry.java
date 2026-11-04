@@ -1,6 +1,7 @@
 package com.grindstone.overlay;
 
 import com.grindstone.repository.RepeatSchedule;
+import java.awt.image.BufferedImage;
 import java.util.Objects;
 import lombok.Value;
 import net.runelite.client.util.Text;
@@ -19,8 +20,9 @@ public class ProgressOverlayEntry {
     boolean complete;
     boolean ready;
     boolean pinned;
+    BufferedImage icon;
 
-    public ProgressOverlayEntry(String title, RepeatSchedule schedule, long current, long target, boolean complete, boolean ready, boolean pinned) {
+    public ProgressOverlayEntry(String title, RepeatSchedule schedule, long current, long target, boolean complete, boolean ready, boolean pinned, BufferedImage icon) {
         this.title = Text.removeTags(Objects.requireNonNull(title)).replaceAll("[\\r\\n\\t]", " ").trim();
         this.schedule = Objects.requireNonNull(schedule);
         this.current = Math.max(0, current);
@@ -28,5 +30,6 @@ public class ProgressOverlayEntry {
         this.complete = complete;
         this.ready = ready;
         this.pinned = pinned;
+        this.icon = icon;
     }
 }

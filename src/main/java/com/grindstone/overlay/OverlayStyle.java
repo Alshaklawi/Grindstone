@@ -1,5 +1,7 @@
 package com.grindstone.overlay;
 
+import com.grindstone.config.OverlayTheme;
+import com.grindstone.ui.Icon;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
@@ -8,6 +10,8 @@ import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Stroke;
+import java.awt.image.BufferedImage;
+import lombok.Value;
 
 /**
  * @author Ayman Yassen
@@ -27,8 +31,89 @@ public final class OverlayStyle {
     public static final Font TITLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 12);
     public static final Font BODY_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 11);
     public static final Font SMALL_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 10);
+    public static final Font METRIC_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 18);
+    public static final Font DISPLAY_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 21);
+    public static final Font GUILD_HEADING_FONT = new Font(Font.SERIF, Font.BOLD, 18);
+    public static final Font GUILD_TITLE_FONT = new Font(Font.SERIF, Font.BOLD, 16);
+    private static final Palette CLASSIC = new Palette(GOLD, GREEN, TEXT, MUTED, BACKGROUND, SURFACE, TRACK, BORDER);
+    private static final Palette SLATE = new Palette(new Color(0x79b7cf), new Color(0x81c8b3), new Color(0xedf2f8), new Color(0xa2aebb), new Color(0x1e252f), new Color(0x2a323e), new Color(0x414b59), new Color(0x414b58));
+    private static final Palette GUILD = new Palette(new Color(0xd7b374), new Color(0x9abd8c), new Color(0xf2eadb), new Color(0xb8ad97), new Color(0x201f1c), new Color(0x363025), new Color(0x39372f), new Color(0x786141));
+    private static final Palette FOCUS = new Palette(new Color(0xa3c4a2), new Color(0xa3c4a2), new Color(0xedf1ed), new Color(0xa9b7af), new Color(0x202823), new Color(0x202823), new Color(0x3a453e), new Color(0x3a453e));
 
     private OverlayStyle() {
+    }
+
+    public static Palette getPalette(OverlayTheme theme) {
+        switch (theme) {
+            case SLATE:
+                return SLATE;
+            case GUILD:
+                return GUILD;
+            case FOCUS:
+                return FOCUS;
+            default:
+                return CLASSIC;
+        }
+    }
+
+    public static int getHeaderHeight(OverlayTheme theme) {
+        switch (theme) {
+            case SLATE:
+                return 68;
+            case GUILD:
+                return 70;
+            case FOCUS:
+                return 30;
+            default:
+                return 60;
+        }
+    }
+
+    public static int getRowHeight(OverlayTheme theme, boolean bars) {
+        switch (theme) {
+            case SLATE:
+                return bars ? 76 : 65;
+            case GUILD:
+                return bars ? 64 : 54;
+            case FOCUS:
+                return bars ? 42 : 38;
+            default:
+                return bars ? 50 : 42;
+        }
+    }
+
+    public static void panel(Graphics2D graphics, OverlayTheme theme, int width, int height, boolean completion) {
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        Palette palette = getPalette(theme);
+        if (theme == OverlayTheme.CLASSIC) {
+            frame(graphics, width, height, completion ? GREEN : GOLD);
+        } else if (theme == OverlayTheme.GUILD) {
+            graphics.setPaint(new GradientPaint(0, 0, new Color(completion ? 0x3d3222 : 0x302c25), width, height, palette.background));
+            graphics.fillRoundRect(0, 0, width, height, 10, 10);
+            graphics.setColor(palette.border);
+            graphics.drawRoundRect(0, 0, width - 1, height - 1, 10, 10);
+            graphics.setColor(new Color(0x494030));
+            graphics.drawRoundRect(3, 3, width - 7, height - 7, 5, 5);
+        } else if (theme == OverlayTheme.SLATE) {
+            graphics.setPaint(new GradientPaint(0, 0, completion ? new Color(0x233e3b) : palette.background, width, height, new Color(0x202832)));
+            graphics.fillRoundRect(0, 0, width, height, 24, 24);
+            graphics.setColor(completion ? new Color(0x465b61) : palette.border);
+            graphics.drawRoundRect(0, 0, width - 1, height - 1, 24, 24);
+        } else if (completion) {
+            graphics.setColor(palette.background);
+            graphics.fillRoundRect(0, 0, width, height, 6, 6);
+            graphics.setColor(palette.accent);
+            graphics.fillRoundRect(0, 0, 3, height, 3, 3);
+        }
+    }
+
+    public static void icon(Graphics2D graphics, BufferedImage image, int x, int y, int size) {
+        BufferedImage source = image == null ? Icon.MAIN.getImage() : image;
+        double scale = Math.min(1, size / (double) Math.max(source.getWidth(), source.getHeight()));
+        int width = Math.max(1, (int) Math.round(source.getWidth() * scale));
+        int height = Math.max(1, (int) Math.round(source.getHeight() * scale));
+        graphics.drawImage(source, x + (size - width) / 2, y + (size - height) / 2, width, height, null);
     }
 
     public static void frame(Graphics2D graphics, int width, int height, Color accent) {
@@ -45,12 +130,16 @@ public final class OverlayStyle {
     }
 
     public static void progress(Graphics2D graphics, int x, int y, int width, double fraction, Color color) {
-        graphics.setColor(TRACK);
-        graphics.fillRoundRect(x, y, width, 5, 5, 5);
+        progress(graphics, x, y, width, 5, fraction, color, TRACK);
+    }
+
+    public static void progress(Graphics2D graphics, int x, int y, int width, int height, double fraction, Color color, Color track) {
+        graphics.setColor(track);
+        graphics.fillRoundRect(x, y, width, height, height, height);
         int filled = (int) Math.round(width * Math.max(0, Math.min(1, fraction)));
         if (filled > 0) {
             graphics.setPaint(new GradientPaint(x, y, color.darker(), x + width, y, color));
-            graphics.fillRoundRect(x, y, filled, 5, 5, 5);
+            graphics.fillRoundRect(x, y, filled, height, height, height);
         }
     }
 
@@ -96,5 +185,22 @@ public final class OverlayStyle {
             return days + "d " + hours + "h";
         }
         return hours > 0 ? hours + "h " + minutes + "m" : minutes > 0 ? minutes + "m" : seconds + "s";
+    }
+
+    /**
+     * @author Ayman Yassen
+     * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
+     * @since 11/04/2026
+     */
+    @Value
+    public static class Palette {
+        Color accent;
+        Color success;
+        Color text;
+        Color muted;
+        Color background;
+        Color surface;
+        Color track;
+        Color border;
     }
 }
