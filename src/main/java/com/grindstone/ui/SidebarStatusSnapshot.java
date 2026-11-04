@@ -60,26 +60,24 @@ final class SidebarStatusSnapshot {
     private static void prepareSnapshotStatuses(Client client, GrindstoneProfile active, Map<String, String> statuses, Map<String, String> tips, Set<String> missing) {
         Map<PlayerStorageSource, Instant> seen = active == null ? Collections.emptyMap() : active.getPlayerStorage().getLastSeen();
         DateTimeFormatter time = DateTimeFormatter.ofPattern("MMM d, HH:mm").withZone(ZoneId.systemDefault());
-        for (PlayerStorageSource source : new PlayerStorageSource[]{PlayerStorageSource.INVENTORY, PlayerStorageSource.EQUIPMENT, PlayerStorageSource.BANK}) {
-            Instant captured = seen.get(source);
-            statuses.put(source.toString(), captured == null ? "Not loaded" : time.format(captured));
-            if (captured == null) {
-                missing.add(source.toString());
-            }
-            String refresh = source == PlayerStorageSource.BANK ? "Open your bank to refresh its contents." : "Updated automatically while logged in.";
-            tips.put(source.toString(), "<html>" + refresh + "<br>" + (captured == null ? "No snapshot saved yet." : "Last updated " + time.format(captured) + (active.getPlayerStorage().isLoadedThisSession(source) ? " this login." : ". Saved from an earlier session; reopen to refresh.")) + "<br>Only this character's known contents are counted.</html>");
+        Instant bankCaptured = seen.get(PlayerStorageSource.BANK);
+        statuses.put("Bank", bankCaptured == null ? "Not loaded" : time.format(bankCaptured));
+        if (bankCaptured == null) {
+            missing.add("Bank");
         }
+        tips.put("Bank", "<html>Open your bank to refresh its contents.<br>" + (bankCaptured == null ? "No snapshot saved yet." : "Last updated " + time.format(bankCaptured) + (active.getPlayerStorage().isLoadedThisSession(PlayerStorageSource.BANK) ? " this login." : ". Saved from an earlier session; reopen to refresh.")) + "<br>Only this character's known contents are counted.</html>");
         int known = active == null ? 0 : active.getCollectionLogHistory().getKnownUnlockCount();
         boolean live = active != null && client.getGameState() == GameState.LOGGED_IN && client.getAccountHash() == active.getHash();
         int total = live && client.getVarpValue(VarPlayerID.COLLECTION_COUNT_MAX) > 0 ? client.getVarpValue(VarPlayerID.COLLECTION_COUNT) : -1;
         boolean complete = active != null && active.getCollectionLogHistory().hasSnapshot();
         boolean current = complete && (total < 0 || known == total);
-        String logStatus = total >= 0 && known > total ? known + " known · mismatch" : current ? time.format(Instant.ofEpochMilli(active.getCollectionLogHistory().getSnapshotAt())) : known > 0 || total >= 0 ? known + (total < 0 ? " known" : " / " + total) + " · partial" : "Not loaded";
+        DateTimeFormatter verificationTime = DateTimeFormatter.ofPattern("MMM d, HH:mm:ss").withZone(ZoneId.systemDefault());
+        String logStatus = total >= 0 && known > total ? known + " known · mismatch" : current ? verificationTime.format(Instant.ofEpochMilli(active.getCollectionLogHistory().getSnapshotAt())) : known > 0 || total >= 0 ? known + (total < 0 ? " known" : " / " + total) + " · partial" : "Not loaded";
         statuses.put("Collection log", logStatus);
         if (!current) {
             missing.add("Collection log");
         }
-        String captured = complete ? "<br>Last full capture: " + time.format(Instant.ofEpochMilli(active.getCollectionLogHistory().getSnapshotAt())) + "." : "<br>No full snapshot yet; collection milestones remain unavailable.";
+        String captured = complete ? "<br>Last verified: " + verificationTime.format(Instant.ofEpochMilli(active.getCollectionLogHistory().getSnapshotAt())) + "." : "<br>No full snapshot yet; collection milestones remain unavailable.";
         tips.put("Collection log", "<html>Open your in-game collection log to capture available unlocks.<br>" + (current ? "Full snapshot verified: " + known + " unlocks." : "Incomplete data: " + known + " known unlocks" + (total < 0 ? "." : " out of " + total + ".") + "<br>The game may not expose every unlock just by opening the log.<br>Its Search interface can expose further collection data.") + captured + "<br>Reopen after playing on another device.</html>");
         int loaded = 0;
         Instant latestOther = null;

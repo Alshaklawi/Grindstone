@@ -48,7 +48,7 @@ public final class CollectionLogHistory {
     }
 
     public boolean confirmLoadedSnapshot(int total, int maximum, long now) {
-        if (maximum <= 0 || total < 0 || total > maximum || firstSeen.size() != total || hasSnapshot() && snapshotCount == total) {
+        if (maximum <= 0 || total < 0 || total > maximum || now <= 0 || firstSeen.size() != total || hasSnapshot() && snapshotCount == total && snapshotAt == now) {
             return false;
         }
         restoreSnapshot(now, total);

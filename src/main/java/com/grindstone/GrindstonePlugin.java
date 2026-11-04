@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.inject.Provides;
 import com.grindstone.config.GrindstoneConfig;
 import com.grindstone.content.collectionlog.CollectionLogPages;
+import com.grindstone.content.collectionlog.CollectionLogHistory;
 import com.grindstone.content.combatachievement.CombatAchievementData;
 import com.grindstone.content.combatachievement.CombatAchievementTier;
 import com.grindstone.content.diary.AchievementDiaryArea;
@@ -59,6 +60,7 @@ import javax.inject.Provider;
 import javax.swing.SwingUtilities;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.ScriptID;
 import net.runelite.api.GameState;
 import net.runelite.api.ItemContainer;
 import net.runelite.api.MenuAction;
@@ -706,7 +708,6 @@ public class GrindstonePlugin extends Plugin {
         profile.getCollectionLogHistory().observe(container);
         if (container.getId() == InventoryID.COLLECTION_TRANSMIT) {
             collectionCaptureDirty = true;
-            captureLoadedCollectionSnapshot();
         }
         if (profile.getPlayerStorage().observe(client, container)) {
             updates.markStorageChanged();
@@ -767,14 +768,8 @@ public class GrindstonePlugin extends Plugin {
 
     @Subscribe
     public void onScriptPostFired(ScriptPostFired event) {
-        if (hasActivePlayerProfile() && event.getScriptId() == 7797) {
-            clientThread.invokeLater(() -> {
-                if (hasActivePlayerProfile()) {
-                    CollectionLogPages.refreshReplacements(client);
-                    observeLoadedCollectionSnapshot();
-                    collectionCaptureDirty = true;
-                }
-            });
+        if (hasActivePlayerProfile() && (event.getScriptId() == ScriptID.COLLECTION_DRAW_LIST || event.getScriptId() == 7797)) {
+            collectionCaptureDirty = true;
         }
     }
 
@@ -802,10 +797,14 @@ public class GrindstonePlugin extends Plugin {
         if (completeCatalog) {
             profile.getCollectionLogHistory().reconcileItems(validItems);
         }
-        captureLoadedCollectionSnapshot();
+        captureLoadedCollectionSnapshot(true);
     }
 
     private void captureLoadedCollectionSnapshot() {
+        captureLoadedCollectionSnapshot(false);
+    }
+
+    private void captureLoadedCollectionSnapshot(boolean refreshVerification) {
         if (profile == null) {
             return;
         }
@@ -815,7 +814,11 @@ public class GrindstonePlugin extends Plugin {
         }
         int total = client.getVarpValue(VarPlayerID.COLLECTION_COUNT);
         int maximum = client.getVarpValue(VarPlayerID.COLLECTION_COUNT_MAX);
-        if (profile.getCollectionLogHistory().confirmLoadedSnapshot(total, maximum, System.currentTimeMillis())) {
+        CollectionLogHistory history = profile.getCollectionLogHistory();
+        if (!refreshVerification && history.hasSnapshot() && history.getSnapshotCount() == total) {
+            return;
+        }
+        if (history.confirmLoadedSnapshot(total, maximum, System.currentTimeMillis())) {
             profile.touch();
             panel.refreshAll();
             saveProfile();

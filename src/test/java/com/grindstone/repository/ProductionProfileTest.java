@@ -26,4 +26,20 @@ public class ProductionProfileTest {
         assertEquals(10, restored.getGoals().get(0).getProgressMaximum());
         assertTrue(restored.getMetadata(restored.getGoals().get(0)).isPinned());
     }
+
+    @Test
+    public void unchangedCollectionLogCanBeReverifiedAfterReloadWithoutAcceptingPartialData() {
+        GrindstoneProfile profile = new GrindstoneProfile(42);
+        profile.getCollectionLogHistory().record(4151, 1_000);
+        assertTrue(profile.getCollectionLogHistory().confirmLoadedSnapshot(1, 2_000, 2_000));
+
+        GrindstoneProfile restored = TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile));
+        assertTrue(restored.getCollectionLogHistory().confirmLoadedSnapshot(1, 2_000, 3_000));
+        assertEquals(3_000, restored.getCollectionLogHistory().getSnapshotAt());
+        assertEquals(Long.valueOf(1_000), restored.getCollectionLogHistory().getFirstSeenAt(4151));
+
+        assertFalse(restored.getCollectionLogHistory().confirmLoadedSnapshot(2, 2_000, 4_000));
+        assertEquals(3_000, restored.getCollectionLogHistory().getSnapshotAt());
+        assertEquals(1, restored.getCollectionLogHistory().getKnownUnlockCount());
+    }
 }
