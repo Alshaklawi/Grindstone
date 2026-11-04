@@ -244,6 +244,10 @@ public class GrindstonePlugin extends Plugin {
 
         setNavigationVisible(true);
 
+        if ("completionPopup".equals(key)) {
+            completionOverlay.clear();
+        }
+
         if (client.getGameState() == GameState.LOGGED_IN && (profile == null || "enabled".equals(key))) {
             loadProfile();
         } else {
