@@ -152,6 +152,10 @@ public final class GrindstoneProgressOverlay extends Overlay {
     }
 
     private static void renderHeader(Graphics2D graphics, Snapshot current, OverlayStyle.Palette palette) {
+        if (current.theme == OverlayTheme.GUILD) {
+            renderGuildHeader(graphics, current, palette);
+            return;
+        }
         if (current.theme == OverlayTheme.CLASSIC) {
             OverlayStyle.icon(graphics, Icon.MAIN.getImage(), 12, 13, 22);
             graphics.setFont(OverlayStyle.HEADING_FONT);
@@ -162,31 +166,37 @@ public final class GrindstoneProgressOverlay extends Overlay {
             graphics.drawString(current.view == ProgressOverlayView.MILESTONES ? current.total + " active" : current.completed + " of " + current.total + " complete", 12, 43);
             return;
         }
-        boolean guild = current.theme == OverlayTheme.GUILD;
-        if (guild) {
-            graphics.setColor(palette.getSurface());
-            graphics.fillRoundRect(4, 4, current.width - 8, 58, 6, 6);
-            graphics.setColor(palette.getBorder());
-            graphics.drawLine(4, 63, current.width - 5, 63);
-            graphics.drawRoundRect(12, 15, 26, 32, 5, 5);
-        }
-        OverlayStyle.icon(graphics, Icon.MAIN.getImage(), guild ? 15 : 13, 22, 22);
-        int titleX = guild ? 48 : 43;
+        OverlayStyle.icon(graphics, Icon.MAIN.getImage(), 13, 22, 22);
+        int titleX = 43;
         graphics.setFont(OverlayStyle.SMALL_FONT);
-        graphics.setColor(guild ? palette.getAccent() : palette.getMuted());
+        graphics.setColor(palette.getMuted());
         graphics.drawString("GRINDSTONE", titleX, 23);
         String tally = current.view == ProgressOverlayView.MILESTONES ? Integer.toString(current.total) : current.completed + " / " + current.total;
         int tallyWidth = graphics.getFontMetrics().stringWidth(tally) + 16;
         int tallyX = current.width - tallyWidth - 12;
-        if (!guild) {
-            graphics.setColor(new Color(0x293e3b));
-            graphics.fillRoundRect(tallyX, 30, tallyWidth, 22, 22, 22);
-        }
+        graphics.setColor(new Color(0x293e3b));
+        graphics.fillRoundRect(tallyX, 30, tallyWidth, 22, 22, 22);
         graphics.setColor(palette.getSuccess());
         graphics.drawString(tally, tallyX + 8, 45);
-        graphics.setFont(guild ? OverlayStyle.GUILD_HEADING_FONT : OverlayStyle.HEADING_FONT);
-        graphics.setColor(guild ? palette.getAccent() : palette.getText());
+        graphics.setFont(OverlayStyle.HEADING_FONT);
+        graphics.setColor(palette.getText());
         graphics.drawString(OverlayStyle.fit(current.view.getTitle(), graphics.getFontMetrics(), tallyX - titleX - 6), titleX, 44);
+    }
+
+    private static void renderGuildHeader(Graphics2D graphics, Snapshot current, OverlayStyle.Palette palette) {
+        graphics.setColor(palette.getSurface());
+        graphics.fillRoundRect(4, 4, current.width - 8, 30, 6, 6);
+        graphics.setColor(palette.getBorder());
+        graphics.drawLine(4, 35, current.width - 5, 35);
+        OverlayStyle.icon(graphics, Icon.MAIN.getImage(), 12, 10, 18);
+        String tally = current.view == ProgressOverlayView.MILESTONES ? Integer.toString(current.total) : current.completed + " / " + current.total;
+        graphics.setFont(OverlayStyle.SMALL_FONT);
+        int tallyWidth = graphics.getFontMetrics().stringWidth(tally);
+        graphics.setColor(palette.getSuccess());
+        graphics.drawString(tally, current.width - 12 - tallyWidth, 24);
+        graphics.setFont(OverlayStyle.GUILD_HEADING_FONT);
+        graphics.setColor(palette.getAccent());
+        graphics.drawString(OverlayStyle.fit(current.view.getTitle(), graphics.getFontMetrics(), current.width - tallyWidth - 62), 38, 24);
     }
 
     private static void renderEntry(Graphics2D graphics, Row row, int width, int y, boolean bars) {

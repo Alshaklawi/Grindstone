@@ -33,7 +33,7 @@ public final class OverlayStyle {
     public static final Font SMALL_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 10);
     public static final Font METRIC_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 18);
     public static final Font DISPLAY_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 21);
-    public static final Font GUILD_HEADING_FONT = new Font(Font.SERIF, Font.BOLD, 18);
+    public static final Font GUILD_HEADING_FONT = new Font(Font.SERIF, Font.BOLD, 14);
     public static final Font GUILD_TITLE_FONT = new Font(Font.SERIF, Font.BOLD, 16);
     private static final Palette CLASSIC = new Palette(GOLD, GREEN, TEXT, MUTED, BACKGROUND, SURFACE, TRACK, BORDER);
     private static final Palette SLATE = new Palette(new Color(0x79b7cf), new Color(0x81c8b3), new Color(0xedf2f8), new Color(0xa2aebb), new Color(0x1e252f), new Color(0x2a323e), new Color(0x414b59), new Color(0x414b58));
@@ -58,7 +58,7 @@ public final class OverlayStyle {
             case SLATE:
                 return 68;
             case GUILD:
-                return 70;
+                return 40;
             default:
                 return 60;
         }
