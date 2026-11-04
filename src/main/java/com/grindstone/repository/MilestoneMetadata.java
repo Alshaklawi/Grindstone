@@ -8,6 +8,7 @@ import com.grindstone.content.milestone.impl.experience.SessionExperienceMilesto
 import com.grindstone.content.milestone.impl.item.PossessedItemMilestone;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,6 +24,8 @@ import lombok.Setter;
  * @since 10/18/2026
  */
 public final class MilestoneMetadata {
+    public static final long MAX_DEADLINE_AT = 253_370_764_800_000L;
+    private static final DateTimeFormatter DEADLINE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'UTC'", Locale.ROOT).withZone(ZoneOffset.UTC);
     @Getter
     private final String id;
     @Getter
@@ -84,7 +87,7 @@ public final class MilestoneMetadata {
         this.collapsed = collapsed;
     }
     public void setDeadline(long deadlineAt, boolean reminder) {
-        if (deadlineAt < 0 || deadlineAt > 253_370_764_800_000L) {
+        if (deadlineAt < 0 || deadlineAt > MAX_DEADLINE_AT) {
             throw new IllegalArgumentException("Invalid personal deadline.");
         }
         this.deadlineAt = deadlineAt;
@@ -94,8 +97,7 @@ public final class MilestoneMetadata {
         if (deadlineAt == 0) {
             return "";
         }
-        String date = Instant.ofEpochMilli(deadlineAt - 1).atZone(ZoneOffset.UTC).toLocalDate().toString();
-        return (now >= deadlineAt ? "Past due · " : "Due · ") + date + " UTC";
+        return (now >= deadlineAt ? "Past due · " : "Due · ") + DEADLINE_TIME.format(Instant.ofEpochMilli(deadlineAt));
     }
     private final List<Completion> completions = new ArrayList<>();
     public MilestoneMetadata() {
