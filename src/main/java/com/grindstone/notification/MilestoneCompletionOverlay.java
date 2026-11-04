@@ -3,6 +3,7 @@ package com.grindstone.notification;
 import com.grindstone.config.GrindstoneConfig;
 import com.grindstone.config.OverlayTheme;
 import com.grindstone.overlay.OverlayStyle;
+import com.grindstone.ui.Icon;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -80,6 +81,15 @@ public final class MilestoneCompletionOverlay extends Overlay {
         }
     }
 
+    public synchronized void preview(OverlayTheme theme) {
+        if (!config.enabled()) {
+            return;
+        }
+        clear();
+        List<CompletionOverlayEntry> entries = List.of(new CompletionOverlayEntry("preview", "The Fractured Archive", "5 raids completed", Icon.RAIDS.getImage()));
+        popup = createPopup(entries, false, clock.getAsLong(), theme, true);
+    }
+
     public synchronized void clear() {
         popup = null;
         pending.clear();
@@ -87,7 +97,7 @@ public final class MilestoneCompletionOverlay extends Overlay {
     }
 
     private synchronized Popup advancePopup(long now) {
-        if (!config.enabled() || !config.completionPopup()) {
+        if (!config.enabled() || (!config.completionPopup() && (popup == null || !popup.preview))) {
             clear();
             return null;
         }
@@ -102,10 +112,16 @@ public final class MilestoneCompletionOverlay extends Overlay {
 
     private void startNext(long now) {
         OverlayTheme theme = config.completionPopupTheme();
-        BufferedImage image = new BufferedImage(WIDTH, getHeight(theme, pending.size()), BufferedImage.TYPE_INT_ARGB);
-        popup = new Popup(List.copyOf(pending.values()), pendingRoutinesOnly, now, Math.max(3, Math.min(15, config.completionPopupSeconds())) * 1_000_000_000L, theme, image);
+        popup = createPopup(List.copyOf(pending.values()), pendingRoutinesOnly, now, theme, false);
         pending.clear();
         pendingRoutinesOnly = true;
+    }
+
+    private Popup createPopup(List<CompletionOverlayEntry> entries, boolean routinesOnly, long now, OverlayTheme theme, boolean preview) {
+        BufferedImage image = new BufferedImage(WIDTH, getHeight(theme, entries.size()), BufferedImage.TYPE_INT_ARGB);
+        Popup next = new Popup(entries, routinesOnly, now, Math.max(3, Math.min(15, config.completionPopupSeconds())) * 1_000_000_000L, theme, image, config.completionPopupAnimations(), preview);
+        renderContent(next);
+        return next;
     }
 
     @Override
@@ -117,15 +133,18 @@ public final class MilestoneCompletionOverlay extends Overlay {
         }
         long age = Math.max(0, now - current.startedAt);
         int height = current.image.getHeight();
-        double entering = Math.min(1, age / (double) ENTER_NANOS);
-        double leaving = Math.max(0, Math.min(1, (age - current.duration + EXIT_NANOS) / (double) EXIT_NANOS));
+        double entering = Math.min(1, age / (double) (current.animated ? ENTER_NANOS : 80_000_000L));
+        double leaving = Math.max(0, Math.min(1, (age - current.duration + (current.animated ? EXIT_NANOS : 80_000_000L)) / (double) (current.animated ? EXIT_NANOS : 80_000_000L)));
         float alpha = (float) (smoothStep(entering) * (1 - smoothStep(leaving)));
-        renderContent(current);
         Graphics2D card = (Graphics2D) graphics.create();
         try {
             card.setComposite(AlphaComposite.SrcOver.derive(alpha));
             card.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            animate(card, current.theme, height, entering, leaving);
+            if (current.animated) {
+                animate(card, current.theme, height, entering, leaving);
+            } else {
+                card.translate(ANIMATION_MARGIN, ANIMATION_MARGIN);
+            }
             card.drawImage(current.image, 0, 0, null);
         } finally {
             card.dispose();
@@ -345,5 +364,7 @@ public final class MilestoneCompletionOverlay extends Overlay {
         long duration;
         OverlayTheme theme;
         BufferedImage image;
+        boolean animated;
+        boolean preview;
     }
 }

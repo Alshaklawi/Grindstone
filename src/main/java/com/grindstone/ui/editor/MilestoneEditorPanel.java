@@ -141,7 +141,7 @@ public final class MilestoneEditorPanel extends JPanel {
 
     private boolean needsCollectionSnapshot() {
         MilestoneType kind = getSelectedType();
-        return kind.requiresCollectionSnapshot() && !collectionSnapshotAvailable;
+        return kind.isCollectionSnapshotRequired() && !collectionSnapshotAvailable;
     }
     private Map<Milestone, RepeatSchedule> existingGoals;
     private final Map<MilestoneType, Map<String, Supplier<Milestone>>> completionChoices;
@@ -243,7 +243,7 @@ public final class MilestoneEditorPanel extends JPanel {
         skillButtons.clear();
         MilestoneType kind = getSelectedType();
         repeatForm.setFixedTarget(null);
-        if (kind.requiresCollectionSnapshot()) {
+        if (kind.isCollectionSnapshotRequired()) {
             body.add(createCollectionSnapshotInfo());
             body.add(Box.createVerticalStrut(8));
         }

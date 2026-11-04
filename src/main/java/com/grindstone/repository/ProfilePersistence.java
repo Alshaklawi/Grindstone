@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -38,7 +37,6 @@ public final class ProfilePersistence {
     private final SyncedProfiles syncedProfiles;
     private final Map<Long, String> profileKeys = new ConcurrentHashMap<>();
     private final Map<Long, String> expectedRemote = new HashMap<>();
-    private final Set<Long> conflicts = ConcurrentHashMap.newKeySet();
     private CompletableFuture<Void> tail = CompletableFuture.completedFuture(null);
     private Directory directory;
 
@@ -109,7 +107,6 @@ public final class ProfilePersistence {
                     String base = marker.has("base") && !marker.get("base").isJsonNull() ? marker.get("base").getAsString() : null;
                     expectedRemote.put(hash, base);
                     if (!Objects.equals(base, saved)) {
-                        conflicts.add(hash);
                         throw new SyncConflictException();
                     }
                     return repository.load(profiles, hash);
@@ -121,8 +118,7 @@ public final class ProfilePersistence {
                     }
                     GrindstoneProfile loaded = repository.readProfile(saved, hash);
                     repository.save(profiles, repository.toJson(loaded));
-                    conflicts.remove(hash);
-                    return loaded;
+                                return loaded;
                 }
             }
             GrindstoneProfile loaded = repository.load(profiles, hash);
@@ -162,12 +158,10 @@ public final class ProfilePersistence {
     private void publish(long hash, String profileKey, String text) throws IOException {
         String current = syncedProfiles.read(profileKey);
         if (!expectedRemote.containsKey(hash) || !Objects.equals(expectedRemote.get(hash), current) && !Objects.equals(text, current)) {
-            conflicts.add(hash);
             throw new SyncConflictException();
         }
         syncedProfiles.write(profileKey, text);
         expectedRemote.put(hash, text);
-        conflicts.remove(hash);
     }
 
     public CompletableFuture<Boolean> checkForConflict(long hash) {
@@ -176,11 +170,7 @@ public final class ProfilePersistence {
             if (syncedProfiles == null || key == null || !expectedRemote.containsKey(hash)) {
                 return false;
             }
-            boolean changed = !Objects.equals(expectedRemote.get(hash), syncedProfiles.read(key));
-            if (changed) {
-                conflicts.add(hash);
-            }
-            return changed;
+            return !Objects.equals(expectedRemote.get(hash), syncedProfiles.read(key));
         });
     }
 
@@ -246,7 +236,6 @@ public final class ProfilePersistence {
                 }
             }
             profiles.joinSegment(hash + ".sync-pending").deleteIfExists();
-            conflicts.remove(hash);
             return restored;
         });
     }

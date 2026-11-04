@@ -170,6 +170,11 @@ public interface GrindstoneConfig extends Config {
         return OverlayTheme.CLASSIC;
     }
 
+    @ConfigItem(keyName = "completionPopupAnimations", name = "Animate popups", description = "Animate popup movement and size. Turn off for a short fade with no motion.", section = NOTIFICATIONS_SECTION, position = 18)
+    default boolean completionPopupAnimations() {
+        return true;
+    }
+
     @ConfigSection(name = "Notifications", description = "Control completion messages, colours and reminders for unfinished routines.", position = 4)
     String notificationsSection = NOTIFICATIONS_SECTION;
 

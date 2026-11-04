@@ -78,7 +78,7 @@ public enum MilestoneType {
         return this == DIARY_TIER || this == COMBAT_TIER || this == COMBAT_DIFFICULTY;
     }
 
-    public boolean requiresCollectionSnapshot() {
+    public boolean isCollectionSnapshotRequired() {
         return this == COLLECTION_PAGE || this == COLLECTION_ITEM || this == COLLECTION_TAB;
     }
 

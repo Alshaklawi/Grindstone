@@ -1,6 +1,7 @@
 package com.grindstone.ui;
 
 import com.grindstone.repository.GrindstoneProfile;
+import com.grindstone.repository.MilestonePack;
 import com.grindstone.ui.util.DialogPlacement;
 import com.grindstone.repository.GrindstoneRepository;
 import java.awt.Component;
@@ -27,15 +28,17 @@ public final class ProfileBackupActions {
     private final ClientThread clientThread;
     private final ScheduledExecutorService executor;
     private final GrindstoneRepository repository;
+    private final MilestonePack packs;
     private final AtomicBoolean busy = new AtomicBoolean();
     private final AtomicInteger generation = new AtomicInteger();
     private volatile Future<?> task;
 
     @Inject
-    public ProfileBackupActions(ClientThread clientThread, ScheduledExecutorService executor, GrindstoneRepository repository) {
+    public ProfileBackupActions(ClientThread clientThread, ScheduledExecutorService executor, GrindstoneRepository repository, MilestonePack packs) {
         this.clientThread = clientThread;
         this.executor = executor;
         this.repository = repository;
+        this.packs = packs;
     }
 
     public void cancel() {
@@ -48,6 +51,10 @@ public final class ProfileBackupActions {
     }
 
     public void show(Component owner, GrindstoneProfile active, BooleanSupplier live, Runnable refresh, boolean importing) {
+        show(owner, active, live, refresh, importing, false);
+    }
+
+    public void show(Component owner, GrindstoneProfile active, BooleanSupplier live, Runnable refresh, boolean importing, boolean sharing) {
         if (active == null) {
             JOptionPane.showMessageDialog(DialogPlacement.getOwner(owner), "Log in before exporting or restoring a profile.");
             return;
@@ -57,11 +64,12 @@ public final class ProfileBackupActions {
             return;
         }
         int token = generation.get();
-        Filepath.Chooser chooser = new Filepath.Chooser().setAcceptsFiles().addExtensionFilter("Grindstone JSON profile", "json").setDefaultExtension("json").setDialogTitle(importing ? "Import Grindstone backup" : "Export Grindstone backup");
+        String label = sharing ? "milestone pack" : "profile backup";
+        Filepath.Chooser chooser = new Filepath.Chooser().setAcceptsFiles().addExtensionFilter("Grindstone JSON", "json").setDefaultExtension("json").setDialogTitle((importing ? "Import " : "Export ") + label);
         if (importing) {
             chooser.setIsOpen();
         } else {
-            chooser.setIsSave().setFileName("grindstone-backup.json");
+            chooser.setIsSave().setFileName(sharing ? "grindstone-milestones.json" : "grindstone-backup.json");
         }
         List<Filepath> selected;
         try {
@@ -78,12 +86,13 @@ public final class ProfileBackupActions {
         if (importing) {
             task = executor.submit(() -> {
                 try {
-                    GrindstoneProfile restored = repository.importBackup(repository.readText(file, 5_000_000), active.getHash());
+                    String text = repository.readText(file, 5_000_000);
+                    GrindstoneProfile restored = sharing ? packs.importPack(text, active.getHash()) : repository.importBackup(text, active.getHash());
                     SwingUtilities.invokeLater(() -> {
                         if (token != generation.get() || !live.getAsBoolean()) {
                             return;
                         }
-                        String prompt = "Merge " + restored.getGoals().size() + " saved milestones? Existing matches and edited targets are kept. Observed progress from other accounts is not copied.";
+                        String prompt = "Merge " + restored.getGoals().size() + (sharing ? " milestone definitions? Account progress and history are not imported." : " saved milestones? Existing matches and edited targets are kept. Observed progress from other accounts is not copied.");
                         if (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(owner), prompt, "Restore missing milestones", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
                             busy.set(false);
                             return;
@@ -116,19 +125,19 @@ public final class ProfileBackupActions {
                         busy.set(false);
                         return;
                     }
-                    export(owner, active, live, token, file, exists);
+                    export(owner, active, live, token, file, exists, sharing);
                 });
             });
         }
     }
 
-    private void export(Component owner, GrindstoneProfile active, BooleanSupplier live, int token, Filepath file, boolean overwrite) {
+    private void export(Component owner, GrindstoneProfile active, BooleanSupplier live, int token, Filepath file, boolean overwrite, boolean sharing) {
         clientThread.invokeLater(() -> {
             if (token != generation.get() || !live.getAsBoolean()) {
                 return;
             }
             try {
-                String snapshot = repository.exportBackup(active);
+                String snapshot = sharing ? packs.exportPack(active) : repository.exportBackup(active);
                 if (snapshot.length() > 5_000_000 || snapshot.getBytes(StandardCharsets.UTF_8).length > 5_000_000) {
                     throw new IllegalArgumentException("Backup exceeds the 5 MB safety limit.");
                 }
@@ -142,7 +151,7 @@ public final class ProfileBackupActions {
                         } else {
                             file.write(snapshot, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW);
                         }
-                        finish(owner, live, token, "Backup exported. Keep it private: it includes account-linked milestones and history.");
+                        finish(owner, live, token, sharing ? "Milestone pack exported. Account identity, progress, storage and history are excluded." : "Backup exported. Keep it private: it includes account-linked milestones and history.");
                     } catch (Exception failure) {
                         fail(owner, live, token, failure);
                     }

@@ -160,6 +160,7 @@ public final class GrindstoneRepository {
     public JsonObject toJson(GrindstoneProfile profile) {
         JsonObject json = new JsonObject();
         json.addProperty("hash", profile.getHash());
+        json.add("sidebarView", gson.toJsonTree(profile.getSidebarView()));
 
         JsonArray savedGoals = new JsonArray();
 
@@ -277,6 +278,13 @@ public final class GrindstoneRepository {
     private GrindstoneProfile decode(JsonObject json, boolean strict) {
         long hash = json.get("hash").getAsLong();
         GrindstoneProfile profile = new GrindstoneProfile(hash);
+        if (json.has("sidebarView")) {
+            try {
+                profile.setSidebarView(SidebarViewState.validated(gson.fromJson(json.get("sidebarView"), SidebarViewState.class)));
+            } catch (RuntimeException invalid) {
+                log.debug("Ignoring an invalid saved sidebar view", invalid);
+            }
+        }
         restoreStorageSnapshots(profile, json, strict);
         if (json.has("collectionLogFirstSeen") && json.get("collectionLogFirstSeen").isJsonObject()) {
             for (Map.Entry<String, JsonElement> observation : json.getAsJsonObject("collectionLogFirstSeen").entrySet()) {
@@ -448,6 +456,7 @@ public final class GrindstoneRepository {
         boolean sameAccount = json.get("hash").getAsLong() == targetHash;
         json.addProperty("hash", targetHash);
         if (!sameAccount) {
+            json.remove("sidebarView");
             json.remove("archivedHistory");
             json.remove("collectionLogFirstSeen");
             json.remove("collectionLogFirstSeenGroups");

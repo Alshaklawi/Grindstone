@@ -39,6 +39,16 @@ import net.runelite.client.game.ItemManager;
 public class GrindstoneProfile {
     @Getter
     private final long hash;
+    @Getter
+    private SidebarViewState sidebarView = SidebarViewState.createDefault();
+
+    public void setSidebarView(SidebarViewState state) {
+        if (!sidebarView.equals(state)) {
+            sidebarView = state;
+            markDirty();
+        }
+    }
+
     private final List<Milestone> goals = new ArrayList<>();
     private final transient Map<Milestone, MilestoneMetadata> metadata = new IdentityHashMap<>();
     private transient long revision;

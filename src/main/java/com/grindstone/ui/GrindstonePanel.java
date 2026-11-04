@@ -1,6 +1,8 @@
 package com.grindstone.ui;
 
 import com.grindstone.config.GrindstoneConfig;
+import com.grindstone.config.OverlayTheme;
+import com.grindstone.notification.MilestoneCompletionOverlay;
 import com.grindstone.content.collectionlog.CollectionLogPages;
 import com.grindstone.content.milestone.BaseSkillMilestone;
 import com.grindstone.content.milestone.ManualMilestone;
@@ -38,6 +40,7 @@ import com.grindstone.repository.MilestoneMetadata;
 import com.grindstone.repository.MilestoneUndo;
 import com.grindstone.repository.RecurringMilestone;
 import com.grindstone.repository.RepeatSchedule;
+import com.grindstone.repository.SidebarViewState;
 import com.grindstone.ui.components.ContentHeightPanel;
 import com.grindstone.ui.components.HistoryBrowserPanel;
 import com.grindstone.ui.components.MilestoneComponent;
@@ -190,6 +193,9 @@ public class GrindstonePanel extends PluginPanel {
     private ItemManager itemManager;
 
     @Inject
+    private MilestoneCompletionOverlay completionOverlay;
+
+    @Inject
     private ItemSearchService itemSearchService;
 
     private final JPanel main = new MilestoneListPanel();
@@ -232,6 +238,10 @@ public class GrindstonePanel extends PluginPanel {
     private final JButton undoDeleteButton = new JButton("Undo delete");
     private final JToggleButton todayButton = new JToggleButton("Routines");
     private final JToggleButton allMilestonesButton = new JToggleButton("All", true);
+    private final JButton dashboardToggle = new JButton("-");
+    private JScrollPane filterScroll;
+    private SidebarViewControls viewControls;
+    private GrindstoneProfile viewProfile;
     private boolean todayMode;
     private String pendingReveal;
     private List<MilestoneView> preparedGoals = new ArrayList<>();
@@ -299,6 +309,7 @@ public class GrindstonePanel extends PluginPanel {
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         add(scrollPane, BorderLayout.CENTER);
 
+        viewControls = new SidebarViewControls(searchField, Map.of("category", categoryFilter, "status", statusFilter, "sort", sortFilter, "type", typeFilter, "schedule", scheduleFilter), pinnedOnly, filterScroll, dashboardOverview, collapsedCategories, collapsedRepeats);
         installListeners();
         render();
     }
@@ -338,7 +349,6 @@ public class GrindstonePanel extends PluginPanel {
         more.putClientProperty("JButton.buttonType", "toolBarButton");
         JPopupMenu moreMenu = new JPopupMenu();
         more.addActionListener(event -> moreMenu.show(more, 0, more.getHeight()));
-        JButton dashboardToggle = new JButton("-");
         styleButton(dashboardToggle);
         dashboardToggle.setToolTipText("Collapse dashboard overview and snapshots");
         dashboardToggle.getAccessibleContext().setAccessibleName("Collapse dashboard");
@@ -348,6 +358,7 @@ public class GrindstonePanel extends PluginPanel {
             dashboardToggle.setText(expanded ? "-" : "+");
             dashboardToggle.setToolTipText(expanded ? "Collapse dashboard overview and snapshots" : "Expand dashboard overview and snapshots");
             dashboardToggle.getAccessibleContext().setAccessibleName(expanded ? "Collapse dashboard" : "Expand dashboard");
+            saveView();
             revalidate();
             repaint();
         });
@@ -442,6 +453,13 @@ public class GrindstonePanel extends PluginPanel {
         milestoneActions.addSeparator();
         milestoneActions.add(clearMilestones);
         moreMenu.add(milestoneActions);
+        JMenu previews = new JMenu("Preview popup");
+        for (OverlayTheme theme : OverlayTheme.values()) {
+            JMenuItem preview = new JMenuItem(theme.toString(), new ImageIcon(Icon.MAIN.getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH)));
+            preview.addActionListener(event -> clientThread.invokeLater(() -> completionOverlay.preview(theme)));
+            previews.add(preview);
+        }
+        moreMenu.add(previews);
         JMenu backups = new JMenu("Profile backups");
         JMenuItem export = new JMenuItem("Export profile backup...");
         export.setToolTipText("Save a private local JSON backup. No network is used.");
@@ -451,6 +469,15 @@ public class GrindstonePanel extends PluginPanel {
         restore.setToolTipText("Merge missing milestones without replacing existing targets.");
         restore.addActionListener(event -> transferBackup(true));
         backups.add(restore);
+        JMenu packs = new JMenu("Milestone packs");
+        JMenuItem share = new JMenuItem("Export definitions...");
+        share.setToolTipText("Share targets and routines without account identity, progress or history.");
+        share.addActionListener(event -> transferBackup(false, true));
+        packs.add(share);
+        JMenuItem importPack = new JMenuItem("Import definitions...");
+        importPack.addActionListener(event -> transferBackup(true, true));
+        packs.add(importPack);
+        moreMenu.add(packs);
         JMenu viewOptions = new JMenu("Category display");
         JMenuItem expandAll = new JMenuItem("Expand all categories");
         expandAll.setToolTipText("Show the milestone cards in every category.");
@@ -634,7 +661,7 @@ public class GrindstonePanel extends PluginPanel {
         clearFiltersButton.setToolTipText("Reset search, filters and sorting.");
         filterActions.add(clearFiltersButton, BorderLayout.EAST);
         filterOptions.add(filterActions);
-        JScrollPane filterScroll = new JScrollPane(filterOptions);
+        filterScroll = new JScrollPane(filterOptions);
         filterScroll.setBorder(BorderFactory.createEmptyBorder());
         filterScroll.setOpaque(false);
         filterScroll.getViewport().setOpaque(false);
@@ -652,6 +679,7 @@ public class GrindstonePanel extends PluginPanel {
             boolean show = !filterScroll.isVisible();
             filterScroll.setVisible(show);
             filtersToggle.setToolTipText(show ? "Hide filter options" : "Show filter options");
+            saveView();
             revalidate();
             repaint();
         });
@@ -776,7 +804,25 @@ public class GrindstonePanel extends PluginPanel {
         pendingReveal = null;
         backupActions.cancel();
         this.profile = profile;
+        SidebarViewState savedView = profile.getSidebarView();
         SwingUtilities.invokeLater(() -> {
+            if (this.profile != profile) {
+                return;
+            }
+            updatingFilters = true;
+            try {
+                viewControls.apply(savedView);
+                todayMode = savedView.isRoutines();
+                todayButton.setSelected(todayMode);
+                allMilestonesButton.setSelected(!todayMode);
+                dashboardToggle.setText(savedView.isDashboardExpanded() ? "-" : "+");
+                dashboardToggle.setToolTipText(savedView.isDashboardExpanded() ? "Collapse dashboard overview and snapshots" : "Expand dashboard overview and snapshots");
+                filtersToggle.setToolTipText(savedView.isFiltersExpanded() ? "Hide filter options" : "Show filter options");
+                viewProfile = profile;
+                syncQuickStatus();
+            } finally {
+                updatingFilters = false;
+            }
             undo.clear();
             undoDeleteButton.setVisible(false);
         });
@@ -801,7 +847,21 @@ public class GrindstonePanel extends PluginPanel {
         render();
     }
 
+    private void saveView() {
+        GrindstoneProfile active = profile;
+        if (!SwingUtilities.isEventDispatchThread() || updatingFilters || viewControls == null || active == null || active != viewProfile) {
+            return;
+        }
+        SidebarViewState state = viewControls.capture(todayMode);
+        clientThread.invokeLater(() -> {
+            if (profile == active) {
+                active.setSidebarView(state);
+            }
+        });
+    }
+
     public void render() {
+        saveView();
         if (!renderQueued.compareAndSet(false, true)) {
             return;
         }
@@ -1845,6 +1905,10 @@ public class GrindstonePanel extends PluginPanel {
         }
     }
     private void transferBackup(boolean importing) {
+        transferBackup(importing, false);
+    }
+
+    private void transferBackup(boolean importing, boolean sharing) {
         GrindstoneProfile active = profile;
         backupActions.show(this, active, () -> profile == active, () -> {
             if (profile == active) {
@@ -1853,7 +1917,7 @@ public class GrindstonePanel extends PluginPanel {
                 }
                 render();
             }
-        }, importing);
+        }, importing, sharing);
     }
     private boolean isCompletedQuestOrDiary(Milestone goal) {
         if (goal.getCategory() != MilestoneCategory.QUEST && goal.getCategory() != MilestoneCategory.ACHIEVEMENT_DIARY) {

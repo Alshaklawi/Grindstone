@@ -59,7 +59,13 @@ public final class ProfileRecoveryActions {
                 confirm(owner, hash, state, (ProfilePersistence.RecoveryOption) selected, live, activate);
             } else {
                 Filepath.Chooser chooser = new Filepath.Chooser().setAcceptsFiles().setIsOpen().addExtensionFilter("Grindstone JSON profile", "json").setDialogTitle("Import recovery backup");
-                List<Filepath> files = chooser.showDialog(DialogPlacement.getOwner(owner));
+                List<Filepath> files;
+                try {
+                    files = chooser.showDialog(DialogPlacement.getOwner(owner));
+                } catch (RuntimeException problem) {
+                    fail(owner, problem);
+                    return;
+                }
                 if (files == null || files.isEmpty() || !live.getAsBoolean()) {
                     return;
                 }
