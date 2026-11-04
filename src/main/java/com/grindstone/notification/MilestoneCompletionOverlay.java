@@ -81,13 +81,13 @@ public final class MilestoneCompletionOverlay extends Overlay {
         }
     }
 
-    public synchronized void preview(OverlayTheme theme) {
+    public synchronized void preview() {
         if (!config.enabled()) {
             return;
         }
         clear();
         List<CompletionOverlayEntry> entries = List.of(new CompletionOverlayEntry("preview", "The Fractured Archive", "5 raids completed", Icon.RAIDS.getImage()));
-        popup = createPopup(entries, false, clock.getAsLong(), theme, true);
+        popup = createPopup(entries, false, clock.getAsLong(), true);
     }
 
     public synchronized void clear() {
@@ -111,15 +111,14 @@ public final class MilestoneCompletionOverlay extends Overlay {
     }
 
     private void startNext(long now) {
-        OverlayTheme theme = config.completionPopupTheme();
-        popup = createPopup(List.copyOf(pending.values()), pendingRoutinesOnly, now, theme, false);
+        popup = createPopup(List.copyOf(pending.values()), pendingRoutinesOnly, now, false);
         pending.clear();
         pendingRoutinesOnly = true;
     }
 
-    private Popup createPopup(List<CompletionOverlayEntry> entries, boolean routinesOnly, long now, OverlayTheme theme, boolean preview) {
-        BufferedImage image = new BufferedImage(WIDTH, getHeight(theme, entries.size()), BufferedImage.TYPE_INT_ARGB);
-        Popup next = new Popup(entries, routinesOnly, now, Math.max(3, Math.min(15, config.completionPopupSeconds())) * 1_000_000_000L, theme, image, config.completionPopupAnimations(), preview);
+    private Popup createPopup(List<CompletionOverlayEntry> entries, boolean routinesOnly, long now, boolean preview) {
+        BufferedImage image = new BufferedImage(WIDTH, getHeight(entries.size()), BufferedImage.TYPE_INT_ARGB);
+        Popup next = new Popup(entries, routinesOnly, now, Math.max(3, Math.min(15, config.completionPopupSeconds())) * 1_000_000_000L, image, config.completionPopupAnimations(), preview);
         renderContent(next);
         return next;
     }
@@ -141,7 +140,7 @@ public final class MilestoneCompletionOverlay extends Overlay {
             card.setComposite(AlphaComposite.SrcOver.derive(alpha));
             card.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
             if (current.animated) {
-                animate(card, current.theme, height, entering, leaving);
+                animate(card, height, entering, leaving);
             } else {
                 card.translate(ANIMATION_MARGIN, ANIMATION_MARGIN);
             }
@@ -152,45 +151,22 @@ public final class MilestoneCompletionOverlay extends Overlay {
         return new Dimension(WIDTH + ANIMATION_MARGIN * 2, height + ANIMATION_MARGIN * 2);
     }
 
-    private static int getHeight(OverlayTheme theme, int entries) {
+    private static int getHeight(int entries) {
         int shown = Math.min(3, entries);
-        int height;
-        switch (theme) {
-            case GUILD:
-                height = 84 + (shown - 1) * 50;
-                break;
-            case SLATE:
-                height = shown == 1 ? 128 : 42 + shown * 62;
-                break;
-            default:
-                height = 58 + shown * 22;
-                break;
-        }
-        return height + (entries > shown ? 20 : 0);
+        return 84 + (shown - 1) * 50 + (entries > shown ? 20 : 0);
     }
 
     private static void renderContent(Popup current) {
         int shown = Math.min(3, current.entries.size());
         int height = current.image.getHeight();
-        OverlayTheme theme = current.theme;
         Graphics2D card = current.image.createGraphics();
         try {
             card.setComposite(AlphaComposite.Clear);
             card.fillRect(0, 0, WIDTH, height);
             card.setComposite(AlphaComposite.SrcOver);
-            OverlayStyle.panel(card, theme, WIDTH, height, true);
-            OverlayStyle.Palette palette = OverlayStyle.getPalette(theme);
-            switch (theme) {
-                case GUILD:
-                    renderGuild(card, current, shown, palette);
-                    break;
-                case SLATE:
-                    renderSlate(card, current, shown, palette);
-                    break;
-                default:
-                    renderClassic(card, current, shown);
-                    break;
-            }
+            OverlayStyle.panel(card, OverlayTheme.GUILD, WIDTH, height, true);
+            OverlayStyle.Palette palette = OverlayStyle.getPalette(OverlayTheme.GUILD);
+            renderGuild(card, current, shown, palette);
             if (current.entries.size() > shown) {
                 card.setFont(OverlayStyle.SMALL_FONT);
                 card.setColor(palette.getMuted());
@@ -205,49 +181,17 @@ public final class MilestoneCompletionOverlay extends Overlay {
         return progress * progress * (3 - 2 * progress);
     }
 
-    private static void animate(Graphics2D graphics, OverlayTheme theme, int height, double entering, double leaving) {
+    private static void animate(Graphics2D graphics, int height, double entering, double leaving) {
         double entrance = (1 - entering) * (1 - entering) * (1 - entering);
         double exit = leaving * leaving;
-        double offsetY;
-        double scale = 1;
-        switch (theme) {
-            case SLATE:
-                offsetY = 12 * entrance + 8 * exit;
-                scale = 1 - 0.04 * entrance - 0.02 * exit;
-                break;
-            case GUILD:
-                offsetY = -10 * entrance - 8 * exit;
-                scale = 1 - 0.025 * entrance - 0.015 * exit;
-                break;
-            default:
-                offsetY = -8 * entrance - 6 * exit;
-                break;
-        }
+        double offsetY = -10 * entrance - 8 * exit;
+        double scale = 1 - 0.025 * entrance - 0.015 * exit;
         graphics.translate(ANIMATION_MARGIN + WIDTH * (1 - scale) / 2, ANIMATION_MARGIN + offsetY + height * (1 - scale) / 2);
         graphics.scale(scale, scale);
     }
 
     private static String getHeading(Popup current) {
         return current.entries.size() == 1 ? current.routinesOnly ? "Routine complete" : "Milestone reached" : current.entries.size() + (current.routinesOnly ? " routines complete" : " milestones reached");
-    }
-
-    private static void renderClassic(Graphics2D card, Popup current, int shown) {
-        card.setColor(new Color(98, 205, 174, 25));
-        card.fillRoundRect(12, 12, 28, 28, 8, 8);
-        OverlayStyle.check(card, 21, 22, OverlayStyle.GREEN);
-        card.setFont(OverlayStyle.SMALL_FONT);
-        card.setColor(OverlayStyle.MUTED);
-        card.drawString("GRINDSTONE", 50, 22);
-        card.setFont(OverlayStyle.HEADING_FONT);
-        card.setColor(OverlayStyle.GREEN);
-        card.drawString(getHeading(current), 50, 37);
-        card.setFont(OverlayStyle.TITLE_FONT);
-        card.setColor(OverlayStyle.TEXT);
-        for (int index = 0; index < shown; index++) {
-            CompletionOverlayEntry entry = current.entries.get(index);
-            OverlayStyle.icon(card, entry.getIcon(), 12, 54 + index * 22, 18);
-            card.drawString(OverlayStyle.fit(entry.getTitle(), card.getFontMetrics(), WIDTH - 48), 36, 68 + index * 22);
-        }
     }
 
     private static void renderGuild(Graphics2D card, Popup current, int shown, OverlayStyle.Palette palette) {
@@ -281,49 +225,6 @@ public final class MilestoneCompletionOverlay extends Overlay {
         }
     }
 
-    private static void renderSlate(Graphics2D card, Popup current, int shown, OverlayStyle.Palette palette) {
-        card.setColor(new Color(0x314d46));
-        card.fillOval(15, 12, 23, 23);
-        OverlayStyle.check(card, 22, 20, palette.getSuccess());
-        card.setFont(OverlayStyle.BODY_FONT);
-        card.setColor(palette.getSuccess());
-        card.drawString(getHeading(current), 46, 28);
-        if (shown == 1) {
-            CompletionOverlayEntry entry = current.entries.get(0);
-            OverlayStyle.icon(card, entry.getIcon(), 17, 51, 28);
-            card.setFont(OverlayStyle.DISPLAY_FONT);
-            card.setColor(palette.getText());
-            String title = entry.getTitle();
-            String first = OverlayStyle.fit(title, card.getFontMetrics(), WIDTH - 76);
-            if (first.equals(title)) {
-                card.drawString(title, 59, 72);
-            } else {
-                int split = first.length() - 3;
-                int space = title.lastIndexOf(' ', split);
-                if (space > split / 2) {
-                    split = space;
-                }
-                card.drawString(title.substring(0, split).trim(), 59, 65);
-                card.drawString(OverlayStyle.fit(title.substring(split).trim(), card.getFontMetrics(), WIDTH - 76), 59, 89);
-            }
-            card.setFont(OverlayStyle.BODY_FONT);
-            card.setColor(palette.getMuted());
-            card.drawString(OverlayStyle.fit(entry.getDetail(), card.getFontMetrics(), WIDTH - 76), 59, 112);
-            return;
-        }
-        for (int index = 0; index < shown; index++) {
-            CompletionOverlayEntry entry = current.entries.get(index);
-            int y = 46 + index * 62;
-            OverlayStyle.icon(card, entry.getIcon(), 17, y + 5, 24);
-            card.setFont(OverlayStyle.TITLE_FONT);
-            card.setColor(palette.getText());
-            card.drawString(OverlayStyle.fit(entry.getTitle(), card.getFontMetrics(), WIDTH - 76), 53, y + 17);
-            card.setFont(OverlayStyle.BODY_FONT);
-            card.setColor(palette.getMuted());
-            card.drawString(OverlayStyle.fit(entry.getDetail(), card.getFontMetrics(), WIDTH - 76), 53, y + 36);
-        }
-    }
-
     /**
      * @author Ayman Yassen
      * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
@@ -335,7 +236,6 @@ public final class MilestoneCompletionOverlay extends Overlay {
         boolean routinesOnly;
         long startedAt;
         long duration;
-        OverlayTheme theme;
         BufferedImage image;
         boolean animated;
         boolean preview;

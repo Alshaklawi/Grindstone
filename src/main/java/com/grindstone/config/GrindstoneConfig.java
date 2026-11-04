@@ -162,12 +162,12 @@ public interface GrindstoneConfig extends Config {
 
     @ConfigItem(keyName = "progressOverlayTheme", name = "Style", description = "Choose Classic, Slate or Guild for the progress tracker.", section = OVERLAY_SECTION, position = 6)
     default OverlayTheme progressOverlayTheme() {
-        return OverlayTheme.CLASSIC;
+        return OverlayTheme.GUILD;
     }
 
-    @ConfigItem(keyName = "completionPopupTheme", name = "Popup style", description = "Choose the completion popup's style independently of the progress tracker.", section = NOTIFICATIONS_SECTION, position = 17)
+    @ConfigItem(keyName = "completionPopupTheme", name = "Popup style", description = "Completion popups always use Guild.", section = NOTIFICATIONS_SECTION, position = 17, hidden = true)
     default OverlayTheme completionPopupTheme() {
-        return OverlayTheme.CLASSIC;
+        return OverlayTheme.GUILD;
     }
 
     @ConfigItem(keyName = "completionPopupAnimations", name = "Animate popups", description = "Animate popup movement and size. Turn off for a short fade with no motion.", section = NOTIFICATIONS_SECTION, position = 18)

@@ -1,7 +1,6 @@
 package com.grindstone.ui;
 
 import com.grindstone.config.GrindstoneConfig;
-import com.grindstone.config.OverlayTheme;
 import com.grindstone.notification.MilestoneCompletionOverlay;
 import com.grindstone.content.collectionlog.CollectionLogPages;
 import com.grindstone.content.milestone.BaseSkillMilestone;
@@ -453,13 +452,9 @@ public class GrindstonePanel extends PluginPanel {
         milestoneActions.addSeparator();
         milestoneActions.add(clearMilestones);
         moreMenu.add(milestoneActions);
-        JMenu previews = new JMenu("Preview popup");
-        for (OverlayTheme theme : OverlayTheme.values()) {
-            JMenuItem preview = new JMenuItem(theme.toString(), new ImageIcon(Icon.MAIN.getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH)));
-            preview.addActionListener(event -> clientThread.invokeLater(() -> completionOverlay.preview(theme)));
-            previews.add(preview);
-        }
-        moreMenu.add(previews);
+        JMenuItem preview = new JMenuItem("Preview popup", new ImageIcon(Icon.MAIN.getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH)));
+        preview.addActionListener(event -> clientThread.invokeLater(completionOverlay::preview));
+        moreMenu.add(preview);
         JMenu backups = new JMenu("Profile backups");
         JMenuItem export = new JMenuItem("Export profile backup...");
         export.setToolTipText("Save a private local JSON backup. No network is used.");

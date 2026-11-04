@@ -1080,10 +1080,12 @@ public class GrindstonePlugin extends Plugin {
     }
 
     private static void migrateOverlayThemes(ConfigManager configManager) {
-        for (String key : new String[]{"progressOverlayTheme", "completionPopupTheme"}) {
-            if ("FOCUS".equals(configManager.getConfiguration(GrindstoneConfig.GROUP, key))) {
-                configManager.setConfiguration(GrindstoneConfig.GROUP, key, "CLASSIC");
-            }
+        if ("FOCUS".equals(configManager.getConfiguration(GrindstoneConfig.GROUP, "progressOverlayTheme"))) {
+            configManager.setConfiguration(GrindstoneConfig.GROUP, "progressOverlayTheme", "GUILD");
+        }
+        String popupTheme = configManager.getConfiguration(GrindstoneConfig.GROUP, "completionPopupTheme");
+        if (popupTheme != null && !"GUILD".equals(popupTheme)) {
+            configManager.setConfiguration(GrindstoneConfig.GROUP, "completionPopupTheme", "GUILD");
         }
     }
 
