@@ -1,0 +1,37 @@
+name: Verify plugin
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  java11-linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          path: source
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '11'
+      - name: Build and check critical regressions
+        working-directory: source
+        run: bash ./gradlew --no-daemon test check jar
+      - name: Package and verify with Plugin Hub v5
+        run: bash source/.github/scripts/verify-plugin-hub.sh "$GITHUB_WORKSPACE/hub-runtime"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: plugin-hub-verification
+          path: |
+            hub-runtime/packager.log
+            /tmp/jars/
+          if-no-files-found: ignore
