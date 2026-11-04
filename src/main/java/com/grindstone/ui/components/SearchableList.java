@@ -42,6 +42,7 @@ public abstract class SearchableList<T> extends JPanel {
     private final JLabel count = new JLabel();
     private final Map<T, String> labels = new LinkedHashMap<>();
     private final Map<T, String> categories = new LinkedHashMap<>();
+    private final Map<T, String> searchTexts = new LinkedHashMap<>();
     private final Consumer<T> onSelection;
     private boolean updating;
 
@@ -128,11 +129,13 @@ public abstract class SearchableList<T> extends JPanel {
         try {
             labels.clear();
             categories.clear();
+            searchTexts.clear();
             TreeSet<String> groups = new TreeSet<>();
             for (T value : values) {
                 labels.put(value, getText(value));
                 String group = getCategory(value);
                 categories.put(value, group);
+                searchTexts.put(value, (labels.get(value) + " " + group).toLowerCase(Locale.ROOT));
                 if (!group.isEmpty()) {
                     groups.add(group);
                 }
@@ -174,16 +177,20 @@ public abstract class SearchableList<T> extends JPanel {
             return;
         }
         String query = search.getText().trim().toLowerCase(Locale.ROOT);
+        String[] words = query.isEmpty() ? new String[0] : query.split("\\s+");
         String selectedCategory = (String) category.getSelectedItem();
         List<T> visible = new ArrayList<>();
         for (T value : labels.keySet()) {
             if (selectedCategory != null && !ALL.equals(selectedCategory) && !selectedCategory.equals(categories.get(value))) {
                 continue;
             }
-            String text = (labels.get(value) + " " + categories.get(value)).toLowerCase(Locale.ROOT);
+            String text = searchTexts.get(value);
             boolean matches = true;
-            for (String word : query.split("\\s+")) {
-                matches &= text.contains(word);
+            for (String word : words) {
+                if (!text.contains(word)) {
+                    matches = false;
+                    break;
+                }
             }
             if (matches) {
                 visible.add(value);
@@ -193,7 +200,7 @@ public abstract class SearchableList<T> extends JPanel {
         updating = true;
         try {
             model.clear();
-            visible.forEach(model::addElement);
+            model.addAll(visible);
             if (visible.contains(previous)) {
                 list.setSelectedValue(previous, true);
             } else if (!visible.isEmpty()) {

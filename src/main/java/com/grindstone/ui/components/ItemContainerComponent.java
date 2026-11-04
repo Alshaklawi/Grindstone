@@ -8,6 +8,8 @@ import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -65,8 +67,9 @@ public class ItemContainerComponent extends JPanel {
     public void set(List<ItemComponent> components) {
         List<ItemComponent> next = new ArrayList<>();
         if (components != null) {
+            Set<ItemComponent> seen = new HashSet<>();
             for (ItemComponent component : components) {
-                if (component != null && !next.contains(component)) {
+                if (component != null && seen.add(component)) {
                     next.add(component);
                 }
             }

@@ -5,6 +5,8 @@ import com.grindstone.util.HtmlUtils;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.IntPredicate;
 import javax.swing.BorderFactory;
@@ -137,17 +139,23 @@ public final class ItemPickerPanel extends JPanel {
             updating = true;
             try {
                 model.clear();
+                List<ItemSearchService.Result> visible = new ArrayList<>(response.results.size());
+                ItemSearchService.Result previous = null;
                 for (ItemSearchService.Result item : response.results) {
                     if (!available.test(item.id)) {
                         continue;
                     }
-                    model.addElement(item);
+                    visible.add(item);
                     if (item.id == selectedId) {
-                        results.setSelectedValue(item, true);
+                        previous = item;
                     }
                     if (item.image != null) {
                         item.image.onLoaded(results::repaint);
                     }
+                }
+                model.addAll(visible);
+                if (previous != null) {
+                    results.setSelectedValue(previous, true);
                 }
                 if (response.complete && model.size() == 1) {
                     results.setSelectedIndex(0);

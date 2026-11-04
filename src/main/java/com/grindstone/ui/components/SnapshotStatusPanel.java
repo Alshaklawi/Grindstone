@@ -10,6 +10,9 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Iterator;
 import java.util.Set;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -27,6 +30,9 @@ import net.runelite.client.ui.ColorScheme;
 public final class SnapshotStatusPanel extends JPanel {
     private static final ImageIcon INFO_ICON = createInfoIcon();
     private final JPanel rows = new JPanel();
+    private Map<String, String> lastStatuses = Map.of();
+    private Map<String, String> lastTips = Map.of();
+    private Set<String> lastMissing = Set.of();
 
     public SnapshotStatusPanel() {
         super(new BorderLayout(0, 4));
@@ -52,6 +58,12 @@ public final class SnapshotStatusPanel extends JPanel {
     }
 
     public void updateSnapshots(Map<String, String> statuses, Map<String, String> tips, Set<String> missing) {
+        if (hasSameStatuses(statuses) && tips.equals(lastTips) && missing.equals(lastMissing)) {
+            return;
+        }
+        lastStatuses = new LinkedHashMap<>(statuses);
+        lastTips = new LinkedHashMap<>(tips);
+        lastMissing = new LinkedHashSet<>(missing);
         rows.removeAll();
         statuses.forEach((name, status) -> {
             JPanel row = new JPanel(new BorderLayout(3, 0));
@@ -81,5 +93,18 @@ public final class SnapshotStatusPanel extends JPanel {
         });
         revalidate();
         repaint();
+    }
+
+    private boolean hasSameStatuses(Map<String, String> statuses) {
+        if (statuses.size() != lastStatuses.size()) {
+            return false;
+        }
+        Iterator<Map.Entry<String, String>> previous = lastStatuses.entrySet().iterator();
+        for (Map.Entry<String, String> status : statuses.entrySet()) {
+            if (!status.equals(previous.next())) {
+                return false;
+            }
+        }
+        return true;
     }
 }

@@ -831,11 +831,15 @@ public class GrindstonePanel extends PluginPanel {
             List<ProgressOverlayEntry> overlayEntries = new ArrayList<>();
             boolean loggedIn = currentProfile != null && client.getGameState() == GameState.LOGGED_IN && client.getLocalPlayer() != null && currentProfile.getHash() == client.getAccountHash();
             boolean captureOverlay = loggedIn && config.progressOverlayEnabled();
+            long now = System.currentTimeMillis();
 
             if (currentProfile != null && config.enabled()) {
                 cardCache.retain(currentProfile.getGoals());
+                boolean bankSnapshot = currentProfile.getPlayerStorage().hasBankSnapshot();
+                boolean collapseDetails = config.collapseDetailsByDefault();
+                List<?> displaySettings = Arrays.asList(config.showGoalIcons(), config.showProgressBar(), config.maxProgressChunks(), config.showCompletionHistory(), config.showActivityIcons(), config.itemsPerRow(), config.maxItemRows(), config.showTrackingState(), config.showObtainedItems(), config.showItemTooltips());
                 if (loggedIn) {
-                    currentProfile.observeRecurring(client, System.currentTimeMillis());
+                    currentProfile.observeRecurring(client, now);
                     completionNotifications.observe(currentProfile);
                 }
                 for (Milestone goal : currentProfile.getGoals()) {
@@ -850,12 +854,12 @@ public class GrindstonePanel extends PluginPanel {
                     MilestoneMetadata metadata = currentProfile.getMetadata(goal);
                     RecurringMilestone recurring = metadata.getRecurring();
                     boolean repeating = recurring.isActive() && RecurringMilestone.supports(goal);
-                    TrackingState tracking = TrackingState.of(goal, recurring, client.getGameState() == GameState.LOGGED_IN && client.getLocalPlayer() != null && client.getAccountHash() == currentProfile.getHash(), currentProfile.getPlayerStorage().hasBankSnapshot());
-                    List<?> key = Arrays.asList(currentProfile, metadata, title, goal.getDescription(), goal.getProgressCurrent(), goal.getProgressMaximum(), goal.getStatus(), recurring.getSchedule(), recurring.getProgress(), recurring.getTarget(), recurring.getBaselineAt(), recurring.getStart(), metadata.isPinned(), metadata.isCollapsed(config.collapseDetailsByDefault()), metadata.getCompletions().size(), tracking, config.showGoalIcons(), config.showProgressBar(), config.maxProgressChunks(), config.showCompletionHistory(), config.showActivityIcons(), config.itemsPerRow(), config.maxItemRows(), config.showTrackingState(), config.showObtainedItems(), config.showItemTooltips());
+                    TrackingState tracking = TrackingState.of(goal, recurring, loggedIn, bankSnapshot);
+                    List<?> key = Arrays.asList(currentProfile, metadata, title, goal.getDescription(), goal.getProgressCurrent(), goal.getProgressMaximum(), goal.getStatus(), recurring.getSchedule(), recurring.getProgress(), recurring.getTarget(), recurring.getBaselineAt(), recurring.getStart(), metadata.isPinned(), metadata.isCollapsed(collapseDetails), metadata.getCompletions().size(), tracking, displaySettings);
                     if (goal instanceof ChecklistMilestone) {
                         key = Arrays.asList(key, Arrays.hashCode(((ChecklistMilestone) goal).getChecks()));
                     }
-                    key = Arrays.asList(key, metadata.getDeadlineAt(), metadata.getDeadlineAt() > 0 && System.currentTimeMillis() >= metadata.getDeadlineAt(), metadata.getDisplayCategory());
+                    key = Arrays.asList(key, metadata.getDeadlineAt(), metadata.getDeadlineAt() > 0 && now >= metadata.getDeadlineAt(), metadata.getDisplayCategory());
                     MilestoneView cached = cardCache.get(goal, key);
                     if (cached != null && tracking != TrackingState.WAITING && goal.getProgressMaximum() > 0) {
                         if (captureOverlay) {
@@ -866,7 +870,7 @@ public class GrindstonePanel extends PluginPanel {
                     }
                     Supplier<MilestoneComponent> preparedCard = goal.prepare(client, config);
                     currentProfile.markDirty();
-                    tracking = TrackingState.of(goal, recurring, client.getGameState() == GameState.LOGGED_IN && client.getLocalPlayer() != null && client.getAccountHash() == currentProfile.getHash(), currentProfile.getPlayerStorage().hasBankSnapshot());
+                    tracking = TrackingState.of(goal, recurring, loggedIn, bankSnapshot);
                     TrackingState displayTracking = tracking;
                     MilestoneStatus status = repeating ? recurring.getStatus() : goal.getStatus();
                     long progressCurrent = repeating ? recurring.getProgress() : goal.getProgressCurrent();
@@ -877,14 +881,15 @@ public class GrindstonePanel extends PluginPanel {
                         progressMaximum = 0;
                     }
                     if (loggedIn && tracking != TrackingState.WAITING) {
-                        metadata.observeReading(goal, title, System.currentTimeMillis());
+                        metadata.observeReading(goal, title, now);
                     }
                     if (!repeating && tracking != TrackingState.WAITING) {
-                        metadata.observe(goal, title, System.currentTimeMillis());
+                        metadata.observe(goal, title, now);
                     }
                     MilestoneMetadata displayMetadata = metadata.copy();
                     RecurringMilestone displayRecurring = displayMetadata.getRecurring();
                     MilestoneCategory category = getSafeCategory(goal);
+                    String searchText = getSearchText(title, goal.getDescription(), category.getDisplayName());
                     boolean hasProgress = goal.hasProgress();
                     String sourceDetail = goal.getCardDescription().isEmpty() ? goal.getDescription() : "";
                     long shownCurrent = progressCurrent;
@@ -1020,7 +1025,7 @@ public class GrindstonePanel extends PluginPanel {
                         }
                         component.setAchievementNote(repeating ? displayRecurring.getSchedule() + " · " + (displayRecurring.getBaselineAt() == 0 ? "Baseline pending" : "This period") : config.showCompletionHistory() && !displayMetadata.getCompletions().isEmpty() && shownStatus != MilestoneStatus.COMPLETE ? "Previously reached · now incomplete" : null);
 
-                        MilestoneView view = new MilestoneView(goal, component, title, category, shownStatus, hasProgress, shownCurrent, shownMaximum);
+                        MilestoneView view = new MilestoneView(goal, component, title, searchText, category, shownStatus, hasProgress, shownCurrent, shownMaximum);
                         cardCache.put(goal, cacheKey, view);
                         return view;
                     });
@@ -1378,6 +1383,7 @@ public class GrindstonePanel extends PluginPanel {
     private List<MilestoneView> filterMilestones(List<MilestoneView> goals) {
         List<MilestoneView> filtered = new ArrayList<>();
         String query = searchField.getText().trim().toLowerCase(Locale.ROOT);
+        String[] words = query.isEmpty() ? new String[0] : query.split("\\s+");
         String selectedCategory = (String) categoryFilter.getSelectedItem();
         String selectedStatus = (String) statusFilter.getSelectedItem();
         String selectedType = (String) typeFilter.getSelectedItem();
@@ -1425,7 +1431,7 @@ public class GrindstonePanel extends PluginPanel {
             if (isComplete(view.status) && schedule == RepeatSchedule.NONE && !COMPLETE.equals(selectedStatus)) {
                 continue;
             }
-            if (!matchesSearch(query, view.title, view.goal.getDescription(), view.category.getDisplayName())) {
+            if (!matchesSearch(words, view.searchText)) {
                 continue;
             }
 
@@ -1454,8 +1460,15 @@ public class GrindstonePanel extends PluginPanel {
         if (query == null || query.trim().isEmpty()) {
             return true;
         }
-        String text = ((title == null ? "" : title) + " " + (description == null ? "" : description) + " " + (category == null ? "" : category)).toLowerCase(Locale.ROOT);
-        for (String word : query.trim().toLowerCase(Locale.ROOT).split("\\s+")) {
+        return matchesSearch(query.trim().toLowerCase(Locale.ROOT).split("\\s+"), getSearchText(title, description, category));
+    }
+
+    private static String getSearchText(String title, String description, String category) {
+        return ((title == null ? "" : title) + " " + (description == null ? "" : description) + " " + (category == null ? "" : category)).toLowerCase(Locale.ROOT);
+    }
+
+    private static boolean matchesSearch(String[] words, String text) {
+        for (String word : words) {
             if (!text.contains(word)) {
                 return false;
             }
@@ -1588,6 +1601,18 @@ public class GrindstonePanel extends PluginPanel {
 
         for (MilestoneView view : goals) {
             categories.add(view.category.getDisplayName());
+        }
+
+        boolean unchanged = categoryFilter.getItemCount() == categories.size();
+        int index = 0;
+        for (String category : categories) {
+            if (!unchanged || !category.equals(categoryFilter.getItemAt(index++))) {
+                unchanged = false;
+                break;
+            }
+        }
+        if (unchanged) {
+            return;
         }
 
         updatingFilters = true;
@@ -2696,16 +2721,18 @@ public class GrindstonePanel extends PluginPanel {
         private final Milestone goal;
         private final MilestoneComponent component;
         private final String title;
+        private final String searchText;
         private final MilestoneCategory category;
         private final MilestoneStatus status;
         private final boolean hasProgress;
         private final long progressCurrent;
         private final long progressMaximum;
 
-        private MilestoneView(Milestone goal, MilestoneComponent component, String title, MilestoneCategory category, MilestoneStatus status, boolean hasProgress, long progressCurrent, long progressMaximum) {
+        private MilestoneView(Milestone goal, MilestoneComponent component, String title, String searchText, MilestoneCategory category, MilestoneStatus status, boolean hasProgress, long progressCurrent, long progressMaximum) {
             this.goal = goal;
             this.component = component;
             this.title = title;
+            this.searchText = searchText;
             this.category = category;
             this.status = status;
             this.hasProgress = hasProgress;

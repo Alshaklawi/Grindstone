@@ -6,12 +6,15 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.PriorityQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.IntFunction;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.swing.SwingUtilities;
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
@@ -72,7 +75,10 @@ public final class ItemSearchService implements ItemLookup {
     }
 
     private static boolean matchesName(String name, String[] words) {
-        String normalized = name.toLowerCase(Locale.ROOT);
+        return matchesNormalized(name.toLowerCase(Locale.ROOT), words);
+    }
+
+    private static boolean matchesNormalized(String normalized, String[] words) {
         for (String word : words) {
             if (!normalized.contains(word)) {
                 return false;
@@ -82,15 +88,18 @@ public final class ItemSearchService implements ItemLookup {
     }
 
     static int rank(String name, String query) {
-        String normalized = name.toLowerCase(Locale.ROOT);
-        return normalized.equals(query) ? 0 : normalized.startsWith(query) ? 1 : 2;
+        return rankNormalized(name.toLowerCase(Locale.ROOT), query);
+    }
+
+    private static int rankNormalized(String name, String query) {
+        return name.equals(query) ? 0 : name.startsWith(query) ? 1 : 2;
     }
 
     @Override
     public Runnable search(String text, Consumer<Response> callback) {
         AtomicBoolean cancelled = new AtomicBoolean();
         String query = text == null ? "" : text.trim().toLowerCase(Locale.ROOT);
-        List<Result> matches = new ArrayList<>();
+        SearchResults matches = new SearchResults(query);
         String[] words = query.split("\\s+");
         boolean idQuery = isIdQuery(query);
         int[] scanned = {0};
@@ -133,23 +142,22 @@ public final class ItemSearchService implements ItemLookup {
             int scanStart = scanned[0];
             while (scanned[0] < index.size() && (scanned[0] == scanStart || System.nanoTime() < deadline)) {
                 Result result = index.get(scanned[0]++);
-                if (matchesName(result.name, words)) {
+                if (matchesNormalized(result.normalizedName, words)) {
                     matches.add(result);
                 }
             }
             boolean complete = nextItemId >= client.getItemCount() && scanned[0] >= index.size();
             if (complete || batches[0]++ % 8 == 0) {
-                List<Result> ordered = new ArrayList<>(matches);
-                ordered.sort(Comparator.comparingInt((Result result) -> rank(result.name, query)) .thenComparing(result -> result.name, String.CASE_INSENSITIVE_ORDER) .thenComparingInt(result -> result.id));
+                List<Result> ordered = matches.getResults();
                 List<Result> visible = new ArrayList<>();
                 for (int i = 0; i < Math.min(RESULT_LIMIT, ordered.size()); i++) {
                     visible.add(withImage(ordered.get(i)));
                 }
                 String message = !complete ? "Searching client items... "
                         + (client.getItemCount() == 0 ? 0 : nextItemId * 100 / client.getItemCount()) + "%"
-                        : ordered.isEmpty() ? "No matches. Try a shorter name or a numeric ID."
-                        : ordered.size() > RESULT_LIMIT ? "First 50 matches. Refine the name to narrow the list."
-                        : ordered.size() + " matching items. Select one to confirm.";
+                        : matches.getMatchCount() == 0 ? "No matches. Try a shorter name or a numeric ID."
+                        : matches.getMatchCount() > RESULT_LIMIT ? "First 50 matches. Refine the name to narrow the list."
+                        : matches.getMatchCount() + " matching items. Select one to confirm.";
                 deliver(cancelled, callback, new Response(visible, message, complete));
             }
             return complete;
@@ -188,7 +196,7 @@ public final class ItemSearchService implements ItemLookup {
     }
 
     private Result withImage(Result result) {
-        return new Result(result.id, result.name, images.apply(result.id));
+        return new Result(result.id, result.name, images.apply(result.id), result.normalizedName);
     }
 
     /**
@@ -200,11 +208,50 @@ public final class ItemSearchService implements ItemLookup {
         public final int id;
         public final String name;
         public final AsyncBufferedImage image;
+        private final String normalizedName;
 
         public Result(int id, String name, AsyncBufferedImage image) {
+            this(id, name, image, name.toLowerCase(Locale.ROOT));
+        }
+
+        private Result(int id, String name, AsyncBufferedImage image, String normalizedName) {
             this.id = id;
             this.name = name;
             this.image = image;
+            this.normalizedName = normalizedName;
+        }
+    }
+
+    /**
+     * @author Ayman Yassen
+     * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
+     * @since 11/04/2026
+     */
+    static final class SearchResults {
+        private final Comparator<Result> order;
+        private final PriorityQueue<Result> best;
+        @Getter(AccessLevel.PACKAGE)
+        private int matchCount;
+
+        SearchResults(String query) {
+            order = Comparator.comparingInt((Result result) -> rankNormalized(result.normalizedName, query)).thenComparing(result -> result.name, String.CASE_INSENSITIVE_ORDER).thenComparingInt(result -> result.id);
+            best = new PriorityQueue<>(RESULT_LIMIT, order.reversed());
+        }
+
+        void add(Result result) {
+            matchCount++;
+            if (best.size() < RESULT_LIMIT) {
+                best.add(result);
+            } else if (order.compare(result, best.peek()) < 0) {
+                best.poll();
+                best.add(result);
+            }
+        }
+
+        List<Result> getResults() {
+            List<Result> results = new ArrayList<>(best);
+            results.sort(order);
+            return results;
         }
     }
 
