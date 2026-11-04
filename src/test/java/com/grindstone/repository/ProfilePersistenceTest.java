@@ -1,6 +1,10 @@
 package com.grindstone.repository;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
+import com.grindstone.content.milestone.Milestone;
+import com.grindstone.content.milestone.MilestoneCategory;
+import com.grindstone.content.milestone.impl.CustomMilestone;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -29,6 +33,39 @@ public class ProfilePersistenceTest {
     public TemporaryFolder temporary = new TemporaryFolder();
 
     @Test
+    public void oversizedImportAndInvalidSavePreserveThePreviousProfile() throws Exception {
+        GrindstoneProfile full = new GrindstoneProfile(42);
+        List<Milestone> goals = new ArrayList<>();
+        for (int i = 0; i < GrindstoneRepository.MAX_MILESTONES; i++) {
+            goals.add(new CustomMilestone("Plan " + i, "", MilestoneCategory.OTHER, 0, 1));
+        }
+        full.replace(goals);
+        GrindstoneProfile backup = TestProfiles.populated(42);
+        try {
+            full.mergeBackup(backup);
+            fail("An oversized merge must be rejected before mutation");
+        } catch (IllegalArgumentException expected) {
+            assertEquals(GrindstoneRepository.MAX_MILESTONES, full.getGoals().size());
+            assertSame(goals.get(0), full.getGoals().get(0));
+        }
+        Filepath directory = Filepath.Unchecked.getRooted(temporary.newFolder().toPath());
+        JsonObject saved = TestProfiles.REPOSITORY.toJson(backup);
+        TestProfiles.REPOSITORY.save(directory, saved);
+        JsonObject invalid = saved.deepCopy();
+        JsonArray tooMany = new JsonArray();
+        for (int i = 0; i <= GrindstoneRepository.MAX_MILESTONES; i++) {
+            tooMany.add(saved.getAsJsonArray("goals").get(0));
+        }
+        invalid.add("goals", tooMany);
+        try {
+            TestProfiles.REPOSITORY.save(directory, invalid);
+            fail("A save the loader rejects must not replace a valid file");
+        } catch (IOException expected) {
+            assertEquals(1, TestProfiles.REPOSITORY.load(directory, 42).getGoals().size());
+        }
+    }
+
+    @Test
     public void migratesLocalProfileAndPrefersSyncedDataOnAnotherComputer() throws Exception {
         Filepath first = Filepath.Unchecked.getRooted(temporary.newFolder().toPath());
         Filepath second = Filepath.Unchecked.getRooted(temporary.newFolder().toPath());
@@ -54,6 +91,65 @@ public class ProfilePersistenceTest {
             fail("A different account's synced data must be rejected");
         } catch (CompletionException expected) {
             assertTrue(expected.getCause() instanceof IOException);
+        }
+    }
+
+    @Test
+    public void staleDeviceCannotOverwriteNewPlansAndRecoveryPreservesBothVersions() throws Exception {
+        MemoryProfiles settings = new MemoryProfiles();
+        Filepath firstRoot = Filepath.Unchecked.getRooted(temporary.newFolder().toPath());
+        Filepath secondRoot = Filepath.Unchecked.getRooted(temporary.newFolder().toPath());
+        ProfilePersistence first = new ProfilePersistence(TestProfiles.REPOSITORY, Runnable::run, settings);
+        ProfilePersistence second = new ProfilePersistence(TestProfiles.REPOSITORY, Runnable::run, settings);
+        first.configure(() -> firstRoot);
+        second.configure(() -> secondRoot);
+        GrindstoneProfile a = first.load(42).join();
+        GrindstoneProfile b = second.load(42).join();
+        a.add(new CustomMilestone("Computer A", "", MilestoneCategory.OTHER, 0, 5));
+        first.save(TestProfiles.REPOSITORY.toJson(a)).join();
+        b.add(new CustomMilestone("Computer B", "", MilestoneCategory.OTHER, 0, 5));
+        try {
+            second.save(TestProfiles.REPOSITORY.toJson(b)).join();
+            fail("A stale device must not silently overwrite a remote edit");
+        } catch (CompletionException expected) {
+            assertTrue(expected.getCause() instanceof ProfilePersistence.SyncConflictException);
+        }
+        assertEquals("Computer A", TestProfiles.REPOSITORY.readProfile(settings.values.get("first"), 42).getGoals().get(0).getTitle(null));
+        assertEquals("Computer B", TestProfiles.REPOSITORY.load(secondRoot.joinSegment("profiles"), 42).getGoals().get(0).getTitle(null));
+        ProfilePersistence.RecoveryState state = second.getRecoveryState(42).join();
+        assertTrue(state.getOptions().stream().anyMatch(option -> option.getTitle().equals("Local save")));
+        assertTrue(state.getOptions().stream().anyMatch(option -> option.getTitle().equals("Synced save")));
+        second.recover(42, TestProfiles.REPOSITORY.toJson(b), state.getRemote()).join();
+        assertEquals("Computer B", TestProfiles.REPOSITORY.readProfile(settings.values.get("first"), 42).getGoals().get(0).getTitle(null));
+        assertFalse(secondRoot.joinSegment("profiles").joinSegment("42.sync-pending").exists());
+    }
+
+    @Test
+    public void corruptSyncedDataCanBeRecoveredWithoutAnActiveProfile() throws Exception {
+        MemoryProfiles settings = new MemoryProfiles();
+        Filepath root = Filepath.Unchecked.getRooted(temporary.newFolder().toPath());
+        ProfilePersistence persistence = new ProfilePersistence(TestProfiles.REPOSITORY, Runnable::run, settings);
+        persistence.configure(() -> root);
+        persistence.load(42).join();
+        persistence.save(TestProfiles.REPOSITORY.toJson(TestProfiles.populated(42))).join();
+        settings.values.put("first", "invalid profile");
+        try {
+            persistence.load(42).join();
+            fail("Corrupt synced data must not be activated");
+        } catch (CompletionException expected) {
+            ProfilePersistence.RecoveryState state = persistence.getRecoveryState(42).join();
+            ProfilePersistence.RecoveryOption local = state.getOptions().stream().filter(option -> option.getTitle().equals("Local save")).findFirst().get();
+            settings.values.put("first", "changed again");
+            try {
+                persistence.recover(42, local.getSnapshot(), state.getRemote()).join();
+                fail("A recovery preview must not replace a newer remote value");
+            } catch (CompletionException changed) {
+                assertTrue(changed.getCause() instanceof ProfilePersistence.SyncConflictException);
+            }
+            state = persistence.getRecoveryState(42).join();
+            GrindstoneProfile restored = persistence.recover(42, local.getSnapshot(), state.getRemote()).join();
+            assertEquals(1, restored.getGoals().size());
+            assertEquals(1, persistence.load(42).join().getGoals().size());
         }
     }
 

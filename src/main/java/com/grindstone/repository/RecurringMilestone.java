@@ -35,6 +35,14 @@ public final class RecurringMilestone {
     @Getter
     private long lastObservedAt;
     private final List<Period> history = new ArrayList<>();
+    @Getter
+    private transient boolean awaitingReading;
+    @Getter
+    private transient long revision;
+
+    public void beginSession(Milestone goal) {
+        awaitingReading = isActive() && baselineAt > 0 && goal instanceof TrackerMilestone && !((TrackerMilestone) goal).getTracker().isMonotonic();
+    }
     public RecurringMilestone copy() {
         RecurringMilestone copy = new RecurringMilestone();
         copy.schedule = schedule;
@@ -46,6 +54,8 @@ public final class RecurringMilestone {
         copy.completedAt = completedAt;
         copy.lastObservedAt = lastObservedAt;
         copy.history.addAll(history);
+        copy.awaitingReading = awaitingReading;
+        copy.revision = revision;
         return copy;
     }
 
@@ -109,7 +119,13 @@ public final class RecurringMilestone {
         if (!isActive() || !supports(goal) || now <= 0 || now < lastObservedAt) {
             return;
         }
+        long value = Math.max(0, goal.getProgressCurrent());
+        boolean monotonic = !(goal instanceof ManualMilestone) && (!(goal instanceof TrackerMilestone) || ((TrackerMilestone) goal).getTracker().isMonotonic());
+        if (baselineAt > 0 && monotonic && value < lastValue || awaitingReading && value == 0 && lastValue > 0) {
+            return;
+        }
         long periodStart = schedule.getPeriodStart(now);
+        boolean readingChanged = baselineAt == 0 || value != lastValue || periodStart > start || awaitingReading;
         if (baselineAt > 0 && periodStart > start) {
             long previousEnd = schedule.getNextReset(start);
             archive(previousEnd, completedAt > 0 ? "Completed" : "Incomplete · last observed");
@@ -119,9 +135,17 @@ public final class RecurringMilestone {
             baselineAt = 0;
             if (goal instanceof ManualMilestone) {
                 ((ManualMilestone) goal).resetProgress();
+                value = Math.max(0, goal.getProgressCurrent());
             }
         }
-        long value = Math.max(0, goal.getProgressCurrent());
+        if (awaitingReading) {
+            // A balance cannot tell us how much was earned or spent while its client data was unavailable.
+            lastValue = value;
+            if (baselineAt > 0) {
+                baselineAt = now;
+            }
+            awaitingReading = false;
+        }
         if (baselineAt == 0) {
             start = periodStart;
             baselineAt = now;
@@ -135,7 +159,10 @@ public final class RecurringMilestone {
             progress = Math.min(Long.MAX_VALUE - (value - lastValue), progress) + (value - lastValue);
         }
         lastValue = value;
-        lastObservedAt = now;
+        if (readingChanged || now - lastObservedAt >= 30_000) {
+            lastObservedAt = now;
+            revision++;
+        }
         if (progress >= target && completedAt == 0) {
             completedAt = now;
         }

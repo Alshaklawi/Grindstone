@@ -22,8 +22,10 @@ public final class CombatAchievementData {
     private static final int TASK_NAME_PARAM = 1308;
     private static final int TASK_DESCRIPTION_PARAM = 1309;
     private static volatile Map<Integer, Task> cachedTasks = Collections.emptyMap();
+    private static Map<Integer, List<Integer>> cachedBossTasks = Collections.emptyMap();
     public static void clearCache() {
         cachedTasks = Collections.emptyMap();
+        cachedBossTasks = Collections.emptyMap();
     }
     public static boolean supportsTask(int task) {
         return task >= 0 && task < COMPLETED.length * 32;
@@ -110,15 +112,21 @@ public final class CombatAchievementData {
     private CombatAchievementData() {
     }
     public static Map<Integer, List<Integer>> getTasksByBoss(Client client) {
+        if (!cachedBossTasks.isEmpty()) {
+            return cachedBossTasks;
+        }
         Map<Integer, List<Integer>> result = new LinkedHashMap<>();
+        boolean ready = true;
         for (CombatAchievementTier tier : CombatAchievementTier.values()) {
             EnumComposition tasks = client.getEnum(tier.getTaskEnum());
             if (tasks == null || tasks.getIntVals() == null) {
+                ready = false;
                 continue;
             }
             for (int structId : tasks.getIntVals()) {
                 StructComposition task = client.getStructComposition(structId);
                 if (task == null) {
+                    ready = false;
                     continue;
                 }
                 int id = task.getIntValue(TASK_ID_PARAM);
@@ -132,7 +140,12 @@ public final class CombatAchievementData {
                 }
             }
         }
-        return result;
+        result.replaceAll((boss, tasks) -> List.copyOf(tasks));
+        Map<Integer, List<Integer>> snapshot = Collections.unmodifiableMap(result);
+        if (ready && !snapshot.isEmpty()) {
+            cachedBossTasks = snapshot;
+        }
+        return snapshot;
     }
     public static String getBossName(Client client, int boss) {
         EnumComposition names = client.getEnum(BOSS_NAMES_ENUM);

@@ -98,6 +98,6 @@ public interface Milestone {
     }
 
     default boolean isAffectedBy(ItemContainer container) {
-        return container != null;
+        return false;
     }
 }

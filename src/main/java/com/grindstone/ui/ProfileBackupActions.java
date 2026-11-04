@@ -92,9 +92,13 @@ public final class ProfileBackupActions {
                             if (token != generation.get() || !live.getAsBoolean()) {
                                 return;
                             }
-                            int added = active.mergeBackup(restored);
-                            refresh.run();
-                            finish(owner, live, token, added + " missing milestones restored. Existing matches were kept.");
+                            try {
+                                int added = active.mergeBackup(restored);
+                                refresh.run();
+                                finish(owner, live, token, added + " missing milestones restored. Existing matches were kept.");
+                            } catch (RuntimeException failure) {
+                                fail(owner, live, token, failure);
+                            }
                         });
                     });
                 } catch (Exception failure) {

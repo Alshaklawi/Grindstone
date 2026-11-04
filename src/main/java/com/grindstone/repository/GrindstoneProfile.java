@@ -42,6 +42,12 @@ public class GrindstoneProfile {
     private final List<Milestone> goals = new ArrayList<>();
     private final transient Map<Milestone, MilestoneMetadata> metadata = new IdentityHashMap<>();
     private transient long revision;
+    @Getter
+    private transient long persistenceRevision;
+
+    public void markDirty() {
+        persistenceRevision++;
+    }
     private final Map<String, ArchivedHistory> archivedHistory = new LinkedHashMap<>();
     public Collection<ArchivedHistory> getArchivedHistory() {
         return Collections.unmodifiableCollection(archivedHistory.values());
@@ -87,6 +93,7 @@ public class GrindstoneProfile {
     }
     public void touch() {
         revision++;
+        markDirty();
     }
     public Consumer<Milestone> snapshotEdit(Milestone original) {
         MilestoneMetadata saved = getMetadata(original).copy();
@@ -133,8 +140,12 @@ public class GrindstoneProfile {
         for (Milestone goal : goals) {
             RecurringMilestone recurring = getMetadata(goal).getRecurring();
             if (recurring.isActive() && RecurringMilestone.supports(goal)) {
+                long previous = recurring.getRevision();
                 goal.refresh(client);
                 recurring.observe(goal, now);
+                if (previous != recurring.getRevision()) {
+                    markDirty();
+                }
             }
         }
         updateLinkedGoals(client != null && client.getGameState() == GameState.LOGGED_IN && client.getLocalPlayer() != null && client.getAccountHash() == hash);
@@ -204,6 +215,9 @@ public class GrindstoneProfile {
         MilestoneMetadata.validated(details);
         if (findMatchingGoal(goal, details.getRecurring().getSchedule()) != null) {
             return false;
+        }
+        if (goals.size() >= GrindstoneRepository.MAX_MILESTONES) {
+            throw new IllegalArgumentException("A profile supports up to " + GrindstoneRepository.MAX_MILESTONES + " milestones.");
         }
         attachCollectionData(goal);
         metadata.put(goal, details);
@@ -337,6 +351,10 @@ public class GrindstoneProfile {
         if (backup.hash != hash) {
             throw new IllegalArgumentException("Backup must be mapped to this account before merging.");
         }
+        long missing = backup.getGoals().stream().filter(goal -> findMatchingGoal(goal, backup.getMetadata(goal).getRecurring().getSchedule()) == null).count();
+        if (goals.size() + missing > GrindstoneRepository.MAX_MILESTONES) {
+            throw new IllegalArgumentException("This import would exceed " + GrindstoneRepository.MAX_MILESTONES + " milestones. No milestones were imported.");
+        }
         int added = 0;
         Map<String, String> mapping = new HashMap<>();
         for (Milestone goal : backup.getGoals()) {
@@ -355,6 +373,7 @@ public class GrindstoneProfile {
         playerStorage.mergeSnapshots(backup.playerStorage);
         backup.getArchivedHistory().forEach(this::restoreArchive);
         setItemManager(itemManager);
+        markDirty();
         return added;
     }
 
@@ -363,6 +382,9 @@ public class GrindstoneProfile {
     }
 
     public void replace(List<Milestone> goals) {
+        if (goals.size() > GrindstoneRepository.MAX_MILESTONES || goals.contains(null)) {
+            throw new IllegalArgumentException("Invalid milestone list or profile limit exceeded.");
+        }
         this.goals.clear();
         this.goals.addAll(goals);
         this.goals.forEach(this::attachCollectionData);

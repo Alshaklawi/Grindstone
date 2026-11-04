@@ -79,7 +79,7 @@ public final class MilestoneCompletionNotifications {
                 String title = NotificationMessages.formatTitle(goal.getTitle(client));
                 String label = (repeating ? recurring.getSchedule() + ": " : "") + title;
                 String progress = config.completionNumbers() ? NotificationMessages.formatProgress(goal, repeating ? recurring.getProgress() : goal.getProgressCurrent(), target) : "";
-                completed.add(new CompletionOverlayEntry(label, progress.isEmpty() ? "" : progress.substring(2, progress.length() - 1), config.completionPopup() ? goal.getIcon(client) : null));
+                completed.add(new CompletionOverlayEntry(id + ":" + cycle, label, progress.isEmpty() ? "" : progress.substring(2, progress.length() - 1), config.completionPopup() ? goal.getIcon(client) : null));
                 headings.add(repeating ? "Routine complete" : "Milestone complete");
                 details.add(label + progress);
                 if (repeating) {

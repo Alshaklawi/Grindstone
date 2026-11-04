@@ -42,6 +42,7 @@ import net.runelite.client.util.Filepath;
 @lombok.extern.slf4j.Slf4j
 @Singleton
 public final class GrindstoneRepository {
+    public static final int MAX_MILESTONES = 5000;
     public static final int MAX_PROFILE_BYTES = 20_000_000;
     private final Gson gson;
     private final JsonObject metadataDefaults;
@@ -81,7 +82,7 @@ public final class GrindstoneRepository {
     public GrindstoneProfile readProfile(String text, long hash) throws IOException {
         requireHash(hash);
         JsonObject json = new JsonParser().parse(text).getAsJsonObject();
-        if (!json.has("hash") || json.get("hash").getAsLong() != hash || !json.has("goals") || !json.get("goals").isJsonArray() || json.getAsJsonArray("goals").size() > 5000) {
+        if (!json.has("hash") || json.get("hash").getAsLong() != hash || !json.has("goals") || !json.get("goals").isJsonArray() || json.getAsJsonArray("goals").size() > MAX_MILESTONES) {
             throw new IOException("This profile does not belong to the current account or has invalid milestone data.");
         }
         GrindstoneProfile profile = decode(json, true);
@@ -116,6 +117,7 @@ public final class GrindstoneRepository {
         if (text.length() > MAX_PROFILE_BYTES || text.getBytes(StandardCharsets.UTF_8).length > MAX_PROFILE_BYTES) {
             throw new IOException("The profile exceeds the save size limit. The previous save has not been changed.");
         }
+        readProfile(text, hash);
         directory.createDirectories();
         Filepath destination = directory.joinSegment(hash + ".json");
         Filepath recovery = directory.joinSegment(hash + ".json.bak");
@@ -437,7 +439,7 @@ public final class GrindstoneRepository {
             throw new IllegalArgumentException("Backup must be smaller than 5 MB.");
         }
         JsonObject json = new JsonParser().parse(text).getAsJsonObject();
-        if (!json.has("hash") || !json.has("goals") || !json.get("goals").isJsonArray() || json.getAsJsonArray("goals").size() > 5000) {
+        if (!json.has("hash") || !json.has("goals") || !json.get("goals").isJsonArray() || json.getAsJsonArray("goals").size() > MAX_MILESTONES) {
             throw new IllegalArgumentException("Not a valid Grindstone profile backup.");
         }
         if (json.has("backupVersion") && json.get("backupVersion").getAsInt() != 1) {

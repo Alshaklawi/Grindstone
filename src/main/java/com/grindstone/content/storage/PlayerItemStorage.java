@@ -160,12 +160,12 @@ public final class PlayerItemStorage {
             return ItemVariants.getNormalId(definition);
         });
     }
-    public void refreshVariables(Client client) {
-        refreshCoinValues(client::getVarbitValue, client::getVarpValue);
+    public boolean refreshVariables(Client client) {
+        boolean changed = refreshCoinValues(client::getVarbitValue, client::getVarpValue);
         EnumComposition mapping = client.getEnum(EnumID.RUNEPOUCH_RUNE);
-        refreshRuneValues(client::getVarbitValue, type -> mapping == null ? -1 : mapping.getIntValue(type));
+        return refreshRuneValues(client::getVarbitValue, type -> mapping == null ? -1 : mapping.getIntValue(type)) || changed;
     }
-    public void refreshRuneValues(IntUnaryOperator varbits, IntUnaryOperator mapping) {
+    public boolean refreshRuneValues(IntUnaryOperator varbits, IntUnaryOperator mapping) {
         Map<Integer, Long> runes = new HashMap<>();
         boolean hasPouch = getQuantity(ItemID.BH_RUNE_POUCH) > 0
         || getQuantity(ItemID.BH_RUNE_POUCH_TROUVER) > 0
@@ -183,23 +183,31 @@ public final class PlayerItemStorage {
                 }
             }
         }
-        variables.put("Rune pouch", runes);
-        variableSeen.put("Rune pouch", Instant.ofEpochMilli(clock.millis()));
+        return updateVariable("Rune pouch", runes);
     }
-    public void refreshCoinValues(IntUnaryOperator varbits, IntUnaryOperator varps) {
-        setCoins("Nightmare Zone coffer", Math.max(0L, varbits.applyAsInt(VarbitID.NZONE_CASH)) * 1000L);
-        setCoins("Last Man Standing coffer", Math.max(0L, varbits.applyAsInt(VarbitID.BR_COFFER)) * 1000L);
-        setCoins("Blast Furnace coffer", varbits.applyAsInt(VarbitID.BLAST_FURNACE_COFFER));
-        setCoins("Miscellania coffer", varbits.applyAsInt(VarbitID.MISC_COFFERS));
-        setCoins("Scar essence mine coffer", varps.applyAsInt(VarPlayerID.SCAR_ESSENCEMINE_COFFER));
+    public boolean refreshCoinValues(IntUnaryOperator varbits, IntUnaryOperator varps) {
+        boolean changed = setCoins("Nightmare Zone coffer", Math.max(0L, varbits.applyAsInt(VarbitID.NZONE_CASH)) * 1000L);
+        changed |= setCoins("Last Man Standing coffer", Math.max(0L, varbits.applyAsInt(VarbitID.BR_COFFER)) * 1000L);
+        changed |= setCoins("Blast Furnace coffer", varbits.applyAsInt(VarbitID.BLAST_FURNACE_COFFER));
+        changed |= setCoins("Miscellania coffer", varbits.applyAsInt(VarbitID.MISC_COFFERS));
+        changed |= setCoins("Scar essence mine coffer", varps.applyAsInt(VarPlayerID.SCAR_ESSENCEMINE_COFFER));
+        return changed;
     }
-    private void setCoins(String source, long quantity) {
+    private boolean setCoins(String source, long quantity) {
         Map<Integer, Long> coins = new HashMap<>();
         if (quantity > 0) {
             coins.put(ItemID.COINS, quantity);
         }
-        variables.put(source, coins);
+        return updateVariable(source, coins);
+    }
+
+    private boolean updateVariable(String source, Map<Integer, Long> values) {
+        if (values.equals(variables.get(source))) {
+            return false;
+        }
+        variables.put(source, values);
         variableSeen.put(source, Instant.ofEpochMilli(clock.millis()));
+        return true;
     }
     public Map<String, Long> getBreakdown(int item) {
         Map<String, Long> result = new LinkedHashMap<>();

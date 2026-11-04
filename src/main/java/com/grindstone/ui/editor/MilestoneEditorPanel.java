@@ -68,7 +68,7 @@ import net.runelite.client.ui.FontManager;
  * @since 10/18/2026
  */
 public final class MilestoneEditorPanel extends JPanel {
-    private final JComboBox<String> type = new JComboBox<>(new String[]{ "Skill level", "Skill experience", "Combat level", "Total level", "Total experience", "Boss kills & completions", "Page", "Item unlock", "Custom milestone", "Quest", "Quest series", "Achievement diary region & tier", "Achievement diary tier (all regions)", "Combat achievements: boss", "Combat achievements: reward tier", "Combat achievements: difficulty tasks", "Owned item quantity", "Combat achievement task", "Base level (all skills)", "Base experience (all skills)", "Session experience", "Personal checklist / routine", "Total unlocks", "Raid completions", "Slayer counters", "Clue scroll completions", "Minigame counters", "Skilling activities", "Quest speedrun completions", "Tab"});
+    private final JComboBox<MilestoneType> type = new JComboBox<>(MilestoneType.values());
     private final ChecklistMilestoneForm checklistForm = new ChecklistMilestoneForm();
     private final CustomMilestoneForm customForm = new CustomMilestoneForm();
     private final RepeatMilestoneForm repeatForm = new RepeatMilestoneForm();
@@ -76,7 +76,7 @@ public final class MilestoneEditorPanel extends JPanel {
         return repeatForm.isVisible() ? repeatForm.getSchedule() : RepeatSchedule.NONE;
     }
     public long getRepeatTarget() {
-        if (type.getSelectedIndex() == 21) {
+        if (getSelectedType() == MilestoneType.CHECKLIST) {
             return checklistForm.read().getProgressMaximum();
         }
         return repeatForm.getTarget();
@@ -140,11 +140,11 @@ public final class MilestoneEditorPanel extends JPanel {
     }
 
     private boolean needsCollectionSnapshot() {
-        int kind = type.getSelectedIndex();
-        return (kind == 6 || kind == 7 || kind == 22 || kind == 29) && !collectionSnapshotAvailable;
+        MilestoneType kind = getSelectedType();
+        return kind.requiresCollectionSnapshot() && !collectionSnapshotAvailable;
     }
     private Map<Milestone, RepeatSchedule> existingGoals;
-    private final Map<Integer, Map<String, Supplier<Milestone>>> completionChoices;
+    private final Map<MilestoneType, Map<String, Supplier<Milestone>>> completionChoices;
 
     public MilestoneEditorPanel(ItemManager itemManager, ItemLookup searchService) {
         this(itemManager, searchService, CompletionMilestoneChoices.create(null));
@@ -152,7 +152,7 @@ public final class MilestoneEditorPanel extends JPanel {
 
     public void hideObtainedCollectionItems(Set<Integer> obtained) {
         Set<Integer> snapshot = new HashSet<>(obtained);
-        itemPicker.setAvailableItems(id -> type.getSelectedIndex() != 7 || !snapshot.contains(CollectionLogPages.getCanonicalItemId(id)));
+        itemPicker.setAvailableItems(id -> getSelectedType() != MilestoneType.COLLECTION_ITEM || !snapshot.contains(CollectionLogPages.getCanonicalItemId(id)));
     }
 
     public void setExistingMilestones(Map<Milestone, RepeatSchedule> existingGoals) {
@@ -165,7 +165,7 @@ public final class MilestoneEditorPanel extends JPanel {
 
     public String getReviewText(Milestone goal) {
         String name = goal.getTitle(null);
-        if ((type.getSelectedIndex() == 7 || type.getSelectedIndex() == 16) && itemPicker.hasSelection()) {
+        if ((getSelectedType() == MilestoneType.COLLECTION_ITEM || getSelectedType() == MilestoneType.OWNED_ITEM) && itemPicker.hasSelection()) {
             name = itemPicker.getSelectedItemName() + " · item " + itemPicker.getSelectedItemId();
         }
         StringBuilder text = new StringBuilder(name).append('\n');
@@ -184,11 +184,11 @@ public final class MilestoneEditorPanel extends JPanel {
         return text.toString();
     }
 
-    public MilestoneEditorPanel(ItemManager itemManager, ItemLookup searchService, Map<Integer, Map<String, Supplier<Milestone>>> completionChoices) {
+    public MilestoneEditorPanel(ItemManager itemManager, ItemLookup searchService, Map<MilestoneType, Map<String, Supplier<Milestone>>> completionChoices) {
         this(itemManager, searchService, completionChoices, false);
     }
 
-    public MilestoneEditorPanel(ItemManager itemManager, ItemLookup searchService, Map<Integer, Map<String, Supplier<Milestone>>> completionChoices, boolean editing) {
+    public MilestoneEditorPanel(ItemManager itemManager, ItemLookup searchService, Map<MilestoneType, Map<String, Supplier<Milestone>>> completionChoices, boolean editing) {
         super(new BorderLayout(0, 12));
         this.completionChoices = completionChoices;
         this.editing = editing;
@@ -213,12 +213,12 @@ public final class MilestoneEditorPanel extends JPanel {
         type.addActionListener(event -> rebuild());
         target.addChangeListener(event -> updatePreview());
         checklistForm.addStepsListener(() -> {
-            if (type.getSelectedIndex() == 21) {
+            if (getSelectedType() == MilestoneType.CHECKLIST) {
                 repeatForm.setFixedTarget(checklistForm.getStepCount());
             }
         });
         repeatForm.addScheduleListener(() -> {
-            customForm.setRecurring(type.getSelectedIndex() == 8 && repeatForm.getSchedule() != RepeatSchedule.NONE);
+            customForm.setRecurring(getSelectedType() == MilestoneType.CUSTOM && repeatForm.getSchedule() != RepeatSchedule.NONE);
             firePropertyChange("formLayout", false, true);
         });
         rebuild();
@@ -241,9 +241,9 @@ public final class MilestoneEditorPanel extends JPanel {
         body.removeAll();
         choices.clear();
         skillButtons.clear();
-        int kind = type.getSelectedIndex();
+        MilestoneType kind = getSelectedType();
         repeatForm.setFixedTarget(null);
-        if (kind == 6 || kind == 7 || kind == 22 || kind == 29) {
+        if (kind.requiresCollectionSnapshot()) {
             body.add(createCollectionSnapshotInfo());
             body.add(Box.createVerticalStrut(8));
         }
@@ -257,20 +257,20 @@ public final class MilestoneEditorPanel extends JPanel {
             firePropertyChange("formLayout", false, true);
             return;
         }
-        if (kind == 21) {
+        if (kind == MilestoneType.CHECKLIST) {
             checklistForm.setAlignmentX(LEFT_ALIGNMENT);
             body.add(checklistForm);
             setHint("Check each step manually. Daily, weekly and monthly routines require every step, reset at the next UTC period and keep observed history. No game actions are performed.");
-        } else if (kind == 8) {
+        } else if (kind == MilestoneType.CUSTOM) {
             customForm.setRecurring(repeatForm.getSchedule() != RepeatSchedule.NONE);
             customForm.setAlignmentX(LEFT_ALIGNMENT);
             body.add(customForm);
             setHint("Write your own milestone. You control its progress and can edit its details later.");
-        } else if (kind == 7 || kind == 16) {
+        } else if (kind == MilestoneType.COLLECTION_ITEM || kind == MilestoneType.OWNED_ITEM) {
             itemPicker.setAlignmentX(LEFT_ALIGNMENT);
             body.add(itemPicker);
             itemPicker.resumeSearch();
-            if (kind == 16) {
+            if (kind == MilestoneType.OWNED_ITEM) {
                 body.add(Box.createVerticalStrut(12));
                 target.setModel(MilestoneTargetModels.create(new PossessedItemMilestone( ItemID.COINS)));
                 target.setEditor(new JSpinner.NumberEditor(target, "#,##0"));
@@ -287,21 +287,21 @@ public final class MilestoneEditorPanel extends JPanel {
                 quantity.add(presets, BorderLayout.SOUTH);
                 body.add(quantity);
             }
-            setHint(kind == 16 ? "Counts the selected item across known personal storage, including coins in supported coffers. Open your bank and other storage to load them. This is item quantity, not bank value. Shared storage and unexposed locations are excluded." : "Tracks collection-log unlocks and first-seen dates, not inventory or bank quantities. Choose an item that belongs to the collection log.");
+            setHint(kind == MilestoneType.OWNED_ITEM ? "Counts the selected item across known personal storage, including coins in supported coffers. Open your bank and other storage to load them. This is item quantity, not bank value. Shared storage and unexposed locations are excluded." : "Tracks collection-log unlocks and first-seen dates, not inventory or bank quantities. Choose an item that belongs to the collection log.");
         } else {
             populateChoices(kind);
             updating = true;
             subject.setItems(choices.keySet());
             updating = false;
-            if (kind < 2 || CompletionMilestoneChoices.isActivityType(kind) || kind == 6 || kind == 29 || kind >= 9 && kind < 18 || kind == 20) {
-                boolean skillSelection = kind == 0 || kind == 1 || kind == 20;
-                body.add(field(skillSelection ? "Skill" : CompletionMilestoneChoices.isActivityType(kind) ? "Activity" : kind == 29 ? "Tab" : kind >= 9 ? "Track" : "Page", skillSelection ? createSkillPicker() : subject));
+            if (kind.isSkill() || CompletionMilestoneChoices.isActivityType(kind) || kind == MilestoneType.COLLECTION_PAGE || kind == MilestoneType.COLLECTION_TAB || kind.isCompletion() || kind == MilestoneType.SESSION_EXPERIENCE) {
+                boolean skillSelection = kind == MilestoneType.SKILL_LEVEL || kind == MilestoneType.SKILL_EXPERIENCE || kind == MilestoneType.SESSION_EXPERIENCE;
+                body.add(field(skillSelection ? "Skill" : CompletionMilestoneChoices.isActivityType(kind) ? "Activity" : kind == MilestoneType.COLLECTION_TAB ? "Tab" : kind.isClientType() ? "Track" : "Page", skillSelection ? createSkillPicker() : subject));
                 body.add(Box.createVerticalStrut(12));
             }
             Milestone sample = choices.isEmpty() ? null : choices.values().iterator().next().get();
             if (sample != null && sample.supportsTarget()) {
                 configureTarget(false);
-                JPanel targetField = field(kind == 1 || kind == 4 || kind == 19 || kind == 20 ? "Target experience" : CompletionMilestoneChoices.isActivityType(kind) ? "Target amount" : kind == 22 ? "Target unlocks" : "Target level", target);
+                JPanel targetField = field(kind == MilestoneType.SKILL_EXPERIENCE || kind == MilestoneType.TOTAL_EXPERIENCE || kind == MilestoneType.BASE_EXPERIENCE || kind == MilestoneType.SESSION_EXPERIENCE ? "Target experience" : CompletionMilestoneChoices.isActivityType(kind) ? "Target amount" : kind == MilestoneType.COLLECTION_TOTAL ? "Target unlocks" : "Target level", target);
                 targetField.add(presets, BorderLayout.SOUTH);
                 presets.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
                 body.add(targetField);
@@ -309,25 +309,25 @@ public final class MilestoneEditorPanel extends JPanel {
             }
             updatePreview();
             body.add(preview);
-            setHint(kind >= 9 ? (choices.isEmpty() ? "Client data is not ready. Log in and reopen this dialog." : "Progress reads your logged-in character automatically. Completion milestones have no manual target.") : kind == 6 ? "Open your in-game collection log to refresh unlocks. Each item keeps its first-seen date." : kind == 5 ? "Progress reads your character's activity count automatically." : kind == 1 || kind == 4 ? "Progress reads your character's real experience automatically." : "Uses real levels. Temporary boosts do not advance level milestones.");
+            setHint(kind.isClientType() ? (choices.isEmpty() ? "Client data is not ready. Log in and reopen this dialog." : "Progress reads your logged-in character automatically. Completion milestones have no manual target.") : kind == MilestoneType.COLLECTION_PAGE ? "Open your in-game collection log to refresh unlocks. Each item keeps its first-seen date." : kind == MilestoneType.BOSS_KILLS ? "Progress reads your character's activity count automatically." : kind == MilestoneType.SKILL_EXPERIENCE || kind == MilestoneType.TOTAL_EXPERIENCE ? "Progress reads your character's real experience automatically." : "Uses real levels. Temporary boosts do not advance level milestones.");
             if (CompletionMilestoneChoices.isActivityType(kind)) {
                 setHint("Uses your character's client-reported activity counter. Open the relevant in-game interface if the reading has not loaded. Repeating routines count gains from their captured baseline.");
             }
-            if (kind == 29) {
+            if (kind == MilestoneType.COLLECTION_TAB) {
                 setHint("Complete a whole collection-log tab. Each distinct unlock counts once across its pages; duplicate drops do not add progress.");
             }
-            if (kind == 22) {
+            if (kind == MilestoneType.COLLECTION_TOTAL) {
                 setHint("Counts total collection-log unlocks across all pages. Open your collection log if the total has not loaded. Each unlock counts once; duplicate item quantities do not add progress.");
             }
-            if (kind == 18 || kind == 19) {
-                setHint("Every skill must reach this target. The bar shows your lowest " + (kind == 18 ? "real skill level; temporary boosts do not count." : "skill XP, not total or average experience."));
+            if (kind == MilestoneType.BASE_LEVEL || kind == MilestoneType.BASE_EXPERIENCE) {
+                setHint("Every skill must reach this target. The bar shows your lowest " + (kind == MilestoneType.BASE_LEVEL ? "real skill level; temporary boosts do not count." : "skill XP, not total or average experience."));
             }
-            if (kind == 20) {
+            if (kind == MilestoneType.SESSION_EXPERIENCE) {
                 setHint("Counts observed XP gains this login, not existing XP. Relogging or reconnecting resets it. For daily or weekly gains, choose Skill experience with a repeat schedule instead.");
             }
         }
-        repeatForm.setVisible(kind == 1 || kind == 4 || CompletionMilestoneChoices.isActivityType(kind) || kind == 8 || kind == 21);
-        if (kind == 21) {
+        repeatForm.setVisible(kind == MilestoneType.SKILL_EXPERIENCE || kind == MilestoneType.TOTAL_EXPERIENCE || CompletionMilestoneChoices.isActivityType(kind) || kind == MilestoneType.CUSTOM || kind == MilestoneType.CHECKLIST);
+        if (kind == MilestoneType.CHECKLIST) {
             repeatForm.setFixedTarget(checklistForm.getStepCount());
         }
         if (repeatForm.isVisible()) {
@@ -388,50 +388,12 @@ public final class MilestoneEditorPanel extends JPanel {
         });
     }
 
-    private void populateChoices(int kind) {
-        if (completionChoices.containsKey(kind) && (kind != 6 || !completionChoices.get(kind).isEmpty() || completionChoices.containsKey(0))) {
-            choices.putAll(completionChoices.get(kind));
-            return;
-        }
-        if (kind == 20) {
-            choices.put("All skills (total gains)", SessionExperienceMilestone::new);
-            for (Skill skill : Skill.values()) {
-                choices.put(skill.getName(), () -> new SessionExperienceMilestone(skill));
-            }
-            return;
-        }
-        if (kind == 6 && !completionChoices.getOrDefault(6, Collections.emptyMap()).isEmpty()) {
-            choices.putAll(completionChoices.get(6));
-            return;
-        }
-        if (kind == 18) {
-            choices.put("Base level", BaseLevelMilestone::new);
-            return;
-        }
-        if (kind == 19) {
-            choices.put("Base experience", BaseExperienceMilestone::new);
-            return;
-        }
-        if (kind >= 9) {
-            choices.putAll(completionChoices.getOrDefault(kind, Collections.emptyMap()));
-            return;
-        }
-        if (kind < 2) {
-            for (Skill skill : Skill.values()) {
-                choices.put(skill.getName(), kind == 0 ? () -> new SkillLevelMilestone(skill) : () -> new SkillExperienceMilestone(skill));
-            }
-        } else if (kind == 2) {
-            choices.put("Combat level", CombatLevelMilestone::new);
-        } else if (kind == 3) {
-            choices.put("Total level", TotalLevelMilestone::new);
-        } else if (kind == 4) {
-            choices.put("Total experience", TotalExperienceMilestone::new);
-        } else {
-            for (CollectionLogEntry entry : CollectionLogEntry.values()) {
-                String name = entry.name().replace('_', ' ').toLowerCase(Locale.ROOT);
-                choices.put(Character.toUpperCase(name.charAt(0)) + name.substring(1), () -> new CollectionLogEntryMilestone(itemManager, entry));
-            }
-        }
+    private MilestoneType getSelectedType() {
+        return (MilestoneType) type.getSelectedItem();
+    }
+
+    private void populateChoices(MilestoneType kind) {
+        choices.putAll(completionChoices.getOrDefault(kind, kind.createDefaultChoices()));
     }
 
     private void configureTarget(boolean preserve) {
@@ -444,7 +406,7 @@ public final class MilestoneEditorPanel extends JPanel {
             return;
         }
         long previous = target.getValue() instanceof Number ? ((Number) target.getValue()).longValue() : 0;
-        SpinnerNumberModel model = !editing && completionChoices.containsKey(type.getSelectedIndex())
+        SpinnerNumberModel model = !editing && completionChoices.containsKey(getSelectedType())
                 ? MilestoneTargetModels.createNextTarget(goal) : MilestoneTargetModels.create(goal);
         if (preserve && previous >= ((Number) model.getMinimum()).longValue() && previous <= ((Number) model.getMaximum()).longValue()) {
             model.setValue(previous);
@@ -453,15 +415,15 @@ public final class MilestoneEditorPanel extends JPanel {
         target.setEditor(new JSpinner.NumberEditor(target, "#,##0"));
         MilestoneTargetModels.describe(target);
         presets.removeAll();
-        int kind = type.getSelectedIndex();
+        MilestoneType kind = getSelectedType();
         long maximum = ((Number) model.getMaximum()).longValue();
-        long[] values = kind == 0 || kind == 18 ? new long[]{50, 75, 99}
-                : kind == 22 ? new long[]{100, 500, 1000}
-                : kind == 20 ? new long[]{10_000, 100_000, 1_000_000}
-                : kind == 1 || kind == 19 ? new long[]{1_000_000, SkillExperienceMilestone.LEVEL_99_EXPERIENCE, maximum}
-                : kind == 2 ? new long[]{70, 100, 126}
-                : kind == 3 ? new long[]{1000, 1500, maximum}
-                : kind == 4 ? new long[]{100_000_000, goal.getProgressMaximum(), maximum}
+        long[] values = kind == MilestoneType.SKILL_LEVEL || kind == MilestoneType.BASE_LEVEL ? new long[]{50, 75, 99}
+                : kind == MilestoneType.COLLECTION_TOTAL ? new long[]{100, 500, 1000}
+                : kind == MilestoneType.SESSION_EXPERIENCE ? new long[]{10_000, 100_000, 1_000_000}
+                : kind == MilestoneType.SKILL_EXPERIENCE || kind == MilestoneType.BASE_EXPERIENCE ? new long[]{1_000_000, SkillExperienceMilestone.LEVEL_99_EXPERIENCE, maximum}
+                : kind == MilestoneType.COMBAT_LEVEL ? new long[]{70, 100, 126}
+                : kind == MilestoneType.TOTAL_LEVEL ? new long[]{1000, 1500, maximum}
+                : kind == MilestoneType.TOTAL_EXPERIENCE ? new long[]{100_000_000, goal.getProgressMaximum(), maximum}
                 : new long[]{100, 500, 1000};
         long minimum = Math.max(((Number) model.getMinimum()).longValue(), goal.getProgressCurrent() + 1);
         Set<Long> suggestions = new TreeSet<>();
@@ -471,7 +433,7 @@ public final class MilestoneEditorPanel extends JPanel {
             }
         }
         // Fill gaps with nearby round thresholds instead of leaving only distant targets.
-        long step = kind == 0 || kind == 18 ? 5 : kind == 2 ? 10 : 100;
+        long step = kind == MilestoneType.SKILL_LEVEL || kind == MilestoneType.BASE_LEVEL ? 5 : kind == MilestoneType.COMBAT_LEVEL ? 10 : 100;
         while (step <= minimum / 100 && step <= Long.MAX_VALUE / 10) {
             step *= 10;
         }
@@ -508,7 +470,7 @@ public final class MilestoneEditorPanel extends JPanel {
             preview.setText("No choices available");
             return;
         }
-        if (type.getSelectedIndex() == 7 || type.getSelectedIndex() == 8) {
+        if (getSelectedType() == MilestoneType.COLLECTION_ITEM || getSelectedType() == MilestoneType.CUSTOM) {
             return;
         }
         String name = subject.getSelectedValue();
@@ -530,8 +492,8 @@ public final class MilestoneEditorPanel extends JPanel {
         if (needsCollectionSnapshot()) {
             return false;
         }
-        return type.getSelectedIndex() == 7 || type.getSelectedIndex() == 16 ? itemPicker.hasSelection()
-                : type.getSelectedIndex() == 8 || type.getSelectedIndex() == 21 || subject.getSelectedValue() != null;
+        return getSelectedType() == MilestoneType.COLLECTION_ITEM || getSelectedType() == MilestoneType.OWNED_ITEM ? itemPicker.hasSelection()
+                : getSelectedType() == MilestoneType.CUSTOM || getSelectedType() == MilestoneType.CHECKLIST || subject.getSelectedValue() != null;
     }
 
     private void notifyReadiness() {
@@ -542,20 +504,20 @@ public final class MilestoneEditorPanel extends JPanel {
         if (needsCollectionSnapshot()) {
             throw new IllegalArgumentException("Capture a full collection-log snapshot before adding collection milestones.");
         }
-        if (type.getSelectedIndex() == 21) {
+        if (getSelectedType() == MilestoneType.CHECKLIST) {
             repeatForm.commit();
             return checklistForm.read();
         }
         if (repeatForm.isVisible()) {
             repeatForm.commit();
         }
-        if (type.getSelectedIndex() == 8) {
+        if (getSelectedType() == MilestoneType.CUSTOM) {
             return customForm.read(getRepeatSchedule() == RepeatSchedule.NONE ? 0 : getRepeatTarget());
         }
-        if (type.getSelectedIndex() == 7) {
+        if (getSelectedType() == MilestoneType.COLLECTION_ITEM) {
             return new CollectionLogItemMilestone(itemPicker.getSelectedItemId(), 1);
         }
-        if (type.getSelectedIndex() == 16) {
+        if (getSelectedType() == MilestoneType.OWNED_ITEM) {
             target.commitEdit();
             return new PossessedItemMilestone( itemPicker.getSelectedItemId(), ((Number) target.getValue()).longValue());
         }
@@ -576,32 +538,32 @@ public final class MilestoneEditorPanel extends JPanel {
     }
     public void loadMilestone(Milestone goal) {
         if (goal instanceof ChecklistMilestone) {
-            type.setSelectedIndex(21);
+            type.setSelectedItem(MilestoneType.CHECKLIST);
             checklistForm.load((ChecklistMilestone) goal);
             repeatForm.setFixedTarget(goal.getProgressMaximum());
             return;
         }
         if (goal instanceof PossessedItemMilestone) {
-            type.setSelectedIndex(16);
+            type.setSelectedItem(MilestoneType.OWNED_ITEM);
             target.setValue(goal.getProgressMaximum());
             itemPicker.loadItem(((PossessedItemMilestone) goal).getItem());
             return;
         }
         if (goal instanceof CollectionLogItemMilestone) {
-            type.setSelectedIndex(7);
+            type.setSelectedItem(MilestoneType.COLLECTION_ITEM);
             itemPicker.loadItem(((CollectionLogItemMilestone) goal).getItem());
             return;
         }
         if (goal instanceof CustomMilestone) {
-            type.setSelectedIndex(8);
+            type.setSelectedItem(MilestoneType.CUSTOM);
             customForm.load((CustomMilestone) goal);
             return;
         }
-        for (int kind = 0; kind < type.getItemCount(); kind++) {
-            if (kind == 7 || kind == 8 || kind == 16 || kind == 21) {
+        for (MilestoneType kind : MilestoneType.values()) {
+            if (kind == MilestoneType.COLLECTION_ITEM || kind == MilestoneType.CUSTOM || kind == MilestoneType.OWNED_ITEM || kind == MilestoneType.CHECKLIST) {
                 continue;
             }
-            type.setSelectedIndex(kind);
+            type.setSelectedItem(kind);
             for (Map.Entry<String, Supplier<Milestone>> choice : choices.entrySet()) {
                 if (GrindstoneProfile.sameSelection(goal, choice.getValue().get())) {
                     subject.setSelectedValue(choice.getKey());

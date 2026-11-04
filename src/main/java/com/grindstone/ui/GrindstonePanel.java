@@ -15,6 +15,7 @@ import com.grindstone.content.milestone.impl.LinkedMilestone;
 import com.grindstone.content.milestone.impl.TrackerMilestone;
 import com.grindstone.content.milestone.impl.collectionlog.CollectionLogEntryMilestone;
 import com.grindstone.content.milestone.impl.collectionlog.CollectionLogItemMilestone;
+import com.grindstone.content.milestone.impl.collectionlog.CollectionLogTotalMilestone;
 import com.grindstone.content.milestone.impl.experience.BaseExperienceMilestone;
 import com.grindstone.content.milestone.impl.experience.SessionExperienceMilestone;
 import com.grindstone.content.milestone.impl.experience.SkillExperienceMilestone;
@@ -31,6 +32,7 @@ import com.grindstone.overlay.ProgressOverlayEntry;
 import com.grindstone.repository.BulkMilestoneAction;
 import com.grindstone.repository.BulkMilestoneChanges;
 import com.grindstone.repository.GrindstoneProfile;
+import com.grindstone.repository.GrindstoneRepository;
 import com.grindstone.repository.HistoryRecord;
 import com.grindstone.repository.MilestoneMetadata;
 import com.grindstone.repository.MilestoneUndo;
@@ -45,6 +47,7 @@ import com.grindstone.ui.components.SegmentedProgressBar;
 import com.grindstone.ui.components.SnapshotStatusPanel;
 import com.grindstone.ui.editor.BulkMilestoneForm;
 import com.grindstone.ui.editor.CompletionMilestoneChoices;
+import com.grindstone.ui.editor.MilestoneType;
 import com.grindstone.ui.editor.CustomMilestoneForm;
 import com.grindstone.ui.editor.DeadlineForm;
 import com.grindstone.ui.editor.LinkedMilestoneForm;
@@ -198,6 +201,15 @@ public class GrindstonePanel extends PluginPanel {
     private final JLabel progressPercent = new JLabel();
     private final JLabel filterSummary = new JLabel();
     private final JLabel updateStatusLabel = new JLabel();
+    private final JButton recoveryButton = new JButton("Recover / resolve sync...");
+    private Runnable recoveryAction;
+
+    public void setRecoveryAction(Runnable action) {
+        SwingUtilities.invokeLater(() -> {
+            recoveryAction = action;
+            recoveryButton.setVisible(action != null);
+        });
+    }
     private final JButton catchUpButton = new JButton();
     private String catchUpText = "";
     private final JLabel resultsLabel = new JLabel();
@@ -381,6 +393,14 @@ public class GrindstonePanel extends PluginPanel {
         snapshots.setAlignmentX(LEFT_ALIGNMENT);
         dashboardOverview.add(snapshots);
         header.add(dashboardOverview);
+        recoveryButton.setVisible(false);
+        recoveryButton.setAlignmentX(LEFT_ALIGNMENT);
+        recoveryButton.addActionListener(event -> {
+            if (recoveryAction != null) {
+                recoveryAction.run();
+            }
+        });
+        header.add(recoveryButton);
 
         JPanel milestoneButtons = new JPanel(new GridLayout(2, 1, 0, 6));
         milestoneButtons.setOpaque(false);
@@ -765,6 +785,7 @@ public class GrindstonePanel extends PluginPanel {
     }
 
     public void unload() {
+        setRecoveryAction(null);
         if (progressOverlay != null) {
             progressOverlay.clear();
         }
@@ -827,6 +848,7 @@ public class GrindstonePanel extends PluginPanel {
                         continue;
                     }
                     Supplier<MilestoneComponent> preparedCard = goal.prepare(client, config);
+                    currentProfile.markDirty();
                     tracking = TrackingState.of(goal, recurring, client.getGameState() == GameState.LOGGED_IN && client.getLocalPlayer() != null && client.getAccountHash() == currentProfile.getHash(), currentProfile.getPlayerStorage().hasBankSnapshot());
                     TrackingState displayTracking = tracking;
                     MilestoneStatus status = repeating ? recurring.getStatus() : goal.getStatus();
@@ -924,6 +946,7 @@ public class GrindstonePanel extends PluginPanel {
                         component.setExpansionListener(expanded -> clientThread.invokeLater(() -> {
                             if (profile == currentProfile && currentProfile.getGoals().contains(goal)) {
                                 currentProfile.getMetadata(goal).setCollapsed(!expanded);
+                                currentProfile.markDirty();
                             }
                         }));
                         component.setMaximumProgressChunks(config.maxProgressChunks());
@@ -2070,7 +2093,7 @@ public class GrindstonePanel extends PluginPanel {
             if (profile != active || client.getGameState() != GameState.LOGGED_IN) {
                 return;
             }
-            Map<Integer, Map<String, Supplier<Milestone>>> choices =
+            Map<MilestoneType, Map<String, Supplier<Milestone>>> choices =
             CompletionMilestoneChoices.getAvailable(client, active.getCollectionLogHistory());
             Map<Milestone, RepeatSchedule> existing = new LinkedHashMap<>();
             for (Milestone goal : active.getGoals()) {
@@ -2085,7 +2108,7 @@ public class GrindstonePanel extends PluginPanel {
         });
     }
 
-    private void showAddMilestoneDialog(GrindstoneProfile active, Map<Integer, Map<String, Supplier<Milestone>>> choices, Map<Milestone, RepeatSchedule> existingGoalsSnapshot, Milestone initialGoal, Set<Integer> obtained) {
+    private void showAddMilestoneDialog(GrindstoneProfile active, Map<MilestoneType, Map<String, Supplier<Milestone>>> choices, Map<Milestone, RepeatSchedule> existingGoalsSnapshot, Milestone initialGoal, Set<Integer> obtained) {
         MilestoneEditorPanel form = new MilestoneEditorPanel(itemManager, itemSearchService, choices);
         form.setExistingMilestones(existingGoalsSnapshot);
         form.setCollectionSnapshotStatus(active.getCollectionLogHistory().hasSnapshot(), active.getCollectionLogHistory().getKnownUnlockCount(), active.getCollectionLogHistory().getSnapshotAt());
@@ -2109,11 +2132,15 @@ public class GrindstonePanel extends PluginPanel {
             if (profile != active) {
                 return;
             }
-            if (isCollectionLogMilestone(candidate) && !active.getCollectionLogHistory().hasSnapshot()) {
+            if (isCollectionLogMilestone(candidate) && !(candidate instanceof CollectionLogTotalMilestone) && !active.getCollectionLogHistory().hasSnapshot()) {
                 SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), "A full collection-log snapshot is required before adding collection milestones. Open your collection log to capture it automatically."));
                 return;
             }
             Milestone existing = active.findMatchingGoal(candidate, schedule);
+            if (existing == null && active.getGoals().size() >= GrindstoneRepository.MAX_MILESTONES) {
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), "This profile has reached its milestone limit. Remove an entry before adding another."));
+                return;
+            }
             if (existing != null) {
                 String title = getSafeTitle(existing);
                 long oldTarget = existing.getProgressMaximum();
@@ -2182,11 +2209,11 @@ public class GrindstonePanel extends PluginPanel {
             if (profile != active || !active.getGoals().contains(goal)) {
                 return;
             }
-            if (isCollectionLogMilestone(goal) && !active.getCollectionLogHistory().hasSnapshot()) {
+            if (isCollectionLogMilestone(goal) && !(goal instanceof CollectionLogTotalMilestone) && !active.getCollectionLogHistory().hasSnapshot()) {
                 SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), "Load a full collection-log snapshot before editing collection milestones. Open your collection log to capture it automatically."));
                 return;
             }
-            Map<Integer, Map<String, Supplier<Milestone>>> choices = CompletionMilestoneChoices.getForEditing(client, active.getCollectionLogHistory());
+            Map<MilestoneType, Map<String, Supplier<Milestone>>> choices = CompletionMilestoneChoices.getForEditing(client, active.getCollectionLogHistory());
             RepeatSchedule schedule = active.getMetadata(goal).getRecurring().getSchedule();
             long periodTarget = active.getMetadata(goal).getRecurring().getTarget();
             SwingUtilities.invokeLater(() -> {

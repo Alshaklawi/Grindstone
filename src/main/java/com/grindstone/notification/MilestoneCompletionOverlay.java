@@ -64,11 +64,11 @@ public final class MilestoneCompletionOverlay extends Overlay {
         Popup current = advancePopup(now);
         boolean added = false;
         for (CompletionOverlayEntry entry : entries) {
-            if (current != null && current.entries.stream().anyMatch(active -> active.getTitle().equals(entry.getTitle()))) {
+            if (current != null && current.entries.stream().anyMatch(active -> active.getId().equals(entry.getId()))) {
                 continue;
             }
-            if (pending.size() < MAX_ENTRIES || pending.containsKey(entry.getTitle())) {
-                pending.put(entry.getTitle(), entry);
+            if (pending.size() < MAX_ENTRIES || pending.containsKey(entry.getId())) {
+                pending.put(entry.getId(), entry);
                 added = true;
             }
         }

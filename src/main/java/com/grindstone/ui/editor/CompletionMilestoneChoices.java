@@ -31,6 +31,7 @@ import com.grindstone.content.milestone.impl.level.TotalLevelMilestone;
 import com.grindstone.content.milestone.impl.quest.QuestMilestone;
 import com.grindstone.content.milestone.impl.quest.QuestSeriesMilestone;
 import com.grindstone.content.quest.QuestSeries;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -46,32 +47,32 @@ import net.runelite.api.Skill;
 public final class CompletionMilestoneChoices {
     private CompletionMilestoneChoices() {
     }
-    public static Map<Integer, Map<String, Supplier<Milestone>>> getAvailable(Client client, CollectionLogHistory history) {
+    public static Map<MilestoneType, Map<String, Supplier<Milestone>>> getAvailable(Client client, CollectionLogHistory history) {
         return getSnapshot(client, history, true);
     }
 
-    public static Map<Integer, Map<String, Supplier<Milestone>>> getForEditing(Client client, CollectionLogHistory history) {
+    public static Map<MilestoneType, Map<String, Supplier<Milestone>>> getForEditing(Client client, CollectionLogHistory history) {
         return getSnapshot(client, history, false);
     }
 
-    private static Map<Integer, Map<String, Supplier<Milestone>>> getSnapshot(Client client, CollectionLogHistory history, boolean unfinishedOnly) {
-        Map<Integer, Map<String, Supplier<Milestone>>> types = create(client);
-        types.put(0, new LinkedHashMap<>());
-        types.put(1, new LinkedHashMap<>());
+    private static Map<MilestoneType, Map<String, Supplier<Milestone>>> getSnapshot(Client client, CollectionLogHistory history, boolean unfinishedOnly) {
+        Map<MilestoneType, Map<String, Supplier<Milestone>>> types = create(client);
+        types.put(MilestoneType.SKILL_LEVEL, new LinkedHashMap<>());
+        types.put(MilestoneType.SKILL_EXPERIENCE, new LinkedHashMap<>());
         for (Skill skill : Skill.values()) {
-            types.get(0).put(skill.getName(), () -> new SkillLevelMilestone(skill));
-            types.get(1).put(skill.getName(), () -> new SkillExperienceMilestone(skill));
+            types.get(MilestoneType.SKILL_LEVEL).put(skill.getName(), () -> new SkillLevelMilestone(skill));
+            types.get(MilestoneType.SKILL_EXPERIENCE).put(skill.getName(), () -> new SkillExperienceMilestone(skill));
         }
-        types.put(2, new LinkedHashMap<>());
-        types.get(2).put("Combat level", CombatLevelMilestone::new);
-        types.put(3, new LinkedHashMap<>());
-        types.get(3).put("Total level", TotalLevelMilestone::new);
-        types.put(4, new LinkedHashMap<>());
-        types.get(4).put("Total experience", TotalExperienceMilestone::new);
-        types.put(18, new LinkedHashMap<>());
-        types.get(18).put("Base level", BaseLevelMilestone::new);
-        types.put(19, new LinkedHashMap<>());
-        types.get(19).put("Base experience", BaseExperienceMilestone::new);
+        types.put(MilestoneType.COMBAT_LEVEL, new LinkedHashMap<>());
+        types.get(MilestoneType.COMBAT_LEVEL).put("Combat level", CombatLevelMilestone::new);
+        types.put(MilestoneType.TOTAL_LEVEL, new LinkedHashMap<>());
+        types.get(MilestoneType.TOTAL_LEVEL).put("Total level", TotalLevelMilestone::new);
+        types.put(MilestoneType.TOTAL_EXPERIENCE, new LinkedHashMap<>());
+        types.get(MilestoneType.TOTAL_EXPERIENCE).put("Total experience", TotalExperienceMilestone::new);
+        types.put(MilestoneType.BASE_LEVEL, new LinkedHashMap<>());
+        types.get(MilestoneType.BASE_LEVEL).put("Base level", BaseLevelMilestone::new);
+        types.put(MilestoneType.BASE_EXPERIENCE, new LinkedHashMap<>());
+        types.get(MilestoneType.BASE_EXPERIENCE).put("Base experience", BaseExperienceMilestone::new);
         // Capture readings on the client thread before the editor moves to the EDT.
         types.forEach((kind, choices) -> {
             choices.replaceAll((name, factory) -> {
@@ -105,7 +106,7 @@ public final class CompletionMilestoneChoices {
             ordered.putAll(sessions);
             sessions = ordered;
         }
-        types.put(20, sessions);
+        types.put(MilestoneType.SESSION_EXPERIENCE, sessions);
         return types;
     }
 
@@ -117,35 +118,35 @@ public final class CompletionMilestoneChoices {
         return goal.getProgressCurrent() < cap;
     }
 
-    public static boolean isActivityType(int kind) {
-        return kind == 5 || kind >= 23 && kind <= 28;
+    public static boolean isActivityType(MilestoneType kind) {
+        return kind.isActivity();
     }
 
-    private static int getActivityType(MilestoneCategory category) {
+    private static MilestoneType getActivityType(MilestoneCategory category) {
         switch (category) {
             case BOSSING:
-                return 5;
+                return MilestoneType.BOSS_KILLS;
             case RAIDS:
-                return 23;
+                return MilestoneType.RAID_COMPLETIONS;
             case SLAYER:
-                return 24;
+                return MilestoneType.SLAYER_COUNTER;
             case CLUES:
-                return 25;
+                return MilestoneType.CLUE_COMPLETIONS;
             case MINIGAMES:
-                return 26;
+                return MilestoneType.MINIGAME_COUNTER;
             case SKILLING:
-                return 27;
+                return MilestoneType.SKILLING_ACTIVITY;
             case QUEST:
-                return 28;
+                return MilestoneType.QUEST_SPEEDRUN;
             default:
                 throw new IllegalArgumentException("Unsupported activity category: " + category);
         }
     }
 
-    public static Map<Integer, Map<String, Supplier<Milestone>>> create(Client client) {
-        Map<Integer, Map<String, Supplier<Milestone>>> types = new LinkedHashMap<>();
-        types.put(5, new LinkedHashMap<>());
-        for (int kind = 23; kind <= 28; kind++) {
+    public static Map<MilestoneType, Map<String, Supplier<Milestone>>> create(Client client) {
+        Map<MilestoneType, Map<String, Supplier<Milestone>>> types = new LinkedHashMap<>();
+        types.put(MilestoneType.BOSS_KILLS, new LinkedHashMap<>());
+        for (MilestoneType kind : EnumSet.of(MilestoneType.RAID_COMPLETIONS, MilestoneType.SLAYER_COUNTER, MilestoneType.CLUE_COMPLETIONS, MilestoneType.MINIGAME_COUNTER, MilestoneType.SKILLING_ACTIVITY, MilestoneType.QUEST_SPEEDRUN)) {
             types.put(kind, new LinkedHashMap<>());
         }
         for (TrackerEntry entry : TrackerEntry.values()) {
@@ -154,37 +155,37 @@ public final class CompletionMilestoneChoices {
             }
             types.get(getActivityType(entry.getCategory())).put(entry.getDisplayName(), () -> new TrackerMilestone(entry, entry.getDefaultTarget()));
         }
-        types.put(29, new LinkedHashMap<>());
-        CollectionLogPages.getTabs(client).forEach((id, name) -> types.get(29).put(name, () -> new CollectionLogTabMilestone(id, name)));
-        types.put(22, new LinkedHashMap<>());
-        types.get(22).put("Total unlocks", CollectionLogTotalMilestone::new);
-        types.put(6, new TreeMap<>());
-        types.put(17, new TreeMap<>());
-        CombatAchievementData.getTasks(client).forEach((id, task) -> types.get(17).put(task.getName() + " (" + task.getTier() + ")", () -> new CombatAchievementTaskMilestone(id, task.getName(), task.getDescription())));
-        CollectionLogPages.discover(client).forEach((id, name) -> types.get(6).put(name, () -> new CollectionLogEntryMilestone(null, id, name)));
-        for (int kind = 9; kind <= 15; kind++) {
-            types.put(kind, kind == 12 || kind >= 14 ? new LinkedHashMap<>() : new TreeMap<>());
+        types.put(MilestoneType.COLLECTION_TAB, new LinkedHashMap<>());
+        CollectionLogPages.getTabs(client).forEach((id, name) -> types.get(MilestoneType.COLLECTION_TAB).put(name, () -> new CollectionLogTabMilestone(id, name)));
+        types.put(MilestoneType.COLLECTION_TOTAL, new LinkedHashMap<>());
+        types.get(MilestoneType.COLLECTION_TOTAL).put("Total unlocks", CollectionLogTotalMilestone::new);
+        types.put(MilestoneType.COLLECTION_PAGE, new TreeMap<>());
+        types.put(MilestoneType.COMBAT_TASK, new TreeMap<>());
+        CombatAchievementData.getTasks(client).forEach((id, task) -> types.get(MilestoneType.COMBAT_TASK).put(task.getName() + " (" + task.getTier() + ")", () -> new CombatAchievementTaskMilestone(id, task.getName(), task.getDescription())));
+        CollectionLogPages.discover(client).forEach((id, name) -> types.get(MilestoneType.COLLECTION_PAGE).put(name, () -> new CollectionLogEntryMilestone(null, id, name)));
+        for (MilestoneType kind : EnumSet.of(MilestoneType.QUEST, MilestoneType.QUEST_SERIES, MilestoneType.DIARY_REGION, MilestoneType.DIARY_TIER, MilestoneType.COMBAT_BOSS, MilestoneType.COMBAT_TIER, MilestoneType.COMBAT_DIFFICULTY)) {
+            types.put(kind, kind.isTier() ? new LinkedHashMap<>() : new TreeMap<>());
         }
         for (Quest quest : Quest.values()) {
-            types.get(9).put(quest.getName(), () -> new QuestMilestone(quest));
+            types.get(MilestoneType.QUEST).put(quest.getName(), () -> new QuestMilestone(quest));
         }
         for (QuestSeries series : QuestSeries.values()) {
-            types.get(10).put(series.toString(), () -> new QuestSeriesMilestone(series));
+            types.get(MilestoneType.QUEST_SERIES).put(series.toString(), () -> new QuestSeriesMilestone(series));
         }
         for (DiaryTier tier : DiaryTier.values()) {
-            types.get(12).put(tier.toString(), () -> new AchievementDiaryTierMilestone(tier));
+            types.get(MilestoneType.DIARY_TIER).put(tier.toString(), () -> new AchievementDiaryTierMilestone(tier));
             for (AchievementDiaryArea area : AchievementDiaryArea.values()) {
-                types.get(11).put(area + " — " + tier, () -> new AchievementDiaryTierAreaMilestone(area, tier));
+                types.get(MilestoneType.DIARY_REGION).put(area + " — " + tier, () -> new AchievementDiaryTierAreaMilestone(area, tier));
             }
         }
         for (CombatAchievementTier tier : CombatAchievementTier.values()) {
-            types.get(14).put(tier.toString(), () -> new CombatAchievementTierMilestone(tier));
-            types.get(15).put(tier.toString(), () -> new CombatAchievementDifficultyMilestone(tier));
+            types.get(MilestoneType.COMBAT_TIER).put(tier.toString(), () -> new CombatAchievementTierMilestone(tier));
+            types.get(MilestoneType.COMBAT_DIFFICULTY).put(tier.toString(), () -> new CombatAchievementDifficultyMilestone(tier));
         }
         if (client != null) {
             CombatAchievementData.getTasksByBoss(client).forEach((boss, tasks) -> {
                 String name = CombatAchievementData.getBossName(client, boss);
-                types.get(13).put(name, () -> new CombatAchievementBossMilestone(boss, name));
+                types.get(MilestoneType.COMBAT_BOSS).put(name, () -> new CombatAchievementBossMilestone(boss, name));
             });
         }
         return types;

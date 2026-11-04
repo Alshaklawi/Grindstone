@@ -184,6 +184,10 @@ public enum TrackerEntry {
     public boolean isSelectable() {
         return this != SOUL_WARS_DEATHS && this != COLOSSEUM_WAVES && this != SPEEDRUNS;
     }
+
+    public boolean isMonotonic() {
+        return this != LMS_SCORE && this != SLAYER_POINTS && this != SLAYER_STREAK && this != SLAYER_WILDERNESS_STREAK;
+    }
     public String getDescription() {
         if (this == LMS_SCORE) {
             return "Current competitive Last Man Standing score, not wins or reward points. Your score can decrease. Play a competitive game to refresh the client reading.";

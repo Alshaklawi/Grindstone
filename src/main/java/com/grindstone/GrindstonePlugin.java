@@ -96,6 +96,8 @@ import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.ImageUtil;
 import net.runelite.client.util.Text;
+import com.grindstone.ui.ProfileRecoveryActions;
+import com.grindstone.content.milestone.MilestoneUpdates;
 
 /**
  * @author Ayman Yassen
@@ -127,6 +129,8 @@ public class GrindstonePlugin extends Plugin {
     @Inject
     private ProfilePersistence persistence;
     @Inject
+    private ProfileRecoveryActions recoveryActions;
+    @Inject
     private MilestoneCompletionNotifications completionNotifications;
     @Inject
     private MilestoneCompletionOverlay completionOverlay;
@@ -142,13 +146,14 @@ public class GrindstonePlugin extends Plugin {
     private final AtomicInteger loadGeneration = new AtomicInteger();
     private volatile boolean running;
     private volatile long loadingHash;
-    private boolean completionProgressDirty;
-    private boolean storageProgressDirty;
+    @Inject
+    private MilestoneUpdates updates;
     private final Map<String, Integer> combatBossIds = new HashMap<>();
     private static final int COLLECTION_SEARCH_ITEM_SCRIPT = 4100;
     private boolean collectionCaptureDirty;
     private long lastRecurringRefresh;
     private JsonObject lastSavedSnapshot;
+    private long lastSavedRevision = -1;
 
     @Override
     protected void startUp() {
@@ -199,8 +204,7 @@ public class GrindstonePlugin extends Plugin {
         setNavigationVisible(false);
         navigationButton = null;
         profile = null;
-        completionProgressDirty = false;
-        storageProgressDirty = false;
+        updates.clear();
         combatBossIds.clear();
     }
 
@@ -221,6 +225,19 @@ public class GrindstonePlugin extends Plugin {
 
     @Subscribe
     public void onConfigChanged(ConfigChanged event) {
+        if (ProfilePersistence.STORAGE_GROUP.equals(event.getGroup()) && "profile".equals(event.getKey())) {
+            clientThread.invokeLater(() -> {
+                GrindstoneProfile active = profile;
+                if (active != null && running) {
+                    persistence.checkForConflict(active.getHash()).thenAccept(conflict -> clientThread.invokeLater(() -> {
+                        if (conflict && profile == active && running) {
+                            offerRecovery(active.getHash(), "Sync conflict · choose which profile to use");
+                        }
+                    }));
+                }
+            });
+            return;
+        }
         if (!GrindstoneConfig.GROUP.equals(event.getGroup())) {
             return;
         }
@@ -687,7 +704,9 @@ public class GrindstonePlugin extends Plugin {
             collectionCaptureDirty = true;
             captureLoadedCollectionSnapshot();
         }
-        storageProgressDirty |= profile.getPlayerStorage().observe(client, container);
+        if (profile.getPlayerStorage().observe(client, container)) {
+            updates.markStorageChanged();
+        }
 
         for (Milestone goal : profile.getGoals()) {
             if (goal == null || goal instanceof PossessedItemMilestone || !goal.isAffectedBy(container)) {
@@ -705,12 +724,7 @@ public class GrindstonePlugin extends Plugin {
             return;
         }
 
-        completionProgressDirty = true;
-        for (Milestone goal : profile.getGoals()) {
-            if (goal instanceof TrackerMilestone && goal.refresh(client)) {
-                panel.refreshMilestone(goal);
-            }
-        }
+        updates.markVariablesChanged();
     }
 
     @Subscribe
@@ -836,26 +850,13 @@ public class GrindstonePlugin extends Plugin {
                 panel.refreshAll();
             }
         }
-        if ((!completionProgressDirty && !storageProgressDirty) || !hasActivePlayerProfile()) {
+        if (!hasActivePlayerProfile()) {
             return;
         }
-        boolean variablesChanged = completionProgressDirty;
-        if (variablesChanged) {
+        if (updates.isVariablesDirty()) {
             captureLoadedCollectionSnapshot();
         }
-        boolean storageChanged = storageProgressDirty;
-        completionProgressDirty = false;
-        storageProgressDirty = false;
-        if (variablesChanged || storageChanged) {
-            profile.getPlayerStorage().refreshVariables(client);
-        }
-        boolean changed = storageChanged;
-        for (Milestone goal : profile.getGoals()) {
-            if ((variablesChanged && goal instanceof ClientCompletionMilestone) || goal instanceof PossessedItemMilestone) {
-                changed |= goal.refresh(client);
-            }
-        }
-        if (changed) {
+        if (updates.refresh(profile, client)) {
             panel.refreshAll();
         }
     }
@@ -866,17 +867,7 @@ public class GrindstonePlugin extends Plugin {
             return;
         }
 
-        boolean changed = false;
-
-        for (Milestone goal : profile.getGoals()) {
-            if ((goal instanceof SkillLevelMilestone && ((SkillLevelMilestone) goal).getSkill() == event.getSkill()) || (goal instanceof SkillExperienceMilestone && ((SkillExperienceMilestone) goal).getSkill() == event.getSkill()) || goal instanceof TotalLevelMilestone || goal instanceof TotalExperienceMilestone || goal instanceof CombatLevelMilestone || goal instanceof BaseSkillMilestone || goal instanceof SessionExperienceMilestone) {
-                changed |= goal.refresh(client);
-            }
-        }
-
-        if (changed) {
-            panel.refreshAll();
-        }
+        updates.markSkillChanged(event.getSkill());
     }
 
     private boolean hasActivePlayerProfile() {
@@ -925,7 +916,7 @@ public class GrindstonePlugin extends Plugin {
             loadingHash = 0;
             if (failure != null) {
                 log.warn("Unable to load Grindstone profile; existing saves were not replaced", failure);
-                panel.setStorageStatus("Profile could not be loaded · saved files kept");
+                offerRecovery(hash, "Profile could not be loaded · recovery available");
                 return;
             }
             activateProfile(loaded);
@@ -933,6 +924,10 @@ public class GrindstonePlugin extends Plugin {
     }
 
     private void activateProfile(GrindstoneProfile loaded) {
+        lastSavedSnapshot = null;
+        lastSavedRevision = -1;
+        updates.clear();
+        panel.setRecoveryAction(null);
         collectionCaptureDirty = false;
         completionNotifications.reset();
         profile = loaded;
@@ -943,6 +938,7 @@ public class GrindstonePlugin extends Plugin {
         loaded.getCollectionLogHistory().observe(client.getItemContainer(InventoryID.COLLECTION_TRANSMIT));
         for (Milestone goal : loaded.getGoals()) {
             loaded.getMetadata(goal).beginCatchUp();
+            loaded.getMetadata(goal).getRecurring().beginSession(goal);
             if (goal instanceof SessionExperienceMilestone) {
                 ((SessionExperienceMilestone) goal).restart();
             }
@@ -959,8 +955,7 @@ public class GrindstonePlugin extends Plugin {
         completionNotifications.reset();
         loadGeneration.incrementAndGet();
         loadingHash = 0;
-        completionProgressDirty = false;
-        storageProgressDirty = false;
+        updates.clear();
         if (profile != null) {
             profile.getPlayerStorage().beginSession();
         }
@@ -979,7 +974,13 @@ public class GrindstonePlugin extends Plugin {
         CompletableFuture<Void> finished = new CompletableFuture<>();
         clientThread.invoke(() -> {
             try {
+                long revision = active.getPersistenceRevision();
+                if (lastSavedSnapshot != null && revision == lastSavedRevision) {
+                    persistence.flush().whenComplete((ignored, failure) -> completeSave(finished, failure));
+                    return;
+                }
                 JsonObject snapshot = repository.toJson(active);
+                lastSavedRevision = revision;
                 if (snapshot.equals(lastSavedSnapshot)) {
                     persistence.flush().whenComplete((ignored, failure) -> completeSave(finished, failure));
                     return;
@@ -994,12 +995,16 @@ public class GrindstonePlugin extends Plugin {
                         log.warn("Unable to save Grindstone profile; the previous save was retained", failure);
                     }
                     clientThread.invokeLater(() -> {
-                        if (failure != null && lastSavedSnapshot == snapshot) {
+                        Throwable cause = failure instanceof CompletionException ? failure.getCause() : failure;
+                        if (failure != null && !(cause instanceof ProfilePersistence.SyncConflictException) && !(cause instanceof ProfilePersistence.SyncLimitException) && lastSavedSnapshot == snapshot) {
                             lastSavedSnapshot = null;
                         }
                         if (running && profile == active) {
-                            Throwable cause = failure instanceof CompletionException ? failure.getCause() : failure;
-                            panel.setStorageStatus(failure == null ? null : cause instanceof ProfilePersistence.SyncLimitException ? "Profile too large to sync · local copy saved" : "Profile save failed · check RuneLite logs");
+                            if (cause instanceof ProfilePersistence.SyncConflictException) {
+                                offerRecovery(active.getHash(), "Sync conflict · local copy saved");
+                            } else {
+                                panel.setStorageStatus(failure == null ? null : cause instanceof ProfilePersistence.SyncLimitException ? "Profile too large to sync · local copy saved" : "Profile save failed · check RuneLite logs");
+                            }
                         }
                     });
                 });
@@ -1021,6 +1026,21 @@ public class GrindstonePlugin extends Plugin {
         } else {
             finished.completeExceptionally(failure);
         }
+    }
+
+    private void offerRecovery(long hash, String message) {
+        int token = loadGeneration.get();
+        panel.setStorageStatus(message);
+        Runnable show = () -> recoveryActions.show(panel, hash, () -> running && config.enabled() && loadGeneration.get() == token, restored -> {
+            if (running && client.getGameState() == GameState.LOGGED_IN && client.getAccountHash() == hash && loadGeneration.get() == token) {
+                activateProfile(restored);
+            }
+        });
+        panel.setRecoveryAction(() -> clientThread.invokeLater(() -> {
+            if (running && loadGeneration.get() == token) {
+                saveProfile().whenComplete((ignored, failure) -> SwingUtilities.invokeLater(show));
+            }
+        }));
     }
 
     @Subscribe

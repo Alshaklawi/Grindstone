@@ -3,6 +3,8 @@ package com.grindstone.repository;
 import com.grindstone.content.milestone.MilestoneCategory;
 import com.grindstone.content.milestone.impl.CustomMilestone;
 import com.grindstone.content.milestone.impl.experience.SkillExperienceMilestone;
+import com.grindstone.content.milestone.impl.TrackerMilestone;
+import com.grindstone.content.tracker.TrackerEntry;
 import java.time.Instant;
 import java.util.Collections;
 import net.runelite.api.Skill;
@@ -15,6 +17,63 @@ import static org.junit.Assert.*;
  * @since 10/19/2026
  */
 public class RecurringMilestoneTest {
+    @Test
+    public void cumulativeCounterReloadCannotInventGainsAcrossRestart() {
+        long[] reading = {500};
+        TrackerMilestone goal = new TrackerMilestone(TrackerEntry.VORKATH, 1000) {
+            @Override
+            public long getProgressCurrent() {
+                return reading[0];
+            }
+        };
+        long now = time("2026-11-04T10:00:00Z");
+        RecurringMilestone routine = new RecurringMilestone();
+        routine.configure(RepeatSchedule.DAILY, 10, now);
+        routine.observe(goal, now);
+        reading[0] = 505;
+        routine.observe(goal, now + 1000);
+        RecurringMilestone restored = net.runelite.http.api.RuneLiteAPI.GSON.fromJson(net.runelite.http.api.RuneLiteAPI.GSON.toJson(routine), RecurringMilestone.class);
+        restored.beginSession(goal);
+        reading[0] = 0;
+        restored.observe(goal, now + 2000);
+        reading[0] = 505;
+        restored.observe(goal, now + 3000);
+        assertEquals(5, restored.getProgress());
+        assertEquals(0, restored.getCompletedAt());
+        reading[0] = 506;
+        restored.observe(goal, now + 4000);
+        assertEquals(6, restored.getProgress());
+    }
+
+    @Test
+    public void balanceReloadRebasesWithoutInventingEarningsAndStillCountsAfterSpending() {
+        long[] reading = {500};
+        TrackerMilestone goal = new TrackerMilestone(TrackerEntry.SLAYER_POINTS, 1000) {
+            @Override
+            public long getProgressCurrent() {
+                return reading[0];
+            }
+        };
+        long now = time("2026-11-04T10:00:00Z");
+        RecurringMilestone routine = new RecurringMilestone();
+        routine.configure(RepeatSchedule.DAILY, 10, now);
+        routine.observe(goal, now);
+        reading[0] = 505;
+        routine.observe(goal, now + 1000);
+        routine.beginSession(goal);
+        reading[0] = 0;
+        routine.observe(goal, now + 2000);
+        assertTrue(routine.isAwaitingReading());
+        reading[0] = 505;
+        routine.observe(goal, now + 3000);
+        assertFalse(routine.isAwaitingReading());
+        assertEquals(5, routine.getProgress());
+        reading[0] = 0;
+        routine.observe(goal, now + 4000);
+        reading[0] = 2;
+        routine.observe(goal, now + 5000);
+        assertEquals(7, routine.getProgress());
+    }
     @Test
     public void restartingArchivesObservedProgressWithoutChangingTheSchedule() {
         CustomMilestone goal = new CustomMilestone("Daily", "", MilestoneCategory.OTHER, 2, 5);

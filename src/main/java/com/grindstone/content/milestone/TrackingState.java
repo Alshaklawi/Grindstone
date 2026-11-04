@@ -43,7 +43,7 @@ public enum TrackingState {
         if (goal instanceof CollectionLogTotalMilestone) {
             return loggedIn && ((CollectionLogTotalMilestone) goal).isLoaded() ? LIVE : WAITING;
         }
-        if (!loggedIn || recurring.isActive() && recurring.getBaselineAt() == 0 || goal instanceof ClientCompletionMilestone && goal.getProgressMaximum() == 0 || goal.getCategory() == MilestoneCategory.COLLECTION_LOG && goal.getProgressMaximum() == 0) {
+        if (!loggedIn || recurring.isActive() && (recurring.getBaselineAt() == 0 || recurring.isAwaitingReading()) || goal instanceof ClientCompletionMilestone && goal.getProgressMaximum() == 0 || goal.getCategory() == MilestoneCategory.COLLECTION_LOG && goal.getProgressMaximum() == 0) {
             return WAITING;
         }
         if (goal instanceof PossessedItemMilestone) {
