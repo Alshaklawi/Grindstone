@@ -15,342 +15,372 @@ import net.runelite.client.config.Range;
 @ConfigGroup(GrindstoneConfig.GROUP)
 public interface GrindstoneConfig extends Config {
     String GROUP = "grindstone";
-    @ConfigItem(keyName = "showDeadlineReminders", name = "Show deadline reminders", description = "Show opted-in personal deadlines in Grindstone's header within 24 hours and while past due. This is not an external notification or game reset.", section = DISPLAY_SECTION, position = 18)
-    default boolean showDeadlineReminders() {
-        return true;
-    }
-    @ConfigItem(keyName = "linkedGoalsEnabled", name = "Linked milestones", description = "Show linked checklists, milestone ladders, prerequisites, achievement milestones and repeat-completion milestones.", section = GOALS_SECTION, position = 9)
-    default boolean linkedGoalsEnabled() {
-        return true;
-    }
-    @ConfigItem(keyName = "groupSkillGoals", name = "Group related skill milestones", description = "Keep each skill's level and XP targets together inside its category. Filters, pinning and recurring sections still apply.", section = DISPLAY_SECTION, position = 16)
-    default boolean groupSkillGoals() {
-        return true;
-    }
-    @ConfigItem(keyName = "questGoalsEnabled", name = "Quest milestones", description = "Show individual quests and quest series.", section = GOALS_SECTION, position = 4)
-    default boolean questGoalsEnabled() {
-        return true;
-    }
-    @ConfigItem(keyName = "diaryGoalsEnabled", name = "Achievement diary milestones", description = "Show region and all-region diary tier milestones.", section = GOALS_SECTION, position = 5)
-    default boolean diaryGoalsEnabled() {
-        return true;
-    }
-    @ConfigItem(keyName = "combatAchievementGoalsEnabled", name = "Combat achievement milestones", description = "Show boss, tier, difficulty and individual combat-task milestones.", section = GOALS_SECTION, position = 6)
-    default boolean combatAchievementGoalsEnabled() {
+    String GENERAL_SECTION = "general";
+    String DISPLAY_SECTION = "display";
+    String CARDS_SECTION = "milestoneCards";
+    String OVERLAY_SECTION = "progressOverlay";
+    String NOTIFICATIONS_SECTION = "notifications";
+    String REMINDERS_SECTION = "reminders";
+    String GOALS_SECTION = "goals";
+    String SHORTCUTS_SECTION = "shortcuts";
+    String COLLECTION_LOG_SECTION = "collectionLog";
+
+    @ConfigSection(name = "General", description = "Enable tracking and choose when to make additional profile saves. Milestone changes also autosave while logged in.", position = 0, closedByDefault = false)
+    String generalSection = GENERAL_SECTION;
+
+    @ConfigItem(keyName = "enabled", name = "Enable Grindstone", description = "Show the sidebar button and track your milestones while logged in.", section = GENERAL_SECTION, position = 0)
+    default boolean enabled() {
         return true;
     }
 
-    @ConfigItem(keyName = "combatAchievementGoalMenu", name = "Combat task milestone shortcut", description = "Add Track task to Combat Achievement right-click menus. Opens the selected task in the milestone editor without performing game actions.", section = GOALS_SECTION, position = 10)
-    default boolean combatAchievementGoalMenu() {
+    @ConfigItem(keyName = "saveOnLogout", name = "Save on logout", description = "Make an additional profile save when you log out. Changes also autosave while logged in.", section = GENERAL_SECTION, position = 1)
+    default boolean saveOnLogout() {
         return true;
     }
 
-    @ConfigItem(keyName = "bossGoalMenu", name = "Boss milestone shortcuts", description = "Add Track kills to supported bosses and Track boss achievements to Combat Achievements boss entries. Opens the editor without performing game actions.", section = GOALS_SECTION, position = 11)
-    default boolean bossGoalMenu() {
+    @ConfigItem(keyName = "saveOnShutdown", name = "Save on shutdown", description = "Make an additional profile save when the plugin stops or RuneLite closes. Changes also autosave while logged in.", section = GENERAL_SECTION, position = 2)
+    default boolean saveOnShutdown() {
         return true;
     }
 
-    @ConfigItem(keyName = "skillGoalMenu", name = "Skills tab milestone shortcuts", description = "Add level and XP milestone shortcuts to skills. Right-click Total level for total and base level/XP milestones. Opens the milestone editor without changing game stats.", section = GOALS_SECTION, position = 12)
-    default boolean skillGoalMenu() {
-        return true;
-    }
+    @ConfigSection(name = "Sidebar layout", description = "Organize the milestone list, routines and information shown in the side panel.", position = 1, closedByDefault = true)
+    String displaySection = DISPLAY_SECTION;
 
-    @ConfigItem(keyName = "combatLevelGoalMenu", name = "Combat level milestone shortcut", description = "Right-click the combat-level display in Combat Options to open a combat-level milestone. Does not change combat settings or perform game actions.", section = GOALS_SECTION, position = 13)
-    default boolean combatLevelGoalMenu() {
-        return true;
-    }
-
-    @ConfigItem(keyName = "questGoalMenu", name = "Quest milestone shortcuts", description = "Right-click a quest in the quest list to open its milestone in Grindstone. No game actions are performed.", section = GOALS_SECTION, position = 14)
-    default boolean questGoalMenu() {
-        return true;
-    }
-
-    @ConfigItem(keyName = "diaryGoalMenu", name = "Diary milestone shortcuts", description = "Right-click an achievement diary region to choose an Easy, Medium, Hard or Elite diary milestone. No game actions are performed.", section = GOALS_SECTION, position = 15)
-    default boolean diaryGoalMenu() {
-        return true;
-    }
-    @ConfigItem(keyName = "ownedItemGoalsEnabled", name = "Owned item milestones", description = "Show quantities across known personal item storage.", section = GOALS_SECTION, position = 7)
-    default boolean ownedItemGoalsEnabled() {
-        return true;
-    }
-    @ConfigItem(keyName = "customGoalsEnabled", name = "Custom milestones", description = "Show manually managed milestones and notes.", section = GOALS_SECTION, position = 8)
-    default boolean customGoalsEnabled() {
-        return true;
-    }
-    @ConfigItem(keyName = "categorizedGoals", name = "Group by category", description = "Group unpinned milestones into categories. Turn off for a single sorted list.", section = DISPLAY_SECTION, position = 6)
+    @ConfigItem(keyName = "categorizedGoals", name = "Group by category", description = "Organize unpinned milestones by category. Turn off to use a single sorted list.", section = DISPLAY_SECTION, position = 0)
     default boolean categorizedGoals() {
         return true;
     }
-    @ConfigItem(keyName = "showUpdateStatus", name = "Show snapshots", description = "Show dashboard snapshot status for storage and collection log, with refresh tips.", section = DISPLAY_SECTION, position = 7)
-    default boolean showUpdateStatus() {
+
+    @ConfigItem(keyName = "groupSkillGoals", name = "Group by skill", description = "Keep related level and XP targets together inside each category.", section = DISPLAY_SECTION, position = 1)
+    default boolean groupSkillGoals() {
         return true;
     }
-    @ConfigItem(keyName = "showPinnedSection", name = "Show pinned section", description = "Keep pinned milestones above categories. Turning this off displays them in the normal list.", section = DISPLAY_SECTION, position = 8)
+
+    @ConfigItem(keyName = "showPinnedSection", name = "Pinned section", description = "Keep pinned milestones above the rest of the list. Turn off to show them in their usual categories.", section = DISPLAY_SECTION, position = 2)
     default boolean showPinnedSection() {
         return true;
     }
-    @ConfigItem(keyName = "showCompletionHistory", name = "Show milestone history", description = "Show recurring period history, observed lifetime completions and reminders. Saved history is retained.", section = DISPLAY_SECTION, position = 9)
-    default boolean showCompletionHistory() {
-        return true;
-    }
-    @ConfigItem(keyName = "showActivityIcons", name = "Activity-specific icons", description = "Use native item icons for activities when milestone icons are enabled.", section = DISPLAY_SECTION, position = 10)
-    default boolean showActivityIcons() {
-        return true;
-    }
-    @ConfigItem(keyName = "groupRecurringGoals", name = "Group routines", description = "Group routines by daily, weekly and monthly schedules with UTC reset countdowns.", section = DISPLAY_SECTION, position = 11)
+
+    @ConfigItem(keyName = "groupRecurringGoals", name = "Group routines by reset", description = "Separate daily, weekly and monthly routines, with UTC reset countdowns.", section = DISPLAY_SECTION, position = 3)
     default boolean groupRecurringGoals() {
         return true;
     }
-    @ConfigItem(keyName = "showTodayOverview", name = "Show routine overview", description = "Show recurring completion and next reset above the All view. The Routines view always shows it.", section = DISPLAY_SECTION, position = 12)
+
+    @ConfigItem(keyName = "showTodayOverview", name = "Routine overview", description = "Show completion totals and the next reset above the All view. The Routines view always includes this overview.", section = DISPLAY_SECTION, position = 4)
     default boolean showTodayOverview() {
         return true;
     }
-    @ConfigItem(keyName = "showTrackingState", name = "Show period warnings", description = "Flag partially observed recurring periods. Other source details are available on title hover.", section = DISPLAY_SECTION, position = 13)
-    default boolean showTrackingState() {
+
+    @ConfigItem(keyName = "hideCompletedGoals", name = "Hide completed routines", description = "Hide finished routines until their next reset. Finished one-time milestones are already hidden. Choose Done in the sidebar to see completed milestones.", section = DISPLAY_SECTION, position = 5)
+    default boolean hideCompletedGoals() {
+        return false;
+    }
+
+    @ConfigItem(keyName = "showUpdateStatus", name = "Game data status", description = "Show the Data disclosure in the sidebar header, with captured storage and collection-log readings and refresh tips.", section = DISPLAY_SECTION, position = 6)
+    default boolean showUpdateStatus() {
         return true;
     }
+
+    @ConfigItem(keyName = "showCompletionHistory", name = "Completion history", description = "Show routine period history, observed lifetime completions and reminders on cards. Turning this off keeps saved history.", section = DISPLAY_SECTION, position = 7)
+    default boolean showCompletionHistory() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "showDeadlineReminders", name = "Deadline reminders", description = "Show opted-in personal deadlines in the sidebar header when due within 24 hours or overdue. These are local reminders, separate from routine resets.", section = DISPLAY_SECTION, position = 8)
+    default boolean showDeadlineReminders() {
+        return true;
+    }
+
+    @ConfigSection(name = "Milestone cards", description = "Change card icons, progress bars and the details shown below each milestone.", position = 2, closedByDefault = true)
+    String cardsSection = CARDS_SECTION;
+
+    @ConfigItem(keyName = "showGoalIcons", name = "Icons", description = "Show an icon beside each milestone title.", section = CARDS_SECTION, position = 0)
+    default boolean showGoalIcons() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "showActivityIcons", name = "Activity icons", description = "Use activity-specific native item icons instead of category icons. Requires Icons above.", section = CARDS_SECTION, position = 1)
+    default boolean showActivityIcons() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "showProgressBar", name = "Progress bars", description = "Show a visual progress bar on each card.", section = CARDS_SECTION, position = 2)
+    default boolean showProgressBar() {
+        return true;
+    }
+
     @Range(min = 1, max = 20)
-    @ConfigItem(keyName = "maxProgressChunks", name = "Maximum progress chunks", description = "At most 20 chunks. For a target of 100 and 20 chunks, each chunk represents 5.", section = DISPLAY_SECTION, position = 4)
+    @ConfigItem(keyName = "maxProgressChunks", name = "Progress segments", description = "Maximum segments in sidebar progress bars. For a target of 100 with 20 segments, each segment represents 5.", section = CARDS_SECTION, position = 3)
     default int maxProgressChunks() {
         return 20;
     }
-    @ConfigItem(keyName = "collapseDetailsByDefault", name = "Start details collapsed", description = "Default for milestones you have not expanded or collapsed manually. Progress remains visible.", section = DISPLAY_SECTION, position = 5)
+
+    @ConfigItem(keyName = "collapseDetailsByDefault", name = "Collapse details initially", description = "Start card descriptions and details collapsed until you choose otherwise for that milestone. Progress stays visible.", section = CARDS_SECTION, position = 4)
     default boolean collapseDetailsByDefault() {
         return false;
     }
-    String GENERAL_SECTION = "general";
-    String GOALS_SECTION = "goals";
-    String COLLECTION_LOG_SECTION = "collectionLog";
-    String DISPLAY_SECTION = "display";
-    String NOTIFICATIONS_SECTION = "notifications";
-    String OVERLAY_SECTION = "progressOverlay";
 
-    @ConfigSection(name = "Progress overlay", description = "Track milestones and routines beside the game. Hold Alt to move the overlay.", position = 5)
+    @ConfigItem(keyName = "showTrackingState", name = "Period warnings", description = "Flag routines with partially observed periods. Source details remain available by hovering the title.", section = CARDS_SECTION, position = 5)
+    default boolean showTrackingState() {
+        return true;
+    }
+
+    @ConfigSection(name = "Progress overlay", description = "Configure the movable tracker in the game view. Hold Alt to move it.", position = 3, closedByDefault = true)
     String overlaySection = OVERLAY_SECTION;
 
-    @ConfigItem(keyName = "progressOverlayEnabled", name = "Show progress overlay", description = "Show a movable progress tracker in the game view, even when the sidebar is closed.", section = OVERLAY_SECTION, position = 0)
+    @ConfigItem(keyName = "progressOverlayEnabled", name = "Enable overlay", description = "Show a movable progress tracker in the game view, including when the sidebar is closed.", section = OVERLAY_SECTION, position = 0)
     default boolean progressOverlayEnabled() {
         return false;
     }
 
-    @ConfigItem(keyName = "progressOverlayView", name = "Track", description = "Choose daily routines, all routines, milestones, pinned entries or everything.", section = OVERLAY_SECTION, position = 1)
+    @ConfigItem(keyName = "progressOverlayTheme", name = "Style", description = "Choose Classic, Slate or Guild for this tracker. Completion popups always use Guild.", section = OVERLAY_SECTION, position = 1)
+    default OverlayTheme progressOverlayTheme() {
+        return OverlayTheme.GUILD;
+    }
+
+    @ConfigItem(keyName = "progressOverlayView", name = "Show", description = "Choose daily routines, all routines, one-time milestones, pinned entries or everything.", section = OVERLAY_SECTION, position = 2)
     default ProgressOverlayView progressOverlayView() {
         return ProgressOverlayView.DAILY;
     }
 
     @Range(min = 1, max = 20)
-    @ConfigItem(keyName = "progressOverlayRows", name = "Maximum entries", description = "Show up to this many entries. Smaller game windows use fewer rows; additional entries stay in the sidebar.", section = OVERLAY_SECTION, position = 2)
+    @ConfigItem(keyName = "progressOverlayRows", name = "Entry limit", description = "Maximum entries to show. Small game windows use fewer rows; additional entries remain in the sidebar.", section = OVERLAY_SECTION, position = 3)
     default int progressOverlayRows() {
         return 8;
     }
 
-    @ConfigItem(keyName = "progressOverlayCompletedRoutines", name = "Keep completed routines", description = "Keep completed routines checked off until their next reset. Finished one-time milestones stay hidden.", section = OVERLAY_SECTION, position = 3)
-    default boolean progressOverlayCompletedRoutines() {
-        return true;
-    }
-
-    @ConfigItem(keyName = "progressOverlayBars", name = "Progress bars", description = "Show a small progress bar below each entry. Turn off for a shorter tracker.", section = OVERLAY_SECTION, position = 4)
-    default boolean progressOverlayBars() {
-        return true;
-    }
-
     @Range(min = 180, max = 360)
-    @ConfigItem(keyName = "progressOverlayWidth", name = "Width", description = "Width of the progress overlay in pixels.", section = OVERLAY_SECTION, position = 5)
+    @ConfigItem(keyName = "progressOverlayWidth", name = "Width (pixels)", description = "Set the tracker width in pixels.", section = OVERLAY_SECTION, position = 4)
     default int progressOverlayWidth() {
         return 240;
     }
 
-    @ConfigItem(keyName = "progressOverlayTheme", name = "Style", description = "Choose Classic, Slate or Guild for the progress tracker.", section = OVERLAY_SECTION, position = 6)
-    default OverlayTheme progressOverlayTheme() {
-        return OverlayTheme.GUILD;
-    }
-
-    @ConfigItem(keyName = "completionPopupTheme", name = "Popup style", description = "Completion popups always use Guild.", section = NOTIFICATIONS_SECTION, position = 17, hidden = true)
-    default OverlayTheme completionPopupTheme() {
-        return OverlayTheme.GUILD;
-    }
-
-    @ConfigItem(keyName = "completionPopupAnimations", name = "Animate popups", description = "Animate popup movement and size. Turn off for a short fade with no motion.", section = NOTIFICATIONS_SECTION, position = 18)
-    default boolean completionPopupAnimations() {
+    @ConfigItem(keyName = "progressOverlayBars", name = "Progress bars", description = "Show a progress bar below each tracker entry.", section = OVERLAY_SECTION, position = 5)
+    default boolean progressOverlayBars() {
         return true;
     }
 
-    @ConfigSection(name = "Notifications", description = "Control completion messages, colours and reminders for unfinished routines.", position = 4)
+    @ConfigItem(keyName = "progressOverlayCompletedRoutines", name = "Keep completed routines", description = "Keep finished routines checked off until their next reset. Finished one-time milestones stay hidden.", section = OVERLAY_SECTION, position = 6)
+    default boolean progressOverlayCompletedRoutines() {
+        return true;
+    }
+
+    @ConfigSection(name = "Completion alerts", description = "Choose completion popups, chat messages and desktop notifications.", position = 4, closedByDefault = true)
     String notificationsSection = NOTIFICATIONS_SECTION;
 
-    @ConfigItem(keyName = "notificationColours", name = "Colourful chat messages", description = "Highlight completion and reminder headings using your RuneLite chat colours.", section = NOTIFICATIONS_SECTION, position = 4)
-    default boolean notificationColours() {
-        return true;
-    }
-
-    @ConfigItem(keyName = "completionNumbers", name = "Completion progress numbers", description = "Include exact comma-separated current and target numbers in completion messages.", section = NOTIFICATIONS_SECTION, position = 5)
-    default boolean completionNumbers() {
-        return true;
-    }
-
-    @ConfigItem(keyName = "routineReminders", name = "Enable routine reminders", description = "Remind you about unfinished tracked routines while logged in.", section = NOTIFICATIONS_SECTION, position = 6)
-    default boolean routineReminders() {
-        return false;
-    }
-
-    @ConfigItem(keyName = "dailyReminders", name = "Daily reminders", description = "Include unfinished daily routines.", section = NOTIFICATIONS_SECTION, position = 7)
-    default boolean dailyReminders() {
-        return true;
-    }
-
-    @ConfigItem(keyName = "weeklyReminders", name = "Weekly reminders", description = "Include unfinished weekly routines.", section = NOTIFICATIONS_SECTION, position = 8)
-    default boolean weeklyReminders() {
-        return true;
-    }
-
-    @ConfigItem(keyName = "monthlyReminders", name = "Monthly reminders", description = "Include unfinished monthly routines.", section = NOTIFICATIONS_SECTION, position = 9)
-    default boolean monthlyReminders() {
-        return true;
-    }
-
-    @ConfigItem(keyName = "routineReminderChat", name = "Reminder chat messages", description = "Show routine reminders in local chat. Nothing is sent to other players.", section = NOTIFICATIONS_SECTION, position = 10)
-    default boolean routineReminderChat() {
-        return true;
-    }
-
-    @ConfigItem(keyName = "routineReminderOnLogin", name = "Remind when loaded", description = "Remind when routines first load. Reconnecting on the same account does not bypass the reminder interval.", section = NOTIFICATIONS_SECTION, position = 11)
-    default boolean routineReminderOnLogin() {
-        return true;
-    }
-
-    @Range(min = 5, max = 240)
-    @ConfigItem(keyName = "routineReminderMinutes", name = "Reminder interval (minutes)", description = "Minimum time between reminders for each routine schedule while logged in. Only unfinished routines are included.", section = NOTIFICATIONS_SECTION, position = 12)
-    default int routineReminderMinutes() {
-        return 60;
-    }
-
-    @ConfigItem(keyName = "routineReminderNotification", name = "Desktop routine reminders", description = "Optional RuneLite notifications for unfinished routines. The separate reminder chat toggle controls Grindstone chat messages.", section = NOTIFICATIONS_SECTION, position = 13)
-    default Notification routineReminderNotification() {
-        return Notification.OFF;
-    }
-
-    @ConfigItem(keyName = "routineReminderOnReset", name = "Remind after routine reset", description = "Remind about unfinished routines when a new daily, weekly or monthly period starts while logged in.", section = NOTIFICATIONS_SECTION, position = 14)
-    default boolean routineReminderOnReset() {
-        return true;
-    }
-
-    @ConfigItem(keyName = "routineReminderNumbers", name = "Reminder progress numbers", description = "Include exact comma-separated current and target numbers in routine reminders, with XP labelled where applicable.", section = NOTIFICATIONS_SECTION, position = 15)
-    default boolean routineReminderNumbers() {
-        return true;
-    }
-
-    @ConfigItem(keyName = "routineReminderCountdown", name = "Reminder reset countdown", description = "Include the time remaining until the routine's configured UTC reset in reminder messages.", section = NOTIFICATIONS_SECTION, position = 16)
-    default boolean routineReminderCountdown() {
-        return true;
-    }
-
-    @ConfigItem(keyName = "completionPopup", name = "Completion popup", description = "Show a non-blocking RuneLite overlay when a personal milestone is newly completed. Already-complete milestones loaded or added are excluded.", section = NOTIFICATIONS_SECTION, position = 0)
+    @ConfigItem(keyName = "completionPopup", name = "Show popup", description = "Show a Guild popup for each newly completed milestone. Loading or adding an already-complete milestone does not trigger an alert.", section = NOTIFICATIONS_SECTION, position = 0)
     default boolean completionPopup() {
         return true;
     }
 
-    @ConfigItem(keyName = "completionChat", name = "Completion chat message", description = "Add a local RuneLite chat message for newly completed personal milestones. Nothing is sent to other players.", section = NOTIFICATIONS_SECTION, position = 1)
-    default boolean completionChat() {
+    @ConfigItem(keyName = "completionPopupAnimations", name = "Popup animation", description = "Animate popup entry and exit. Turn off for a short stationary fade.", section = NOTIFICATIONS_SECTION, position = 1)
+    default boolean completionPopupAnimations() {
         return true;
     }
 
     @Range(min = 3, max = 15)
-    @ConfigItem(keyName = "completionPopupSeconds", name = "Popup duration (seconds)", description = "How long a completion popup remains visible.", section = NOTIFICATIONS_SECTION, position = 2)
+    @ConfigItem(keyName = "completionPopupSeconds", name = "Popup duration (seconds)", description = "How long each completion popup stays on screen.", section = NOTIFICATIONS_SECTION, position = 2)
     default int completionPopupSeconds() {
         return 6;
     }
 
-    @ConfigItem(keyName = "completionNotification", name = "Desktop completion notification", description = "Optional RuneLite notification with the standard sound, focus and desktop settings. Customize using its cogwheel; its own game-message option may duplicate Grindstone's separate chat message.", section = NOTIFICATIONS_SECTION, position = 3)
+    @ConfigItem(keyName = "completionChat", name = "Chat messages", description = "Show completion messages in your local chat. Nothing is sent to other players.", section = NOTIFICATIONS_SECTION, position = 3)
+    default boolean completionChat() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "completionNumbers", name = "Progress numbers", description = "Include exact current and target values in completion messages.", section = NOTIFICATIONS_SECTION, position = 4)
+    default boolean completionNumbers() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "notificationColours", name = "Chat highlights", description = "Use your RuneLite chat colours for completion and routine reminder headings.", section = NOTIFICATIONS_SECTION, position = 5)
+    default boolean notificationColours() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "completionNotification", name = "Desktop notification", description = "Use RuneLite desktop and sound notifications. Customize delivery with the cogwheel; its game-message option may duplicate Chat messages above.", section = NOTIFICATIONS_SECTION, position = 6)
     default Notification completionNotification() {
         return Notification.OFF;
     }
 
-    @ConfigSection(name = "General", description = "Enable Grindstone and control when your profile is saved.", position = 0)
-    String generalSection = GENERAL_SECTION;
+    @ConfigItem(keyName = "completionPopupTheme", name = "Popup style", description = "Completion popups always use Guild.", section = NOTIFICATIONS_SECTION, position = 7, hidden = true)
+    default OverlayTheme completionPopupTheme() {
+        return OverlayTheme.GUILD;
+    }
 
-    @ConfigSection(name = "Milestones & routines", description = "Choose what to track and which right-click shortcuts to show.", position = 1)
+    @ConfigSection(name = "Routine reminders", description = "Choose which unfinished routines trigger reminders, when to remind you and how to deliver them.", position = 5, closedByDefault = true)
+    String remindersSection = REMINDERS_SECTION;
+
+    @ConfigItem(keyName = "routineReminders", name = "Enable reminders", description = "Remind you about unfinished tracked routines while logged in.", section = REMINDERS_SECTION, position = 0)
+    default boolean routineReminders() {
+        return false;
+    }
+
+    @ConfigItem(keyName = "dailyReminders", name = "Daily routines", description = "Include unfinished daily routines when reminders are enabled.", section = REMINDERS_SECTION, position = 1)
+    default boolean dailyReminders() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "weeklyReminders", name = "Weekly routines", description = "Include unfinished weekly routines when reminders are enabled.", section = REMINDERS_SECTION, position = 2)
+    default boolean weeklyReminders() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "monthlyReminders", name = "Monthly routines", description = "Include unfinished monthly routines when reminders are enabled.", section = REMINDERS_SECTION, position = 3)
+    default boolean monthlyReminders() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "routineReminderOnLogin", name = "When routines load", description = "Remind when routines first load. Reconnecting on the same account does not bypass the interval.", section = REMINDERS_SECTION, position = 4)
+    default boolean routineReminderOnLogin() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "routineReminderOnReset", name = "After reset", description = "Remind when a new daily, weekly or monthly period begins while logged in.", section = REMINDERS_SECTION, position = 5)
+    default boolean routineReminderOnReset() {
+        return true;
+    }
+
+    @Range(min = 5, max = 240)
+    @ConfigItem(keyName = "routineReminderMinutes", name = "Interval (minutes)", description = "Minimum time between reminders for each routine schedule. Only unfinished routines are included.", section = REMINDERS_SECTION, position = 6)
+    default int routineReminderMinutes() {
+        return 60;
+    }
+
+    @ConfigItem(keyName = "routineReminderChat", name = "Chat messages", description = "Show reminders in your local chat. Nothing is sent to other players. Chat highlights are configured under Completion alerts.", section = REMINDERS_SECTION, position = 7)
+    default boolean routineReminderChat() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "routineReminderNumbers", name = "Progress numbers", description = "Include exact current and target values, with XP labelled where applicable.", section = REMINDERS_SECTION, position = 8)
+    default boolean routineReminderNumbers() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "routineReminderCountdown", name = "Reset countdown", description = "Include the time remaining until the routine's configured UTC reset.", section = REMINDERS_SECTION, position = 9)
+    default boolean routineReminderCountdown() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "routineReminderNotification", name = "Desktop notification", description = "Use RuneLite desktop and sound notifications for unfinished routines. Customize delivery with the cogwheel; Chat messages above controls local chat.", section = REMINDERS_SECTION, position = 10)
+    default Notification routineReminderNotification() {
+        return Notification.OFF;
+    }
+
+    @ConfigSection(name = "Milestone types", description = "Choose which milestone types are visible. Turning a type off keeps its saved milestones and progress.", position = 6, closedByDefault = true)
     String goalsSection = GOALS_SECTION;
 
-    @ConfigSection(name = "Collection Log", description = "Control collection-log cards and item details.", position = 2)
-    String collectionLogSection = COLLECTION_LOG_SECTION;
-
-    @ConfigSection(name = "Display", description = "Adjust the side panel layout without affecting your saved milestones.", position = 3)
-    String displaySection = DISPLAY_SECTION;
-
-    @ConfigItem(keyName = "enabled", name = "Enable Grindstone", description = "Show the Grindstone button and begin tracking while logged in.", section = GENERAL_SECTION, position = 0)
-    default boolean enabled() {
-        return true;
-    }
-
-    @ConfigItem(keyName = "saveOnLogout", name = "Save on logout", description = "Keep changes made to your milestones when you log out.", section = GENERAL_SECTION, position = 1)
-    default boolean saveOnLogout() {
-        return true;
-    }
-
-    @ConfigItem(keyName = "saveOnShutdown", name = "Save on shutdown", description = "Keep changes made to your milestones when the plugin is disabled or RuneLite closes.", section = GENERAL_SECTION, position = 2)
-    default boolean saveOnShutdown() {
-        return true;
-    }
-
-    @ConfigItem(keyName = "levelGoalsEnabled", name = "Level milestones", description = "Show skill levels, combat level, and total level.", section = GOALS_SECTION, position = 0)
+    @ConfigItem(keyName = "levelGoalsEnabled", name = "Levels", description = "Show skill, combat, total and base level milestones.", section = GOALS_SECTION, position = 0)
     default boolean levelGoalsEnabled() {
         return true;
     }
 
-    @ConfigItem(keyName = "experienceGoalsEnabled", name = "Experience milestones", description = "Show per-skill experience and total experience.", section = GOALS_SECTION, position = 1)
+    @ConfigItem(keyName = "experienceGoalsEnabled", name = "Experience", description = "Show skill, total, base and session XP milestones.", section = GOALS_SECTION, position = 1)
     default boolean experienceGoalsEnabled() {
         return true;
     }
 
-    @ConfigItem(keyName = "trackerGoalsEnabled", name = "Tracker milestones", description = "Show kill-count and completion trackers.", section = GOALS_SECTION, position = 2)
+    @ConfigItem(keyName = "trackerGoalsEnabled", name = "Boss & activity counts", description = "Show kill-count and activity completion trackers.", section = GOALS_SECTION, position = 2)
     default boolean trackerGoalsEnabled() {
         return true;
     }
 
-    @ConfigItem(keyName = "hideCompletedGoals", name = "Hide completed routines", description = "Also hide completed daily, weekly and monthly routines. Completed one-time milestones are hidden automatically. Select Done to view completed milestones.", section = GOALS_SECTION, position = 3)
-    default boolean hideCompletedGoals() {
-        return false;
+    @ConfigItem(keyName = "questGoalsEnabled", name = "Quests", description = "Show individual quests and quest series.", section = GOALS_SECTION, position = 3)
+    default boolean questGoalsEnabled() {
+        return true;
     }
 
-    @ConfigItem(keyName = "collectionLogEnabled", name = "Collection log milestones", description = "Show collection-log entry and item milestones.", section = COLLECTION_LOG_SECTION, position = 0)
+    @ConfigItem(keyName = "diaryGoalsEnabled", name = "Achievement diaries", description = "Show regional and all-region diary tier milestones.", section = GOALS_SECTION, position = 4)
+    default boolean diaryGoalsEnabled() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "combatAchievementGoalsEnabled", name = "Combat achievements", description = "Show boss, tier, difficulty and individual combat-task milestones.", section = GOALS_SECTION, position = 5)
+    default boolean combatAchievementGoalsEnabled() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "collectionLogEnabled", name = "Collection log", description = "Show collection-log page and item milestones. Grid appearance is configured under Collection log.", section = GOALS_SECTION, position = 6)
     default boolean collectionLogEnabled() {
         return true;
     }
 
-    @ConfigItem(keyName = "collectionLogGoalMenu", name = "Collection log milestone shortcut", description = "Add Track unlock to collection-log items and Track page to collection-log pages. Opens the milestone editor without performing game actions.", section = COLLECTION_LOG_SECTION, position = 3)
+    @ConfigItem(keyName = "ownedItemGoalsEnabled", name = "Owned items", description = "Show item quantity milestones across known personal storage.", section = GOALS_SECTION, position = 7)
+    default boolean ownedItemGoalsEnabled() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "customGoalsEnabled", name = "Custom milestones", description = "Show manual progress milestones, checklists and notes.", section = GOALS_SECTION, position = 8)
+    default boolean customGoalsEnabled() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "linkedGoalsEnabled", name = "Linked milestones", description = "Show linked checklists, ladders, prerequisites, achievement targets and repeat-completion targets.", section = GOALS_SECTION, position = 9)
+    default boolean linkedGoalsEnabled() {
+        return true;
+    }
+
+    @ConfigSection(name = "Right-click shortcuts", description = "Open milestone editors from in-game right-click menus. These shortcuts do not perform game actions.", position = 7, closedByDefault = true)
+    String shortcutsSection = SHORTCUTS_SECTION;
+
+    @ConfigItem(keyName = "skillGoalMenu", name = "Skills tab", description = "Add level and XP shortcuts to skills. Right-click Total level for total and base level or XP milestones.", section = SHORTCUTS_SECTION, position = 0)
+    default boolean skillGoalMenu() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "combatLevelGoalMenu", name = "Combat level", description = "Right-click the level display in Combat Options to open a combat-level milestone.", section = SHORTCUTS_SECTION, position = 1)
+    default boolean combatLevelGoalMenu() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "bossGoalMenu", name = "Bosses", description = "Add Track kills to supported bosses and Track boss achievements to Combat Achievements boss entries.", section = SHORTCUTS_SECTION, position = 2)
+    default boolean bossGoalMenu() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "questGoalMenu", name = "Quests", description = "Right-click a quest in the quest list to open its milestone editor.", section = SHORTCUTS_SECTION, position = 3)
+    default boolean questGoalMenu() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "diaryGoalMenu", name = "Achievement diaries", description = "Right-click a diary region to choose an Easy, Medium, Hard or Elite milestone.", section = SHORTCUTS_SECTION, position = 4)
+    default boolean diaryGoalMenu() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "combatAchievementGoalMenu", name = "Combat tasks", description = "Add Track task to Combat Achievement task menus.", section = SHORTCUTS_SECTION, position = 5)
+    default boolean combatAchievementGoalMenu() {
+        return true;
+    }
+
+    @ConfigItem(keyName = "collectionLogGoalMenu", name = "Collection log", description = "Add Track unlock to collection-log items and Track page to collection-log pages.", section = SHORTCUTS_SECTION, position = 6)
     default boolean collectionLogGoalMenu() {
         return true;
     }
 
-    @ConfigItem(keyName = "showObtainedItems", name = "Show obtained items", description = "Include items you already have in collection-log grids.", section = COLLECTION_LOG_SECTION, position = 1)
+    @ConfigSection(name = "Collection log", description = "Adjust item grids on collection-log milestone cards. Tracking and shortcuts have their own sections.", position = 8, closedByDefault = true)
+    String collectionLogSection = COLLECTION_LOG_SECTION;
+
+    @ConfigItem(keyName = "showObtainedItems", name = "Show obtained items", description = "Include already-obtained items in the grid.", section = COLLECTION_LOG_SECTION, position = 0)
     default boolean showObtainedItems() {
         return false;
     }
 
-    @ConfigItem(keyName = "showItemTooltips", name = "Show item tooltips", description = "Show an item name when you hover its icon.", section = COLLECTION_LOG_SECTION, position = 2)
-    default boolean showItemTooltips() {
-        return true;
-    }
-
-    @ConfigItem(keyName = "showGoalIcons", name = "Show milestone icons", description = "Show category icons on milestone cards.", section = DISPLAY_SECTION, position = 0)
-    default boolean showGoalIcons() {
-        return true;
-    }
-
-    @ConfigItem(keyName = "showProgressBar", name = "Show progress bars", description = "Show visual progress bars below milestone cards.", section = DISPLAY_SECTION, position = 1)
-    default boolean showProgressBar() {
-        return true;
-    }
-
     @Range(min = 1, max = 4)
-    @ConfigItem(keyName = "itemsPerRow", name = "Items per row", description = "Maximum collection-log columns. Narrow sidebars automatically use fewer columns to keep icons clear.", section = DISPLAY_SECTION, position = 2)
+    @ConfigItem(keyName = "itemsPerRow", name = "Columns", description = "Maximum item columns. Narrow sidebars automatically use fewer columns to keep icons clear.", section = COLLECTION_LOG_SECTION, position = 1)
     default int itemsPerRow() {
         return 4;
     }
 
     @Range(min = 1, max = 10)
-    @ConfigItem(keyName = "maxItemRows", name = "Preview item rows", description = "Rows shown before Show all appears. Expanded grids use the main sidebar scrollbar.", section = DISPLAY_SECTION, position = 3)
+    @ConfigItem(keyName = "maxItemRows", name = "Preview rows", description = "Rows shown before Show all appears. Expanded grids use the main sidebar scrollbar.", section = COLLECTION_LOG_SECTION, position = 2)
     default int maxItemRows() {
         return 5;
+    }
+
+    @ConfigItem(keyName = "showItemTooltips", name = "Item tooltips", description = "Show an item name when you hover its icon.", section = COLLECTION_LOG_SECTION, position = 3)
+    default boolean showItemTooltips() {
+        return true;
     }
 }
