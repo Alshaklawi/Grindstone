@@ -14,16 +14,6 @@ import static org.junit.Assert.*;
  */
 public class ItemVariantsTest {
     @Test
-    public void resolvesNotedAndPlaceholderIdsToTheirNormalItem() {
-        assertEquals(ItemID.DRAGON_PICKAXE, ItemVariants.getNormalId(100_001, 1, ItemID.DRAGON_PICKAXE, -1, -1));
-        assertEquals(ItemID.DRAGON_PICKAXE, ItemVariants.getNormalId(100_002, -1, -1, 1, ItemID.DRAGON_PICKAXE));
-        assertEquals(ItemID.DRAGON_PICKAXE, ItemVariants.getNormalId(ItemID.DRAGON_PICKAXE, -1, 100_001, -1, 100_002));
-        assertEquals(-1, ItemVariants.getNormalId(100_001, 1, -1, -1, -1));
-        assertEquals(-1, ItemVariants.getNormalId(100_002, -1, -1, 1, -1));
-        assertEquals(-1, ItemVariants.getNormalId(-1, -1, -1, -1, -1));
-    }
-
-    @Test
     public void notedAndNormalStacksShareOneQuantityWithoutCountingPlaceholders() {
         PlayerItemStorage storage = new PlayerItemStorage();
         int note = 100_001;

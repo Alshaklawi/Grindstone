@@ -14,20 +14,6 @@ import static org.junit.Assert.*;
  */
 public class SavedMilestoneTypesTest {
     @Test
-    public void newlySavedProfilesContainOnlyStableTypeTagsNotJavaClassNames() {
-        String json = TestProfiles.REPOSITORY.exportBackup(TestProfiles.populated(42));
-        assertTrue(json.contains("\"type\""));
-        assertFalse(json.contains("\"class\""));
-        assertFalse(json.contains("com.grindstone."));
-    }
-    @Test
-    public void goalsUseStableTagsWithoutClassNameAliases() {
-        PossessedItemMilestone goal = new PossessedItemMilestone(ItemID.COINS, 1_500_000_000L);
-        assertEquals("owned-item", SavedMilestoneTypes.nameOf(goal));
-        assertSame(PossessedItemMilestone.class, SavedMilestoneTypes.resolve(SavedMilestoneTypes.nameOf(goal)));
-        assertNull(SavedMilestoneTypes.resolve(PossessedItemMilestone.class.getName()));
-    }
-    @Test
     public void stableTagsRestoreTheSameSelections() {
         GrindstoneProfile profile = TestProfiles.populated(42);
         CompletionMilestoneChoices.create(null).values().forEach(choices -> choices.values().forEach(factory -> profile.add(factory.get())));

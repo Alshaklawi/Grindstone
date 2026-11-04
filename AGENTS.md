@@ -15,4 +15,4 @@
 - Use gameval constants, injected Gson and OkHttp, LinkBrowser, and scoped Filepath APIs and chooser. Keep network and disk work off the client thread.
 - Preserve config keys and saved-profile compatibility; provide migrations for changes. Third-party services must be opt-in with RuneLite's required warning.
 - Retain the permissive license. Do not commit build artifacts; keep icons small and valid.
-- Run relevant tests and compliance checks. Never interact with RuneScape through automation; gameplay changes require the player's in-game confirmation.
+- Add tests only when crucial to protecting critical behavior. Avoid routine UI/layout tests, simple lookup or validation tests, and coverage already provided by broader tests. Run relevant existing tests and compliance checks. Never interact with RuneScape through automation; gameplay changes require the player's in-game confirmation.

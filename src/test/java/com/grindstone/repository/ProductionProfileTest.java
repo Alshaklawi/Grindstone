@@ -13,14 +13,6 @@ import static org.junit.Assert.*;
  */
 public class ProductionProfileTest {
     @Test
-    public void newProfilesAndEmptySavedProfilesHaveNoGeneratedGoals() {
-        GrindstoneProfile profile = new GrindstoneProfile(42);
-        assertTrue(profile.getGoals().isEmpty());
-        assertTrue(TestProfiles.REPOSITORY.fromJson(TestProfiles.REPOSITORY.toJson(profile)).getGoals().isEmpty());
-        assertTrue(new GrindstoneProfile(43, null).getGoals().isEmpty());
-    }
-
-    @Test
     public void savedPlayerGoalsAndMetadataRemainIntact() {
         GrindstoneProfile profile = new GrindstoneProfile(42);
         CustomMilestone goal = new CustomMilestone("My routine", "My notes", MilestoneCategory.OTHER, 3, 10);

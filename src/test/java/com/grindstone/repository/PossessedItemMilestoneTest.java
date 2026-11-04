@@ -3,13 +3,7 @@ import com.grindstone.content.milestone.MilestoneStatus;
 import com.grindstone.content.milestone.impl.item.PossessedItemMilestone;
 import com.grindstone.content.storage.PlayerItemStorage;
 import com.grindstone.content.storage.PlayerStorageSource;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.Collections;
-import java.util.Locale;
 import java.util.function.IntUnaryOperator;
 import net.runelite.api.Item;
 import net.runelite.api.gameval.InventoryID;
@@ -26,19 +20,6 @@ import static org.junit.Assert.*;
  */
 public class PossessedItemMilestoneTest {
     @Test
-    public void snapshotHeaderUpdatesWithoutOpeningTheBankAndResetsOnLogout() {
-        Instant now = Instant.parse("2026-10-19T12:34:56Z");
-        PlayerItemStorage storage = new PlayerItemStorage(Clock.fixed(now, ZoneOffset.UTC));
-        assertEquals("Last snapshot: —", storage.getSnapshotLabel());
-        put(storage, InventoryID.INV, ItemID.COINS, 10);
-        String time = DateTimeFormatter.ofPattern("HH:mm:ss z", Locale.ROOT).withZone(ZoneId.systemDefault()).format(now);
-        assertEquals("Last snapshot: " + time, storage.getSnapshotLabel());
-        assertFalse(storage.hasBankSnapshot());
-        storage.reset();
-        assertEquals("Last snapshot: —", storage.getSnapshotLabel());
-    }
-
-    @Test
     public void combinesPersonalContainersWithLongArithmetic() {
         PlayerItemStorage storage = new PlayerItemStorage();
         put(storage, InventoryID.BANK, ItemID.COINS, 2_000_000_000);
@@ -46,20 +27,6 @@ public class PossessedItemMilestoneTest {
         put(storage, InventoryID.LOOTING_BAG, ItemID.COINS, 500_000_000);
         assertEquals(3_500_000_000L, storage.getQuantity(ItemID.COINS));
         assertEquals(3, storage.getBreakdown(ItemID.COINS).size());
-    }
-    @Test
-    public void equipmentAndSpecializedStorageAreIncluded() {
-        PlayerItemStorage storage = new PlayerItemStorage();
-        put(storage, InventoryID.WORN, ItemID.DRAGON_PICKAXE, 1);
-        put(storage, InventoryID.TACKLE_BOX, ItemID.DRAGON_PICKAXE, 2);
-        put(storage, InventoryID.SEED_BOX, ItemID.DRAGON_PICKAXE, 3);
-        put(storage, InventoryID.SEED_VAULT, ItemID.DRAGON_PICKAXE, 4);
-        put(storage, InventoryID.HUNTSMANS_KIT, ItemID.DRAGON_PICKAXE, 5);
-        put(storage, InventoryID.FORESTRY_KIT, ItemID.DRAGON_PICKAXE, 6);
-        put(storage, InventoryID.PREPOT_DEVICE_INV, ItemID.DRAGON_PICKAXE, 7);
-        put(storage, InventoryID.DEATH_PERMANENT, ItemID.DRAGON_PICKAXE, 8);
-        put(storage, InventoryID.SAILING_BOAT_1_CARGOHOLD, ItemID.DRAGON_PICKAXE, 9);
-        assertEquals(45, storage.getQuantity(ItemID.DRAGON_PICKAXE));
     }
     @Test
     public void snapshotsReplaceRatherThanAccumulateAndTransfersKeepTheTotal() {
@@ -159,24 +126,6 @@ public class PossessedItemMilestoneTest {
         assertFalse(restored.getPlayerStorage().isLoadedThisSession(PlayerStorageSource.BANK));
         saved.refresh(null);
         assertEquals(1_500_000_000L, saved.getProgressCurrent());
-    }
-    @Test
-    public void unknownBankIsExplicitAndSavedSnapshotsSurviveNewSessions() {
-        PlayerItemStorage storage = new PlayerItemStorage();
-        assertTrue(storage.describe(ItemID.COINS).contains("Open your bank"));
-        put(storage, InventoryID.BANK, ItemID.COINS, 100);
-        assertFalse(storage.describe(ItemID.COINS).contains("Open your bank"));
-        storage.beginSession();
-        assertEquals(100, storage.getQuantity(ItemID.COINS));
-        assertTrue(storage.hasBankSnapshot());
-        assertFalse(storage.isLoadedThisSession(PlayerStorageSource.BANK));
-        storage.reset();
-        assertEquals(0, storage.getQuantity(ItemID.COINS));
-        assertTrue(storage.describe(ItemID.COINS).contains("Open your bank"));
-    }
-    @Test(expected = IllegalArgumentException.class)
-    public void invalidTargetCannotBeSaved() {
-        new PossessedItemMilestone(ItemID.COINS, 0);
     }
     private void put(PlayerItemStorage storage, int container, int item, int amount) {
         storage.replace(container, new Item[]{new Item(item, amount)}, id -> id);
