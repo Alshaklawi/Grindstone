@@ -77,6 +77,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -85,7 +86,6 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
@@ -167,7 +167,7 @@ public class GrindstonePanel extends PluginPanel {
     private final JButton clearFiltersButton = new JButton("Clear");
     private final JToggleButton todayButton = new JToggleButton("Routines");
     private final JToggleButton allMilestonesButton = new JToggleButton("All", true);
-    private final JButton dashboardToggle = new JButton("Data");
+    private final JMenuItem dashboardToggle = new JMenuItem("Game data");
     private JScrollPane filterScroll;
     private SidebarViewControls viewControls;
     private GrindstoneProfile viewProfile;
@@ -256,22 +256,20 @@ public class GrindstonePanel extends PluginPanel {
         titleRow.setAlignmentX(LEFT_ALIGNMENT);
         titleLabel.setIcon(new ImageIcon(Icon.MAIN.getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH)));
         titleRow.add(titleLabel, BorderLayout.CENTER);
-        JButton add = new JButton("+ Add");
+        JButton add = new JButton("+ Add milestone");
         styleButton(add);
         add.setToolTipText("Create an automatic tracker or a custom milestone with manual progress.");
         add.getAccessibleContext().setAccessibleName("Add milestone");
         add.addActionListener(event -> creationActions.showAddMilestoneDialog());
+        add.setAlignmentX(LEFT_ALIGNMENT);
+        add.setMargin(new Insets(6, 8, 6, 8));
+        add.setMaximumSize(new Dimension(Integer.MAX_VALUE, add.getPreferredSize().height));
         JButton more = new JButton("...");
         styleButton(more);
         more.setToolTipText("More milestone options");
         more.putClientProperty("JButton.buttonType", "toolBarButton");
-        JPopupMenu moreMenu = SidebarMenu.create(creationActions, editActions, bulkActions, () -> profile, developerMode, () -> clientThread.invokeLater(completionOverlay::preview), this::transferBackup, this::setAllCategoriesCollapsed, () -> MilestoneHistoryActions.showAccountHistory(actionSupport, this::revealMilestone));
+        JPopupMenu moreMenu = SidebarMenu.create(creationActions, editActions, bulkActions, () -> profile, dashboardToggle, developerMode, () -> clientThread.invokeLater(completionOverlay::preview), this::transferBackup, this::setAllCategoriesCollapsed, () -> MilestoneHistoryActions.showAccountHistory(actionSupport, this::revealMilestone));
         more.addActionListener(event -> moreMenu.show(more, 0, more.getHeight()));
-        styleButton(dashboardToggle);
-        dashboardToggle.setFont(UiTypography.META);
-        dashboardToggle.putClientProperty("JButton.buttonType", "toolBarButton");
-        dashboardToggle.setMargin(new Insets(2, 4, 2, 4));
-        dashboardToggle.setHorizontalTextPosition(SwingConstants.LEFT);
         dashboardToggle.addActionListener(event -> {
             dashboardOverview.setVisible(!dashboardOverview.isVisible());
             updateDashboardToggle();
@@ -279,11 +277,7 @@ public class GrindstonePanel extends PluginPanel {
             revalidate();
             repaint();
         });
-        JPanel titleActions = new JPanel(new BorderLayout(4, 0));
-        titleActions.setOpaque(false);
-        titleActions.add(add, BorderLayout.CENTER);
-        titleActions.add(more, BorderLayout.EAST);
-        titleRow.add(titleActions, BorderLayout.EAST);
+        titleRow.add(more, BorderLayout.EAST);
         header.add(titleRow);
         dashboardOverview.setOpaque(false);
         dashboardOverview.setLayout(new BoxLayout(dashboardOverview, BoxLayout.Y_AXIS));
@@ -291,18 +285,13 @@ public class GrindstonePanel extends PluginPanel {
         dashboardOverview.setVisible(false);
         updateDashboardToggle();
         header.add(Box.createVerticalStrut(4));
-        JPanel summaryRow = new JPanel(new BorderLayout(6, 0));
-        summaryRow.setOpaque(false);
-        summaryRow.setAlignmentX(LEFT_ALIGNMENT);
         summaryLabel.setFont(UiTypography.META);
-        summaryRow.add(summaryLabel, BorderLayout.CENTER);
-        summaryRow.add(dashboardToggle, BorderLayout.EAST);
-        header.add(summaryRow);
+        header.add(summaryLabel);
         header.add(Box.createVerticalStrut(4));
         header.add(overallProgress);
         updateStatusLabel.setFont(UiTypography.META);
         updateStatusLabel.setAlignmentX(LEFT_ALIGNMENT);
-        updateStatusLabel.setToolTipText("Storage and save messages. Expand Data for captured game data.");
+        updateStatusLabel.setToolTipText("Storage and save messages. Open Game data from the options menu for captured readings.");
         updateStatusLabel.setVisible(false);
         catchUpButton.setAlignmentX(LEFT_ALIGNMENT);
         catchUpButton.setFont(UiTypography.META);
@@ -352,10 +341,13 @@ public class GrindstonePanel extends PluginPanel {
         }
         header.add(Box.createVerticalStrut(10));
         header.add(navigation);
+        header.add(Box.createVerticalStrut(8));
+        header.add(add);
     }
 
     private void updateDashboardToggle() {
         boolean expanded = dashboardOverview.isVisible();
+        dashboardToggle.setText(expanded ? "Hide game data" : "Game data");
         dashboardToggle.setIcon(expanded ? DATA_EXPANDED_ICON : DATA_COLLAPSED_ICON);
         dashboardToggle.setToolTipText(expanded ? "Hide captured game data" : "Show captured game data and refresh instructions");
         dashboardToggle.getAccessibleContext().setAccessibleName(expanded ? "Hide game data" : "Show game data");
@@ -691,7 +683,7 @@ public class GrindstonePanel extends PluginPanel {
                 catchUpButton.setVisible(status.getCatchUpCount() > 0);
                 updateStatusLabel.setText("<html>" + (storageStatus == null ? "" : HtmlUtils.escape(storageStatus) + "<br>") + (status.getDueCount() == 0 ? "" : status.getDueCount() + " personal deadline(s) due within 24h / past due<br>") + "</html>");
                 updateStatusLabel.setVisible(storageStatus != null || status.getDueCount() > 0);
-                updateStatusLabel.setToolTipText("Storage and save messages. Expand Data for captured game data.");
+                updateStatusLabel.setToolTipText("Storage and save messages. Open Game data from the options menu for captured readings.");
                 List<MilestoneView> allGoals = new ArrayList<>(preparedViews.size());
                 for (Supplier<MilestoneView> prepared : preparedViews) {
                     allGoals.add(prepared.get());

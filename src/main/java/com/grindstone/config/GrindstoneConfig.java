@@ -76,7 +76,7 @@ public interface GrindstoneConfig extends Config {
         return false;
     }
 
-    @ConfigItem(keyName = "showUpdateStatus", name = "Game data status", description = "Show the Data disclosure in the sidebar header, with captured storage and collection-log readings and refresh tips.", section = DISPLAY_SECTION, position = 6)
+    @ConfigItem(keyName = "showUpdateStatus", name = "Game data status", description = "Show Game data in the options menu, with captured storage and collection-log readings and refresh tips.", section = DISPLAY_SECTION, position = 6)
     default boolean showUpdateStatus() {
         return true;
     }

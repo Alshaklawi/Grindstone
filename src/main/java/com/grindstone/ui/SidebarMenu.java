@@ -20,8 +20,10 @@ public final class SidebarMenu {
     private SidebarMenu() {
     }
 
-    public static JPopupMenu create(MilestoneCreationActions creation, MilestoneEditActions edits, BulkMilestoneActions bulk, Supplier<GrindstoneProfile> profiles, boolean developerMode, Runnable previewPopup, BiConsumer<Boolean, Boolean> transferBackup, Consumer<Boolean> collapseCategories, Runnable showHistory) {
+    public static JPopupMenu create(MilestoneCreationActions creation, MilestoneEditActions edits, BulkMilestoneActions bulk, Supplier<GrindstoneProfile> profiles, JMenuItem gameData, boolean developerMode, Runnable previewPopup, BiConsumer<Boolean, Boolean> transferBackup, Consumer<Boolean> collapseCategories, Runnable showHistory) {
         JPopupMenu menu = new JPopupMenu();
+        menu.add(gameData);
+        menu.addSeparator();
         JMenuItem link = new JMenuItem("Link milestones...");
         link.setToolTipText("Combine existing trackers into a linked milestone.");
         link.addActionListener(event -> edits.editLinkedMilestone(profiles.get(), null));

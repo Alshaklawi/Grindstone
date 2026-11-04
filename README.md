@@ -20,7 +20,7 @@ Search and filter by status, category, type or schedule. Pin important targets, 
 ## Get started
 
 1. Enable **Grindstone**, log in and open its RuneLite sidebar.
-2. Select **+ Add**, choose a subject and set your target.
+2. Select **+ Add milestone**, choose a subject and set your target.
 3. Save your milestone and play. Supported trackers update from available game data.
 
 Track levels and XP, bosses and activities, quests and diaries, Combat Achievements, collection-log unlocks and owned items. Personal milestones support manual counters, notes and checklists; linked milestones combine existing trackers.
@@ -65,8 +65,8 @@ Newly reached targets appear together in a compact Guild popup. Entry and exit a
 
 Sign in to the same RuneLite account on each computer to sync your character's milestones, history and snapshots. RuneLite uses its normal sync schedule. Local recovery copies and manual backups remain available through the **…** menu; milestone packs share definitions without account progress or history.
 
-Open **Data** in the sidebar for capture status and refresh instructions. Bank and other storage snapshots retain their last known contents; reopen storage after playing on another device.
+Open **… → Game data** for capture status and refresh instructions. Bank and other storage snapshots retain their last known contents; reopen storage after playing on another device.
 
-Before adding collection-log milestones, open your in-game collection log and check its capture status in **Data**. Grindstone verifies loaded unlocks against the game's total; incomplete data may require refreshing the log. **Add all collection-log pages** adds missing page milestones.
+Before adding collection-log milestones, open your in-game collection log and check its capture status in **Game data**. Grindstone verifies loaded unlocks against the game's total; incomplete data may require refreshing the log. **Add all collection-log pages** adds missing page milestones.
 
 Played on mobile or another computer? **Since last seen** summarizes changes from the previous saved reading. Exact achievement times and gains across routine resets cannot be reconstructed.
