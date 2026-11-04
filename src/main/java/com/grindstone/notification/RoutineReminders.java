@@ -86,7 +86,7 @@ public final class RoutineReminders {
             String heading = schedule + " reminder";
             String detail = pending.size() + (pending.size() == 1 ? " routine left: " : " routines left: ") + String.join("; ", pending.subList(0, Math.min(3, pending.size()))) + (pending.size() > 3 ? "; and " + (pending.size() - 3) + " more" : "") + "." + (config.routineReminderCountdown() ? " Resets in " + OverlayStyle.formatCountdown(schedule.getNextReset(start), now) + "." : "");
             if (config.routineReminderChat()) {
-                chat.queue(QueuedMessage.builder().type(ChatMessageType.CONSOLE).value(NotificationMessages.formatChat(heading, detail, config.notificationColours(), false)).build());
+                chat.queue(QueuedMessage.builder().type(ChatMessageType.CONSOLE).runeLiteFormattedMessage(NotificationMessages.formatChat(heading, detail, config.notificationColours())).build());
             }
             if (config.routineReminderNotification().isEnabled()) {
                 notifier.notify(config.routineReminderNotification(), heading + ": " + detail);

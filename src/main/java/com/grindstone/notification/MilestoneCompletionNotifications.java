@@ -100,10 +100,10 @@ public final class MilestoneCompletionNotifications {
         String message = heading + ": " + detail;
         if (config.completionChat()) {
             for (int index = 0; index < Math.min(5, details.size()); index++) {
-                chat.queue(QueuedMessage.builder().type(ChatMessageType.CONSOLE).value(NotificationMessages.formatChat(headings.get(index), details.get(index), config.notificationColours(), true)).build());
+                chat.queue(QueuedMessage.builder().type(ChatMessageType.CONSOLE).runeLiteFormattedMessage(NotificationMessages.formatChat(headings.get(index), details.get(index), config.notificationColours())).build());
             }
             if (details.size() > 5) {
-                chat.queue(QueuedMessage.builder().type(ChatMessageType.CONSOLE).value(NotificationMessages.formatChat("More targets reached", (details.size() - 5) + " more complete. Open History in Grindstone to view them.", config.notificationColours(), true)).build());
+                chat.queue(QueuedMessage.builder().type(ChatMessageType.CONSOLE).runeLiteFormattedMessage(NotificationMessages.formatChat("More targets reached", (details.size() - 5) + " more complete. Open History in Grindstone to view them.", config.notificationColours())).build());
             }
         }
         if (config.completionNotification().isEnabled()) {

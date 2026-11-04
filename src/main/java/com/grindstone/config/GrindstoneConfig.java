@@ -178,7 +178,7 @@ public interface GrindstoneConfig extends Config {
     @ConfigSection(name = "Notifications", description = "Control completion messages, colours and reminders for unfinished routines.", position = 4)
     String notificationsSection = NOTIFICATIONS_SECTION;
 
-    @ConfigItem(keyName = "notificationColours", name = "Colourful chat messages", description = "Colour milestone completions and routine reminders in local chat.", section = NOTIFICATIONS_SECTION, position = 4)
+    @ConfigItem(keyName = "notificationColours", name = "Colourful chat messages", description = "Highlight completion and reminder headings using your RuneLite chat colours.", section = NOTIFICATIONS_SECTION, position = 4)
     default boolean notificationColours() {
         return true;
     }

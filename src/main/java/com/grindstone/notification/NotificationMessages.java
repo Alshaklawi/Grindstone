@@ -5,9 +5,9 @@ import com.grindstone.content.milestone.impl.experience.BaseExperienceMilestone;
 import com.grindstone.content.milestone.impl.experience.SessionExperienceMilestone;
 import com.grindstone.content.milestone.impl.experience.SkillExperienceMilestone;
 import com.grindstone.content.milestone.impl.experience.TotalExperienceMilestone;
-import java.awt.Color;
 import java.util.Locale;
-import net.runelite.client.util.ColorUtil;
+import net.runelite.client.chat.ChatColorType;
+import net.runelite.client.chat.ChatMessageBuilder;
 import net.runelite.client.util.Text;
 
 /**
@@ -39,10 +39,14 @@ public final class NotificationMessages {
         return numbers;
     }
 
-    public static String formatChat(String heading, String detail, boolean colours, boolean complete) {
-        if (!colours) {
-            return "[Grindstone] " + heading + ": " + detail;
-        }
-        return ColorUtil.wrapWithColorTag("[Grindstone] ", new Color(178, 112, 18)) + ColorUtil.wrapWithColorTag(heading + ": ", complete ? new Color(0, 125, 55) : new Color(165, 80, 15)) + ColorUtil.wrapWithColorTag(detail, new Color(35, 100, 155));
+    public static String formatChat(String heading, String detail, boolean colours) {
+        return new ChatMessageBuilder()
+                .append(ChatColorType.NORMAL)
+                .append("[Grindstone] ")
+                .append(colours ? ChatColorType.HIGHLIGHT : ChatColorType.NORMAL)
+                .append(heading)
+                .append(ChatColorType.NORMAL)
+                .append(": " + detail)
+                .build();
     }
 }
