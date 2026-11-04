@@ -20,7 +20,7 @@ public final class SidebarMenu {
     private SidebarMenu() {
     }
 
-    public static JPopupMenu create(MilestoneCreationActions creation, MilestoneEditActions edits, BulkMilestoneActions bulk, Supplier<GrindstoneProfile> profiles, Runnable previewPopup, BiConsumer<Boolean, Boolean> transferBackup, Consumer<Boolean> collapseCategories, Runnable showHistory) {
+    public static JPopupMenu create(MilestoneCreationActions creation, MilestoneEditActions edits, BulkMilestoneActions bulk, Supplier<GrindstoneProfile> profiles, boolean developerMode, Runnable previewPopup, BiConsumer<Boolean, Boolean> transferBackup, Consumer<Boolean> collapseCategories, Runnable showHistory) {
         JPopupMenu menu = new JPopupMenu();
         JMenuItem link = new JMenuItem("Link milestones...");
         link.setToolTipText("Combine existing trackers into a linked milestone.");
@@ -61,9 +61,6 @@ public final class SidebarMenu {
         milestoneActions.addSeparator();
         milestoneActions.add(clearMilestones);
         menu.add(milestoneActions);
-        JMenuItem preview = new JMenuItem("Preview popup", new ImageIcon(Icon.MAIN.getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH)));
-        preview.addActionListener(event -> previewPopup.run());
-        menu.add(preview);
         JMenu backups = new JMenu("Profile backups");
         JMenuItem export = new JMenuItem("Export profile backup...");
         export.setToolTipText("Save a private local JSON backup. No network is used.");
@@ -98,6 +95,14 @@ public final class SidebarMenu {
         history.setToolTipText("Browse this account's milestone history by date, schedule, milestone and outcome.");
         history.addActionListener(event -> showHistory.run());
         menu.add(history);
+        if (developerMode) {
+            menu.addSeparator();
+            JMenu development = new JMenu("Development");
+            JMenuItem preview = new JMenuItem("Preview popup", new ImageIcon(Icon.MAIN.getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH)));
+            preview.addActionListener(event -> previewPopup.run());
+            development.add(preview);
+            menu.add(development);
+        }
         return menu;
     }
 }

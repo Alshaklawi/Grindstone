@@ -62,6 +62,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -183,7 +184,7 @@ public class GrindstonePanel extends PluginPanel {
     private boolean updatingFilters;
 
     @Inject
-    public GrindstonePanel(Client client, ClientThread clientThread, GrindstoneConfig config, ItemManager itemManager, ItemSearchService itemSearchService) {
+    public GrindstonePanel(Client client, ClientThread clientThread, GrindstoneConfig config, ItemManager itemManager, ItemSearchService itemSearchService, @Named("developerMode") boolean developerMode) {
         super(false);
 
         this.client = client;
@@ -204,7 +205,7 @@ public class GrindstonePanel extends PluginPanel {
         setBackground(PANEL_COLOR);
         setOpaque(true);
 
-        buildHeader();
+        buildHeader(developerMode);
         buildControls();
 
         JPanel topPanel = new JPanel();
@@ -222,7 +223,7 @@ public class GrindstonePanel extends PluginPanel {
         render();
     }
 
-    private void buildHeader() {
+    private void buildHeader(boolean developerMode) {
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.setBackground(HEADER_COLOR);
         header.setOpaque(true);
@@ -260,7 +261,7 @@ public class GrindstonePanel extends PluginPanel {
         styleButton(more);
         more.setToolTipText("More milestone options");
         more.putClientProperty("JButton.buttonType", "toolBarButton");
-        JPopupMenu moreMenu = SidebarMenu.create(creationActions, editActions, bulkActions, () -> profile, () -> clientThread.invokeLater(completionOverlay::preview), this::transferBackup, this::setAllCategoriesCollapsed, () -> MilestoneHistoryActions.showAccountHistory(actionSupport, this::revealMilestone));
+        JPopupMenu moreMenu = SidebarMenu.create(creationActions, editActions, bulkActions, () -> profile, developerMode, () -> clientThread.invokeLater(completionOverlay::preview), this::transferBackup, this::setAllCategoriesCollapsed, () -> MilestoneHistoryActions.showAccountHistory(actionSupport, this::revealMilestone));
         more.addActionListener(event -> moreMenu.show(more, 0, more.getHeight()));
         styleButton(dashboardToggle);
         dashboardToggle.setFont(UiTypography.META);
