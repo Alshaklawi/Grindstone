@@ -23,7 +23,7 @@ public class ProgressOverlayEntry {
     BufferedImage icon;
 
     public ProgressOverlayEntry(String title, RepeatSchedule schedule, long current, long target, boolean complete, boolean ready, boolean pinned, BufferedImage icon) {
-        this.title = Text.removeTags(Objects.requireNonNull(title)).replaceAll("[\\r\\n\\t]", " ").trim();
+        this.title = Text.removeTags(Objects.requireNonNull(title)).replace('\r', ' ').replace('\n', ' ').replace('\t', ' ').trim();
         this.schedule = Objects.requireNonNull(schedule);
         this.current = Math.max(0, current);
         this.target = Math.max(0, target);
