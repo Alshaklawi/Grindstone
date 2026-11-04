@@ -53,7 +53,7 @@ public class SidebarViewState {
     }
 
     public static SidebarViewState createDefault() {
-        return new SidebarViewState("", Map.of(), false, false, false, true, Set.of(), Set.of());
+        return new SidebarViewState("", Map.of(), false, false, false, false, Set.of(), Set.of());
     }
 
     public static SidebarViewState validated(SidebarViewState state) {

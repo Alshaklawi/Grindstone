@@ -17,7 +17,6 @@ import javax.swing.JButton;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JToggleButton;
 import net.runelite.client.ui.ColorScheme;
 
 /**
@@ -36,11 +35,6 @@ public final class SnapshotStatusPanel extends JPanel {
         setBorder(BorderFactory.createEmptyBorder(6, 0, 2, 0));
         rows.setOpaque(false);
         rows.setLayout(new BoxLayout(rows, BoxLayout.Y_AXIS));
-        JToggleButton heading = new JToggleButton("Snapshots", true);
-        heading.setFont(UiTypography.BODY);
-        heading.setToolTipText("Show or hide captured game data. Hover each information button for refresh instructions.");
-        heading.addActionListener(event -> rows.setVisible(heading.isSelected()));
-        add(heading, BorderLayout.NORTH);
         add(rows, BorderLayout.CENTER);
     }
 

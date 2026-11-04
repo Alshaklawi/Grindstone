@@ -17,7 +17,6 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Consumer;
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -125,7 +124,7 @@ public class MilestoneComponent extends JPanel {
         setAlignmentX(LEFT_ALIGNMENT);
         setOpaque(true);
         setBackground(CARD_COLOR);
-        setBorder(BorderFactory.createCompoundBorder( BorderFactory.createLineBorder(ColorScheme.BORDER_COLOR), BorderFactory.createEmptyBorder(9, 8, 9, 8)));
+        setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(ColorScheme.BORDER_COLOR), BorderFactory.createEmptyBorder(8, 8, 8, 8)));
 
         header.setOpaque(false);
         headerText.setOpaque(false);
@@ -156,12 +155,14 @@ public class MilestoneComponent extends JPanel {
         expandButton.putClientProperty("JButton.buttonType", "toolBarButton");
         expandButton.setToolTipText("Collapse milestone details");
         expandButton.setRolloverEnabled(true);
+        expandButton.setMargin(new Insets(0, 4, 0, 4));
         expandButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         expandButton.addActionListener(event -> setExpanded(!expanded));
 
         editButton.putClientProperty("JButton.buttonType", "toolBarButton");
         editButton.setToolTipText("Actions");
         editButton.setRolloverEnabled(true);
+        editButton.setMargin(new Insets(0, 4, 0, 4));
         editButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         editButton.setVisible(false);
 
@@ -179,12 +180,6 @@ public class MilestoneComponent extends JPanel {
         deadlineLabel.setAlignmentX(LEFT_ALIGNMENT);
         deadlineLabel.setVisible(false);
         headerText.add(deadlineLabel);
-        headerText.add(Box.createVerticalStrut(2));
-        JPanel headerDetails = new JPanel(new BorderLayout(4, 0));
-        headerDetails.setOpaque(false);
-        headerDetails.setAlignmentX(LEFT_ALIGNMENT);
-        headerDetails.add(headerActions, BorderLayout.EAST);
-        headerText.add(headerDetails);
 
         header.add(iconLabel, BorderLayout.WEST);
         header.add(headerText, BorderLayout.CENTER);
@@ -198,11 +193,11 @@ public class MilestoneComponent extends JPanel {
         progressBar.setStringPainted(false);
         progressBar.setBorderPainted(false);
         progressBar.setBackground(ColorScheme.MEDIUM_GRAY_COLOR);
-        progressBar.setPreferredSize(new Dimension(100, 9));
-        progressBar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 9));
+        progressBar.setPreferredSize(new Dimension(100, 5));
+        progressBar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 5));
 
         progressLabel.setForeground(MUTED_COLOR);
-        progressLabel.setFont(UiTypography.BODY);
+        progressLabel.setFont(UiTypography.META);
 
         footer.setOpaque(false);
         footer.setLayout(new BorderLayout(0, 4));
@@ -213,8 +208,12 @@ public class MilestoneComponent extends JPanel {
         bottom.add(manualControls, BorderLayout.SOUTH);
         manualControls.setVisible(false);
         footer.add(bottom, BorderLayout.SOUTH);
-        statusLabel.setFont(UiTypography.BODY);
-        footer.add(statusLabel, BorderLayout.NORTH);
+        statusLabel.setFont(UiTypography.META);
+        JPanel statusRow = new JPanel(new BorderLayout(6, 0));
+        statusRow.setOpaque(false);
+        statusRow.add(statusLabel, BorderLayout.CENTER);
+        statusRow.add(headerActions, BorderLayout.EAST);
+        footer.add(statusRow, BorderLayout.NORTH);
 
         add(header, BorderLayout.NORTH);
         add(content, BorderLayout.CENTER);
