@@ -160,7 +160,7 @@ public interface GrindstoneConfig extends Config {
         return 240;
     }
 
-    @ConfigItem(keyName = "progressOverlayTheme", name = "Style", description = "Choose Classic, Slate, Guild or Focus for the progress tracker.", section = OVERLAY_SECTION, position = 6)
+    @ConfigItem(keyName = "progressOverlayTheme", name = "Style", description = "Choose Classic, Slate or Guild for the progress tracker.", section = OVERLAY_SECTION, position = 6)
     default OverlayTheme progressOverlayTheme() {
         return OverlayTheme.CLASSIC;
     }

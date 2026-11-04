@@ -122,9 +122,6 @@ public final class GrindstoneProgressOverlay extends Overlay {
                     case GUILD:
                         renderGuildEntry(card, row, current.width, y, current.bars, palette);
                         break;
-                    case FOCUS:
-                        renderFocusEntry(card, row, current.width, y, current.bars, palette);
-                        break;
                     default:
                         renderEntry(card, row, current.width, y, current.bars);
                         break;
@@ -155,15 +152,6 @@ public final class GrindstoneProgressOverlay extends Overlay {
     }
 
     private static void renderHeader(Graphics2D graphics, Snapshot current, OverlayStyle.Palette palette) {
-        if (current.theme == OverlayTheme.FOCUS) {
-            graphics.setFont(OverlayStyle.SMALL_FONT);
-            graphics.setColor(palette.getMuted());
-            String count = current.total + " tracked";
-            int countWidth = graphics.getFontMetrics().stringWidth(count);
-            graphics.drawString(OverlayStyle.fit(current.view.getTitle().toUpperCase(Locale.ROOT), graphics.getFontMetrics(), current.width - countWidth - 24), 4, 18);
-            graphics.drawString(count, current.width - countWidth - 4, 18);
-            return;
-        }
         if (current.theme == OverlayTheme.CLASSIC) {
             OverlayStyle.icon(graphics, Icon.MAIN.getImage(), 12, 13, 22);
             graphics.setFont(OverlayStyle.HEADING_FONT);
@@ -276,24 +264,6 @@ public final class GrindstoneProgressOverlay extends Overlay {
         }
         if (bars) {
             OverlayStyle.progress(graphics, 19, y + 57, width - 38, 4, row.entry.isReady() ? row.ratio : 0, accent, palette.getTrack());
-        }
-    }
-
-    private static void renderFocusEntry(Graphics2D graphics, Row row, int width, int y, boolean bars, OverlayStyle.Palette palette) {
-        graphics.setColor(palette.getSurface());
-        int height = OverlayStyle.getRowHeight(OverlayTheme.FOCUS, bars) - 6;
-        graphics.fillRoundRect(0, y, width, height, 6, 6);
-        OverlayStyle.icon(graphics, row.entry.getIcon(), 8, y + 7, 18);
-        String progress = !row.entry.isReady() ? "Waiting" : row.entry.isComplete() ? "Done" : row.progress;
-        graphics.setFont(OverlayStyle.SMALL_FONT);
-        int progressWidth = graphics.getFontMetrics().stringWidth(progress);
-        graphics.setColor(row.entry.isComplete() ? palette.getSuccess() : palette.getMuted());
-        graphics.drawString(progress, width - 12 - progressWidth, y + 21);
-        graphics.setFont(OverlayStyle.BODY_FONT);
-        graphics.setColor(palette.getText());
-        graphics.drawString(OverlayStyle.fit(row.entry.getTitle(), graphics.getFontMetrics(), width - progressWidth - 60), 34, y + 21);
-        if (bars) {
-            OverlayStyle.progress(graphics, 3, y + height - 2, width - 6, 2, row.entry.isReady() ? row.ratio : 0, getAccent(row, palette), palette.getTrack());
         }
     }
 

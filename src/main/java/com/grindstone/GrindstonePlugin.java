@@ -117,6 +117,9 @@ public class GrindstonePlugin extends Plugin {
     private GrindstoneConfig config;
 
     @Inject
+    private ConfigManager configManager;
+
+    @Inject
     private ClientToolbar clientToolbar;
 
     @Inject
@@ -245,6 +248,7 @@ public class GrindstonePlugin extends Plugin {
     }
 
     private void applyConfigChange(String key) {
+        migrateOverlayThemes(configManager);
         if (!running) {
             return;
         }
@@ -1075,8 +1079,17 @@ public class GrindstonePlugin extends Plugin {
         return ImageUtil.loadImageResource(GrindstonePlugin.class, "grindstone.png");
     }
 
+    private static void migrateOverlayThemes(ConfigManager configManager) {
+        for (String key : new String[]{"progressOverlayTheme", "completionPopupTheme"}) {
+            if ("FOCUS".equals(configManager.getConfiguration(GrindstoneConfig.GROUP, key))) {
+                configManager.setConfiguration(GrindstoneConfig.GROUP, key, "CLASSIC");
+            }
+        }
+    }
+
     @Provides
     GrindstoneConfig provideConfig(ConfigManager configManager) {
+        migrateOverlayThemes(configManager);
         return configManager.getConfig(GrindstoneConfig.class);
     }
 }

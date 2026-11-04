@@ -38,7 +38,6 @@ public final class OverlayStyle {
     private static final Palette CLASSIC = new Palette(GOLD, GREEN, TEXT, MUTED, BACKGROUND, SURFACE, TRACK, BORDER);
     private static final Palette SLATE = new Palette(new Color(0x79b7cf), new Color(0x81c8b3), new Color(0xedf2f8), new Color(0xa2aebb), new Color(0x1e252f), new Color(0x2a323e), new Color(0x414b59), new Color(0x414b58));
     private static final Palette GUILD = new Palette(new Color(0xd7b374), new Color(0x9abd8c), new Color(0xf2eadb), new Color(0xb8ad97), new Color(0x201f1c), new Color(0x363025), new Color(0x39372f), new Color(0x786141));
-    private static final Palette FOCUS = new Palette(new Color(0xa3c4a2), new Color(0xa3c4a2), new Color(0xedf1ed), new Color(0xa9b7af), new Color(0x202823), new Color(0x202823), new Color(0x3a453e), new Color(0x3a453e));
 
     private OverlayStyle() {
     }
@@ -49,8 +48,6 @@ public final class OverlayStyle {
                 return SLATE;
             case GUILD:
                 return GUILD;
-            case FOCUS:
-                return FOCUS;
             default:
                 return CLASSIC;
         }
@@ -62,8 +59,6 @@ public final class OverlayStyle {
                 return 68;
             case GUILD:
                 return 70;
-            case FOCUS:
-                return 30;
             default:
                 return 60;
         }
@@ -75,8 +70,6 @@ public final class OverlayStyle {
                 return bars ? 76 : 65;
             case GUILD:
                 return bars ? 64 : 54;
-            case FOCUS:
-                return bars ? 42 : 38;
             default:
                 return bars ? 50 : 42;
         }
@@ -100,11 +93,6 @@ public final class OverlayStyle {
             graphics.fillRoundRect(0, 0, width, height, 24, 24);
             graphics.setColor(completion ? new Color(0x465b61) : palette.border);
             graphics.drawRoundRect(0, 0, width - 1, height - 1, 24, 24);
-        } else if (completion) {
-            graphics.setColor(palette.background);
-            graphics.fillRoundRect(0, 0, width, height, 6, 6);
-            graphics.setColor(palette.accent);
-            graphics.fillRoundRect(0, 0, 3, height, 3, 3);
         }
     }
 

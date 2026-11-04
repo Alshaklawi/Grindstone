@@ -159,9 +159,6 @@ public final class MilestoneCompletionOverlay extends Overlay {
             case GUILD:
                 height = 84 + (shown - 1) * 50;
                 break;
-            case FOCUS:
-                height = 60 + (shown - 1) * 50;
-                break;
             case SLATE:
                 height = shown == 1 ? 128 : 42 + shown * 62;
                 break;
@@ -187,9 +184,6 @@ public final class MilestoneCompletionOverlay extends Overlay {
                 case GUILD:
                     renderGuild(card, current, shown, palette);
                     break;
-                case FOCUS:
-                    renderFocus(card, current, shown, palette);
-                    break;
                 case SLATE:
                     renderSlate(card, current, shown, palette);
                     break;
@@ -214,7 +208,6 @@ public final class MilestoneCompletionOverlay extends Overlay {
     private static void animate(Graphics2D graphics, OverlayTheme theme, int height, double entering, double leaving) {
         double entrance = (1 - entering) * (1 - entering) * (1 - entering);
         double exit = leaving * leaving;
-        double offsetX = 0;
         double offsetY;
         double scale = 1;
         switch (theme) {
@@ -226,15 +219,11 @@ public final class MilestoneCompletionOverlay extends Overlay {
                 offsetY = -10 * entrance - 8 * exit;
                 scale = 1 - 0.025 * entrance - 0.015 * exit;
                 break;
-            case FOCUS:
-                offsetX = 12 * entrance + 10 * exit;
-                offsetY = 0;
-                break;
             default:
                 offsetY = -8 * entrance - 6 * exit;
                 break;
         }
-        graphics.translate(ANIMATION_MARGIN + offsetX + WIDTH * (1 - scale) / 2, ANIMATION_MARGIN + offsetY + height * (1 - scale) / 2);
+        graphics.translate(ANIMATION_MARGIN + WIDTH * (1 - scale) / 2, ANIMATION_MARGIN + offsetY + height * (1 - scale) / 2);
         graphics.scale(scale, scale);
     }
 
@@ -289,22 +278,6 @@ public final class MilestoneCompletionOverlay extends Overlay {
             card.setFont(OverlayStyle.BODY_FONT);
             card.setColor(palette.getMuted());
             card.drawString(OverlayStyle.fit(entry.getDetail(), card.getFontMetrics(), WIDTH - 72), 54, y + 34);
-        }
-    }
-
-    private static void renderFocus(Graphics2D card, Popup current, int shown, OverlayStyle.Palette palette) {
-        for (int index = 0; index < shown; index++) {
-            CompletionOverlayEntry entry = current.entries.get(index);
-            int y = 12 + index * 50;
-            OverlayStyle.icon(card, entry.getIcon(), 12, y + 5, 22);
-            card.setFont(OverlayStyle.TITLE_FONT);
-            card.setColor(palette.getText());
-            card.drawString(OverlayStyle.fit(entry.getTitle(), card.getFontMetrics(), WIDTH - 70), 45, y + 13);
-            card.setFont(OverlayStyle.SMALL_FONT);
-            card.setColor(palette.getMuted());
-            String detail = (current.routinesOnly ? "Routine complete" : "Milestone complete") + (entry.getDetail().isEmpty() ? "" : " · " + entry.getDetail());
-            card.drawString(OverlayStyle.fit(detail, card.getFontMetrics(), WIDTH - 70), 45, y + 30);
-            OverlayStyle.check(card, WIDTH - 24, y + 12, palette.getSuccess());
         }
     }
 
