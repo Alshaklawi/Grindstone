@@ -52,7 +52,7 @@ final class SidebarFilterRenderer extends JPanel implements ListCellRenderer<Str
         context.setText(field + ":");
         context.setVisible(index < 0 && !field.isEmpty());
         context.setForeground(secondary);
-        valueLabel.setText(text);
+        valueLabel.setText(MilestoneFilters.ALL_STATUSES.equals(text) ? "All" : text);
         valueLabel.setForeground(list.isEnabled() ? foreground : secondary);
         Integer total = counts.get(text);
         count.setText(total == null ? "" : total.toString());

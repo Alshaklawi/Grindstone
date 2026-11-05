@@ -404,7 +404,7 @@ public class GrindstonePanel extends PluginPanel {
 
         styleComboBox(categoryFilter);
         styleComboBox(statusFilter);
-        statusFilter.setRenderer(new SidebarFilterRenderer("", statusCounts));
+        statusFilter.setRenderer(new SidebarFilterRenderer("Status", statusCounts));
         statusFilter.getAccessibleContext().setAccessibleName("Milestone status");
         styleComboBox(sortFilter);
         UiTooltips.set(categoryFilter, "Show milestones from one category, or choose All categories.");
