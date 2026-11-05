@@ -71,7 +71,7 @@ public interface GrindstoneConfig extends Config {
         return true;
     }
 
-    @ConfigItem(keyName = "hideCompletedGoals", name = "Hide completed routines", description = "Hide finished routines until their next reset. Finished one-time milestones are already hidden. Choose Done in the sidebar to see completed milestones.", section = DISPLAY_SECTION, position = 5)
+    @ConfigItem(keyName = "hideCompletedGoals", name = "Hide completed routines", description = "Hide finished routines until their next reset. Completed one-time milestones remain visible. Choose Done in the sidebar to see completed milestones, including hidden routines.", section = DISPLAY_SECTION, position = 5)
     default boolean hideCompletedGoals() {
         return false;
     }

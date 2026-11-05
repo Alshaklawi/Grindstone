@@ -420,7 +420,7 @@ public class GrindstonePanel extends PluginPanel {
         statusFilter.getAccessibleContext().setAccessibleName("Milestone status");
         styleComboBox(sortFilter);
         UiTooltips.set(categoryFilter, "Show milestones from one category, or choose All categories.");
-        UiTooltips.set(statusFilter, "Filter by progress state. Done also shows finished one-time milestones and hidden recurring completions.");
+        UiTooltips.set(statusFilter, "Filter by progress state. Done shows only completed milestones, including routines hidden by settings.");
         UiTooltips.set(sortFilter, "Sort within each category. Closest unfinished puts incomplete milestones nearest their target first.");
         UiTooltips.set(typeFilter, "Custom includes manual checklists. Linked milestones combine existing trackers. Filter base stats, session gains or personal deadlines without deleting anything.");
 

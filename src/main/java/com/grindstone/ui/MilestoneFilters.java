@@ -61,16 +61,13 @@ final class MilestoneFilters {
 
         for (MilestoneView view : goals) {
             RepeatSchedule schedule = (RepeatSchedule) view.getComponent().getClientProperty("grindstone.repeat");
-            if (isComplete(view.getStatus()) && schedule == RepeatSchedule.NONE && !COMPLETE.equals(selectedStatus)) {
-                continue;
-            }
             if (!matchesSearch(words, view.getSearchText())) {
                 continue;
             }
             if (selectedCategory != null && !ALL_CATEGORIES.equals(selectedCategory) && !selectedCategory.equals(view.getCategory().getDisplayName())) {
                 continue;
             }
-            if (!matchesStatus(view.getStatus(), selectedStatus, hideCompleted, Boolean.TRUE.equals(view.getComponent().getClientProperty("grindstone.ready")))) {
+            if (!matchesStatus(view.getStatus(), selectedStatus, hideCompleted && schedule != null && schedule != RepeatSchedule.NONE, Boolean.TRUE.equals(view.getComponent().getClientProperty("grindstone.ready")))) {
                 continue;
             }
             if (!matchesSchedule(schedule, selectedSchedule) || state.isPinnedOnly() && !Boolean.TRUE.equals(view.getComponent().getClientProperty("grindstone.pinned"))) {
