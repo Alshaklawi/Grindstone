@@ -70,13 +70,11 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.DefaultListCellRenderer;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -354,13 +352,11 @@ public class GrindstonePanel extends PluginPanel {
     }
 
     private JPanel createFilterField(String title, JComboBox<String> control) {
-        JPanel field = new JPanel(new BorderLayout(8, 0));
+        JPanel field = new JPanel(new BorderLayout());
         field.setOpaque(false);
-        JLabel label = createControlLabel(title);
-        label.setPreferredSize(new Dimension(52, 28));
-        label.setLabelFor(control);
-        field.add(label, BorderLayout.WEST);
-        control.setPreferredSize(new Dimension(130, 28));
+        control.getAccessibleContext().setAccessibleName(title);
+        control.setRenderer(new SidebarFilterRenderer(title, Map.of()));
+        control.setPreferredSize(new Dimension(200, 28));
         control.setMinimumSize(new Dimension(0, 28));
         field.add(control, BorderLayout.CENTER);
         return field;
@@ -408,15 +404,7 @@ public class GrindstonePanel extends PluginPanel {
 
         styleComboBox(categoryFilter);
         styleComboBox(statusFilter);
-        statusFilter.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean selected, boolean focus) {
-                super.getListCellRendererComponent(list, value, index, selected, focus);
-                Integer count = statusCounts.get(value);
-                setText(value + (count == null ? "" : " (" + count + ")"));
-                return this;
-            }
-        });
+        statusFilter.setRenderer(new SidebarFilterRenderer("", statusCounts));
         statusFilter.getAccessibleContext().setAccessibleName("Milestone status");
         styleComboBox(sortFilter);
         UiTooltips.set(categoryFilter, "Show milestones from one category, or choose All categories.");
@@ -462,6 +450,8 @@ public class GrindstonePanel extends PluginPanel {
         JPanel selectors = new JPanel(new GridLayout(4, 1, 0, 6));
         selectors.setOpaque(false);
         selectors.setAlignmentX(LEFT_ALIGNMENT);
+        selectors.setPreferredSize(new Dimension(200, 130));
+        selectors.setMaximumSize(new Dimension(Integer.MAX_VALUE, 130));
         selectors.add(createFilterField("Category", categoryFilter));
         selectors.add(createFilterField("Type", typeFilter));
         selectors.add(createFilterField("Schedule", scheduleFilter));
@@ -507,18 +497,11 @@ public class GrindstonePanel extends PluginPanel {
         controlsPanel.add(actionRow);
     }
 
-    private JLabel createControlLabel(String text) {
-        JLabel label = new JLabel(text);
-        label.setForeground(MUTED_COLOR);
-        label.setFont(FontManager.getRunescapeSmallFont());
-        label.setAlignmentX(LEFT_ALIGNMENT);
-        return label;
-    }
-
     private void styleComboBox(JComboBox<String> comboBox) {
         comboBox.setFont(UiTypography.BODY);
+        comboBox.setRenderer(new SidebarFilterRenderer("", Map.of()));
         comboBox.setFocusable(true);
-        comboBox.setMaximumRowCount(12);
+        comboBox.setMaximumRowCount(8);
     }
 
     private void styleButton(JButton button) {
