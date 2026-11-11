@@ -3,6 +3,7 @@ package com.grindstone.content.milestone.impl;
 import com.grindstone.content.milestone.MilestoneCategory;
 import com.grindstone.content.milestone.MilestoneStatus;
 import com.grindstone.content.milestone.ManualMilestone;
+import java.awt.image.BufferedImage;
 import java.util.UUID;
 import lombok.Getter;
 import net.runelite.api.Client;
@@ -59,6 +60,11 @@ public final class CustomMilestone implements ManualMilestone {
     @Override
     public String getTitle(Client client) {
         return title;
+    }
+
+    @Override
+    public BufferedImage getIcon(Client client) {
+        return category.getIcon().getImage();
     }
 
 

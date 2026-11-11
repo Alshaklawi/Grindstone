@@ -2,7 +2,6 @@ package com.grindstone.ui;
 
 import com.grindstone.GrindstonePlugin;
 import java.awt.image.BufferedImage;
-import lombok.Getter;
 import net.runelite.api.Skill;
 import net.runelite.client.game.SkillIconManager;
 import net.runelite.client.util.ImageUtil;
@@ -32,8 +31,11 @@ public enum Icon {
         return SKILL_ICONS.getSkillImage(skill, true);
     }
 
-    @Getter
     private final BufferedImage image;
+
+    public BufferedImage getImage() {
+        return this == SLAYER ? getSkillImage(Skill.SLAYER) : image;
+    }
 
     Icon(String file) {
         this.image = ImageUtil.loadImageResource(GrindstonePlugin.class, file);
