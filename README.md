@@ -79,7 +79,15 @@ Newly reached targets appear in Collection Log-inspired popups with native icons
 
 Popups slide in, stay visible for the selected duration, then slide out. Animation and progress numbers are optional. Completion chat colors adapt to RuneLite's chat background.
 
-<img src="docs/images/popup-current.png" width="240" alt="Current Guild completion popup for five Fractured Archive raids">
+**Guild**
+
+<img src="docs/images/popup-current.png" width="240" alt="Guild completion popup with a gold frame, serif title and native raid icon">
+
+**Slate**
+
+<img src="docs/images/popup-slate-current.png" width="240" alt="Slate completion popup with a rounded blue frame and inset result card">
+
+**RuneLite**
 
 <img src="docs/images/popup-runelite-current.png" width="240" alt="Plain RuneLite completion popup with the same raid target and native icon">
 
