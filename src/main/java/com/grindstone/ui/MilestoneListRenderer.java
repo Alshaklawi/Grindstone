@@ -17,6 +17,7 @@ import com.grindstone.ui.util.DialogPlacement;
 import com.grindstone.ui.util.SkillMilestoneGrouping;
 import com.grindstone.ui.util.UiTypography;
 import com.grindstone.util.HtmlUtils;
+import com.grindstone.util.NumberFormats;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -302,12 +303,20 @@ final class MilestoneListRenderer extends JPanel {
             routineOverview.add(Box.createVerticalStrut(6));
             routineOverview.add(routineDue);
         }
+        int percentage;
+        if (recurring.size() == 1) {
+            MilestoneView routine = recurring.get(0);
+            percentage = NumberFormats.calculatePercentage(routine.getProgressCurrent(), routine.getProgressMaximum());
+        } else {
+            int maximum = completed == recurring.size() - waiting ? 100 : 99;
+            percentage = Math.min(maximum, (int) Math.round(ratio * 100));
+        }
         routineTitle.setText("Routines · " + completed + "/" + recurring.size() + " complete");
-        routineSummary.setText(waiting == recurring.size() ? "Waiting for game data" : "<html>" + Math.round(ratio * 100) + (recurring.size() == 1 ? "% toward target" : "% average progress") + (waiting > 0 ? "<br>" + waiting + " waiting for data" : "") + "</html>");
+        routineSummary.setText(waiting == recurring.size() ? "Waiting for game data" : "<html>" + percentage + (recurring.size() == 1 ? "% toward target" : "% average progress") + (waiting > 0 ? "<br>" + waiting + " waiting for data" : "") + "</html>");
         String progressTip = "Average target progress for routines with loaded data.";
         routineSummary.setToolTipText(waiting == recurring.size() ? null : progressTip);
         routineProgress.setToolTipText(progressTip);
-        routineProgress.setProgress(Math.round(ratio * 100), 100);
+        routineProgress.setProgress(percentage, 100);
         routineProgress.setStatus(completed == recurring.size() ? MilestoneStatus.COMPLETE : ratio > 0 ? MilestoneStatus.IN_PROGRESS : MilestoneStatus.NOT_STARTED);
         routineProgress.setVisible(waiting < recurring.size());
         long next = recurring.stream().mapToLong(this::getNextReset).min().orElse(0);

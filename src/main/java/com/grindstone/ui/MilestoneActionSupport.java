@@ -78,15 +78,15 @@ public final class MilestoneActionSupport {
         RecurringMilestone recurring = active.getMetadata(goal).getRecurring();
         if (goal instanceof ChecklistMilestone) {
             target = goal.getProgressMaximum();
-            if (schedule != RepeatSchedule.NONE && (recurring.getSchedule() != schedule || recurring.getTarget() != target)) {
-                ((ChecklistMilestone) goal).resetProgress();
-            }
         }
-        boolean newSchedule = recurring.getSchedule() != schedule;
+        boolean newPeriod = recurring.getSchedule() != schedule || recurring.getTarget() != target;
         recurring.configure(schedule, target, System.currentTimeMillis());
+        if (goal instanceof ChecklistMilestone && schedule != RepeatSchedule.NONE && newPeriod) {
+            ((ChecklistMilestone) goal).resetProgress();
+        }
         if (goal instanceof CustomMilestone && schedule != RepeatSchedule.NONE) {
             CustomMilestone custom = (CustomMilestone) goal;
-            custom.update(custom.getTitle(null), custom.getDescription(), custom.getCategory(), newSchedule ? 0 : Math.min(custom.getProgressCurrent(), target), target);
+            custom.update(custom.getTitle(null), custom.getDescription(), custom.getCategory(), newPeriod ? 0 : Math.min(custom.getProgressCurrent(), target), target);
         }
     }
 
