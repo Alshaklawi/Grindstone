@@ -48,7 +48,7 @@ public class MilestoneComponent extends JPanel {
     private static final Color CARD_COLOR = ColorScheme.DARKER_GRAY_COLOR;
     private static final Color TEXT_COLOR = ColorScheme.TEXT_COLOR;
     private static final Color MUTED_COLOR = ColorScheme.LIGHT_GRAY_COLOR;
-    private static final int ICON_SIZE = 16;
+    static final int ICON_SIZE = 16;
     private static final ImageIcon PIN_ICON = createPinIcon(false);
     private static final ImageIcon PINNED_ICON = createPinIcon(true);
     private static final ImageIcon COLLAPSED_ICON = new ImageIcon(ImageUtil.loadImageResource(MilestoneComponent.class, "/util/arrow_right.png"));
@@ -425,14 +425,14 @@ public class MilestoneComponent extends JPanel {
     }
 
     private void updateIconImage() {
-        if (icon == null) {
-            iconLabel.setIcon(null);
-            return;
-        }
-        double scale = Math.min(1, ICON_SIZE / (double) Math.max(icon.getWidth(), icon.getHeight()));
-        int width = Math.max(1, (int) Math.round(icon.getWidth() * scale));
-        int height = Math.max(1, (int) Math.round(icon.getHeight() * scale));
-        iconLabel.setIcon(new ImageIcon(ImageUtil.resizeImage(icon, width, height)));
+        iconLabel.setIcon(icon == null ? null : createCompactIcon(icon));
+    }
+
+    static ImageIcon createCompactIcon(BufferedImage image) {
+        double scale = Math.min(1, ICON_SIZE / (double) Math.max(image.getWidth(), image.getHeight()));
+        int width = Math.max(1, (int) Math.round(image.getWidth() * scale));
+        int height = Math.max(1, (int) Math.round(image.getHeight() * scale));
+        return new ImageIcon(ImageUtil.resizeImage(image, width, height));
     }
 
     public void setProgress(long current, long maximum, String text) {

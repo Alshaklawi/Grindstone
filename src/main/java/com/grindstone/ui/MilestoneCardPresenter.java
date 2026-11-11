@@ -101,6 +101,9 @@ final class MilestoneCardPresenter {
             if (goal instanceof ChecklistMilestone) {
                 key = Arrays.asList(key, Arrays.hashCode(((ChecklistMilestone) goal).getChecks()));
             }
+            if (goal instanceof LinkedMilestone) {
+                key = Arrays.asList(key, ((LinkedMilestone) goal).getSourceProgress());
+            }
             key = Arrays.asList(key, metadata.getDeadlineAt(), metadata.getDeadlineAt() > 0 && now >= metadata.getDeadlineAt(), metadata.getDisplayCategory());
             MilestoneView cached = cardCache.get(goal, key);
             if (cached != null && tracking != TrackingState.WAITING && goal.getProgressMaximum() > 0) {
@@ -133,7 +136,7 @@ final class MilestoneCardPresenter {
             MilestoneCategory category = support.getCategory(goal);
             String searchText = getSearchText(title, goal.getDescription(), category.getDisplayName());
             boolean hasProgress = goal.hasProgress();
-            String sourceDetail = goal.getCardDescription().isEmpty() ? goal.getDescription() : "";
+            String sourceDetail = !(goal instanceof LinkedMilestone) && goal.getCardDescription().isEmpty() ? goal.getDescription() : "";
             long shownCurrent = progressCurrent;
             long shownMaximum = progressMaximum;
             MilestoneStatus shownStatus = status;

@@ -1,5 +1,6 @@
 package com.grindstone.content.milestone.impl;
 
+import com.grindstone.config.GrindstoneConfig;
 import com.grindstone.content.milestone.Milestone;
 import com.grindstone.content.milestone.MilestoneCategory;
 import com.grindstone.content.milestone.MilestoneStatus;
@@ -9,6 +10,9 @@ import com.grindstone.repository.MilestoneMetadata;
 import com.grindstone.repository.GrindstoneProfile;
 import com.grindstone.repository.RecurringMilestone;
 import com.grindstone.repository.RepeatSchedule;
+import com.grindstone.ui.components.LinkedSourceRow;
+import com.grindstone.ui.components.MilestoneComponent;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,7 +21,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import lombok.Getter;
+import lombok.Value;
 import net.runelite.api.Client;
 
 /**
@@ -42,7 +49,7 @@ public final class LinkedMilestone implements Milestone {
     private transient long current;
     @Getter
     private transient boolean available;
-    private transient String details = "Waiting for source milestones.";
+    private transient List<SourceProgress> sourceProgress;
     private transient boolean started;
 
     public LinkedMilestone(String title, String description, Mode mode, List<String> sources, long[] targets, int required) {
@@ -110,7 +117,7 @@ public final class LinkedMilestone implements Milestone {
         current = 0;
         started = false;
         available = true;
-        StringBuilder text = new StringBuilder();
+        List<SourceProgress> rows = new ArrayList<>(sources.size());
         int met = 0;
         boolean prerequisites = true;
         for (int i = 0; i < sources.size(); i++) {
@@ -118,13 +125,13 @@ public final class LinkedMilestone implements Milestone {
             Milestone source = sourceIndex.get(sourceId);
             if (source == null) {
                 available = false;
-                text.append("Missing source · restore it or edit this milestone.\n");
+                rows.add(new SourceProgress(null, "Missing source", 0, 0, false, "Restore it or edit this milestone"));
                 continue;
             }
             MilestoneMetadata metadata = profile.getMetadata(source);
             if (mode == Mode.COLLECTION_SET && !(source instanceof CollectionLogItemMilestone)) {
                 available = false;
-                text.append("Invalid collection source · choose individual collection items.\n");
+                rows.add(new SourceProgress(source, source.getTitle(null), 0, 0, false, "Choose an individual collection item"));
                 continue;
             }
             RecurringMilestone recurring = metadata.getRecurring();
@@ -151,7 +158,6 @@ public final class LinkedMilestone implements Milestone {
                         current++;
                     }
                 }
-                text.append("Current reading: ").append(value).append(". Milestones: ").append(Arrays.toString(targets)).append('\n');
             } else if (mode == Mode.DEPENDENCY && i > 0) {
                 prerequisites &= complete;
             }
@@ -159,7 +165,16 @@ public final class LinkedMilestone implements Milestone {
                 met++;
             }
             available &= known;
-            text.append(known ? complete ? "[Done] " : "[Pending] " : "[Waiting] ").append(source.getTitle(null)).append(known ? " · observed " + value : " · unavailable").append(" · target ").append(threshold).append('\n');
+            long rowTarget = threshold;
+            if (mode == Mode.MILESTONES) {
+                rowTarget = targets[(int) Math.min(current, targets.length - 1)];
+                complete = current == targets.length;
+            } else if (mode == Mode.REPEAT_COMPLETIONS) {
+                value = completedPeriods;
+                rowTarget = required;
+                complete = value >= rowTarget;
+            }
+            rows.add(new SourceProgress(source, source.getTitle(null), known ? value : 0, rowTarget, complete, known ? null : "Waiting for data"));
         }
         if (mode != Mode.MILESTONES && mode != Mode.REPEAT_COMPLETIONS) {
             current = mode == Mode.DEPENDENCY ? prerequisites && met == sources.size() ? 1 : 0 : met;
@@ -167,10 +182,7 @@ public final class LinkedMilestone implements Milestone {
         if (mode == Mode.ANY_OF && met >= required) {
             available = true;
         }
-        if (mode == Mode.DEPENDENCY && !prerequisites) {
-            text.insert(0, "Prerequisites pending. This only gates the personal milestone, not gameplay.\n");
-        }
-        details = text.toString().trim();
+        sourceProgress = List.copyOf(rows);
     }
 
     private void observePeriod(RepeatSchedule schedule, long start) {
@@ -239,7 +251,43 @@ public final class LinkedMilestone implements Milestone {
 
     @Override
     public String getDescription() {
-        return (description.isEmpty() ? "" : description + "\n") + mode + "\n" + (details == null ? "Waiting for source milestones." : details);
+        return description + " " + mode + " " + getSourceProgress().stream().map(SourceProgress::getTitle).collect(Collectors.joining(" "));
+    }
+
+    @Override
+    public String getCardDescription() {
+        return description;
+    }
+
+    public List<SourceProgress> getSourceProgress() {
+        return sourceProgress == null ? List.of() : sourceProgress;
+    }
+
+    @Override
+    public Supplier<MilestoneComponent> prepare(Client client, GrindstoneConfig config) {
+        Supplier<MilestoneComponent> card = Milestone.super.prepare(client, config);
+        boolean showIcons = config == null || config.showGoalIcons();
+        boolean showActivityIcons = config == null || config.showActivityIcons();
+        boolean showBars = config == null || config.showProgressBar();
+        int chunks = config == null ? 20 : config.maxProgressChunks();
+        List<Supplier<LinkedSourceRow>> rows = new ArrayList<>();
+        for (SourceProgress reading : getSourceProgress()) {
+            Milestone source = reading.getSource();
+            String sourceTitle = source == null ? reading.getTitle() : source.getTitle(client);
+            BufferedImage image = null;
+            if (showIcons && source != null) {
+                image = source instanceof TrackerMilestone ? ((TrackerMilestone) source).getIcon(client, showActivityIcons) : source.getIcon(client);
+            }
+            BufferedImage icon = image;
+            rows.add(() -> new LinkedSourceRow(sourceTitle, icon, reading.getCurrent(), reading.getTarget(), reading.isComplete(), reading.getUnavailableReason(), showBars, chunks));
+        }
+        return () -> {
+            MilestoneComponent component = card.get();
+            for (Supplier<LinkedSourceRow> row : rows) {
+                component.addDetail(row.get());
+            }
+            return component;
+        };
     }
 
     @Override
@@ -265,6 +313,21 @@ public final class LinkedMilestone implements Milestone {
     @Override
     public MilestoneStatus getStatus() {
         return available && current >= getProgressMaximum() ? MilestoneStatus.COMPLETE : current > 0 || started && mode != Mode.DEPENDENCY ? MilestoneStatus.IN_PROGRESS : MilestoneStatus.NOT_STARTED;
+    }
+
+    /**
+     * @author Ayman Yassen
+     * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
+     * @since 11/11/2026
+     */
+    @Value
+    public static class SourceProgress {
+        Milestone source;
+        String title;
+        long current;
+        long target;
+        boolean complete;
+        String unavailableReason;
     }
 
     /**
