@@ -3,6 +3,7 @@ package com.grindstone;
 import com.google.gson.JsonObject;
 import com.google.inject.Provides;
 import com.grindstone.config.GrindstoneConfig;
+import com.grindstone.overlay.ProgressOverlayMouseListener;
 import com.grindstone.content.collectionlog.CollectionLogPages;
 import com.grindstone.content.collectionlog.CollectionLogHistory;
 import com.grindstone.content.combatachievement.CombatAchievementData;
@@ -90,10 +91,12 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ClientShutdown;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.ItemManager;
+import net.runelite.client.input.MouseManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.task.Schedule;
 import net.runelite.client.ui.ClientToolbar;
+import net.runelite.client.ui.DrawManager;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.ImageUtil;
@@ -143,6 +146,13 @@ public class GrindstonePlugin extends Plugin {
     private GrindstoneProgressOverlay progressOverlay;
     @Inject
     private OverlayManager overlayManager;
+    @Inject
+    private MouseManager mouseManager;
+    @Inject
+    private ProgressOverlayMouseListener progressOverlayMouseListener;
+    @Inject
+    private DrawManager drawManager;
+    private final Runnable finishOverlayFrame = () -> progressOverlay.endFrame();
 
     private NavigationButton navigationButton;
     private GrindstonePanel panel;
@@ -170,6 +180,9 @@ public class GrindstonePlugin extends Plugin {
         completionNotifications.stop();
         overlayManager.add(completionOverlay);
         overlayManager.add(progressOverlay);
+        progressOverlayMouseListener.setActive(true);
+        mouseManager.registerMouseListener(progressOverlayMouseListener);
+        drawManager.registerEveryFrameListener(finishOverlayFrame);
         loadGeneration.incrementAndGet();
         sessionProfiles.clear();
         persistence.configure(this::getPluginDirectory);
@@ -193,6 +206,9 @@ public class GrindstonePlugin extends Plugin {
     @Override
     protected void shutDown() {
         running = false;
+        progressOverlayMouseListener.setActive(false);
+        mouseManager.unregisterMouseListener(progressOverlayMouseListener);
+        drawManager.unregisterEveryFrameListener(finishOverlayFrame);
         collectionCaptureDirty = false;
         overlayManager.remove(completionOverlay);
         overlayManager.remove(progressOverlay);

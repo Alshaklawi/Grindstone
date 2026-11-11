@@ -28,16 +28,16 @@ public final class OverlayStyle {
     public static final Color TRACK = new Color(47, 58, 71);
     public static final Color SURFACE = new Color(255, 255, 255, 7);
     public static final Font HEADING_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 13);
-    public static final Font TITLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 12);
-    public static final Font BODY_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 11);
-    public static final Font SMALL_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 10);
+    public static final Font TITLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 13);
+    public static final Font BODY_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
+    public static final Font SMALL_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 11);
     public static final Font METRIC_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 18);
     public static final Font DISPLAY_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 21);
     public static final Font GUILD_HEADING_FONT = new Font(Font.SERIF, Font.BOLD, 14);
     public static final Font GUILD_TITLE_FONT = new Font(Font.SERIF, Font.BOLD, 16);
     private static final Palette CLASSIC = new Palette(GOLD, GREEN, TEXT, MUTED, BACKGROUND, SURFACE, TRACK, BORDER);
     private static final Palette SLATE = new Palette(new Color(0x79b7cf), new Color(0x81c8b3), new Color(0xedf2f8), new Color(0xa2aebb), new Color(0x1e252f), new Color(0x2a323e), new Color(0x414b59), new Color(0x414b58));
-    private static final Palette GUILD = new Palette(new Color(0xd7b374), new Color(0x9abd8c), new Color(0xf2eadb), new Color(0xb8ad97), new Color(0x201f1c), new Color(0x363025), new Color(0x39372f), new Color(0x786141));
+    private static final Palette GUILD = new Palette(new Color(0xe7c78e), new Color(0xb0d4a2), new Color(0xfff5e5), new Color(0xd8cbb5), new Color(0x201f1c), new Color(0x363025), new Color(0x39372f), new Color(0x786141));
 
     private OverlayStyle() {
     }

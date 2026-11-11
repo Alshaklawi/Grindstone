@@ -10,6 +10,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -42,6 +43,8 @@ public final class GrindstoneProgressOverlay extends Overlay {
     private final GrindstoneConfig config;
     private final LongSupplier clock;
     private volatile Snapshot snapshot;
+    private volatile boolean rendered;
+    private boolean renderedThisFrame;
 
     @Inject
     public GrindstoneProgressOverlay(GrindstoneConfig config) {
@@ -59,6 +62,18 @@ public final class GrindstoneProgressOverlay extends Overlay {
 
     public void clear() {
         snapshot = null;
+        rendered = false;
+        renderedThisFrame = false;
+    }
+
+    public void endFrame() {
+        rendered = renderedThisFrame;
+        renderedThisFrame = false;
+    }
+
+    public boolean isMouseOver(Point point) {
+        Snapshot current = snapshot;
+        return rendered && config.progressOverlayEnabled() && current != null && !current.entries.isEmpty() && getBounds().contains(point);
     }
 
     public void update(List<ProgressOverlayEntry> entries, int canvasHeight) {
@@ -149,6 +164,7 @@ public final class GrindstoneProgressOverlay extends Overlay {
             } finally {
                 card.dispose();
             }
+            renderedThisFrame = true;
             return new Dimension(current.width, cache.height);
         }
         int imageVersion = current.imageVersion.get();
@@ -172,6 +188,7 @@ public final class GrindstoneProgressOverlay extends Overlay {
             cache.renderedCountdown = cache.countdown;
         }
         graphics.drawImage(cache.image, cache.inverseScale, null);
+        renderedThisFrame = true;
         return new Dimension(current.width, cache.height);
     }
 
