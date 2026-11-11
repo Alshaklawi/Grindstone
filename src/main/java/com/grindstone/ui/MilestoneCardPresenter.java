@@ -108,7 +108,7 @@ final class MilestoneCardPresenter {
             MilestoneView cached = cardCache.get(goal, key);
             if (cached != null && tracking != TrackingState.WAITING && goal.getProgressMaximum() > 0) {
                 if (captureOverlay) {
-                    overlayEntries.add(new ProgressOverlayEntry(title, repeating ? recurring.getSchedule() : RepeatSchedule.NONE, repeating ? recurring.getProgress() : goal.getProgressCurrent(), repeating ? recurring.getTarget() : goal.getProgressMaximum(), isComplete(repeating ? recurring.getStatus() : goal.getStatus()), true, metadata.isPinned(), goal.getIcon(client)));
+                    overlayEntries.add(createOverlayEntry(goal, title, repeating ? recurring.getSchedule() : RepeatSchedule.NONE, repeating ? recurring.getProgress() : goal.getProgressCurrent(), repeating ? recurring.getTarget() : goal.getProgressMaximum(), isComplete(repeating ? recurring.getStatus() : goal.getStatus()), true, metadata.isPinned()));
                 }
                 preparedViews.add(() -> cached);
                 continue;
@@ -141,7 +141,7 @@ final class MilestoneCardPresenter {
             long shownMaximum = progressMaximum;
             MilestoneStatus shownStatus = status;
             if (captureOverlay) {
-                overlayEntries.add(new ProgressOverlayEntry(title, repeating ? recurring.getSchedule() : RepeatSchedule.NONE, shownCurrent, shownMaximum, isComplete(shownStatus), tracking != TrackingState.WAITING, metadata.isPinned(), goal.getIcon(client)));
+                overlayEntries.add(createOverlayEntry(goal, title, repeating ? recurring.getSchedule() : RepeatSchedule.NONE, shownCurrent, shownMaximum, isComplete(shownStatus), tracking != TrackingState.WAITING, metadata.isPinned()));
             }
             List<String> steps = goal instanceof ChecklistMilestone ? new ArrayList<>(((ChecklistMilestone) goal).getSteps()) : new ArrayList<>();
             boolean[] checks = goal instanceof ChecklistMilestone ? ((ChecklistMilestone) goal).getChecks().clone() : new boolean[0];
@@ -277,6 +277,43 @@ final class MilestoneCardPresenter {
             });
         }
         return preparedViews;
+    }
+
+    private ProgressOverlayEntry createOverlayEntry(Milestone goal, String title, RepeatSchedule schedule, long current, long target, boolean complete, boolean ready, boolean pinned) {
+        if (!(goal instanceof LinkedMilestone)) {
+            return new ProgressOverlayEntry(title, schedule, current, target, complete, ready, pinned, goal.getIcon(client));
+        }
+        LinkedMilestone linked = (LinkedMilestone) goal;
+        List<ProgressOverlayEntry.Source> sources = new ArrayList<>(2);
+        int remaining = 0;
+        for (LinkedMilestone.SourceProgress reading : linked.getSourceProgress()) {
+            if (reading.isComplete()) {
+                continue;
+            }
+            if (sources.size() == 2) {
+                remaining++;
+                continue;
+            }
+            Milestone source = reading.getSource();
+            String sourceTitle = source == null ? reading.getTitle() : source.getTitle(client);
+            sources.add(new ProgressOverlayEntry.Source(sourceTitle, reading.getIcon(client, config.showActivityIcons()), reading.getCurrent(), reading.getTarget(), reading.getUnavailableReason() == null));
+        }
+        String unit;
+        switch (linked.getMode()) {
+            case MILESTONES:
+                unit = "checkpoints";
+                break;
+            case REPEAT_COMPLETIONS:
+                unit = "periods";
+                break;
+            case DEPENDENCY:
+                unit = "linked target";
+                break;
+            default:
+                unit = "targets";
+                break;
+        }
+        return new ProgressOverlayEntry(title, schedule, current, target, complete, ready, pinned, goal.getIcon(client), unit, sources, remaining);
     }
 
     private static String getSearchText(String title, String description, String category) {

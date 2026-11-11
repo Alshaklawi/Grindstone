@@ -33,6 +33,7 @@ import net.runelite.client.util.AsyncBufferedImage;
 @Singleton
 public final class GrindstoneProgressOverlay extends Overlay {
     private static final int SECTION_HEIGHT = 24;
+    private static final int SOURCE_HEIGHT = 24;
     private static final int MAX_CACHE_PIXELS = 4_000_000;
     private final GrindstoneConfig config;
     private final LongSupplier clock;
@@ -76,24 +77,42 @@ public final class GrindstoneProgressOverlay extends Overlay {
         int height = OverlayStyle.getHeaderHeight(theme) + getFooterHeight(view, true);
         int budget = Math.max(height + rowHeight + (grouped ? SECTION_HEIGHT : 0), canvasHeight - 32);
         RepeatSchedule previous = null;
-        List<Row> rows = new ArrayList<>();
+        List<ProgressOverlayEntry> selected = new ArrayList<>();
         for (ProgressOverlayEntry entry : visible) {
             int cost = rowHeight + (grouped && previous != entry.getSchedule() ? SECTION_HEIGHT : 0);
-            if (rows.size() >= limit || height + cost > budget) {
+            if (selected.size() >= limit || height + cost > budget) {
                 break;
             }
-            rows.add(new Row(entry));
+            selected.add(entry);
             height += cost;
             previous = entry.getSchedule();
+        }
+        List<Row> rows = new ArrayList<>(selected.size());
+        for (ProgressOverlayEntry entry : selected) {
+            int detailHeight = entry.getSources().isEmpty() ? 0 : 8 + entry.getSources().size() * SOURCE_HEIGHT + (entry.getRemainingSources() > 0 ? 14 : 0);
+            if (height + detailHeight > budget) {
+                detailHeight = 0;
+            }
+            rows.add(new Row(entry, detailHeight));
+            height += detailHeight;
         }
         int completed = (int) visible.stream().filter(ProgressOverlayEntry::isComplete).count();
         Snapshot next = new Snapshot(List.copyOf(rows), view, visible.size(), completed, Math.max(180, Math.min(360, config.progressOverlayWidth())), bars, grouped, theme);
         for (Row row : rows) {
-            if (row.entry.getIcon() instanceof AsyncBufferedImage) {
-                ((AsyncBufferedImage) row.entry.getIcon()).onLoaded(next.imageVersion::incrementAndGet);
+            watchIcon(row.entry.getIcon(), next);
+            if (row.detailHeight > 0) {
+                for (ProgressOverlayEntry.Source source : row.entry.getSources()) {
+                    watchIcon(source.getIcon(), next);
+                }
             }
         }
         snapshot = next;
+    }
+
+    private static void watchIcon(BufferedImage image, Snapshot snapshot) {
+        if (image instanceof AsyncBufferedImage) {
+            ((AsyncBufferedImage) image).onLoaded(snapshot.imageVersion::incrementAndGet);
+        }
     }
 
     @Override
@@ -150,6 +169,7 @@ public final class GrindstoneProgressOverlay extends Overlay {
 
     private static int getHeight(Snapshot current) {
         int sections = 0;
+        int details = 0;
         RepeatSchedule previous = null;
         for (Row row : current.entries) {
             ProgressOverlayEntry entry = row.entry;
@@ -157,9 +177,10 @@ public final class GrindstoneProgressOverlay extends Overlay {
                 sections++;
             }
             previous = entry.getSchedule();
+            details += row.detailHeight;
         }
         boolean hidden = current.total > current.entries.size();
-        return OverlayStyle.getHeaderHeight(current.theme) + current.entries.size() * OverlayStyle.getRowHeight(current.theme, current.bars) + sections * SECTION_HEIGHT + getFooterHeight(current.view, hidden);
+        return OverlayStyle.getHeaderHeight(current.theme) + current.entries.size() * OverlayStyle.getRowHeight(current.theme, current.bars) + sections * SECTION_HEIGHT + details + getFooterHeight(current.view, hidden);
     }
 
     private static void renderContent(Graphics2D card, Snapshot current, int height, String countdown) {
@@ -194,6 +215,10 @@ public final class GrindstoneProgressOverlay extends Overlay {
                     break;
             }
             y += rowHeight;
+            if (row.detailHeight > 0) {
+                renderSources(card, row, current.width, y, current.bars, palette);
+                y += row.detailHeight;
+            }
             previous = entry.getSchedule();
         }
         card.setFont(OverlayStyle.SMALL_FONT);
@@ -206,6 +231,36 @@ public final class GrindstoneProgressOverlay extends Overlay {
             card.setFont(OverlayStyle.BODY_FONT);
             card.drawString(OverlayStyle.fit((current.total - current.entries.size()) + " more in the sidebar", card.getFontMetrics(), current.width - 24), 12, y + 14);
         }
+    }
+
+    private static void renderSources(Graphics2D graphics, Row row, int width, int y, boolean bars, OverlayStyle.Palette palette) {
+        graphics.setColor(palette.getSurface());
+        graphics.fillRoundRect(12, y + 1, width - 24, row.detailHeight - 5, 6, 6);
+        graphics.setFont(OverlayStyle.SMALL_FONT);
+        int top = y + 4;
+        for (ProgressOverlayEntry.Source source : row.entry.getSources()) {
+            if (source.getIcon() != null) {
+                OverlayStyle.icon(graphics, source.getIcon(), 17, top + 2, 14);
+            }
+            String value = source.isReady() ? formatSourceProgress(source.getCurrent()) + " / " + formatSourceProgress(source.getTarget()) : "Waiting";
+            int valueWidth = graphics.getFontMetrics().stringWidth(value);
+            graphics.setColor(palette.getText());
+            graphics.drawString(OverlayStyle.fit(source.getTitle(), graphics.getFontMetrics(), width - 61 - valueWidth), 36, top + 13);
+            graphics.setColor(palette.getMuted());
+            graphics.drawString(value, width - 18 - valueWidth, top + 13);
+            if (bars && source.isReady() && source.getTarget() > 0) {
+                OverlayStyle.progress(graphics, 36, top + 17, width - 54, 2, source.getCurrent() / (double) source.getTarget(), palette.getAccent(), palette.getTrack());
+            }
+            top += SOURCE_HEIGHT;
+        }
+        if (row.entry.getRemainingSources() > 0) {
+            graphics.setColor(palette.getMuted());
+            graphics.drawString("+" + row.entry.getRemainingSources() + " more in sidebar", 36, top + 9);
+        }
+    }
+
+    private static String formatSourceProgress(long value) {
+        return value >= 1_000_000_000L ? NumberFormats.formatTarget(value) : NumberFormats.formatExperience(value);
     }
 
     private static int getFooterHeight(ProgressOverlayView view, boolean hidden) {
@@ -363,11 +418,13 @@ public final class GrindstoneProgressOverlay extends Overlay {
         private final String progress;
         private final String current;
         private final String target;
+        private final int detailHeight;
 
-        private Row(ProgressOverlayEntry entry) {
+        private Row(ProgressOverlayEntry entry, int detailHeight) {
             this.entry = entry;
+            this.detailHeight = detailHeight;
             current = formatProgress(entry.getCurrent());
-            target = formatProgress(entry.getTarget());
+            target = formatProgress(entry.getTarget()) + (entry.getUnit().isEmpty() ? "" : " " + entry.getUnit());
             ratio = entry.getTarget() <= 0 ? 0 : Math.max(0, Math.min(1, entry.getCurrent() / (double) entry.getTarget()));
             percentage = entry.isReady() && entry.getTarget() > 0 ? entry.isComplete() ? "Done" : (int) Math.floor(ratio * 100) + "%" : "";
             progress = entry.isReady() ? entry.getTarget() > 0 ? current + " / " + target : entry.isComplete() ? "Complete" : "In progress" : "Waiting for game data";

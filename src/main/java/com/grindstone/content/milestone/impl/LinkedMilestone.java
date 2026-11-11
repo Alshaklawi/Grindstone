@@ -276,7 +276,7 @@ public final class LinkedMilestone implements Milestone {
             String sourceTitle = source == null ? reading.getTitle() : source.getTitle(client);
             BufferedImage image = null;
             if (showIcons && source != null) {
-                image = source instanceof TrackerMilestone ? ((TrackerMilestone) source).getIcon(client, showActivityIcons) : source.getIcon(client);
+                image = reading.getIcon(client, showActivityIcons);
             }
             BufferedImage icon = image;
             rows.add(() -> new LinkedSourceRow(sourceTitle, icon, reading.getCurrent(), reading.getTarget(), reading.isComplete(), reading.getUnavailableReason(), showBars, chunks));
@@ -328,6 +328,13 @@ public final class LinkedMilestone implements Milestone {
         long target;
         boolean complete;
         String unavailableReason;
+
+        public BufferedImage getIcon(Client client, boolean showActivityIcons) {
+            if (source instanceof TrackerMilestone) {
+                return ((TrackerMilestone) source).getIcon(client, showActivityIcons);
+            }
+            return source == null ? null : source.getIcon(client);
+        }
     }
 
     /**
