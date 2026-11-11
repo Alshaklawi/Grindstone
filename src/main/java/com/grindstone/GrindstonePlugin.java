@@ -1093,7 +1093,7 @@ public class GrindstonePlugin extends Plugin {
             configManager.setConfiguration(GrindstoneConfig.GROUP, "progressOverlayTheme", "RUNELITE");
         }
         String popupTheme = configManager.getConfiguration(GrindstoneConfig.GROUP, "completionPopupTheme");
-        if (popupTheme != null && !"GUILD".equals(popupTheme)) {
+        if ("FOCUS".equals(popupTheme)) {
             configManager.setConfiguration(GrindstoneConfig.GROUP, "completionPopupTheme", "GUILD");
         }
     }

@@ -71,13 +71,17 @@ Enable **RuneLite settings → Grindstone → Progress overlay**. Choose daily r
 
 <img src="docs/images/overlay-slate-current.png" width="200" alt="Current Slate progress overlay showing the same example routines">
 
-Classic is also available. The progress overlay is optional; completion popups always use Guild.
+Classic is also available. The progress overlay is optional; popup styling is selected separately.
 
 ### Completion popups
 
-Newly reached targets appear together in a compact Guild popup. Entry and exit animations can be configured in Notifications. Completion chat colors adapt to RuneLite's chat background, and exact progress numbers can be switched off.
+Newly reached targets appear in Collection Log-inspired popups with native icons and clear results such as **5 raids completed** or **Level 99 reached**. Choose **Guild** (default), **Slate**, **Classic** or plain **RuneLite** under **Completion alerts → Popup style**. Larger batches are queued so each target is shown.
+
+Popups slide in, stay visible for the selected duration, then slide out. Animation and progress numbers are optional. Completion chat colors adapt to RuneLite's chat background.
 
 <img src="docs/images/popup-current.png" width="240" alt="Current Guild completion popup for five Fractured Archive raids">
+
+<img src="docs/images/popup-runelite-current.png" width="240" alt="Plain RuneLite completion popup with the same raid target and native icon">
 
 ## Saved progress and game data
 

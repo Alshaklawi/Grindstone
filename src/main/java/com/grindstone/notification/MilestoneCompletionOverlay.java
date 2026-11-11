@@ -2,10 +2,9 @@ package com.grindstone.notification;
 
 import com.grindstone.config.GrindstoneConfig;
 import com.grindstone.config.OverlayTheme;
-import com.grindstone.overlay.OverlayStyle;
 import java.awt.AlphaComposite;
-import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
@@ -16,7 +15,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.LongSupplier;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import lombok.Value;
+import lombok.RequiredArgsConstructor;
+import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -29,7 +29,7 @@ import net.runelite.client.util.AsyncBufferedImage;
  */
 @Singleton
 public final class MilestoneCompletionOverlay extends Overlay {
-    private static final int WIDTH = 320;
+    private static final int WIDTH = CompletionPopupStyle.WIDTH;
     private static final int MAX_ENTRIES = 50;
     private static final int ANIMATION_MARGIN = 14;
     private static final long ENTER_NANOS = 320_000_000L;
@@ -83,7 +83,7 @@ public final class MilestoneCompletionOverlay extends Overlay {
 
     public synchronized void preview(BufferedImage icon) {
         clear();
-        List<CompletionOverlayEntry> entries = List.of(new CompletionOverlayEntry("preview", "The Fractured Archive", "5 raids completed", icon));
+        List<CompletionOverlayEntry> entries = List.of(new CompletionOverlayEntry("preview", "The Fractured Archive", config.completionNumbers() ? "5 raids completed" : "Raid target reached", icon));
         popup = createPopup(entries, false, clock.getAsLong(), true);
     }
 
@@ -108,14 +108,20 @@ public final class MilestoneCompletionOverlay extends Overlay {
     }
 
     private void startNext(long now) {
-        popup = createPopup(List.copyOf(pending.values()), pendingRoutinesOnly, now, false);
-        pending.clear();
-        pendingRoutinesOnly = true;
+        List<CompletionOverlayEntry> entries = List.copyOf(pending.values()).subList(0, Math.min(3, pending.size()));
+        popup = createPopup(entries, pendingRoutinesOnly, now, false);
+        for (CompletionOverlayEntry entry : entries) {
+            pending.remove(entry.getId());
+        }
+        if (pending.isEmpty()) {
+            pendingRoutinesOnly = true;
+        }
     }
 
     private Popup createPopup(List<CompletionOverlayEntry> entries, boolean routinesOnly, long now, boolean preview) {
-        BufferedImage image = new BufferedImage(WIDTH, getHeight(entries.size()), BufferedImage.TYPE_INT_ARGB);
-        Popup next = new Popup(entries, routinesOnly, now, Math.max(3, Math.min(15, config.completionPopupSeconds())) * 1_000_000_000L, image, config.completionPopupAnimations(), preview);
+        boolean animated = config.completionPopupAnimations();
+        long duration = Math.max(3, Math.min(15, config.completionPopupSeconds())) * 1_000_000_000L + (animated ? ENTER_NANOS + EXIT_NANOS : 160_000_000L);
+        Popup next = new Popup(entries, routinesOnly, now, duration, animated, preview, config.completionPopupTheme());
         renderContent(next);
         for (CompletionOverlayEntry entry : entries.subList(0, Math.min(3, entries.size()))) {
             if (entry.getIcon() instanceof AsyncBufferedImage) {
@@ -132,6 +138,10 @@ public final class MilestoneCompletionOverlay extends Overlay {
         if (current == null) {
             return null;
         }
+        if (current.theme == OverlayTheme.RUNELITE && !graphics.getFont().equals(current.font)) {
+            current.font = graphics.getFont();
+            current.iconDirty.set(true);
+        }
         if (current.iconDirty.getAndSet(false)) {
             renderContent(current);
         }
@@ -144,6 +154,7 @@ public final class MilestoneCompletionOverlay extends Overlay {
         try {
             card.setComposite(AlphaComposite.SrcOver.derive(alpha));
             card.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            card.clipRect(0, 0, WIDTH + ANIMATION_MARGIN * 2, height + ANIMATION_MARGIN * 2);
             if (current.animated) {
                 animate(card, height, entering, leaving);
             } else {
@@ -156,30 +167,19 @@ public final class MilestoneCompletionOverlay extends Overlay {
         return new Dimension(WIDTH + ANIMATION_MARGIN * 2, height + ANIMATION_MARGIN * 2);
     }
 
-    private static int getHeight(int entries) {
-        int shown = Math.min(3, entries);
-        return 84 + (shown - 1) * 50 + (entries > shown ? 20 : 0);
-    }
-
     private static void renderContent(Popup current) {
-        int shown = Math.min(3, current.entries.size());
-        int height = current.image.getHeight();
-        Graphics2D card = current.image.createGraphics();
+        int height = CompletionPopupStyle.getHeight(current.entries.size(), current.theme, current.font);
+        BufferedImage image = new BufferedImage(WIDTH, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D card = image.createGraphics();
         try {
             card.setComposite(AlphaComposite.Clear);
             card.fillRect(0, 0, WIDTH, height);
             card.setComposite(AlphaComposite.SrcOver);
-            OverlayStyle.panel(card, OverlayTheme.GUILD, WIDTH, height, true);
-            OverlayStyle.Palette palette = OverlayStyle.getPalette(OverlayTheme.GUILD);
-            renderGuild(card, current, shown, palette);
-            if (current.entries.size() > shown) {
-                card.setFont(OverlayStyle.SMALL_FONT);
-                card.setColor(palette.getMuted());
-                card.drawString("And " + (current.entries.size() - shown) + " more in the sidebar", 14, height - 10);
-            }
+            CompletionPopupStyle.render(card, current.theme, current.entries, current.routinesOnly, current.font);
         } finally {
             card.dispose();
         }
+        current.image = image;
     }
 
     private static double smoothStep(double progress) {
@@ -187,47 +187,10 @@ public final class MilestoneCompletionOverlay extends Overlay {
     }
 
     private static void animate(Graphics2D graphics, int height, double entering, double leaving) {
-        double entrance = (1 - entering) * (1 - entering) * (1 - entering);
-        double exit = leaving * leaving;
-        double offsetY = -10 * entrance - 8 * exit;
-        double scale = 1 - 0.025 * entrance - 0.015 * exit;
-        graphics.translate(ANIMATION_MARGIN + WIDTH * (1 - scale) / 2, ANIMATION_MARGIN + offsetY + height * (1 - scale) / 2);
-        graphics.scale(scale, scale);
-    }
-
-    private static String getHeading(Popup current) {
-        return current.entries.size() == 1 ? current.routinesOnly ? "Routine complete" : "Milestone reached" : current.entries.size() + (current.routinesOnly ? " routines complete" : " milestones reached");
-    }
-
-    private static void renderGuild(Graphics2D card, Popup current, int shown, OverlayStyle.Palette palette) {
-        card.setColor(palette.getAccent());
-        card.drawOval(13, 23, 38, 38);
-        card.setColor(new Color(0x77613e));
-        card.drawOval(17, 27, 30, 30);
-        OverlayStyle.icon(card, current.entries.get(0).getIcon(), 18, 28, 28);
-        card.setFont(OverlayStyle.SMALL_FONT);
-        card.setColor(palette.getAccent());
-        card.drawString(getHeading(current), 65, 24);
-        card.setFont(OverlayStyle.GUILD_TITLE_FONT);
-        card.setColor(palette.getText());
-        card.drawString(OverlayStyle.fit(current.entries.get(0).getTitle(), card.getFontMetrics(), WIDTH - 91), 65, 44);
-        card.setFont(OverlayStyle.BODY_FONT);
-        card.setColor(palette.getMuted());
-        card.drawString(OverlayStyle.fit(current.entries.get(0).getDetail(), card.getFontMetrics(), WIDTH - 91), 65, 62);
-        OverlayStyle.check(card, WIDTH - 25, 37, palette.getSuccess());
-        for (int index = 1; index < shown; index++) {
-            CompletionOverlayEntry entry = current.entries.get(index);
-            int y = 84 + (index - 1) * 50;
-            card.setColor(new Color(0x494235));
-            card.drawLine(16, y - 6, WIDTH - 17, y - 6);
-            OverlayStyle.icon(card, entry.getIcon(), 19, y + 2, 24);
-            card.setFont(OverlayStyle.GUILD_TITLE_FONT);
-            card.setColor(palette.getText());
-            card.drawString(OverlayStyle.fit(entry.getTitle(), card.getFontMetrics(), WIDTH - 72), 54, y + 16);
-            card.setFont(OverlayStyle.BODY_FONT);
-            card.setColor(palette.getMuted());
-            card.drawString(OverlayStyle.fit(entry.getDetail(), card.getFontMetrics(), WIDTH - 72), 54, y + 34);
-        }
+        double entrance = 1 - smoothStep(entering);
+        double exit = smoothStep(leaving);
+        int offsetY = (int) Math.round(-(height + ANIMATION_MARGIN) * Math.max(entrance, exit));
+        graphics.translate(ANIMATION_MARGIN, ANIMATION_MARGIN + offsetY);
     }
 
     /**
@@ -235,15 +198,17 @@ public final class MilestoneCompletionOverlay extends Overlay {
      * @see <a href="https://discord.gg/l.e.g.e.n.d.a.r.y">Discord</a>
      * @since 10/20/2026
      */
-    @Value
+    @RequiredArgsConstructor
     private static class Popup {
         private final AtomicBoolean iconDirty = new AtomicBoolean();
-        List<CompletionOverlayEntry> entries;
-        boolean routinesOnly;
-        long startedAt;
-        long duration;
-        BufferedImage image;
-        boolean animated;
-        boolean preview;
+        private final List<CompletionOverlayEntry> entries;
+        private final boolean routinesOnly;
+        private final long startedAt;
+        private final long duration;
+        private final boolean animated;
+        private final boolean preview;
+        private final OverlayTheme theme;
+        private BufferedImage image;
+        private Font font = FontManager.getRunescapeFont();
     }
 }

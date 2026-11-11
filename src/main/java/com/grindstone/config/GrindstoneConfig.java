@@ -128,7 +128,7 @@ public interface GrindstoneConfig extends Config {
         return false;
     }
 
-    @ConfigItem(keyName = "progressOverlayTheme", name = "Style", description = "Choose Guild, Slate, Classic or RuneLite. Completion popups use Guild.", section = OVERLAY_SECTION, position = 1)
+    @ConfigItem(keyName = "progressOverlayTheme", name = "Style", description = "Choose Guild, Slate, Classic or the plain RuneLite overlay.", section = OVERLAY_SECTION, position = 1)
     default OverlayTheme progressOverlayTheme() {
         return OverlayTheme.RUNELITE;
     }
@@ -162,7 +162,7 @@ public interface GrindstoneConfig extends Config {
     @ConfigSection(name = "Completion alerts", description = "Popups, chat alerts and desktop notifications.", position = 4, closedByDefault = true)
     String notificationsSection = NOTIFICATIONS_SECTION;
 
-    @ConfigItem(keyName = "completionPopup", name = "Show popup", description = "Show a Guild popup when a milestone is newly completed.", section = NOTIFICATIONS_SECTION, position = 0)
+    @ConfigItem(keyName = "completionPopup", name = "Show popup", description = "Show a popup when a milestone or routine is completed.", section = NOTIFICATIONS_SECTION, position = 0)
     default boolean completionPopup() {
         return true;
     }
@@ -173,7 +173,7 @@ public interface GrindstoneConfig extends Config {
     }
 
     @Range(min = 3, max = 15)
-    @ConfigItem(keyName = "completionPopupSeconds", name = "Popup duration (seconds)", description = "Time each popup stays visible.", section = NOTIFICATIONS_SECTION, position = 2)
+    @ConfigItem(keyName = "completionPopupSeconds", name = "Popup duration (seconds)", description = "Time each popup stays fully visible, before it slides out.", section = NOTIFICATIONS_SECTION, position = 2)
     default int completionPopupSeconds() {
         return 6;
     }
@@ -198,7 +198,7 @@ public interface GrindstoneConfig extends Config {
         return Notification.OFF;
     }
 
-    @ConfigItem(keyName = "completionPopupTheme", name = "Popup style", description = "Completion popups always use Guild.", section = NOTIFICATIONS_SECTION, position = 7, hidden = true)
+    @ConfigItem(keyName = "completionPopupTheme", name = "Popup style", description = "Choose Guild, Slate, Classic or the plain RuneLite popup.", section = NOTIFICATIONS_SECTION, position = 7)
     default OverlayTheme completionPopupTheme() {
         return OverlayTheme.GUILD;
     }
