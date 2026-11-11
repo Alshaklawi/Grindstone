@@ -3,6 +3,8 @@ package com.grindstone.ui;
 import com.grindstone.GrindstonePlugin;
 import java.awt.image.BufferedImage;
 import lombok.Getter;
+import net.runelite.api.Skill;
+import net.runelite.client.game.SkillIconManager;
 import net.runelite.client.util.ImageUtil;
 
 /**
@@ -23,6 +25,12 @@ public enum Icon {
     ACHIEVEMENT_DIARY("achievement_diary_icon.png"),
     COMBAT_ACHIEVEMENT("combat_achievement_icon.png"),
     SKILLING("skilling.png");
+
+    private static final SkillIconManager SKILL_ICONS = new SkillIconManager();
+
+    public static BufferedImage getSkillImage(Skill skill) {
+        return SKILL_ICONS.getSkillImage(skill, true);
+    }
 
     @Getter
     private final BufferedImage image;

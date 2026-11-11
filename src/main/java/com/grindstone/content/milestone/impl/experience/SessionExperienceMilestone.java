@@ -119,7 +119,7 @@ public final class SessionExperienceMilestone implements Milestone {
 
     @Override
     public BufferedImage getIcon(Client client) {
-        return Icon.SKILLING.getImage();
+        return total ? Icon.SKILLING.getImage() : Icon.getSkillImage(skill);
     }
 
     @Override

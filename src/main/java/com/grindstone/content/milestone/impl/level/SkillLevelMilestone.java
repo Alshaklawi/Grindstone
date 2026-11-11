@@ -54,7 +54,7 @@ public class SkillLevelMilestone implements Milestone {
 
     @Override
     public BufferedImage getIcon(Client client) {
-        return Icon.SKILLING.getImage();
+        return Icon.getSkillImage(skill);
     }
 
     @Override
