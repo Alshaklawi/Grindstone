@@ -89,6 +89,7 @@ import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import net.runelite.api.Client;
+import net.runelite.api.gameval.ItemID;
 import net.runelite.api.GameState;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.game.ItemManager;
@@ -207,7 +208,7 @@ public class GrindstonePanel extends PluginPanel {
         setBackground(PANEL_COLOR);
         setOpaque(true);
 
-        buildHeader(developerMode);
+        buildHeader(developerMode, itemManager);
         buildControls();
 
         JPanel topPanel = new JPanel();
@@ -225,7 +226,7 @@ public class GrindstonePanel extends PluginPanel {
         render();
     }
 
-    private void buildHeader(boolean developerMode) {
+    private void buildHeader(boolean developerMode, ItemManager itemManager) {
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.setBackground(HEADER_COLOR);
         header.setOpaque(true);
@@ -266,7 +267,7 @@ public class GrindstonePanel extends PluginPanel {
         styleButton(more);
         more.setToolTipText("More milestone options");
         more.putClientProperty("JButton.buttonType", "toolBarButton");
-        JPopupMenu moreMenu = SidebarMenu.create(creationActions, editActions, bulkActions, () -> profile, dashboardToggle, developerMode, () -> clientThread.invokeLater(completionOverlay::preview), this::transferBackup, this::setAllCategoriesCollapsed, () -> MilestoneHistoryActions.showAccountHistory(actionSupport, this::revealMilestone));
+        JPopupMenu moreMenu = SidebarMenu.create(creationActions, editActions, bulkActions, () -> profile, dashboardToggle, developerMode, () -> clientThread.invokeLater(() -> completionOverlay.preview(itemManager.getImage(ItemID.OCELLUSPET))), this::transferBackup, this::setAllCategoriesCollapsed, () -> MilestoneHistoryActions.showAccountHistory(actionSupport, this::revealMilestone));
         more.addActionListener(event -> moreMenu.show(more, 0, more.getHeight()));
         dashboardToggle.addActionListener(event -> {
             dashboardOverview.setVisible(!dashboardOverview.isVisible());

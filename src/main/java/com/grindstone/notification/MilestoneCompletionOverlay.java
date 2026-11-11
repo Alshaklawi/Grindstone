@@ -3,7 +3,6 @@ package com.grindstone.notification;
 import com.grindstone.config.GrindstoneConfig;
 import com.grindstone.config.OverlayTheme;
 import com.grindstone.overlay.OverlayStyle;
-import com.grindstone.ui.Icon;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -12,7 +11,6 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.LongSupplier;
@@ -83,9 +81,9 @@ public final class MilestoneCompletionOverlay extends Overlay {
         }
     }
 
-    public synchronized void preview() {
+    public synchronized void preview(BufferedImage icon) {
         clear();
-        List<CompletionOverlayEntry> entries = List.of(new CompletionOverlayEntry("preview", "The Fractured Archive", "5 raids completed", Icon.RAIDS.getImage()));
+        List<CompletionOverlayEntry> entries = List.of(new CompletionOverlayEntry("preview", "The Fractured Archive", "5 raids completed", icon));
         popup = createPopup(entries, false, clock.getAsLong(), true);
     }
 
@@ -206,10 +204,10 @@ public final class MilestoneCompletionOverlay extends Overlay {
         card.drawOval(13, 23, 38, 38);
         card.setColor(new Color(0x77613e));
         card.drawOval(17, 27, 30, 30);
-        OverlayStyle.icon(card, current.entries.get(0).getIcon(), 22, 32, 20);
+        OverlayStyle.icon(card, current.entries.get(0).getIcon(), 18, 28, 28);
         card.setFont(OverlayStyle.SMALL_FONT);
         card.setColor(palette.getAccent());
-        card.drawString(getHeading(current).toUpperCase(Locale.ROOT), 65, 24);
+        card.drawString(getHeading(current), 65, 24);
         card.setFont(OverlayStyle.GUILD_TITLE_FONT);
         card.setColor(palette.getText());
         card.drawString(OverlayStyle.fit(current.entries.get(0).getTitle(), card.getFontMetrics(), WIDTH - 91), 65, 44);
