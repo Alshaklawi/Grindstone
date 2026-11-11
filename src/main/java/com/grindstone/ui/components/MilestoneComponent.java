@@ -25,6 +25,7 @@ import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -386,6 +387,17 @@ public class MilestoneComponent extends JPanel {
         JMenuItem item = new JMenuItem(title);
         item.setToolTipText(tooltip);
         item.addActionListener(listener);
+        menu.add(item);
+    }
+
+    public void addGoalToggleAction(String title, String tooltip, boolean selected, Consumer<Boolean> action) {
+        JPopupMenu menu = getComponentPopupMenu();
+        if (menu == null) {
+            return;
+        }
+        JCheckBoxMenuItem item = new JCheckBoxMenuItem(title, selected);
+        item.setToolTipText(tooltip);
+        item.addActionListener(event -> action.accept(item.isSelected()));
         menu.add(item);
     }
 

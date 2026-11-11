@@ -42,6 +42,7 @@ final class MilestoneFilters {
     static final String SORT_STATUS = "Status";
     static final String SORT_NAME_DESC = "Name (Z-A)";
     static final String SORT_CLOSEST = "Closest unfinished";
+    static final String SORT_DEADLINE = "Deadline (soonest)";
 
     private MilestoneFilters() {
     }
@@ -168,6 +169,8 @@ final class MilestoneFilters {
     static void sort(List<MilestoneView> goals, String selectedSort) {
         if (SORT_NAME_DESC.equals(selectedSort)) {
             goals.sort(Comparator.comparing(MilestoneView::getTitle, String.CASE_INSENSITIVE_ORDER).reversed());
+        } else if (SORT_DEADLINE.equals(selectedSort)) {
+            goals.sort(Comparator.comparing((MilestoneView view) -> isComplete(view.getStatus())).thenComparingLong(MilestoneFilters::getDeadlineOrder).thenComparing(MilestoneView::getTitle, String.CASE_INSENSITIVE_ORDER));
         } else if (SORT_CLOSEST.equals(selectedSort)) {
             goals.sort(Comparator.comparing((MilestoneView view) -> isComplete(view.getStatus())).thenComparing(Comparator.comparingDouble(MilestoneFilters::getProgressRatio).reversed()).thenComparing(MilestoneView::getTitle, String.CASE_INSENSITIVE_ORDER));
         } else if (SORT_PROGRESS_DESC.equals(selectedSort)) {
@@ -201,5 +204,10 @@ final class MilestoneFilters {
             return 1;
         }
         return 2;
+    }
+
+    private static long getDeadlineOrder(MilestoneView view) {
+        Object deadline = view.getComponent().getClientProperty("grindstone.deadline");
+        return deadline instanceof Long && (Long) deadline > 0 ? (Long) deadline : Long.MAX_VALUE;
     }
 }

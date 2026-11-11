@@ -103,7 +103,7 @@ final class MilestoneCardPresenter {
             if (goal instanceof LinkedMilestone) {
                 key = Arrays.asList(key, ((LinkedMilestone) goal).getSourceProgress());
             }
-            key = Arrays.asList(key, metadata.getDeadlineAt(), metadata.getDeadlineAt() > 0 && now >= metadata.getDeadlineAt(), metadata.getDisplayCategory());
+            key = Arrays.asList(key, metadata.getDeadlineAt(), metadata.getDeadlineAt() > 0 && now >= metadata.getDeadlineAt(), metadata.getDisplayCategory(), recurring.isRemindersMuted());
             MilestoneView cached = cardCache.get(goal, key);
             if (cached != null && tracking != TrackingState.WAITING && goal.getProgressMaximum() > 0) {
                 if (captureOverlay) {
@@ -251,6 +251,13 @@ final class MilestoneCardPresenter {
                     component.addGoalAction(repeating ? "Routine schedule..." : "Make routine...", "Choose a routine schedule or one-time tracking.", event -> editActions.editRepeat(currentProfile, goal, repeatSchedule, repeatTarget));
                 }
                 if (repeating) {
+                    component.addGoalToggleAction("Mute reminders", "Silence reminders for this routine. Progress keeps tracking.", displayRecurring.isRemindersMuted(), muted -> clientThread.invokeLater(() -> {
+                        if (support.isCurrentProfile(currentProfile) && currentProfile.getGoals().contains(goal)) {
+                            currentProfile.getMetadata(goal).getRecurring().setRemindersMuted(muted);
+                            currentProfile.touch();
+                            support.render();
+                        }
+                    }));
                     component.addGoalAction("Restart current period...", "Save this period to history and start fresh.", event -> editActions.restartPeriod(currentProfile, goal));
                 }
                 if (goal instanceof SessionExperienceMilestone) {
@@ -267,7 +274,7 @@ final class MilestoneCardPresenter {
                         }
                     });
                 }
-                component.setAchievementNote(repeating ? displayRecurring.getSchedule() + " · " + (displayRecurring.getBaselineAt() == 0 ? "Baseline pending" : "This period") : config.showCompletionHistory() && !displayMetadata.getCompletions().isEmpty() && shownStatus != MilestoneStatus.COMPLETE ? "Previously reached · now incomplete" : null);
+                component.setAchievementNote(repeating ? displayRecurring.getSchedule() + " · " + (displayRecurring.isRemindersMuted() ? "Reminders muted" : displayRecurring.getBaselineAt() == 0 ? "Baseline pending" : "This period") : config.showCompletionHistory() && !displayMetadata.getCompletions().isEmpty() && shownStatus != MilestoneStatus.COMPLETE ? "Previously reached · now incomplete" : null);
 
                 MilestoneView view = new MilestoneView(goal, component, title, searchText, category, shownStatus, hasProgress, shownCurrent, shownMaximum);
                 cardCache.put(goal, cacheKey, view);

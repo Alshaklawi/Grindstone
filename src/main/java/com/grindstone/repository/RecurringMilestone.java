@@ -12,6 +12,7 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 /**
  * @author Ayman Yassen
@@ -34,6 +35,9 @@ public final class RecurringMilestone {
     private long completedAt;
     @Getter
     private long lastObservedAt;
+    @Getter
+    @Setter
+    private boolean remindersMuted;
     private final List<Period> history = new ArrayList<>();
     @Getter
     private transient boolean awaitingReading;
@@ -53,6 +57,7 @@ public final class RecurringMilestone {
         copy.progress = progress;
         copy.completedAt = completedAt;
         copy.lastObservedAt = lastObservedAt;
+        copy.remindersMuted = remindersMuted;
         copy.history.addAll(history);
         copy.awaitingReading = awaitingReading;
         copy.revision = revision;

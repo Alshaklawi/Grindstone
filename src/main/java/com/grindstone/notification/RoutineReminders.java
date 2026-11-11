@@ -74,7 +74,7 @@ public final class RoutineReminders {
             List<String> pending = new ArrayList<>();
             for (Milestone goal : profile.getGoals()) {
                 RecurringMilestone routine = profile.getMetadata(goal).getRecurring();
-                if (routine.getSchedule() != schedule || !RecurringMilestone.supports(goal) || routine.getStatus() == MilestoneStatus.COMPLETE || TrackingState.of(goal, routine, true, profile.getPlayerStorage().hasBankSnapshot()) == TrackingState.WAITING) {
+                if (routine.getSchedule() != schedule || routine.isRemindersMuted() || !RecurringMilestone.supports(goal) || routine.getStatus() == MilestoneStatus.COMPLETE || TrackingState.of(goal, routine, true, profile.getPlayerStorage().hasBankSnapshot()) == TrackingState.WAITING) {
                     continue;
                 }
                 pending.add(NotificationMessages.formatTitle(goal.getTitle(client)) + (config.routineReminderNumbers() ? NotificationMessages.formatProgress(goal, routine.getProgress(), routine.getTarget()) : ""));

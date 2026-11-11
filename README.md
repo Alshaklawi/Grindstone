@@ -11,7 +11,7 @@ Track skills, boss kills, collection-log unlocks, supplies and personal mileston
 
 ## Your milestones
 
-Search and filter by status, category, type or schedule. Pin important targets, group related skills, and expand cards for details and actions.
+Search and filter by status, category, type or schedule. Pin important targets, sort by the nearest deadline, group related skills, and expand cards for details and actions.
 
 <img src="docs/images/sidebar-current.png" width="180" alt="Current Grindstone sidebar with skill, Slayer and Fractured Archive milestones">
 
@@ -52,6 +52,8 @@ Create repeating milestones or add a routine preset from the **…** menu. The *
 <img src="docs/images/routines-current.png" width="180" alt="Current Routines sidebar with a period overview and daily milestone cards">
 
 Add personal deadlines and optional reminders without changing the game's reset schedule. In **RuneLite settings → Grindstone → Notifications**, choose completion alerts, routine reminders, chat messages and optional desktop notifications.
+
+Use a routine's **… → Mute reminders** to silence it while keeping progress tracking and completion alerts.
 
 ## Progress beside the game
 

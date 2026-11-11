@@ -16,6 +16,7 @@ import static com.grindstone.ui.MilestoneFilters.ONE_OFF;
 import static com.grindstone.ui.MilestoneFilters.PAST_DUE;
 import static com.grindstone.ui.MilestoneFilters.SESSION;
 import static com.grindstone.ui.MilestoneFilters.SORT_CLOSEST;
+import static com.grindstone.ui.MilestoneFilters.SORT_DEADLINE;
 import static com.grindstone.ui.MilestoneFilters.SORT_NAME;
 import static com.grindstone.ui.MilestoneFilters.SORT_NAME_DESC;
 import static com.grindstone.ui.MilestoneFilters.SORT_PROGRESS_ASC;
@@ -397,7 +398,7 @@ public class GrindstonePanel extends PluginPanel {
         pinnedOnly.setFont(UiTypography.BODY);
         pinnedOnly.setAlignmentX(LEFT_ALIGNMENT);
         pinnedOnly.setToolTipText("Show pinned milestones only.");
-        sortFilter.setModel(new DefaultComboBoxModel<>(new String[]{SORT_NAME, SORT_NAME_DESC, SORT_CLOSEST, SORT_PROGRESS_DESC, SORT_PROGRESS_ASC, SORT_STATUS}));
+        sortFilter.setModel(new DefaultComboBoxModel<>(new String[]{SORT_NAME, SORT_NAME_DESC, SORT_CLOSEST, SORT_DEADLINE, SORT_PROGRESS_DESC, SORT_PROGRESS_ASC, SORT_STATUS}));
         typeFilter.setModel(new DefaultComboBoxModel<>(new String[]{ALL_TYPES, AUTOMATIC, CUSTOM, LINKED, BASE, SESSION, DEADLINES, PAST_DUE}));
         styleComboBox(typeFilter);
         typeFilter.setAlignmentX(LEFT_ALIGNMENT);
@@ -410,7 +411,7 @@ public class GrindstonePanel extends PluginPanel {
         styleComboBox(sortFilter);
         UiTooltips.set(categoryFilter, "Filter by category.");
         UiTooltips.set(statusFilter, "Done includes completed routines hidden by settings.");
-        UiTooltips.set(sortFilter, "Sort within each category. Closest unfinished shows targets nearest completion first.");
+        UiTooltips.set(sortFilter, "Sort within each section. Deadline (soonest) puts unfinished deadlines first.");
         UiTooltips.set(typeFilter, "Filter by milestone type. Groups combine existing milestones.");
 
         categoryFilter.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
