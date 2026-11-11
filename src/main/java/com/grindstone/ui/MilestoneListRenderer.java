@@ -4,6 +4,8 @@ import static com.grindstone.ui.MilestoneFilters.isComplete;
 import com.grindstone.config.GrindstoneConfig;
 import com.grindstone.content.milestone.Milestone;
 import com.grindstone.content.milestone.MilestoneCategory;
+import com.grindstone.content.milestone.MilestoneStatus;
+import com.grindstone.overlay.OverlayStyle;
 import com.grindstone.repository.GrindstoneProfile;
 import com.grindstone.repository.RepeatSchedule;
 import com.grindstone.repository.SidebarViewState;
@@ -76,6 +78,7 @@ final class MilestoneListRenderer extends JPanel {
     private final Map<RepeatSchedule, JButton> repeatHeadings = new LinkedHashMap<>();
     private JPanel routineOverview;
     private JLabel routineTitle;
+    private JLabel routineSummary;
     private JLabel routineDue;
     private SegmentedProgressBar routineProgress;
     private final Component routineGap = Box.createVerticalStrut(12);
@@ -272,47 +275,48 @@ final class MilestoneListRenderer extends JPanel {
         long completed = recurring.stream().filter(view -> isComplete(view.getStatus())).count();
         long waiting = recurring.stream().filter(view -> !Boolean.TRUE.equals(view.getComponent().getClientProperty("grindstone.ready"))).count();
         double ratio = recurring.stream().filter(view -> Boolean.TRUE.equals(view.getComponent().getClientProperty("grindstone.ready"))).mapToDouble(MilestoneFilters::getProgressRatio).average().orElse(0);
-        if (routineOverview != null) {
-            routineTitle.setText("Your routine · " + completed + "/" + recurring.size() + " reached");
-            routineProgress.setProgress(Math.round(ratio * 100), 100);
-            routineProgress.setVisible(waiting < recurring.size());
-            long next = recurring.stream().mapToLong(this::getNextReset).min().orElse(0);
-            routineDue.setText("<html>Next reset: " + DateTimeFormatter.ofPattern("EEE HH:mm 'UTC'", Locale.ROOT).withZone(ZoneOffset.UTC).format(Instant.ofEpochMilli(next)) + "<br>" + (waiting == recurring.size() ? "Waiting for readings" : Math.round(ratio * 100) + "% of known progress") + (waiting > 0 ? " · " + waiting + " waiting" : "") + "</html>");
-            if (routineOverview.getParent() != main) {
-                main.add(routineOverview, 0);
-                main.add(routineGap, 1);
-            }
-            return;
+        if (routineOverview == null) {
+            routineOverview = new ContentHeightPanel();
+            routineOverview.setLayout(new BoxLayout(routineOverview, BoxLayout.Y_AXIS));
+            routineOverview.setBackground(HEADER_COLOR);
+            routineOverview.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            routineOverview.setAlignmentX(LEFT_ALIGNMENT);
+            routineTitle = new JLabel();
+            routineTitle.setFont(UiTypography.TITLE);
+            routineTitle.setAlignmentX(LEFT_ALIGNMENT);
+            routineOverview.add(routineTitle);
+            routineOverview.add(Box.createVerticalStrut(6));
+            routineSummary = new JLabel();
+            routineSummary.setFont(UiTypography.BODY);
+            routineSummary.setAlignmentX(LEFT_ALIGNMENT);
+            routineOverview.add(routineSummary);
+            routineOverview.add(Box.createVerticalStrut(4));
+            routineProgress = new SegmentedProgressBar();
+            routineProgress.setMaximumSize(new Dimension(Integer.MAX_VALUE, 8));
+            routineProgress.setAlignmentX(LEFT_ALIGNMENT);
+            routineOverview.add(routineProgress);
+            routineDue = new JLabel();
+            routineDue.setFont(UiTypography.BODY);
+            routineDue.setForeground(MUTED_COLOR);
+            routineDue.setAlignmentX(LEFT_ALIGNMENT);
+            routineOverview.add(Box.createVerticalStrut(6));
+            routineOverview.add(routineDue);
         }
-        JPanel overview = new ContentHeightPanel();
-        routineOverview = overview;
-        overview.setLayout(new BoxLayout(overview, BoxLayout.Y_AXIS));
-        overview.setBackground(HEADER_COLOR);
-        overview.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        overview.setAlignmentX(LEFT_ALIGNMENT);
-        JLabel title = new JLabel("Your routine · " + completed + "/" + recurring.size() + " reached");
-        routineTitle = title;
-        title.setFont(UiTypography.TITLE);
-        title.setAlignmentX(LEFT_ALIGNMENT);
-        overview.add(title);
-        overview.add(Box.createVerticalStrut(6));
-        SegmentedProgressBar progress = new SegmentedProgressBar();
-        routineProgress = progress;
-        progress.setVisible(waiting < recurring.size());
-        progress.setProgress(Math.round(ratio * 100), 100);
-        progress.setToolTipText("Average progress across all enabled routines, regardless of search filters.");
-        progress.setMaximumSize(new Dimension(Integer.MAX_VALUE, 8));
-        progress.setAlignmentX(LEFT_ALIGNMENT);
-        overview.add(progress);
+        routineTitle.setText("Routines · " + completed + "/" + recurring.size() + " complete");
+        routineSummary.setText(waiting == recurring.size() ? "Waiting for game data" : "<html>" + Math.round(ratio * 100) + (recurring.size() == 1 ? "% toward target" : "% average progress") + (waiting > 0 ? "<br>" + waiting + " waiting for data" : "") + "</html>");
+        String progressTip = "Average target progress for routines with loaded data.";
+        routineSummary.setToolTipText(waiting == recurring.size() ? null : progressTip);
+        routineProgress.setToolTipText(progressTip);
+        routineProgress.setProgress(Math.round(ratio * 100), 100);
+        routineProgress.setStatus(completed == recurring.size() ? MilestoneStatus.COMPLETE : ratio > 0 ? MilestoneStatus.IN_PROGRESS : MilestoneStatus.NOT_STARTED);
+        routineProgress.setVisible(waiting < recurring.size());
         long next = recurring.stream().mapToLong(this::getNextReset).min().orElse(0);
-        JLabel due = new JLabel("<html>Next reset: " + DateTimeFormatter.ofPattern("EEE HH:mm 'UTC'", Locale.ROOT).withZone(ZoneOffset.UTC).format(Instant.ofEpochMilli(next)) + "<br>" + (waiting == recurring.size() ? "Waiting for readings" : Math.round(ratio * 100) + "% of known progress") + (waiting > 0 ? " · " + waiting + " waiting" : "") + "</html>");
-        routineDue = due;
-        due.setFont(UiTypography.META);
-        due.setAlignmentX(LEFT_ALIGNMENT);
-        overview.add(Box.createVerticalStrut(6));
-        overview.add(due);
-        main.add(overview, 0);
-        main.add(routineGap, 1);
+        routineDue.setText("Next reset in " + OverlayStyle.formatCountdown(next, System.currentTimeMillis()));
+        routineDue.setToolTipText(DateTimeFormatter.ofPattern("EEE d MMM HH:mm 'UTC'", Locale.ROOT).withZone(ZoneOffset.UTC).format(Instant.ofEpochMilli(next)));
+        if (routineOverview.getParent() != main) {
+            main.add(routineOverview, 0);
+            main.add(routineGap, 1);
+        }
     }
 
     private long getNextReset(MilestoneView view) {
