@@ -32,6 +32,8 @@ import net.runelite.client.util.AsyncBufferedImage;
  */
 @Singleton
 public final class GrindstoneProgressOverlay extends Overlay {
+    private static final String TITLE = "Grindstone";
+    private static final int WIDTH = 240;
     private static final int SECTION_HEIGHT = 24;
     private static final int SOURCE_HEIGHT = 24;
     private static final int MAX_CACHE_PIXELS = 4_000_000;
@@ -50,6 +52,7 @@ public final class GrindstoneProgressOverlay extends Overlay {
         setPosition(OverlayPosition.TOP_LEFT);
         setLayer(OverlayLayer.ABOVE_WIDGETS);
         setPriority(PRIORITY_LOW);
+        setResizable(false);
     }
 
     public void clear() {
@@ -97,7 +100,7 @@ public final class GrindstoneProgressOverlay extends Overlay {
             height += detailHeight;
         }
         int completed = (int) visible.stream().filter(ProgressOverlayEntry::isComplete).count();
-        Snapshot next = new Snapshot(List.copyOf(rows), view, visible.size(), completed, Math.max(180, Math.min(360, config.progressOverlayWidth())), bars, grouped, theme);
+        Snapshot next = new Snapshot(List.copyOf(rows), view, visible.size(), completed, WIDTH, bars, grouped, theme);
         for (Row row : rows) {
             watchIcon(row.entry.getIcon(), next);
             if (row.detailHeight > 0) {
@@ -276,7 +279,7 @@ public final class GrindstoneProgressOverlay extends Overlay {
             OverlayStyle.icon(graphics, Icon.MAIN.getImage(), 12, 13, 22);
             graphics.setFont(OverlayStyle.HEADING_FONT);
             graphics.setColor(palette.getText());
-            graphics.drawString(OverlayStyle.fit(current.view.getTitle(), graphics.getFontMetrics(), current.width - 54), 40, 25);
+            graphics.drawString(OverlayStyle.fit(TITLE, graphics.getFontMetrics(), current.width - 54), 40, 25);
             graphics.setFont(OverlayStyle.BODY_FONT);
             graphics.setColor(palette.getMuted());
             graphics.drawString(current.view == ProgressOverlayView.MILESTONES ? current.total + " active" : current.completed + " of " + current.total + " complete", 12, 43);
@@ -286,7 +289,7 @@ public final class GrindstoneProgressOverlay extends Overlay {
         int titleX = 43;
         graphics.setFont(OverlayStyle.SMALL_FONT);
         graphics.setColor(palette.getMuted());
-        graphics.drawString("GRINDSTONE", titleX, 23);
+        graphics.drawString(current.view.getTitle(), titleX, 23);
         String tally = current.view == ProgressOverlayView.MILESTONES ? Integer.toString(current.total) : current.completed + " / " + current.total;
         int tallyWidth = graphics.getFontMetrics().stringWidth(tally) + 16;
         int tallyX = current.width - tallyWidth - 12;
@@ -296,7 +299,7 @@ public final class GrindstoneProgressOverlay extends Overlay {
         graphics.drawString(tally, tallyX + 8, 45);
         graphics.setFont(OverlayStyle.HEADING_FONT);
         graphics.setColor(palette.getText());
-        graphics.drawString(OverlayStyle.fit(current.view.getTitle(), graphics.getFontMetrics(), tallyX - titleX - 6), titleX, 44);
+        graphics.drawString(OverlayStyle.fit(TITLE, graphics.getFontMetrics(), tallyX - titleX - 6), titleX, 44);
     }
 
     private static void renderGuildHeader(Graphics2D graphics, Snapshot current, OverlayStyle.Palette palette) {
@@ -312,7 +315,7 @@ public final class GrindstoneProgressOverlay extends Overlay {
         graphics.drawString(tally, current.width - 12 - tallyWidth, 24);
         graphics.setFont(OverlayStyle.GUILD_HEADING_FONT);
         graphics.setColor(palette.getAccent());
-        graphics.drawString(OverlayStyle.fit(current.view.getTitle(), graphics.getFontMetrics(), current.width - tallyWidth - 62), 38, 24);
+        graphics.drawString(OverlayStyle.fit(TITLE, graphics.getFontMetrics(), current.width - tallyWidth - 62), 38, 24);
     }
 
     private static void renderEntry(Graphics2D graphics, Row row, int width, int y, boolean bars) {

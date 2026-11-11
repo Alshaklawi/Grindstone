@@ -55,7 +55,7 @@ Add personal deadlines and optional reminders without changing the game's reset 
 
 ## Progress beside the game
 
-Enable **RuneLite settings → Grindstone → Progress overlay**. Choose daily routines, all routines, milestones, pinned entries or all tracked. Hold **Alt** and drag to reposition it; adjust its width, entry limit and progress bars in settings.
+Enable **RuneLite settings → Grindstone → Progress overlay**. Choose daily routines, all routines, milestones, pinned entries or all tracked. Hold **Alt** and drag to reposition it. Adjust the entry limit and progress bars in settings.
 
 ### Guild — default
 

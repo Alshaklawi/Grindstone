@@ -149,8 +149,7 @@ public interface GrindstoneConfig extends Config {
         return 8;
     }
 
-    @Range(min = 180, max = 360)
-    @ConfigItem(keyName = "progressOverlayWidth", name = "Width (pixels)", description = "Overlay width in pixels.", section = OVERLAY_SECTION, position = 4)
+    @ConfigItem(keyName = "progressOverlayWidth", name = "Width (pixels)", description = "Overlay width in pixels.", section = OVERLAY_SECTION, position = 4, hidden = true)
     default int progressOverlayWidth() {
         return 240;
     }
