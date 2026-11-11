@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.function.IntUnaryOperator;
 import lombok.Getter;
 import net.runelite.api.Client;
+import net.runelite.api.gameval.ItemID;
 import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.api.gameval.VarbitID;
 /**
@@ -216,6 +217,23 @@ public enum TrackerEntry {
         return Math.max(0, (varbit ? varbits : varps).applyAsInt(id));
     }
     public int getIconItem(Client client) {
+        switch (this) {
+            case CHAMBERS_OF_XERIC:
+            case XERICCHAMBERS_CHALLENGE:
+                return ItemID.OLMPET;
+            case THEATREOFBLOOD:
+            case THEATREOFBLOOD_HARD:
+            case THEATREOFBLOOD_STORY:
+                return ItemID.VERZIKPET;
+            case TOMBSOFAMASCUT_ENTRY:
+            case TOMBSOFAMASCUT:
+            case TOMBSOFAMASCUT_EXPERT:
+                return ItemID.WARDENPET_TUMEKEN;
+            case THE_FRACTURED_ARCHIVE:
+                return ItemID.OCELLUSPET;
+            default:
+                break;
+        }
         if (category == MilestoneCategory.SLAYER || category == MilestoneCategory.CLUES) {
             return 0;
         }
