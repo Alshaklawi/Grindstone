@@ -186,6 +186,51 @@ public enum TrackerEntry {
         return this != SOUL_WARS_DEATHS && this != COLOSSEUM_WAVES && this != SPEEDRUNS;
     }
 
+    public String getProgressUnit(long count) {
+        String singular;
+        switch (this) {
+            case BARROWS:
+            case PERILOUS_MOONS:
+                singular = "chest";
+                break;
+            case LMS_SCORE:
+            case SLAYER_POINTS:
+                singular = "point";
+                break;
+            case SLAYER_STREAK:
+            case SLAYER_WILDERNESS_STREAK:
+                singular = "task";
+                break;
+            case COLOSSEUM_WAVES:
+                singular = "wave";
+                break;
+            case DOM_LEVELS:
+                return count == 1 ? "delve level" : "delve levels";
+            case SOUL_WARS_DEATHS:
+                singular = "death";
+                break;
+            case SOUL_WARS_GAMES:
+                singular = "game";
+                break;
+            case SOUL_WARS_WINS:
+                singular = "win";
+                break;
+            case GOTR:
+                singular = "rift";
+                break;
+            case MIXOLOGY_ORDERS:
+                singular = "order";
+                break;
+            case SPEEDRUNS:
+                singular = "run";
+                break;
+            default:
+                singular = displayName.endsWith(" kills") ? "kill" : category == MilestoneCategory.RAIDS ? "raid" : category == MilestoneCategory.CLUES ? "clue" : "completion";
+                break;
+        }
+        return count == 1 ? singular : singular + "s";
+    }
+
     public boolean isMonotonic() {
         return this != LMS_SCORE && this != SLAYER_POINTS && this != SLAYER_STREAK && this != SLAYER_WILDERNESS_STREAK;
     }

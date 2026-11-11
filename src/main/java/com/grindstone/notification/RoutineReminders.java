@@ -77,13 +77,13 @@ public final class RoutineReminders {
                 if (routine.getSchedule() != schedule || routine.isRemindersMuted() || !RecurringMilestone.supports(goal) || routine.getStatus() == MilestoneStatus.COMPLETE || TrackingState.of(goal, routine, true, profile.getPlayerStorage().hasBankSnapshot()) == TrackingState.WAITING) {
                     continue;
                 }
-                pending.add(NotificationMessages.formatTitle(goal.getTitle(client)) + (config.routineReminderNumbers() ? NotificationMessages.formatProgress(goal, routine.getProgress(), routine.getTarget()) : ""));
+                pending.add(NotificationMessages.getTitle(goal, client) + (config.routineReminderNumbers() ? NotificationMessages.formatProgress(goal, routine.getProgress(), routine.getTarget()) : ""));
             }
             if (pending.isEmpty()) {
                 continue;
             }
             lastReminded.put(schedule, now);
-            String heading = schedule + " reminder";
+            String heading = schedule + " routines";
             String detail = pending.size() + (pending.size() == 1 ? " routine left: " : " routines left: ") + String.join("; ", pending.subList(0, Math.min(3, pending.size()))) + (pending.size() > 3 ? "; and " + (pending.size() - 3) + " more" : "") + "." + (config.routineReminderCountdown() ? " Resets in " + OverlayStyle.formatCountdown(schedule.getNextReset(start), now) + "." : "");
             if (config.routineReminderChat()) {
                 chat.queue(QueuedMessage.builder().type(ChatMessageType.CONSOLE).runeLiteFormattedMessage(NotificationMessages.formatChat(heading, detail, config.notificationColours())).build());

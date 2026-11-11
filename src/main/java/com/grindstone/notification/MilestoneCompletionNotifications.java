@@ -7,6 +7,7 @@ import com.grindstone.content.milestone.TrackingState;
 import com.grindstone.repository.MilestoneMetadata;
 import com.grindstone.repository.GrindstoneProfile;
 import com.grindstone.repository.RecurringMilestone;
+import com.grindstone.repository.RepeatSchedule;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -76,12 +77,12 @@ public final class MilestoneCompletionNotifications {
             String cycle = target + ":" + (repeating ? recurring.getSchedule() + ":" + recurring.getStart() : "once");
             boolean complete = (repeating ? recurring.getStatus() : goal.getStatus()) == MilestoneStatus.COMPLETE;
             if (transitions.observe(id, cycle, complete)) {
-                String title = NotificationMessages.formatTitle(goal.getTitle(client));
-                String label = (repeating ? recurring.getSchedule() + ": " : "") + title;
-                String progress = config.completionNumbers() ? NotificationMessages.formatProgress(goal, repeating ? recurring.getProgress() : goal.getProgressCurrent(), target) : "";
-                completed.add(new CompletionOverlayEntry(id + ":" + cycle, label, progress.isEmpty() ? "" : progress.substring(2, progress.length() - 1), config.completionPopup() ? goal.getIcon(client) : null));
-                headings.add(repeating ? "Routine complete" : "Milestone complete");
-                details.add(label + progress);
+                String title = NotificationMessages.getTitle(goal, client);
+                RepeatSchedule schedule = repeating ? recurring.getSchedule() : RepeatSchedule.NONE;
+                String detail = NotificationMessages.getCompletionDetail(goal, repeating ? recurring.getProgress() : goal.getProgressCurrent(), target, schedule, config.completionNumbers());
+                completed.add(new CompletionOverlayEntry(id + ":" + cycle, title, detail, config.completionPopup() ? goal.getIcon(client) : null));
+                headings.add(NotificationMessages.getCompletionHeading(goal, schedule));
+                details.add(title + " — " + detail);
                 if (repeating) {
                     routineCompletions++;
                 }
