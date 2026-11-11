@@ -130,7 +130,7 @@ public interface GrindstoneConfig extends Config {
 
     @ConfigItem(keyName = "progressOverlayTheme", name = "Style", description = "Choose Guild, Slate, Classic or RuneLite. Completion popups use Guild.", section = OVERLAY_SECTION, position = 1)
     default OverlayTheme progressOverlayTheme() {
-        return OverlayTheme.GUILD;
+        return OverlayTheme.RUNELITE;
     }
 
     @ConfigItem(keyName = "progressOverlayView", name = "Show", description = "Choose which milestones and routines to show.", section = OVERLAY_SECTION, position = 2)

@@ -57,17 +57,17 @@ Add personal deadlines and optional reminders without changing the game's reset 
 
 Enable **RuneLite settings → Grindstone → Progress overlay**. Choose daily routines, all routines, milestones, pinned entries or all tracked. Hold **Alt** and drag to reposition it. Adjust the entry limit and progress bars in settings.
 
-### Guild — default
+### RuneLite — default
+
+<img src="docs/images/overlay-runelite-current.png" width="200" alt="Native RuneLite progress overlay with skill icons, progress bars and a reset countdown">
+
+### Guild
 
 <img src="docs/images/overlay-guild-current.png" width="200" alt="Current compact Guild overlay with native icons, progress bars and a reset countdown">
 
 ### Slate
 
 <img src="docs/images/overlay-slate-current.png" width="200" alt="Current Slate progress overlay showing the same example routines">
-
-### RuneLite
-
-<img src="docs/images/overlay-runelite-current.png" width="200" alt="Native RuneLite progress overlay with skill icons, progress bars and a reset countdown">
 
 Classic is also available. The progress overlay is optional; completion popups always use Guild.
 
