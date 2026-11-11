@@ -1,4 +1,5 @@
 package com.grindstone.util;
+import java.math.BigInteger;
 import java.util.Locale;
 /**
  * @author Ayman Yassen
@@ -7,6 +8,14 @@ import java.util.Locale;
  */
 public final class NumberFormats {
     private NumberFormats() {
+    }
+    public static int calculatePercentage(long current, long target) {
+        if (target <= 0) {
+            return 0;
+        }
+        long progress = Math.max(0, Math.min(current, target));
+        BigInteger numerator = BigInteger.valueOf(progress).multiply(BigInteger.valueOf(100));
+        return numerator.divide(BigInteger.valueOf(target)).intValue();
     }
     public static String formatExperience(long value) {
         if (value >= 1_000_000) {

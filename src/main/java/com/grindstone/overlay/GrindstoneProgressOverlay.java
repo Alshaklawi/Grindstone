@@ -502,7 +502,7 @@ public final class GrindstoneProgressOverlay extends Overlay {
             current = formatProgress(entry.getCurrent());
             target = formatProgress(entry.getTarget()) + (entry.getUnit().isEmpty() ? "" : " " + entry.getUnit());
             ratio = entry.getTarget() <= 0 ? 0 : Math.max(0, Math.min(1, entry.getCurrent() / (double) entry.getTarget()));
-            percentage = entry.isReady() && entry.getTarget() > 0 ? entry.isComplete() ? "Done" : (int) Math.floor(ratio * 100) + "%" : "";
+            percentage = entry.isReady() && entry.getTarget() > 0 ? entry.isComplete() ? "Done" : NumberFormats.calculatePercentage(entry.getCurrent(), entry.getTarget()) + "%" : "";
             progress = entry.isReady() ? entry.getTarget() > 0 ? current + " / " + target : entry.isComplete() ? "Complete" : "In progress" : "Waiting for game data";
         }
     }
