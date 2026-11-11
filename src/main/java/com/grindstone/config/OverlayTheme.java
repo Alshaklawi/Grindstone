@@ -11,7 +11,8 @@ import lombok.RequiredArgsConstructor;
 public enum OverlayTheme {
     CLASSIC("Classic"),
     SLATE("Slate"),
-    GUILD("Guild");
+    GUILD("Guild"),
+    RUNELITE("RuneLite");
 
     private final String title;
 

@@ -8,6 +8,7 @@ import com.grindstone.ui.Icon;
 import com.grindstone.util.NumberFormats;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
@@ -36,6 +37,7 @@ public final class GrindstoneProgressOverlay extends Overlay {
     private static final int WIDTH = 240;
     private static final int SECTION_HEIGHT = 24;
     private static final int SOURCE_HEIGHT = 24;
+    private static final int NATIVE_SOURCE_HEIGHT = 42;
     private static final int MAX_CACHE_PIXELS = 4_000_000;
     private final GrindstoneConfig config;
     private final LongSupplier clock;
@@ -91,8 +93,9 @@ public final class GrindstoneProgressOverlay extends Overlay {
             previous = entry.getSchedule();
         }
         List<Row> rows = new ArrayList<>(selected.size());
+        int sourceHeight = theme == OverlayTheme.RUNELITE && bars ? NATIVE_SOURCE_HEIGHT : SOURCE_HEIGHT;
         for (ProgressOverlayEntry entry : selected) {
-            int detailHeight = entry.getSources().isEmpty() ? 0 : 8 + entry.getSources().size() * SOURCE_HEIGHT + (entry.getRemainingSources() > 0 ? 14 : 0);
+            int detailHeight = entry.getSources().isEmpty() ? 0 : 8 + entry.getSources().size() * sourceHeight + (entry.getRemainingSources() > 0 ? 14 : 0);
             if (height + detailHeight > budget) {
                 detailHeight = 0;
             }
@@ -149,11 +152,12 @@ public final class GrindstoneProgressOverlay extends Overlay {
             return new Dimension(current.width, cache.height);
         }
         int imageVersion = current.imageVersion.get();
-        if (cache.image == null || cache.imageVersion != imageVersion || cache.scaleX != scaleX || cache.scaleY != scaleY || !cache.countdown.equals(cache.renderedCountdown)) {
+        if (cache.image == null || cache.imageVersion != imageVersion || cache.scaleX != scaleX || cache.scaleY != scaleY || !graphics.getFont().equals(cache.font) || !cache.countdown.equals(cache.renderedCountdown)) {
             BufferedImage image = new BufferedImage((int) imageWidth, (int) imageHeight, BufferedImage.TYPE_INT_ARGB);
             Graphics2D card = image.createGraphics();
             try {
                 card.setRenderingHints(graphics.getRenderingHints());
+                card.setFont(graphics.getFont());
                 card.scale(scaleX, scaleY);
                 renderContent(card, current, cache.height, cache.countdown);
             } finally {
@@ -163,6 +167,7 @@ public final class GrindstoneProgressOverlay extends Overlay {
             cache.imageVersion = imageVersion;
             cache.scaleX = scaleX;
             cache.scaleY = scaleY;
+            cache.font = graphics.getFont();
             cache.inverseScale = AffineTransform.getScaleInstance(1 / scaleX, 1 / scaleY);
             cache.renderedCountdown = cache.countdown;
         }
@@ -187,6 +192,10 @@ public final class GrindstoneProgressOverlay extends Overlay {
     }
 
     private static void renderContent(Graphics2D card, Snapshot current, int height, String countdown) {
+        if (current.theme == OverlayTheme.RUNELITE) {
+            renderRuneLiteContent(card, current, height, countdown);
+            return;
+        }
         int rowHeight = OverlayStyle.getRowHeight(current.theme, current.bars);
         boolean hidden = current.total > current.entries.size();
         OverlayStyle.Palette palette = OverlayStyle.getPalette(current.theme);
@@ -233,6 +242,53 @@ public final class GrindstoneProgressOverlay extends Overlay {
         if (hidden) {
             card.setFont(OverlayStyle.BODY_FONT);
             card.drawString(OverlayStyle.fit((current.total - current.entries.size()) + " more in the sidebar", card.getFontMetrics(), current.width - 24), 12, y + 14);
+        }
+    }
+
+    private static void renderRuneLiteContent(Graphics2D graphics, Snapshot current, int height, String countdown) {
+        RuneLiteOverlayStyle.renderPanel(graphics, current.width, height, TITLE);
+        String tally = current.view == ProgressOverlayView.MILESTONES ? current.total + " active" : current.completed + " / " + current.total;
+        RuneLiteOverlayStyle.renderLine(graphics, 6, 22, current.width - 12, current.view.toString(), tally, Color.WHITE);
+        int y = OverlayStyle.getHeaderHeight(current.theme);
+        RepeatSchedule previous = null;
+        for (Row row : current.entries) {
+            ProgressOverlayEntry entry = row.entry;
+            if (current.grouped && previous != entry.getSchedule()) {
+                RuneLiteOverlayStyle.renderLine(graphics, 6, y, current.width - 12, entry.getSchedule() == RepeatSchedule.NONE ? "Milestones" : entry.getSchedule().toString(), "", Color.YELLOW);
+                y += SECTION_HEIGHT;
+            }
+            Color color = entry.isComplete() ? Color.GREEN : entry.isReady() ? Color.WHITE : Color.LIGHT_GRAY;
+            RuneLiteOverlayStyle.renderIcon(graphics, entry.getIcon(), 6, y + 1);
+            RuneLiteOverlayStyle.renderLine(graphics, 26, y, current.width - 32, entry.getTitle(), "", color);
+            RuneLiteOverlayStyle.renderLine(graphics, 6, y + 18, current.width - 12, row.progress, row.percentage, color);
+            if (current.bars) {
+                RuneLiteOverlayStyle.renderProgress(graphics, 6, y + 38, current.width - 12, entry.isReady() ? row.ratio : 0);
+            }
+            y += OverlayStyle.getRowHeight(current.theme, current.bars);
+            if (row.detailHeight > 0) {
+                int top = y + 4;
+                for (ProgressOverlayEntry.Source source : entry.getSources()) {
+                    RuneLiteOverlayStyle.renderIcon(graphics, source.getIcon(), 12, top);
+                    String value = source.isReady() ? formatSourceProgress(source.getCurrent()) + " / " + formatSourceProgress(source.getTarget()) : "Waiting";
+                    RuneLiteOverlayStyle.renderLine(graphics, 32, top, current.width - 38, source.getTitle(), value, Color.LIGHT_GRAY);
+                    if (current.bars && source.isReady() && source.getTarget() > 0) {
+                        RuneLiteOverlayStyle.renderProgress(graphics, 32, top + 20, current.width - 38, source.getCurrent() / (double) source.getTarget());
+                    }
+                    top += current.bars ? NATIVE_SOURCE_HEIGHT : SOURCE_HEIGHT;
+                }
+                if (entry.getRemainingSources() > 0) {
+                    RuneLiteOverlayStyle.renderLine(graphics, 32, top, current.width - 38, "+" + entry.getRemainingSources() + " more in sidebar", "", Color.LIGHT_GRAY);
+                }
+                y += row.detailHeight;
+            }
+            previous = entry.getSchedule();
+        }
+        if (current.view == ProgressOverlayView.DAILY) {
+            RuneLiteOverlayStyle.renderLine(graphics, 6, y, current.width - 12, countdown, "", Color.LIGHT_GRAY);
+            y += 24;
+        }
+        if (current.total > current.entries.size()) {
+            RuneLiteOverlayStyle.renderLine(graphics, 6, y, current.width - 12, (current.total - current.entries.size()) + " more in sidebar", "", Color.LIGHT_GRAY);
         }
     }
 
@@ -472,6 +528,7 @@ public final class GrindstoneProgressOverlay extends Overlay {
         private int height;
         private double scaleX;
         private double scaleY;
+        private Font font;
         private AffineTransform inverseScale;
         private long countdownSecond = Long.MIN_VALUE;
         private String countdown = "";

@@ -128,7 +128,7 @@ public interface GrindstoneConfig extends Config {
         return false;
     }
 
-    @ConfigItem(keyName = "progressOverlayTheme", name = "Style", description = "Choose Guild, Slate or Classic. Completion popups use Guild.", section = OVERLAY_SECTION, position = 1)
+    @ConfigItem(keyName = "progressOverlayTheme", name = "Style", description = "Choose Guild, Slate, Classic or RuneLite. Completion popups use Guild.", section = OVERLAY_SECTION, position = 1)
     default OverlayTheme progressOverlayTheme() {
         return OverlayTheme.GUILD;
     }

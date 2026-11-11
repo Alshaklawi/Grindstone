@@ -55,6 +55,8 @@ public final class OverlayStyle {
 
     public static int getHeaderHeight(OverlayTheme theme) {
         switch (theme) {
+            case RUNELITE:
+                return 48;
             case SLATE:
                 return 68;
             case GUILD:
@@ -66,6 +68,8 @@ public final class OverlayStyle {
 
     public static int getRowHeight(OverlayTheme theme, boolean bars) {
         switch (theme) {
+            case RUNELITE:
+                return bars ? 60 : 42;
             case SLATE:
                 return bars ? 76 : 65;
             case GUILD:
