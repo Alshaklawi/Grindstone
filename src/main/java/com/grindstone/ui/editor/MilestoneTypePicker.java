@@ -13,7 +13,6 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
-import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.util.ImageUtil;
 
 /**
@@ -26,7 +25,6 @@ public final class MilestoneTypePicker extends JPanel {
     private final JComboBox<MilestoneType> selection = new JComboBox<>();
     private final JComboBox<MilestoneFocus> focus = new JComboBox<>();
     private final JPanel typeField = new JPanel(new BorderLayout(0, 5));
-    private final JLabel description = new JLabel();
     private boolean updating;
     private final Predicate<MilestoneType> available;
 
@@ -59,7 +57,6 @@ public final class MilestoneTypePicker extends JPanel {
             }
         });
         focus.setMaximumRowCount(MilestoneFocus.values().length);
-        focus.setToolTipText("Choose what you want to track.");
         focus.addActionListener(event -> {
             if (!updating && focus.getSelectedItem() != null) {
                 selectGroup((MilestoneFocus) focus.getSelectedItem());
@@ -75,10 +72,6 @@ public final class MilestoneTypePicker extends JPanel {
         add(top, BorderLayout.NORTH);
         JPanel details = new JPanel(new BorderLayout(0, 7));
         details.setOpaque(false);
-        description.setFont(UiTypography.BODY);
-        description.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-        description.setBorder(BorderFactory.createEmptyBorder(2, 0, 3, 0));
-        details.add(description, BorderLayout.NORTH);
         selection.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean selected, boolean focus) {
@@ -88,7 +81,6 @@ public final class MilestoneTypePicker extends JPanel {
                 return rendered;
             }
         });
-        selection.setToolTipText("Choose a milestone type within this focus. Your target fields appear below.");
         JLabel typeLabel = new JLabel("Type");
         typeLabel.setLabelFor(selection);
         typeLabel.setFont(UiTypography.BODY);
@@ -137,7 +129,6 @@ public final class MilestoneTypePicker extends JPanel {
         try {
             MilestoneFocus group = current.getFocus();
             focus.setSelectedItem(group);
-            description.setText("<html>" + group.getDescription() + "</html>");
             selection.removeAllItems();
             for (MilestoneType option : MilestoneType.values()) {
                 if (option.getFocus() == group && available.test(option)) {

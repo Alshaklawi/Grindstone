@@ -70,11 +70,11 @@ public final class BulkMilestoneForm extends JPanel {
         table.setDefaultRenderer(String.class, textRenderer);
         table.setRowHeight(24);
         table.getColumnModel().getColumn(0).setMaxWidth(44);
-        table.setToolTipText("Tick milestones to include them in one action. Hidden selections remain selected; check the selected count before applying.");
+        table.setToolTipText("Select milestones for this action. Selections stay checked when filtered out.");
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
         table.setRowSorter(sorter);
         JTextField search = new JTextField();
-        search.setToolTipText("Search names, categories and repeat schedules. This only filters the manager, not your side panel.");
+        search.setToolTipText("Search milestones in this manager.");
         search.getDocument().addDocumentListener(new DocumentListener() {
             private void changed() {
                 String query = search.getText().trim().toLowerCase(Locale.ROOT);
@@ -107,8 +107,8 @@ public final class BulkMilestoneForm extends JPanel {
         JPanel selection = new JPanel(new GridLayout(1, 3, 6, 0));
         JButton select = new JButton("Select visible");
         JButton clear = new JButton("Clear all selections");
-        select.setToolTipText("Select only rows matching the manager's current search.");
-        clear.setToolTipText("Clear every selected milestone, including those hidden by the search.");
+        select.setToolTipText("Select matching milestones.");
+        clear.setToolTipText("Clear all selections, including hidden ones.");
         select.addActionListener(event -> {
             changingSelection = true;
             for (int i = 0; i < table.getRowCount(); i++) {
@@ -141,7 +141,7 @@ public final class BulkMilestoneForm extends JPanel {
         repeat.add(schedule);
         repeat.add(new JLabel("Period target"));
         repeat.add(periodTarget);
-        periodTarget.setToolTipText("Shared period target for XP, activity and custom milestones. Checklists always require all their steps. Unsupported or duplicate schedules reject the entire action.");
+        periodTarget.setToolTipText("Target for each period. Checklists require every step. Conflicting schedules cancel the action.");
         options.add(repeat);
         options.add(deadline);
         Runnable visibility = () -> {

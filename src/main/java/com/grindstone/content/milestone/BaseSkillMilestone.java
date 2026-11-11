@@ -69,7 +69,7 @@ public abstract class BaseSkillMilestone implements Milestone {
 
     @Override
     public final String getDescription() {
-        return "Every skill must reach the target. Progress is the lowest " + (tracksExperience() ? "skill XP" : "real skill level (boosts excluded)") + ". " + reached + " / " + Skill.values().length + " skills meet the target." + (lowest == null ? " Waiting for client readings." : " Lowest: " + lowest.getName() + ".");
+        return "Every skill must reach the target. The bar shows your lowest " + (tracksExperience() ? "skill XP." : "real level, excluding boosts.") + (lowest == null ? " Log in to load progress." : " Lowest: " + lowest.getName() + ".");
     }
 
     @Override

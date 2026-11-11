@@ -27,7 +27,7 @@ public final class CombatAchievementDifficultyMilestone extends ClientCompletion
     }
     @Override
     public String getDescription() {
-        return "Complete every task of this difficulty, regardless of your points or reward tier.";
+        return "Complete every task of this difficulty.";
     }
     @Override
     public MilestoneCategory getCategory() {

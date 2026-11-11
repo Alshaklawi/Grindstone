@@ -104,7 +104,7 @@ public final class SessionExperienceMilestone implements Milestone {
 
     @Override
     public String getDescription() {
-        return "Only XP gains observed since this milestone's first reading in the current login are counted. Existing XP is the baseline, not progress. Relogging, reconnecting or restarting this milestone resets session progress. Session readings are not saved or imported.";
+        return "Tracks XP gained this login. Relogging, reconnecting or restarting clears session progress.";
     }
 
     @Override

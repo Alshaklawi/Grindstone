@@ -38,11 +38,11 @@ public final class BulkMilestoneChanges {
                 }
                 Milestone matching = profile.findMatchingGoal(goal, schedule);
                 if (matching != null && matching != goal) {
-                    throw new IllegalArgumentException("A matching tracker already has that schedule. No milestones were changed.");
+                    throw new IllegalArgumentException("A matching milestone already has that schedule. Choose another schedule.");
                 }
                 for (int j = 0; j < i; j++) {
                     if (GrindstoneProfile.sameSelection(goal, selected.get(j))) {
-                        throw new IllegalArgumentException("Two selected milestones would share the same subject and schedule. No milestones were changed.");
+                        throw new IllegalArgumentException("Two selected milestones would have the same schedule. Choose a different schedule.");
                     }
                 }
             }

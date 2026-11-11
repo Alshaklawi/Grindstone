@@ -191,13 +191,13 @@ public enum TrackerEntry {
     }
     public String getDescription() {
         if (this == LMS_SCORE) {
-            return "Current competitive Last Man Standing score, not wins or reward points. Your score can decrease. Play a competitive game to refresh the client reading.";
+            return "Tracks your current competitive LMS score. It can decrease. Play a competitive game to refresh.";
         }
         if (this == SLAYER_POINTS) {
-            return "Current unspent Slayer reward points, not lifetime points earned. Spending points reduces progress. Open Slayer rewards to refresh the client reading.";
+            return "Tracks unspent Slayer points. Spending points reduces progress. Open Slayer rewards to refresh.";
         }
         if (this == SLAYER_STREAK || this == SLAYER_WILDERNESS_STREAK) {
-            return "Current " + (this == SLAYER_STREAK ? "normal" : "Wilderness") + " Slayer task streak, tracked separately. Resetting this streak reduces progress; this is not a lifetime task total. Check your Slayer information or complete a task to refresh the client reading.";
+            return "Tracks your " + (this == SLAYER_STREAK ? "normal" : "Wilderness") + " Slayer streak. Breaking the streak reduces progress. Open Slayer information or complete a task to refresh.";
         }
         return "";
     }

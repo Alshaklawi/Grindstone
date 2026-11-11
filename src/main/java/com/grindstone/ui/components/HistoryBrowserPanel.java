@@ -41,7 +41,7 @@ public final class HistoryBrowserPanel extends JPanel {
     private final UtcDatePicker to = new UtcDatePicker(null);
     private final JComboBox<String> schedule = new JComboBox<>(new String[]{"All schedules", "Lifetime", "Daily", "Weekly", "Monthly"});
     private final JLabel summary = new JLabel();
-    private final DefaultTableModel model = new DefaultTableModel(new String[]{"Milestone", "Schedule", "Period start", "Period end", "Progress", "Target", "Outcome", "Baseline", "Last observed", "Completed"}, 0) {
+    private final DefaultTableModel model = new DefaultTableModel(new String[]{"Milestone", "Schedule", "Period start", "Period end", "Progress", "Target", "Outcome", "Tracking started", "Last updated", "Completed"}, 0) {
         @Override
         public boolean isCellEditable(int row, int column) {
             return false;
@@ -66,8 +66,8 @@ public final class HistoryBrowserPanel extends JPanel {
         filters.add(from);
         filters.add(to);
         search.setToolTipText("Filter milestone titles and period outcomes.");
-        from.setToolTipText("Optional inclusive UTC date; periods overlapping this range are included.");
-        to.setToolTipText("Optional inclusive UTC date. Clear for no upper date limit.");
+        from.setToolTipText("Include periods overlapping this UTC date.");
+        to.setToolTipText("Last UTC date to include. Clear for no limit.");
         table.setFont(FontManager.getRunescapeFont());
         table.setRowHeight(28);
         table.setAutoCreateRowSorter(true);
@@ -85,7 +85,7 @@ public final class HistoryBrowserPanel extends JPanel {
         });
         JButton open = new JButton("Show selected");
         open.setEnabled(false);
-        open.setToolTipText("Close history and reveal the selected milestone in the sidebar.");
+        open.setToolTipText("Show this milestone in the sidebar.");
         table.getSelectionModel().addListSelectionListener(event -> open.setEnabled(table.getSelectedRow() >= 0 && !shown.get(table.convertRowIndexToModel(table.getSelectedRow())).goalId.isEmpty()));
         open.addActionListener(event -> {
             if (table.getSelectedRow() >= 0) {
@@ -95,7 +95,7 @@ public final class HistoryBrowserPanel extends JPanel {
         JPanel bottom = new JPanel(new BorderLayout(8, 8));
         bottom.add(summary, BorderLayout.CENTER);
         bottom.add(open, BorderLayout.EAST);
-        JLabel note = new JLabel("UTC · incomplete = last observed, not a confirmed miss · unobserved gaps may span several periods · dates are first observations");
+        JLabel note = new JLabel("UTC · dates show when progress was recorded · unrecorded periods are unknown");
         note.setFont(FontManager.getRunescapeSmallFont());
         bottom.add(note, BorderLayout.SOUTH);
         add(filters, BorderLayout.NORTH);

@@ -151,7 +151,7 @@ public final class ProfileBackupActions {
                         } else {
                             file.write(snapshot, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW);
                         }
-                        finish(owner, live, token, sharing ? "Milestone pack exported. Account identity, progress, storage and history are excluded." : "Backup exported. Keep it private: it includes account-linked milestones and history.");
+                        finish(owner, live, token, sharing ? "Milestone pack exported." : "Backup exported. Keep it private. It contains your account progress and history.");
                     } catch (Exception failure) {
                         fail(owner, live, token, failure);
                     }

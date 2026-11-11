@@ -132,7 +132,7 @@ final class MilestoneListRenderer extends JPanel {
             main.removeAll();
             layoutKey = null;
 
-            addMessage("Grindstone is disabled", "Enable Grindstone in the plugin configuration to display your milestones.");
+            addMessage("Grindstone is disabled", "Enable Grindstone in settings to see your milestones.");
             refreshPanel();
             return;
         }
@@ -195,9 +195,9 @@ final class MilestoneListRenderer extends JPanel {
 
         if (filteredGoals.isEmpty()) {
             if (currentProfile.getGoals().isEmpty()) {
-                addMessage("No milestones yet", "Choose Add milestone to start tracking a skill, activity, item or personal milestone.");
+                addMessage("No milestones yet", "Select Add milestone to start tracking.");
             } else if (!todayMode && !allGoals.isEmpty() && allGoals.stream().allMatch(view -> isComplete(view.getStatus()))) {
-                addMessage("All milestones complete", "Choose Add milestone for your next target, or Done to see your completed milestones.");
+                addMessage("All milestones complete", "Add another milestone, or select Done to see completed ones.");
             } else {
                 addMessage(todayMode ? "No matching routines" : "No matching milestones", todayMode ? "Clear filters or choose Make routine from a milestone's actions." : "Try another search term or clear your filters.");
             }
@@ -309,7 +309,7 @@ final class MilestoneListRenderer extends JPanel {
         routineProgress = progress;
         progress.setVisible(waiting < recurring.size());
         progress.setProgress(Math.round(ratio * 100), 100);
-        progress.setToolTipText("Average milestone completion, not a sum of different units. Includes all visible routines, independent of search filters.");
+        progress.setToolTipText("Average progress across all enabled routines, regardless of search filters.");
         progress.setMaximumSize(new Dimension(Integer.MAX_VALUE, 8));
         progress.setAlignmentX(LEFT_ALIGNMENT);
         overview.add(progress);
@@ -348,7 +348,7 @@ final class MilestoneListRenderer extends JPanel {
         heading.setAlignmentX(LEFT_ALIGNMENT);
         heading.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
         heading.setHorizontalAlignment(SwingConstants.LEFT);
-        heading.setToolTipText("Click to expand or collapse. Resets use UTC: midnight daily, Monday weekly, first of the month monthly. Countdown refreshes while logged in.");
+        heading.setToolTipText("Click to expand or collapse. UTC resets: daily at midnight, weekly on Monday, monthly on the 1st.");
         heading.addActionListener(event -> {
             collapsedRepeats.put(schedule, !Boolean.TRUE.equals(collapsedRepeats.get(schedule)));
             requestRender.run();
@@ -417,7 +417,6 @@ final class MilestoneListRenderer extends JPanel {
         titlePanel.add(titleLabel);
 
         JLabel countLabel = new JLabel(String.valueOf(goals.size()), SwingConstants.RIGHT);
-        countLabel.setToolTipText("Milestones in this category matching your current filters.");
         countLabel.setForeground(MUTED_COLOR);
         countLabel.setFont(FontManager.getRunescapeSmallFont());
         countLabel.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 0));
@@ -487,7 +486,7 @@ final class MilestoneListRenderer extends JPanel {
                 heading.setFont(UiTypography.META);
                 heading.setForeground(MUTED_COLOR);
                 heading.setBorder(BorderFactory.createEmptyBorder(0, 0, 6, 0));
-                heading.setToolTipText("Related milestones for this skill. Each target keeps its own progress, actions and history.");
+                heading.setToolTipText("Level and XP milestones for this skill.");
                 skillGroup.add(heading);
                 for (MilestoneView view : group) {
                     view.getComponent().setAlignmentX(LEFT_ALIGNMENT);
@@ -538,7 +537,7 @@ final class MilestoneListRenderer extends JPanel {
                 return;
             }
         }
-        JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), "This milestone is hidden by its tracker visibility setting. Enable that milestone type in Grindstone configuration to reveal it.");
+        JOptionPane.showMessageDialog(DialogPlacement.getOwner(this), "Enable this milestone type in Grindstone settings to show it.");
     }
 
     private void refreshPanel() {

@@ -71,7 +71,7 @@ public final class LinkedMilestone implements Milestone {
     public void validate() {
         UUID.fromString(id);
         if (title == null || title.trim().isEmpty() || title.length() > 80 || description == null || description.length() > 2000 || mode == null || sources == null || sources.isEmpty() || sources.size() > 100 || targets == null || targets.length == 0 || targets.length > 100 || required < 1 || required > 1_000_000 || achieved == null || achieved.length != sources.size() || completedThrough == null || completedThrough.size() > RepeatSchedule.values().length || completedPeriods < 0) {
-            throw new IllegalArgumentException("Invalid linked milestone settings.");
+            throw new IllegalArgumentException("Check the group name, milestones and targets.");
         }
         for (String source : sources) {
             UUID.fromString(source);
@@ -87,7 +87,7 @@ public final class LinkedMilestone implements Milestone {
             throw new IllegalArgumentException("Choose a valid number of source milestones.");
         }
         if (mode == Mode.REPEAT_COMPLETIONS && targets.length != 1 || mode == Mode.DEPENDENCY && sources.size() < 2) {
-            throw new IllegalArgumentException("Choose one repeat source, or a main milestone plus at least one prerequisite.");
+            throw new IllegalArgumentException("Choose one routine, or a milestone with at least one prerequisite.");
         }
         long previous = 0;
         for (long target : targets) {
@@ -98,7 +98,7 @@ public final class LinkedMilestone implements Milestone {
         }
         for (Map.Entry<RepeatSchedule, Long> entry : completedThrough.entrySet()) {
             if (entry.getKey() == null || entry.getValue() == null || entry.getValue() < 0) {
-                throw new IllegalArgumentException("Invalid observed period watermark.");
+                throw new IllegalArgumentException("This group's saved routine history is invalid.");
             }
         }
     }
@@ -343,12 +343,12 @@ public final class LinkedMilestone implements Milestone {
      * @since 10/19/2026
      */
     public enum Mode {
-        CHECKLIST("All-of checklist"),
-        ANY_OF("Any-of milestone"),
-        MILESTONES("Milestone ladder"),
-        COLLECTION_SET("Selected collection items"),
-        ACHIEVED("Spending-safe achievements"),
-        REPEAT_COMPLETIONS("Completed recurring periods"),
+        CHECKLIST("Complete all targets"),
+        ANY_OF("Complete some targets"),
+        MILESTONES("Checkpoints"),
+        COLLECTION_SET("Collection set"),
+        ACHIEVED("Reach each target once"),
+        REPEAT_COMPLETIONS("Complete routine periods"),
         DEPENDENCY("Milestone with prerequisites");
 
         private final String label;

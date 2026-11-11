@@ -107,7 +107,7 @@ import com.grindstone.content.milestone.MilestoneUpdates;
  * @since 10/18/2026
  */
 @Slf4j
-@PluginDescriptor( internalName = "grindstone", name = "Grindstone", description = "Track skills, quests, collection log unlocks and more with custom milestones and daily routines.", tags = {"collection", "milestones", "routines", "goals", "tracker"} )
+@PluginDescriptor( internalName = "grindstone", name = "Grindstone", description = "Track skills, bosses, unlocks and personal milestones. Build daily routines.", tags = {"collection", "milestones", "routines", "goals", "tracker"} )
 public class GrindstonePlugin extends Plugin {
     @Inject
     private Client client;

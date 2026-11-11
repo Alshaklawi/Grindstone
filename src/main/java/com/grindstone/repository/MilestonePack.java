@@ -79,7 +79,7 @@ public final class MilestonePack {
                 for (JsonElement source : data.getAsJsonArray("sources")) {
                     String mapped = identities.get(source.getAsString());
                     if (mapped == null) {
-                        throw new IllegalArgumentException("A linked milestone has a missing source. Repair its sources before sharing.");
+                        throw new IllegalArgumentException("A group has a missing milestone. Update the group before sharing.");
                     }
                     sources.add(mapped);
                 }

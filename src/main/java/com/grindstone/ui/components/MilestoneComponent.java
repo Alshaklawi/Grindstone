@@ -69,7 +69,7 @@ public class MilestoneComponent extends JPanel {
     public void setDeadlineNote(String text) {
         deadlineLabel.setText(text);
         deadlineLabel.setVisible(text != null && !text.isEmpty());
-        deadlineLabel.setToolTipText("Personal UTC deadline. Passing it never deletes progress or changes game state; it is not a game reset timer.");
+        deadlineLabel.setToolTipText("Personal deadline in UTC.");
     }
     public void setReliability(String label, String detail) {
         reliabilityLabel.setText(label);
@@ -90,7 +90,7 @@ public class MilestoneComponent extends JPanel {
             JCheckBox complete = new JCheckBox("Completed", current >= target);
             complete.setOpaque(false);
             complete.setFont(UiTypography.BODY);
-            complete.setToolTipText("Check or uncheck this personal milestone. This does not perform any game action.");
+            complete.setToolTipText("Mark this milestone complete or incomplete.");
             complete.addActionListener(event -> toggle.run());
             manualControls.add(complete);
         } else {
@@ -98,14 +98,14 @@ public class MilestoneComponent extends JPanel {
             plus.setFont(UiTypography.BODY);
             plus.setMargin(new Insets(4, 5, 4, 5));
             plus.setEnabled(current < target);
-            plus.setToolTipText("Add one to this personal milestone's progress.");
+            plus.setToolTipText("Add 1 to progress.");
             plus.addActionListener(event -> increment.run());
             manualControls.add(plus);
         }
         JButton set = new JButton("Set progress");
         set.setFont(UiTypography.BODY);
         set.setMargin(new Insets(4, 5, 4, 5));
-        set.setToolTipText("Enter manual progress without opening the full milestone editor.");
+        set.setToolTipText("Set progress manually.");
         set.addActionListener(event -> setProgress.run());
         manualControls.add(set);
         manualControls.setVisible(true);
@@ -251,14 +251,14 @@ public class MilestoneComponent extends JPanel {
 
     public void setRequiredQuantity(long quantity) {
         requiredQuantityLabel.setText(String.format(Locale.ROOT, "Required: %,d", Math.max(0, quantity)));
-        requiredQuantityLabel.setToolTipText("Target item quantity, not the amount currently owned. " + requiredQuantityLabel.getText());
+        requiredQuantityLabel.setToolTipText("Quantity needed for this target. " + requiredQuantityLabel.getText());
         requiredQuantityLabel.setVisible(quantity > 0);
         revalidate();
         repaint();
     }
     public void setTrackingNote(String text) {
         trackingNoteLabel.setText(text);
-        trackingNoteLabel.setToolTipText("A snapshot is the last known client data, not a guarantee that every storage location is loaded or current.");
+        trackingNoteLabel.setToolTipText("Saved storage contents. Reopen storage to refresh.");
         trackingNoteLabel.setVisible(text != null && !text.isEmpty());
         revalidate();
     }
@@ -366,12 +366,12 @@ public class MilestoneComponent extends JPanel {
         JPopupMenu menu = new JPopupMenu();
         if (edit != null) {
             JMenuItem editTarget = new JMenuItem("Edit...");
-            editTarget.setToolTipText("Edit the milestone target, or a custom milestone's details and manual progress.");
+            editTarget.setToolTipText("Edit the target or personal milestone details.");
             editTarget.addActionListener(edit);
             menu.add(editTarget);
         }
         JMenuItem remove = new JMenuItem("Delete...");
-        remove.setToolTipText("Remove this milestone after confirmation. Game progress is unaffected.");
+        remove.setToolTipText("Delete this milestone.");
         remove.addActionListener(delete);
         menu.add(remove);
         setEditAction(event -> menu.show(editButton, 0, editButton.getHeight()));

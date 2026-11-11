@@ -50,6 +50,6 @@ public final class CombatAchievementTaskMilestone extends ClientCompletionMilest
     }
     @Override
     public String getProgressText() {
-        return !hasProgress() ? "Waiting for native task data" : getProgressCurrent() == 1 ? "Task completed" : "Task not completed";
+        return !hasProgress() ? "Waiting for task data" : getProgressCurrent() == 1 ? "Task completed" : "Task incomplete";
     }
 }

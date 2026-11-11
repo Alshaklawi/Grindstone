@@ -55,7 +55,7 @@ public abstract class SearchableList<T> extends JPanel {
         search.setIcon(IconTextField.Icon.SEARCH);
         search.setFont(UiTypography.BODY);
         search.setPreferredSize(new Dimension(300, 30));
-        search.setToolTipText("Search names and categories. Every search word must match.");
+        search.setToolTipText("Search names and categories.");
         category.setFont(UiTypography.BODY);
         category.setToolTipText("Narrow the list to one category.");
         controls.add(search, BorderLayout.NORTH);

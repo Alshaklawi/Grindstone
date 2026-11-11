@@ -53,7 +53,7 @@ public final class UtcDatePicker extends JPanel {
     public UtcDatePicker(LocalDate date) {
         super(new BorderLayout());
         setOpaque(false);
-        choose.setToolTipText("Choose a UTC date from the calendar. Clear removes the date.");
+        choose.setToolTipText("Choose a UTC date, or clear to remove it.");
         choose.getAccessibleContext().setAccessibleName("Choose UTC date");
         choose.addActionListener(event -> openCalendar());
         add(choose, BorderLayout.CENTER);

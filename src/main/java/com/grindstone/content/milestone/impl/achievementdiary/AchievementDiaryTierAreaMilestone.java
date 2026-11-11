@@ -27,7 +27,7 @@ public final class AchievementDiaryTierAreaMilestone extends ClientCompletionMil
     }
     @Override
     public String getDescription() {
-        return "Complete all tasks in this diary tier. Claiming its reward is not required.";
+        return "Complete every task in this diary tier. You can claim the reward later.";
     }
     @Override
     public MilestoneCategory getCategory() {

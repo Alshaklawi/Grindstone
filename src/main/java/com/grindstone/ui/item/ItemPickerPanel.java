@@ -56,7 +56,7 @@ public final class ItemPickerPanel extends JPanel {
         search.setIcon(IconTextField.Icon.SEARCH);
         search.setPreferredSize(new Dimension(350, 32));
         search.addActionListener(event -> search());
-        UiTooltips.set(search, "Search normal item names (at least 2 letters), or enter an ID with optional #. Noted and placeholder IDs resolve to the normal item; placeholders never count as owned items.");
+        UiTooltips.set(search, "Search by name (2+ letters) or item ID. Normal and noted items are counted together; placeholders are ignored.");
         add(search, BorderLayout.NORTH);
         results.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         results.setFixedCellHeight(42);
@@ -93,7 +93,7 @@ public final class ItemPickerPanel extends JPanel {
         preview.setOpaque(true);
         preview.setBackground(ColorScheme.DARKER_GRAY_COLOR);
         preview.setPreferredSize(new Dimension(350, 60));
-        preview.setToolTipText("Confirm the item name, ID and icon before adding the milestone.");
+        preview.setToolTipText("Check the selected item before adding it.");
         info.add(status, BorderLayout.NORTH);
         info.add(preview, BorderLayout.CENTER);
         add(info, BorderLayout.SOUTH);

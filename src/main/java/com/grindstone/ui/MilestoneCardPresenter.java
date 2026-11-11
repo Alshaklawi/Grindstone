@@ -32,7 +32,6 @@ import com.grindstone.ui.util.MilestoneCardCache;
 import com.grindstone.ui.util.UiTypography;
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -136,8 +135,8 @@ final class MilestoneCardPresenter {
             MilestoneCategory category = support.getCategory(goal);
             String searchText = getSearchText(title, goal.getDescription(), category.getDisplayName());
             boolean hasProgress = goal.hasProgress();
-            String sourceDetail = !(goal instanceof LinkedMilestone) && goal.getCardDescription().isEmpty() ? goal.getDescription() : "";
             long shownCurrent = progressCurrent;
+            String sourceDetail = goal instanceof TrackerMilestone || goal instanceof SessionExperienceMilestone ? goal.getDescription() : "";
             long shownMaximum = progressMaximum;
             MilestoneStatus shownStatus = status;
             if (captureOverlay) {
@@ -159,7 +158,7 @@ final class MilestoneCardPresenter {
                         check.getAccessibleContext().setAccessibleName(steps.get(step));
                         check.setOpaque(false);
                         check.setFont(UiTypography.BODY);
-                        check.setToolTipText("Manually mark this personal step complete. No game action is performed; repeating checklists reset at their UTC boundary.");
+                        check.setToolTipText("Check off this step. Repeating checklists reset each period.");
                         check.setAlignmentX(Component.LEFT_ALIGNMENT);
                         check.addActionListener(event -> {
                             boolean selected = check.isSelected();
@@ -201,9 +200,8 @@ final class MilestoneCardPresenter {
                 } else if (displayTracking == TrackingState.PARTIAL_STORAGE || displayTracking == TrackingState.SNAPSHOT) {
                     component.setProgress(shownCurrent, shownMaximum, String.format(Locale.ROOT, "%,d / %,d", shownCurrent, shownMaximum));
                 }
-                String baselineDetail = displayRecurring.getBaselineAt() == 0 ? "" : " Baseline: " + Instant.ofEpochMilli(displayRecurring.getBaselineAt()) + ".";
-                long observedAt = repeating ? displayRecurring.getLastObservedAt() : displayMetadata.getLastObservedAt();
-                component.setReliability(config.showTrackingState() ? displayTracking.getCardLabel() : null, displayTracking.getDetail() + baselineDetail + (observedAt == 0 ? "" : " Last reading: " + Instant.ofEpochMilli(observedAt) + ".") + (sourceDetail.isEmpty() ? "" : " " + sourceDetail));
+                String trackingDetail = !sourceDetail.isEmpty() && (displayTracking == TrackingState.COUNTER || displayTracking == TrackingState.LIVE) ? sourceDetail : displayTracking.getDetail();
+                component.setReliability(config.showTrackingState() ? displayTracking.getCardLabel() : null, trackingDetail);
                 component.setDeadlineNote(displayMetadata.getDeadlineText(System.currentTimeMillis()));
                 component.putClientProperty("grindstone.deadline", displayMetadata.getDeadlineAt());
                 component.setExpansionListener(null);
@@ -216,7 +214,7 @@ final class MilestoneCardPresenter {
                 }));
                 component.setMaximumProgressChunks(config.maxProgressChunks());
                 component.setGoalActions(event -> editActions.editMilestone(currentProfile, goal, title), event -> editActions.deleteMilestone(currentProfile, goal, title));
-                component.addGoalAction("Set deadline...", "Set a personal UTC deadline and optional reminder in Grindstone's header.", event -> editActions.editDeadline(currentProfile, goal));
+                component.addGoalAction("Set deadline...", "Choose a UTC deadline and optional sidebar reminder.", event -> editActions.editDeadline(currentProfile, goal));
                 if (goal instanceof CustomMilestone) {
                     CustomMilestone custom = (CustomMilestone) goal;
                     long shownTarget = shownMaximum;
@@ -235,9 +233,9 @@ final class MilestoneCardPresenter {
                     }
                 });
                 component.setPinAction(pinned, togglePin);
-                component.addGoalAction(pinned ? "Unpin" : "Pin", "Pinned milestones appear first, while still respecting your search and filters.", event -> togglePin.run());
+                component.addGoalAction(pinned ? "Unpin" : "Pin", null, event -> togglePin.run());
                 if (config.showCompletionHistory()) {
-                    component.addGoalAction("History...", "View recurring periods, progress, outcomes and first-observed completion dates.", event -> clientThread.invokeLater(() -> {
+                    component.addGoalAction("History...", "View progress and completion dates.", event -> clientThread.invokeLater(() -> {
                         if (!support.isCurrentProfile(currentProfile) || !currentProfile.getGoals().contains(goal)) {
                             return;
                         }
@@ -250,14 +248,14 @@ final class MilestoneCardPresenter {
                     }));
                 }
                 if (RecurringMilestone.supports(goal)) {
-                    component.addGoalAction(repeating ? "Routine schedule..." : "Make routine...", "Choose a daily, weekly or monthly routine, or return to a one-time milestone.", event -> editActions.editRepeat(currentProfile, goal, repeatSchedule, repeatTarget));
+                    component.addGoalAction(repeating ? "Routine schedule..." : "Make routine...", "Choose a routine schedule or one-time tracking.", event -> editActions.editRepeat(currentProfile, goal, repeatSchedule, repeatTarget));
                 }
                 if (repeating) {
-                    component.addGoalAction("Restart current period...", "Archive observed progress and capture a fresh baseline. Game progress is never reset.", event -> editActions.restartPeriod(currentProfile, goal));
+                    component.addGoalAction("Restart current period...", "Save this period to history and start fresh.", event -> editActions.restartPeriod(currentProfile, goal));
                 }
                 if (goal instanceof SessionExperienceMilestone) {
-                    component.addGoalAction("Restart session XP...", "Clear only this milestone's observed login gains and capture the current XP as its new baseline.", event -> {
-                        if (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), "Reset this milestone's session XP progress? Your game XP and saved completion history are unchanged.", "Restart session milestone", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
+                    component.addGoalAction("Restart session XP...", "Start counting session XP again from your current XP.", event -> {
+                        if (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), "Start this session milestone from zero?", "Restart session milestone", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
                             clientThread.invokeLater(() -> {
                                 if (support.isCurrentProfile(currentProfile) && currentProfile.getGoals().contains(goal) && support.hasClientProfile(currentProfile)) {
                                     ((SessionExperienceMilestone) goal).restart();

@@ -46,16 +46,16 @@ public final class MilestoneHistoryPanel extends JPanel {
     private MilestoneHistoryPanel(List<Object[]> periodRows, List<Object[]> milestoneRows, boolean showPeriods) {
         super(new BorderLayout(0, 10));
         JTabbedPane tabs = new JTabbedPane();
-        DefaultTableModel periods = model("Schedule", "Period start", "Period end", "Progress", "Target", "Outcome", "Baseline captured", "Last observed", "Completed at");
+        DefaultTableModel periods = model("Schedule", "Period start", "Period end", "Progress", "Target", "Outcome", "Tracking started", "Last updated", "Completed at");
         periodRows.forEach(periods::addRow);
-        DefaultTableModel milestones = model("Milestone", "Target", "First observed completed");
+        DefaultTableModel milestones = model("Milestone", "Target", "Completion recorded");
         milestoneRows.forEach(milestones::addRow);
         tabs.addTab("Periods (" + periodRows.size() + ")", table(periods));
         tabs.addTab("Lifetime targets (" + milestoneRows.size() + ")", table(milestones));
         if (!showPeriods) {
             tabs.setSelectedIndex(1);
         }
-        JLabel note = new JLabel("<html>Times are UTC. Progress starts from the captured baseline, not an assumed offline reset value.<br>Incomplete values are last observed; unobserved gaps are not counted as misses. Latest 500 period records retained.<br>Completion dates are first observed, not historical achievement dates.</html>");
+        JLabel note = new JLabel("<html>Times are UTC. Dates show when progress was recorded.<br>Unrecorded periods are left unknown. Latest 500 periods shown.</html>");
         note.setFont(FontManager.getRunescapeSmallFont());
         add(note, BorderLayout.NORTH);
         add(tabs, BorderLayout.CENTER);
@@ -98,7 +98,7 @@ public final class MilestoneHistoryPanel extends JPanel {
         for (int column = 0; column < model.getColumnCount(); column++) {
             table.getColumnModel().getColumn(column).setPreferredWidth(model.getColumnClass(column) == Long.class ? 95 : 175);
         }
-        table.setToolTipText("Scroll horizontally for observation dates. Click a heading to sort; rows cannot be edited.");
+        table.setToolTipText("Click a heading to sort. Scroll sideways for dates.");
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createEmptyBorder());
         return scroll;

@@ -27,13 +27,17 @@ public final class RepeatMilestoneForm extends JPanel {
         fields.add(new JLabel("Target per period"));
         fields.add(target);
         target.setEditor(new JSpinner.NumberEditor(target, "#,##0"));
-        schedule.setToolTipText("One-time tracks a milestone. Daily, weekly and monthly schedules create routines with UTC resets.");
-        target.setToolTipText("XP gained, activity completions, or manual progress required in each period. This does not change your lifetime target.");
-        JLabel explanation = new JLabel("<html>UTC resets · XP and activities count gains.<br>Offline resets capture a new baseline on login.<br>Custom progress resets with each period or schedule change.<br>Changing the schedule or target archives the current period.</html>");
+        schedule.setToolTipText("Choose one-time tracking or a routine with UTC resets.");
+        target.setToolTipText("New XP, completions or manual progress required each period.");
+        JLabel explanation = new JLabel("<html>UTC resets. Manual progress resets each period.<br>After an offline reset, tracking starts on login.<br>Changing the schedule or target starts a new period.</html>");
         explanation.setFont(FontManager.getRunescapeSmallFont());
+        explanation.setVisible(false);
         add(fields, BorderLayout.NORTH);
         add(explanation, BorderLayout.CENTER);
-        schedule.addActionListener(event -> target.setEnabled(fixedTarget == null && getSchedule() != RepeatSchedule.NONE));
+        schedule.addActionListener(event -> {
+            target.setEnabled(fixedTarget == null && getSchedule() != RepeatSchedule.NONE);
+            explanation.setVisible(getSchedule() != RepeatSchedule.NONE);
+        });
         target.setEnabled(false);
     }
     public void load(RepeatSchedule repeat, long target) {

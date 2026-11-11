@@ -68,7 +68,7 @@ public final class MilestoneEditActions {
                 form.commit();
                 RepeatSchedule selected = form.getSchedule();
                 long selectedTarget = form.getTarget();
-                if ((schedule != selected || target != selectedTarget) && JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), "Repeat: " + schedule + " → " + selected + "\nPeriod target: " + target + " → " + selectedTarget + "\nThe current observed period will be archived.", "Preview schedule change", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
+                if ((schedule != selected || target != selectedTarget) && JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), "Repeat: " + schedule + " → " + selected + "\nPeriod target: " + target + " → " + selectedTarget + "\nThis saves the current period to history and starts fresh.", "Preview schedule change", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
                     return;
                 }
                 support.getClientThread().invokeLater(() -> {
@@ -91,7 +91,7 @@ public final class MilestoneEditActions {
     }
 
     public void restartPeriod(GrindstoneProfile active, Milestone goal) {
-        if (support.getProfile() != active || JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), "Archive the current observed period and capture a fresh baseline?\nCustom progress resets to zero. Your game progress is unaffected.", "Restart current period", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
+        if (support.getProfile() != active || JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), "Save this period to history and start fresh?\nManual progress will reset to zero.", "Restart current period", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
             return;
         }
         support.getClientThread().invokeLater(() -> {
@@ -128,7 +128,7 @@ public final class MilestoneEditActions {
                 return;
             }
             if (isCollectionLogMilestone(goal) && !(goal instanceof CollectionLogTotalMilestone) && !active.getCollectionLogHistory().hasSnapshot()) {
-                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(support.getOwner()), "Load a full collection-log snapshot before editing collection milestones. Open your collection log to capture it automatically."));
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(support.getOwner()), "Open your collection log to load all unlocks, then try again."));
                 return;
             }
             Map<MilestoneType, Map<String, Supplier<Milestone>>> choices = CompletionMilestoneChoices.getForEditing(support.getClient(), active.getCollectionLogHistory());
@@ -205,7 +205,7 @@ public final class MilestoneEditActions {
                 while (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), scroll, original == null ? "Add group" : "Edit group", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
                     try {
                         LinkedMilestone candidate = form.read();
-                        if (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), support.createPreview(candidate.getTitle(null) + "\n" + candidate.getMode() + " · " + candidate.getSources().size() + " source(s)\nTargets: " + Arrays.toString(candidate.getTargets()) + "\nMissing sources remain unavailable; this never performs game actions."), "Preview group", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
+                        if (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), support.createPreview(candidate.getTitle(null) + "\n" + candidate.getMode() + " · " + candidate.getSources().size() + " milestone(s)\nTargets: " + Arrays.toString(candidate.getTargets())), "Preview group", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
                             continue;
                         }
                         support.getClientThread().invokeLater(() -> {
@@ -286,7 +286,7 @@ public final class MilestoneEditActions {
                 support.getClientThread().invokeLater(() -> {
                     if (support.getProfile() == active && active.getGoals().contains(goal)) {
                         if (openedSchedule != RepeatSchedule.NONE && openedSchedule.getPeriodStart(System.currentTimeMillis()) != openedPeriod) {
-                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(support.getOwner()), "The period reset while you were editing. Reopen the editor to avoid applying the previous period's progress."));
+                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(support.getOwner()), "This routine reset while you were editing. Reopen the editor for the new period."));
                             support.render();
                             return;
                         }
@@ -309,7 +309,7 @@ public final class MilestoneEditActions {
     }
 
     private boolean confirmEdit(String title, Milestone original, Milestone replacement, RepeatSchedule before, RepeatSchedule after, long previousTarget, long nextTarget) {
-        String summary = title + " → " + replacement.getTitle(null) + "\nTarget: " + String.format(Locale.ROOT, "%,d → %,d", original.getProgressMaximum(), replacement.getProgressMaximum()) + "\nRepeat: " + before + " → " + after + "\nPeriod target: " + String.format(Locale.ROOT, "%,d → %,d", previousTarget, nextTarget) + "\n\nChanged subjects retain old observations in account history.\nChanged repeat settings archive the current observed period.";
+        String summary = title + " → " + replacement.getTitle(null) + "\nTarget: " + String.format(Locale.ROOT, "%,d → %,d", original.getProgressMaximum(), replacement.getProgressMaximum()) + "\nRepeat: " + before + " → " + after + "\nPeriod target: " + String.format(Locale.ROOT, "%,d → %,d", previousTarget, nextTarget) + "\n\nChanging routine settings saves this period and starts fresh.";
         JTextArea preview = new JTextArea(summary, 10, 38);
         preview.setEditable(false);
         preview.setLineWrap(true);
@@ -319,7 +319,7 @@ public final class MilestoneEditActions {
     }
 
     public void deleteMilestone(GrindstoneProfile active, Milestone goal, String title) {
-        if (support.getProfile() != active || JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), "Remove " + title + " from your milestones?\nYour game progress is unaffected.", "Delete milestone", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
+        if (support.getProfile() != active || JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), "Delete " + title + "?", "Delete milestone", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
             return;
         }
         support.getClientThread().invokeLater(() -> {
@@ -340,7 +340,7 @@ public final class MilestoneEditActions {
                 long requested = ((Number) value.getValue()).longValue();
                 changeManualProgress(active, goal, previous -> {
                     if (schedule != RepeatSchedule.NONE && schedule.getPeriodStart(System.currentTimeMillis()) != window) {
-                        throw new IllegalStateException("The period reset while this dialog was open. Reopen Set progress for the new period.");
+                        throw new IllegalStateException("This routine reset. Reopen Set progress for the new period.");
                     }
                     return requested;
                 });

@@ -32,7 +32,7 @@ public final class ChecklistMilestoneForm extends JPanel {
         setOpaque(false);
         description.setLineWrap(true);
         description.setWrapStyleWord(true);
-        steps.setToolTipText("One distinct step per line, up to 100. Each step is checked manually and performs no game action.");
+        steps.setToolTipText("One step per line, up to 100. Check off each step yourself.");
         add(field("Milestone name", title));
         add(field("Description (optional)", new JScrollPane(description)));
         add(field("Checklist steps (one per line)", new JScrollPane(steps)));

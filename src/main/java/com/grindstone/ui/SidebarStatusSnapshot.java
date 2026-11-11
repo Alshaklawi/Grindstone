@@ -53,7 +53,7 @@ final class SidebarStatusSnapshot {
                 }
             }
         }
-        String capturedCatchUp = "Progress since the previous Grindstone reading:\n\n" + String.join("\n", catchUp) + "\n\nUpdated from your character's available game data when you returned to RuneLite. Exact achievement times and gains across routine resets cannot be reconstructed. Open the collection log, bank or relevant activity interface to refresh data that is not loaded yet.";
+        String capturedCatchUp = "Progress since the previous Grindstone reading:\n\n" + String.join("\n", catchUp) + "\n\nUpdated when you returned to RuneLite. Open your collection log, bank or activity screen to refresh missing data.";
         return new SidebarStatusSnapshot(Collections.unmodifiableMap(new LinkedHashMap<>(snapshotStatuses)), Collections.unmodifiableMap(new LinkedHashMap<>(snapshotTips)), Collections.unmodifiableSet(new LinkedHashSet<>(missingSnapshots)), dueCount, catchUp.size(), capturedCatchUp);
     }
 
@@ -65,7 +65,7 @@ final class SidebarStatusSnapshot {
         if (bankCaptured == null) {
             missing.add("Bank");
         }
-        tips.put("Bank", "<html>Open your bank to refresh its contents.<br>" + (bankCaptured == null ? "No snapshot saved yet." : "Last updated " + time.format(bankCaptured) + (active.getPlayerStorage().isLoadedThisSession(PlayerStorageSource.BANK) ? " this login." : ". Saved from an earlier session; reopen to refresh.")) + "<br>Only this character's known contents are counted.</html>");
+        tips.put("Bank", "<html>Open your bank to refresh.<br>" + (bankCaptured == null ? "No saved contents yet." : "Last updated " + time.format(bankCaptured) + (active.getPlayerStorage().isLoadedThisSession(PlayerStorageSource.BANK) ? " this login." : " in a previous login.")) + "</html>");
         int known = active == null ? 0 : active.getCollectionLogHistory().getKnownUnlockCount();
         boolean live = active != null && client.getGameState() == GameState.LOGGED_IN && client.getAccountHash() == active.getHash();
         int total = live && client.getVarpValue(VarPlayerID.COLLECTION_COUNT_MAX) > 0 ? client.getVarpValue(VarPlayerID.COLLECTION_COUNT) : -1;
@@ -77,11 +77,11 @@ final class SidebarStatusSnapshot {
         if (!current) {
             missing.add("Collection log");
         }
-        String captured = complete ? "<br>Last verified: " + verificationTime.format(Instant.ofEpochMilli(active.getCollectionLogHistory().getSnapshotAt())) + "." : "<br>No full snapshot yet; collection milestones remain unavailable.";
-        tips.put("Collection log", "<html>Open your in-game collection log to capture available unlocks.<br>" + (current ? "Full snapshot verified: " + known + " unlocks." : "Incomplete data: " + known + " known unlocks" + (total < 0 ? "." : " out of " + total + ".") + "<br>The game may not expose every unlock just by opening the log.<br>Its Search interface can expose further collection data.") + captured + "<br>Reopen after playing on another device.</html>");
+        String captured = complete ? "<br>Last checked " + verificationTime.format(Instant.ofEpochMilli(active.getCollectionLogHistory().getSnapshotAt())) + "." : "<br>Load all unlocks to use collection milestones.";
+        tips.put("Collection log", "<html>" + (current ? known + " unlocks loaded. Reopen your collection log to refresh." : known + (total < 0 ? " unlocks loaded." : " / " + total + " unlocks loaded.") + "<br>Open your collection log. Use its Search if unlocks are missing.") + captured + "</html>");
         int loaded = 0;
         Instant latestOther = null;
-        StringBuilder other = new StringBuilder("<html>Open each storage in game to refresh it. Last known snapshots are saved between sessions; reopen storage to refresh.");
+        StringBuilder other = new StringBuilder("<html>Open storage in game to refresh its saved contents.");
         for (PlayerStorageSource source : PlayerStorageSource.values()) {
             if (source == PlayerStorageSource.INVENTORY || source == PlayerStorageSource.EQUIPMENT || source == PlayerStorageSource.BANK) {
                 continue;

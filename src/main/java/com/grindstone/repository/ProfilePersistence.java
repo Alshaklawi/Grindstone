@@ -96,7 +96,7 @@ public final class ProfilePersistence {
                 saved = syncedProfiles.read(profileKey);
                 if (profiles.joinSegment(hash + ".sync-pending").exists()) {
                     if (!profiles.joinSegment(hash + ".json").exists() && !profiles.joinSegment(hash + ".json.bak").exists()) {
-                        throw new IOException("The pending local profile is missing. Synced data has not been changed.");
+                        throw new IOException("Your local profile could not be found. Synced data is safe.");
                     }
                     JsonObject marker;
                     try {
@@ -274,13 +274,13 @@ public final class ProfilePersistence {
      */
     public static final class SyncConflictException extends IOException {
         public SyncConflictException() {
-            super("The synced profile changed on another device. Your local save has been kept; choose which profile to use.");
+            super("Another device changed this profile. Your local save is safe. Choose which version to use.");
         }
     }
 
     private static void requireProfileKey(String profileKey) throws IOException {
         if (profileKey == null) {
-            throw new IOException("RuneLite's character profile is not ready. The local save has been kept.");
+            throw new IOException("Your RuneLite profile is still loading. Your local save is safe.");
         }
     }
 
@@ -352,7 +352,7 @@ public final class ProfilePersistence {
      */
     public static final class SyncLimitException extends IOException {
         private SyncLimitException() {
-            super("Profile exceeds RuneLite's 262,000-character sync limit. A local recovery copy was saved.");
+            super("This profile is too large to sync. A local recovery copy was saved.");
         }
     }
 }

@@ -50,7 +50,7 @@ public final class CollectionLogTotalMilestone extends ClientCompletionMilestone
 
     @Override
     public String getDescription() {
-        return "Reach a total number of collection-log unlocks across all pages. Uses the game's total counter, not item quantities or a sum of page totals. Open your collection log if the total has not loaded.";
+        return "Tracks total collection-log unlocks. Open your collection log to refresh.";
     }
 
     @Override

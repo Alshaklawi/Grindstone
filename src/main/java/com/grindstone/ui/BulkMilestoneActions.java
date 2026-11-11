@@ -61,8 +61,8 @@ public final class BulkMilestoneActions {
                         long target = action == BulkMilestoneAction.SCHEDULE ? form.getPeriodTarget() : 1;
                         long deadlineAt = form.getDeadlineAt();
                         boolean reminder = form.isReminderEnabled();
-                        String details = action == BulkMilestoneAction.CATEGORY ? "\nCategory: " + category.getDisplayName() : action == BulkMilestoneAction.SCHEDULE ? "\nRepeat: " + schedule + " · target " + target + "\nChecklists require all their steps. Active manual progress resets when its period settings change." : action == BulkMilestoneAction.DEADLINE ? "\n" + (deadlineAt == 0 ? "Remove deadlines" : "Due at " + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'UTC'", Locale.ROOT).withZone(ZoneOffset.UTC).format(Instant.ofEpochMilli(deadlineAt))) : "";
-                        if (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), action + " · " + selected.size() + " milestones?" + details + (action == BulkMilestoneAction.DELETE ? "\nDeleting source milestones can make linked milestones unavailable.\nObserved history is archived." : "") + "\nThe action is validated before changes.", "Preview bulk action", JOptionPane.OK_CANCEL_OPTION, action == BulkMilestoneAction.DELETE ? JOptionPane.WARNING_MESSAGE : JOptionPane.QUESTION_MESSAGE) != JOptionPane.OK_OPTION) {
+                        String details = action == BulkMilestoneAction.CATEGORY ? "\nCategory: " + category.getDisplayName() : action == BulkMilestoneAction.SCHEDULE ? "\nRepeat: " + schedule + " · target " + target + "\nChecklists require every step. Changing period settings resets manual progress." : action == BulkMilestoneAction.DEADLINE ? "\n" + (deadlineAt == 0 ? "Remove deadlines" : "Due at " + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'UTC'", Locale.ROOT).withZone(ZoneOffset.UTC).format(Instant.ofEpochMilli(deadlineAt))) : "";
+                        if (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), action + " · " + selected.size() + " milestones?" + details + (action == BulkMilestoneAction.DELETE ? "\nGroups using deleted milestones will need updating. History is saved." : ""), "Preview bulk action", JOptionPane.OK_CANCEL_OPTION, action == BulkMilestoneAction.DELETE ? JOptionPane.WARNING_MESSAGE : JOptionPane.QUESTION_MESSAGE) != JOptionPane.OK_OPTION) {
                             continue;
                         }
                         support.getClientThread().invokeLater(() -> {
@@ -71,7 +71,7 @@ public final class BulkMilestoneActions {
                             }
                             try {
                                 if (active.getRevision() != revision) {
-                                    throw new IllegalArgumentException("Milestones changed while this manager was open. No changes applied; reopen it to review the current milestones.");
+                                    throw new IllegalArgumentException("Milestones changed. Reopen the manager to review them before applying changes.");
                                 }
                                 BulkMilestoneChanges.apply(active, selected, action, category, schedule, target, deadlineAt, reminder, System.currentTimeMillis());
                                 support.render();
@@ -104,7 +104,7 @@ public final class BulkMilestoneActions {
                 return;
             }
             SwingUtilities.invokeLater(() -> {
-                if (support.getProfile() != active || JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), "Remove all " + selected.size() + " milestones, including hidden milestones?\nRecorded history is retained within the 500-milestone archive limit.", "Clear all milestones", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
+                if (support.getProfile() != active || JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), "Delete all " + selected.size() + " milestones, including hidden ones?\nHistory keeps up to 500 deleted milestones.", "Clear all milestones", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION) {
                     return;
                 }
                 support.getClientThread().invokeLater(() -> {
@@ -112,7 +112,7 @@ public final class BulkMilestoneActions {
                         return;
                     }
                     if (active.getRevision() != revision) {
-                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(support.getOwner()), "Milestones changed while confirmation was open. Nothing was cleared; try again."));
+                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(support.getOwner()), "Milestones changed. Review them and try again."));
                         return;
                     }
                     BulkMilestoneChanges.apply(active, selected, BulkMilestoneAction.DELETE, null, RepeatSchedule.NONE, 1, 0, false, System.currentTimeMillis());

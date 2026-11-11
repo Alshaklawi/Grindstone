@@ -256,7 +256,7 @@ public class GrindstonePanel extends PluginPanel {
         titleRow.add(titleLabel, BorderLayout.CENTER);
         JButton add = new JButton("+ Add milestone");
         styleButton(add);
-        add.setToolTipText("Create an automatic tracker or a custom milestone with manual progress.");
+        add.setToolTipText("Track game progress or create a personal milestone.");
         add.getAccessibleContext().setAccessibleName("Add milestone");
         add.addActionListener(event -> creationActions.showAddMilestoneDialog());
         add.setAlignmentX(LEFT_ALIGNMENT);
@@ -289,12 +289,12 @@ public class GrindstonePanel extends PluginPanel {
         header.add(overallProgress);
         updateStatusLabel.setFont(UiTypography.META);
         updateStatusLabel.setAlignmentX(LEFT_ALIGNMENT);
-        updateStatusLabel.setToolTipText("Storage and save messages. Open Game data from the options menu for captured readings.");
+        updateStatusLabel.setToolTipText("Save status. Open Game data for storage and collection-log updates.");
         updateStatusLabel.setVisible(false);
         catchUpButton.setAlignmentX(LEFT_ALIGNMENT);
         catchUpButton.setFont(UiTypography.META);
         catchUpButton.setVisible(false);
-        catchUpButton.setToolTipText("Review progress discovered since your previous Grindstone reading, including play on mobile or another computer.");
+        catchUpButton.setToolTipText("Review progress since your previous visit.");
         catchUpButton.addActionListener(event -> {
             JTextArea details = new JTextArea(catchUpText, 12, 36);
             details.setEditable(false);
@@ -322,8 +322,8 @@ public class GrindstonePanel extends PluginPanel {
         ButtonGroup views = new ButtonGroup();
         views.add(todayButton);
         views.add(allMilestonesButton);
-        todayButton.setToolTipText("Focus on routines, ordered by next reset, with a period progress overview.");
-        allMilestonesButton.setToolTipText("Show milestones and routines with your usual filters.");
+        todayButton.setToolTipText("Show routines ordered by next reset.");
+        allMilestonesButton.setToolTipText("Show all milestones and routines.");
         todayButton.addActionListener(event -> {
             todayMode = true;
             render();
@@ -347,7 +347,7 @@ public class GrindstonePanel extends PluginPanel {
         boolean expanded = dashboardOverview.isVisible();
         dashboardToggle.setText(expanded ? "Hide game data" : "Game data");
         dashboardToggle.setIcon(expanded ? DATA_EXPANDED_ICON : DATA_COLLAPSED_ICON);
-        dashboardToggle.setToolTipText(expanded ? "Hide captured game data" : "Show captured game data and refresh instructions");
+        dashboardToggle.setToolTipText(expanded ? "Hide captured game data" : "Show game data and refresh tips");
         dashboardToggle.getAccessibleContext().setAccessibleName(expanded ? "Hide game data" : "Show game data");
     }
 
@@ -370,7 +370,7 @@ public class GrindstonePanel extends PluginPanel {
 
         searchField.setIcon(IconTextField.Icon.SEARCH);
         searchField.setFont(UiTypography.BODY);
-        UiTooltips.set(searchField, "Search titles, descriptions and categories. Every search word must match; word order does not matter.");
+        UiTooltips.set(searchField, "Search names, notes and categories. All search words must match.");
         searchField.setBackground(ColorScheme.DARKER_GRAY_COLOR);
         searchField.setHoverBackgroundColor(ColorScheme.DARKER_GRAY_HOVER_COLOR);
         searchField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
@@ -391,11 +391,11 @@ public class GrindstonePanel extends PluginPanel {
         styleComboBox(scheduleFilter);
         scheduleFilter.setAlignmentX(LEFT_ALIGNMENT);
         scheduleFilter.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
-        UiTooltips.set(scheduleFilter, "Show one-off milestones or milestones repeating daily, weekly or monthly.");
+        UiTooltips.set(scheduleFilter, "Filter by one-time, daily, weekly or monthly.");
         pinnedOnly.setOpaque(false);
         pinnedOnly.setFont(UiTypography.BODY);
         pinnedOnly.setAlignmentX(LEFT_ALIGNMENT);
-        pinnedOnly.setToolTipText("Show only milestones you pinned, without changing your pins or other filters.");
+        pinnedOnly.setToolTipText("Show pinned milestones only.");
         sortFilter.setModel(new DefaultComboBoxModel<>(new String[]{SORT_NAME, SORT_NAME_DESC, SORT_CLOSEST, SORT_PROGRESS_DESC, SORT_PROGRESS_ASC, SORT_STATUS}));
         typeFilter.setModel(new DefaultComboBoxModel<>(new String[]{ALL_TYPES, AUTOMATIC, CUSTOM, LINKED, BASE, SESSION, DEADLINES, PAST_DUE}));
         styleComboBox(typeFilter);
@@ -407,10 +407,10 @@ public class GrindstonePanel extends PluginPanel {
         statusFilter.setRenderer(new SidebarFilterRenderer("Status", statusCounts));
         statusFilter.getAccessibleContext().setAccessibleName("Milestone status");
         styleComboBox(sortFilter);
-        UiTooltips.set(categoryFilter, "Show milestones from one category, or choose All categories.");
-        UiTooltips.set(statusFilter, "Filter by progress state. Done shows only completed milestones, including routines hidden by settings.");
-        UiTooltips.set(sortFilter, "Sort within each category. Closest unfinished puts incomplete milestones nearest their target first.");
-        UiTooltips.set(typeFilter, "Custom includes manual checklists. Linked milestones combine existing trackers. Filter base stats, session gains or personal deadlines without deleting anything.");
+        UiTooltips.set(categoryFilter, "Filter by category.");
+        UiTooltips.set(statusFilter, "Done includes completed routines hidden by settings.");
+        UiTooltips.set(sortFilter, "Sort within each category. Closest unfinished shows targets nearest completion first.");
+        UiTooltips.set(typeFilter, "Filter by milestone type. Groups combine existing milestones.");
 
         categoryFilter.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
         statusFilter.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
@@ -471,7 +471,7 @@ public class GrindstonePanel extends PluginPanel {
         filterScroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 176));
         filterScroll.setVisible(false);
         styleButton(filtersToggle);
-        filtersToggle.setToolTipText("Show category, type, schedule, pin and sort options. The number includes search and active selections.");
+        filtersToggle.setToolTipText("Filter by category, type, schedule or pins. The count includes active search and filters.");
         filtersToggle.setAlignmentX(LEFT_ALIGNMENT);
         filtersToggle.addActionListener(event -> {
             boolean show = !filterScroll.isVisible();
@@ -666,7 +666,7 @@ public class GrindstonePanel extends PluginPanel {
                 catchUpButton.setVisible(status.getCatchUpCount() > 0);
                 updateStatusLabel.setText("<html>" + (storageStatus == null ? "" : HtmlUtils.escape(storageStatus) + "<br>") + (status.getDueCount() == 0 ? "" : status.getDueCount() + " personal deadline(s) due within 24h / past due<br>") + "</html>");
                 updateStatusLabel.setVisible(storageStatus != null || status.getDueCount() > 0);
-                updateStatusLabel.setToolTipText("Storage and save messages. Open Game data from the options menu for captured readings.");
+                updateStatusLabel.setToolTipText("Save status. Open Game data for storage and collection-log updates.");
                 List<MilestoneView> allGoals = new ArrayList<>(preparedViews.size());
                 for (Supplier<MilestoneView> prepared : preparedViews) {
                     allGoals.add(prepared.get());
@@ -866,7 +866,7 @@ public class GrindstonePanel extends PluginPanel {
         }
         listRenderer.render(currentProfile, allGoals, viewControls.capture(todayMode), searchField.getText());
         resultsLabel.setText(currentProfile == null || !config.enabled() ? "0 tracked" : "Showing " + listRenderer.getDisplayedCount() + " of " + allGoals.size());
-        resultsLabel.setToolTipText("Milestones matching your search, filters and visibility settings.");
+        resultsLabel.setToolTipText("Milestones matching your filters.");
     }
 
     public void showAddMilestoneDialog(Milestone initialGoal) {

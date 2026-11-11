@@ -62,7 +62,7 @@ public final class LinkedMilestoneForm extends JPanel {
         DefaultListCellRenderer sourceRenderer = new DefaultListCellRenderer();
         sourceRenderer.putClientProperty("html.disable", Boolean.TRUE);
         main.setRenderer(sourceRenderer);
-        model = new DefaultTableModel(new Object[]{"Use", "Source milestone", "Required reading"}, 0) {
+        model = new DefaultTableModel(new Object[]{"Use", "Milestone", "Target"}, 0) {
             @Override
             public Class<?> getColumnClass(int column) {
                 return column == 0 ? Boolean.class : column == 2 ? Long.class : String.class;
@@ -82,7 +82,7 @@ public final class LinkedMilestoneForm extends JPanel {
         table.setDefaultRenderer(String.class, textRenderer);
         table.setRowHeight(24);
         table.setFont(UiTypography.BODY);
-        table.setToolTipText("Select sources and edit their required readings. Targets are captured here; editing the source later does not silently change this plan.");
+        table.setToolTipText("Select milestones and set their targets. These targets stay fixed if you edit the original milestones.");
         table.getColumnModel().getColumn(0).setMaxWidth(44);
         sorter = new TableRowSorter<>(model);
         table.setRowSorter(sorter);
@@ -91,21 +91,21 @@ public final class LinkedMilestoneForm extends JPanel {
         JPanel sourceControls = new JPanel(new BorderLayout(0, 6));
         sourceControls.add(search, BorderLayout.NORTH);
         sourceControls.add(scroll, BorderLayout.CENTER);
-        search.setToolTipText("Search source milestones. Selections remain selected when filtered out.");
+        search.setToolTipText("Search milestones. Hidden selections stay checked.");
         notes.setLineWrap(true);
         notes.setWrapStyleWord(true);
         add(field("Group name", title));
         add(field("Description (optional)", new JScrollPane(notes)));
         add(field("Type", mode));
-        mainField = field("Main source (the milestone gated by prerequisites, or ladder/count source)", main);
-        milestonesField = field("Milestones, smallest first (comma separated)", milestones);
-        requiredField = field("Required milestones / completed periods", required);
-        sourcesField = field("Sources / prerequisites", sourceControls);
+        mainField = field("Main milestone", main);
+        milestonesField = field("Checkpoints (comma separated)", milestones);
+        requiredField = field("Required targets", required);
+        sourcesField = field("Milestones", sourceControls);
         add(mainField);
         add(milestonesField);
         add(requiredField);
         add(sourcesField);
-        JLabel hint = new JLabel("<html>Select existing milestones to group together. Add any missing milestones first.<br>Groups can contain individual milestones only.<br>Collection sets accept individual collection-item milestones only.<br>Repeat counts retain observed completed periods.</html>");
+        JLabel hint = new JLabel("<html>Add milestones first, then select them here. Groups cannot contain other groups.</html>");
         hint.setFont(UiTypography.META);
         hint.setAlignmentX(LEFT_ALIGNMENT);
         add(hint);
@@ -161,6 +161,8 @@ public final class LinkedMilestoneForm extends JPanel {
     private void refreshFields() {
         LinkedMilestone.Mode selected = (LinkedMilestone.Mode) mode.getSelectedItem();
         boolean single = selected == LinkedMilestone.Mode.MILESTONES || selected == LinkedMilestone.Mode.REPEAT_COMPLETIONS;
+        ((JLabel) requiredField.getComponent(0)).setText(selected == LinkedMilestone.Mode.REPEAT_COMPLETIONS ? "Completed periods" : "Required targets");
+        ((JLabel) sourcesField.getComponent(0)).setText(selected == LinkedMilestone.Mode.DEPENDENCY ? "Prerequisites" : "Milestones");
         mainField.setVisible(single || selected == LinkedMilestone.Mode.DEPENDENCY);
         milestonesField.setVisible(selected == LinkedMilestone.Mode.MILESTONES);
         requiredField.setVisible(selected == LinkedMilestone.Mode.ANY_OF || selected == LinkedMilestone.Mode.REPEAT_COMPLETIONS);
@@ -203,7 +205,7 @@ public final class LinkedMilestoneForm extends JPanel {
                 if (Boolean.TRUE.equals(model.getValueAt(i, 0)) && !ids.contains(choices.get(i).id)) {
                     requireLoadedTarget(choices.get(i));
                     if (selected == LinkedMilestone.Mode.COLLECTION_SET && !choices.get(i).collectionItem) {
-                        throw new IllegalArgumentException("Collection sets can reference only individual collection-item milestones.");
+                        throw new IllegalArgumentException("Collection sets require individual item-unlock milestones.");
                     }
                     ids.add(choices.get(i).id);
                     targets.add(((Number) model.getValueAt(i, 2)).longValue());
@@ -217,7 +219,7 @@ public final class LinkedMilestoneForm extends JPanel {
 
     private void requireLoadedTarget(Choice choice) {
         if (choice.target <= 0 && (original == null || !original.getSources().contains(choice.id))) {
-            throw new IllegalArgumentException("The native target for " + choice.title + " is not loaded. Open its native interface and reopen this editor before adding it as a source.");
+            throw new IllegalArgumentException(choice.title + " has no data yet. Open its in-game screen, then reopen this editor.");
         }
     }
 

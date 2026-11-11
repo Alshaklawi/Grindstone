@@ -26,7 +26,7 @@ public final class CombatAchievementTierMilestone extends ClientCompletionMilest
     }
     @Override
     public String getDescription() {
-        return "Reach the reward tier using points earned from tasks of any difficulty.";
+        return "Reach this reward tier with points from any task difficulty.";
     }
     @Override
     public MilestoneCategory getCategory() {

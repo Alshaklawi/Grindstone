@@ -241,6 +241,6 @@ public final class PlayerItemStorage {
                 .collect(Collectors.joining("; "));
         return (amounts.isEmpty() ? "No items found in known storage." : amounts + ".")
                 + (containers.containsKey(PlayerStorageSource.BANK) ? "" : " Open your bank to include it.")
-                + " Last known snapshots; reopen storage after playing on another device to refresh contents. Shared storage, GE offers, POH, deathpiles and unexposed storage are excluded.";
+                + " Reopen storage to refresh saved contents. Excludes shared storage, GE offers, POH storage and deathpiles.";
     }
 }

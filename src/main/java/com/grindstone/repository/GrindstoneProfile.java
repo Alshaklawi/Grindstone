@@ -264,7 +264,7 @@ public class GrindstoneProfile {
         }
         for (Milestone goal : goals) {
             if (goal != original && sameGoal(goal, replacement) && getMetadata(goal).getRecurring().getSchedule() == schedule) {
-                throw new IllegalArgumentException("That tracker and schedule are already tracked. Edit the existing milestone instead.");
+                throw new IllegalArgumentException("This milestone already has that schedule. Edit it to make changes.");
             }
         }
         MilestoneMetadata old = getMetadata(original);

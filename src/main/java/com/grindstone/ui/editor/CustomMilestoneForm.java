@@ -48,11 +48,11 @@ public final class CustomMilestoneForm extends JPanel {
         });
         current.setEditor(new JSpinner.NumberEditor(current, "#,##0"));
         target.setEditor(new JSpinner.NumberEditor(target, "#,##0"));
-        UiTooltips.set(title, "A short name for this personal milestone (1 to 80 characters).");
-        UiTooltips.set(description, "Optional notes, milestones or a plan (up to 2,000 characters). Descriptions are searchable.");
-        UiTooltips.set(category, "Choose where the milestone appears in the sidebar. This does not change how progress is tracked.");
-        UiTooltips.set(current, "Enter your manual progress, from zero to the target. Equal to the target marks this milestone complete.");
-        UiTooltips.set(target, "Set a positive target. Use 1 for a checklist milestone, then change progress to 1 when finished.");
+        UiTooltips.set(title, "Milestone name, up to 80 characters.");
+        UiTooltips.set(description, "Optional searchable notes, up to 2,000 characters.");
+        UiTooltips.set(category, "Choose a sidebar category.");
+        UiTooltips.set(current, "Enter progress from zero to the target.");
+        UiTooltips.set(target, "Set your target. Use 1 for a single task.");
         addField("Title (required, up to 80 characters)", title);
         addField("Description (optional, up to 2,000 characters)", notes);
         addField("Category", category);

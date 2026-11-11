@@ -1,7 +1,6 @@
 package com.grindstone.ui.editor;
 
 import com.grindstone.content.collectionlog.CollectionLogPages;
-import com.grindstone.content.milestone.ManualMilestone;
 import com.grindstone.content.milestone.Milestone;
 import com.grindstone.content.milestone.impl.ChecklistMilestone;
 import com.grindstone.content.milestone.impl.CustomMilestone;
@@ -120,8 +119,8 @@ public final class MilestoneEditorPanel extends JPanel {
         row.add(status, BorderLayout.CENTER);
         JButton info = new JButton("i");
         info.setMargin(new Insets(1, 6, 1, 6));
-        String captured = collectionSnapshotAt > 0 ? "<br>Last full capture: " + DateTimeFormatter.ofPattern("MMM d, HH:mm").withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(collectionSnapshotAt)) + "." : "<br>No verified full snapshot yet.";
-        String tip = "<html>Open your in-game collection log to capture available unlocks.<br>A full snapshot must match the game's total before adding collection milestones." + captured + "<br>See dashboard Snapshots for incomplete data and refresh tips.</html>";
+        String captured = collectionSnapshotAt > 0 ? "<br>Last checked " + DateTimeFormatter.ofPattern("MMM d, HH:mm").withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(collectionSnapshotAt)) + "." : "";
+        String tip = "<html>Open your collection log to load all unlocks before adding milestones." + captured + "<br>See Game data for loading progress.</html>";
         info.setToolTipText(tip);
         info.getAccessibleContext().setAccessibleName("Collection log snapshot information");
         status.setToolTipText(tip);
@@ -160,14 +159,15 @@ public final class MilestoneEditorPanel extends JPanel {
         }
         StringBuilder text = new StringBuilder(name).append('\n');
         text.append("Type: ").append(type.getSelectedItem()).append('\n');
-        text.append("Target: ").append(goal.getProgressMaximum() > 0 ? String.format(Locale.ROOT, "%,d", goal.getProgressMaximum()) : "native completion; reading loads after saving").append('\n');
+        text.append("Target: ").append(goal.getProgressMaximum() > 0 ? String.format(Locale.ROOT, "%,d", goal.getProgressMaximum()) : "Complete in game").append('\n');
         text.append("Repeat: ").append(getRepeatSchedule());
         if (getRepeatSchedule() != RepeatSchedule.NONE) {
             text.append(" · ").append(String.format(Locale.ROOT, "%,d per period", getRepeatTarget()));
         }
         boolean duplicate = existingGoals != null && existingGoals.entrySet().stream().anyMatch(entry -> entry.getValue() == getRepeatSchedule() && GrindstoneProfile.sameSelection(goal, entry.getKey()));
-        text.append("\n\n").append(duplicate ? "A matching tracker and schedule existed when this editor opened. You will be asked before changing its target; no duplicate is added." : "This adds a new milestone. Matching trackers are checked again before saving.");
-        text.append("\n\n").append(goal instanceof ManualMilestone ? "Manual progress only. Grindstone never performs game actions." : "Client progress starts after saving. Some counters, storage and collection logs need their native interface opened. Unavailable readings are not confirmed zero.");
+        if (duplicate) {
+            text.append("\n\nThis milestone already exists. You can update its target.");
+        }
         if (!goal.getDescription().isEmpty()) {
             text.append("\n\n").append(goal.getDescription());
         }
@@ -185,8 +185,8 @@ public final class MilestoneEditorPanel extends JPanel {
         this.itemManager = itemManager;
         itemPicker = new ItemPickerPanel(searchService, selection -> notifyReadiness());
         setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
-        UiTooltips.set(type, "Choose a milestone type. The form will show only the relevant fields.");
-        UiTooltips.set(subject, "Choose the skill, activity or collection-log page to track.");
+        UiTooltips.set(type, "Choose what to track.");
+        UiTooltips.set(subject, "Choose a skill, activity or collection-log page.");
         add(new MilestoneTypePicker(type, kind -> !completionChoices.containsKey(kind) || !completionChoices.get(kind).isEmpty()), BorderLayout.NORTH);
         body.setOpaque(false);
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
@@ -239,7 +239,7 @@ public final class MilestoneEditorPanel extends JPanel {
         }
         if (needsCollectionSnapshot()) {
             repeatForm.setVisible(false);
-            setHint("Open your in-game collection log, then reopen Add milestone after a full snapshot is captured. Check Snapshots on the dashboard for capture progress.");
+            setHint("Open your collection log, then reopen Add milestone. Check Game data for loading progress.");
             body.add(hint);
             notifyReadiness();
             revalidate();
@@ -250,12 +250,12 @@ public final class MilestoneEditorPanel extends JPanel {
         if (kind == MilestoneType.CHECKLIST) {
             checklistForm.setAlignmentX(LEFT_ALIGNMENT);
             body.add(checklistForm);
-            setHint("Check each step manually. Daily, weekly and monthly routines require every step, reset at the next UTC period and keep observed history. No game actions are performed.");
+            setHint("");
         } else if (kind == MilestoneType.CUSTOM) {
             customForm.setRecurring(repeatForm.getSchedule() != RepeatSchedule.NONE);
             customForm.setAlignmentX(LEFT_ALIGNMENT);
             body.add(customForm);
-            setHint("Write your own milestone. You control its progress and can edit its details later.");
+            setHint("");
         } else if (kind == MilestoneType.COLLECTION_ITEM || kind == MilestoneType.OWNED_ITEM) {
             itemPicker.setAlignmentX(LEFT_ALIGNMENT);
             body.add(itemPicker);
@@ -277,7 +277,7 @@ public final class MilestoneEditorPanel extends JPanel {
                 quantity.add(presets, BorderLayout.SOUTH);
                 body.add(quantity);
             }
-            setHint(kind == MilestoneType.OWNED_ITEM ? "Counts the selected item across known personal storage, including coins in supported coffers. Open your bank and other storage to load them. This is item quantity, not bank value. Shared storage and unexposed locations are excluded." : "Tracks collection-log unlocks and first-seen dates, not inventory or bank quantities. Choose an item that belongs to the collection log.");
+            setHint(kind == MilestoneType.OWNED_ITEM ? "Counts items in known storage. Open your bank and other storage to refresh." : "Choose a collection-log item. Open your collection log to refresh unlocks.");
         } else {
             populateChoices(kind);
             updating = true;
@@ -299,21 +299,21 @@ public final class MilestoneEditorPanel extends JPanel {
             }
             updatePreview();
             body.add(preview);
-            setHint(kind.isClientType() ? (choices.isEmpty() ? "Client data is not ready. Log in and reopen this dialog." : "Progress reads your logged-in character automatically. Completion milestones have no manual target.") : kind == MilestoneType.COLLECTION_PAGE ? "Open your in-game collection log to refresh unlocks. Each item keeps its first-seen date." : kind == MilestoneType.BOSS_KILLS ? "Progress reads your character's activity count automatically." : kind == MilestoneType.SKILL_EXPERIENCE || kind == MilestoneType.TOTAL_EXPERIENCE ? "Progress reads your character's real experience automatically." : "Uses real levels. Temporary boosts do not advance level milestones.");
+            setHint(kind.isClientType() ? (choices.isEmpty() ? "Client data is not ready. Log in and reopen this dialog." : "Progress updates automatically. Completion targets are set by the game.") : kind == MilestoneType.COLLECTION_PAGE ? "Open your collection log to refresh unlocks." : kind == MilestoneType.BOSS_KILLS ? "Progress reads your character's activity count automatically." : kind == MilestoneType.SKILL_EXPERIENCE || kind == MilestoneType.TOTAL_EXPERIENCE ? "Progress reads your character's real experience automatically." : "Uses real levels. Temporary boosts do not advance level milestones.");
             if (CompletionMilestoneChoices.isActivityType(kind)) {
-                setHint("Uses your character's client-reported activity counter. Open the relevant in-game interface if the reading has not loaded. Repeating routines count gains from their captured baseline.");
+                setHint("Tracks your activity total. Open its in-game screen to refresh. Routines count new completions each period.");
             }
             if (kind == MilestoneType.COLLECTION_TAB) {
-                setHint("Complete a whole collection-log tab. Each distinct unlock counts once across its pages; duplicate drops do not add progress.");
+                setHint("Complete all unlocks in a collection-log tab. Each item counts once.");
             }
             if (kind == MilestoneType.COLLECTION_TOTAL) {
-                setHint("Counts total collection-log unlocks across all pages. Open your collection log if the total has not loaded. Each unlock counts once; duplicate item quantities do not add progress.");
+                setHint("Tracks total collection-log unlocks. Open your collection log to refresh.");
             }
             if (kind == MilestoneType.BASE_LEVEL || kind == MilestoneType.BASE_EXPERIENCE) {
                 setHint("Every skill must reach this target. The bar shows your lowest " + (kind == MilestoneType.BASE_LEVEL ? "real skill level; temporary boosts do not count." : "skill XP, not total or average experience."));
             }
             if (kind == MilestoneType.SESSION_EXPERIENCE) {
-                setHint("Counts observed XP gains this login, not existing XP. Relogging or reconnecting resets it. For daily or weekly gains, choose Skill experience with a repeat schedule instead.");
+                setHint("Tracks XP gained this login. Relogging or reconnecting clears progress.");
             }
         }
         repeatForm.setVisible(kind == MilestoneType.SKILL_EXPERIENCE || kind == MilestoneType.TOTAL_EXPERIENCE || CompletionMilestoneChoices.isActivityType(kind) || kind == MilestoneType.CUSTOM || kind == MilestoneType.CHECKLIST);
@@ -469,12 +469,13 @@ public final class MilestoneEditorPanel extends JPanel {
             return;
         }
         Milestone sample = choices.get(name).get();
-        UiTooltips.set(subject, sample.getDescription().isEmpty() ? "Choose the milestone to track on your character." : sample.getDescription());
+        UiTooltips.set(subject, sample.getDescription().isEmpty() ? "Choose a milestone." : sample.getDescription());
         String detail = sample.supportsTarget() ? String.format(Locale.ROOT, "Target: %,d", ((Number) target.getValue()).longValue()) : sample.getTitle(null);
         preview.setText("<html><b>" + HtmlUtils.escape(name) + "</b><br>" + detail + "</html>");
     }
 
     private void setHint(String text) {
+        hint.setVisible(!text.isEmpty());
         hint.setText("<html><div style='width: 350px'>" + HtmlUtils.escape(text) + "</div></html>");
     }
 
@@ -492,7 +493,7 @@ public final class MilestoneEditorPanel extends JPanel {
 
     public Milestone createMilestone() throws ParseException {
         if (needsCollectionSnapshot()) {
-            throw new IllegalArgumentException("Capture a full collection-log snapshot before adding collection milestones.");
+            throw new IllegalArgumentException("Open your collection log to load all unlocks first.");
         }
         if (getSelectedType() == MilestoneType.CHECKLIST) {
             repeatForm.commit();

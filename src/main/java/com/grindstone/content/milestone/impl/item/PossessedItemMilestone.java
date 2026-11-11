@@ -72,7 +72,7 @@ public final class PossessedItemMilestone implements Milestone {
     }
     @Override
     public String getDescription() {
-        return "Normal and noted quantities are combined; bank placeholders are excluded. " + (storage == null ? "Open your bank and item storage to include their contents." : storage.describe(normalizedItem > 0 ? normalizedItem : item));
+        return "Counts normal and noted items. Ignores placeholders. " + (storage == null ? "Open your bank and item storage to include their contents." : storage.describe(normalizedItem > 0 ? normalizedItem : item));
     }
     @Override
     public String getCardDescription() {

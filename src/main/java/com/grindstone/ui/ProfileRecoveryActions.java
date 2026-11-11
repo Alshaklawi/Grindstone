@@ -51,7 +51,7 @@ public final class ProfileRecoveryActions {
             }
             List<Object> choices = new ArrayList<>(state.getOptions());
             choices.add("Import backup...");
-            Object selected = JOptionPane.showInputDialog(DialogPlacement.getOwner(owner), "Choose the profile to use. Existing local and synced versions will be kept as recovery copies.", "Recover profile", JOptionPane.QUESTION_MESSAGE, null, choices.toArray(), choices.get(0));
+            Object selected = JOptionPane.showInputDialog(DialogPlacement.getOwner(owner), "Choose a profile version. Both versions are kept as recovery copies.", "Recover profile", JOptionPane.QUESTION_MESSAGE, null, choices.toArray(), choices.get(0));
             if (selected == null || !live.getAsBoolean()) {
                 return;
             }

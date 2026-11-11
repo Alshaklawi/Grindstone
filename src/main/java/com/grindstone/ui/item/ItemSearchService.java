@@ -123,7 +123,7 @@ public final class ItemSearchService implements ItemLookup {
                 if (result != null) {
                     found.add(withImage(result));
                 }
-                deliver(cancelled, callback, new Response(found, result == null ? "That ID has no usable item definition." : result.id != id ? "Variant resolved to its normal item. Noted and normal quantities are tracked together." : "Item ID resolved. Confirm its name and icon below.", true));
+                deliver(cancelled, callback, new Response(found, result == null ? "That ID has no usable item definition." : result.id != id ? "Normal and noted quantities are counted together." : "Item ID resolved. Confirm its name and icon below.", true));
                 return true;
             }
             if (query.length() < 2) {

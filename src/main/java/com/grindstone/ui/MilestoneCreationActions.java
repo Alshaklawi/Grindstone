@@ -115,7 +115,7 @@ public final class MilestoneCreationActions {
                 return;
             }
             if (!active.getCollectionLogHistory().hasSnapshot()) {
-                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(support.getOwner()), "First open your in-game collection log to load a full snapshot. Then add collection-log milestones once the snapshot is complete."));
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(support.getOwner()), "Open your collection log to load all unlocks, then try again."));
                 return;
             }
             Map<Integer, String> pages = CollectionLogPages.discover(support.getClient());
@@ -233,12 +233,12 @@ public final class MilestoneCreationActions {
                 return;
             }
             if (isCollectionLogMilestone(candidate) && !(candidate instanceof CollectionLogTotalMilestone) && !active.getCollectionLogHistory().hasSnapshot()) {
-                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(support.getOwner()), "A full collection-log snapshot is required before adding collection milestones. Open your collection log to capture it automatically."));
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(support.getOwner()), "Open your collection log to load all unlocks, then try again."));
                 return;
             }
             Milestone existing = active.findMatchingGoal(candidate, schedule);
             if (existing == null && active.getGoals().size() >= GrindstoneRepository.MAX_MILESTONES) {
-                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(support.getOwner()), "This profile has reached its milestone limit. Remove an entry before adding another."));
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(DialogPlacement.getOwner(support.getOwner()), "Milestone limit reached. Remove a milestone to add another."));
                 return;
             }
             if (existing != null) {
@@ -250,7 +250,7 @@ public final class MilestoneCreationActions {
                         return;
                     }
                     if (existing.supportsTarget()) {
-                        if (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), title + " is already tracked.\nUpdate its target from " + String.format(Locale.ROOT, "%,d to %,d?", oldTarget, newTarget) + "\nRepeat: " + schedule + (schedule == RepeatSchedule.NONE ? " (lifetime tracking)" : String.format(Locale.ROOT, " · %,d per period", periodTarget)) + "\nChanging repeat settings archives the current observed period.", "Update existing milestone", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION) {
+                        if (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), title + " is already tracked.\nUpdate its target from " + String.format(Locale.ROOT, "%,d to %,d?", oldTarget, newTarget) + "\nRepeat: " + schedule + (schedule == RepeatSchedule.NONE ? "" : String.format(Locale.ROOT, " · %,d per period", periodTarget)) + "\nChanging routine settings saves this period and starts fresh.", "Update existing milestone", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION) {
                             support.getClientThread().invokeLater(() -> {
                                 if (support.getProfile() == active && active.getGoals().contains(existing)) {
                                     existing.setTarget(newTarget);
@@ -271,7 +271,7 @@ public final class MilestoneCreationActions {
                 if ((diary || quest) && candidate.getStatus() == MilestoneStatus.COMPLETE) {
                     SwingUtilities.invokeLater(() -> {
                         if (support.getProfile() == active) {
-                            JOptionPane.showMessageDialog(DialogPlacement.getOwner(support.getOwner()), diary ? "This achievement diary is already complete. Choose an unfinished diary to track." : "This quest or quest series is already complete. Choose an unfinished quest to track.");
+                            JOptionPane.showMessageDialog(DialogPlacement.getOwner(support.getOwner()), diary ? "This diary is already complete. Choose an unfinished diary." : "This quest is already complete. Choose an unfinished quest.");
                         }
                     });
                     return;

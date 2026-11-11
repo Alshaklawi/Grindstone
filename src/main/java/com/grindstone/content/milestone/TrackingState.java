@@ -14,14 +14,14 @@ import lombok.Getter;
  */
 public enum TrackingState {
     MANUAL("Manual progress", "Progress is entered by you. Grindstone does not perform game actions."),
-    LINKED("Linked tracker readings", "Uses selected local trackers and captured targets. Collection sources count observed unlocks, not confirmed absence; owned items use known storage, not guaranteed all-storage totals. Missing sources are unavailable. Repeat counts cover observed completed periods; prerequisites never gate gameplay."),
-    LIVE("Live client read", "Read from the logged-in client. Only data exposed by the client can be tracked."),
-    COUNTER("Client-reported counter", "Uses the client's activity total. Some counters require opening the native activity interface or completing that activity to refresh; a client-reported zero is not proof of a fully synchronized server total."),
-    WAITING("Waiting for data", "Log in or open the relevant native interface. No confirmed zero is assumed while data is unavailable."),
-    PARTIAL_STORAGE("Partial known storage", "No bank snapshot has been saved yet. Counts cover known storage only, not all possible player storage."),
-    SNAPSHOT("Known storage snapshot", "Last known personal storage contents, not a live all-storage guarantee. Reopen storage to refresh it."),
-    OBSERVED_LOG("Observed unlocks", "Only known collection-log observations are counted. Zero observed does not prove an item is unobtained; open your collection log to refresh known unlocks."),
-    LATE_BASELINE("Captured-period gains", "The baseline was captured after the period began. Only gains since that observation are counted; offline progress across a reset cannot be attributed exactly.");
+    LINKED("Group progress", "Combines selected milestones using this group's targets."),
+    LIVE("Live progress", "Progress updates while logged in."),
+    COUNTER("Activity count", "Tracks your activity total. Open its in-game screen or complete the activity to refresh."),
+    WAITING("Waiting for data", "Log in or open the relevant in-game screen to load progress."),
+    PARTIAL_STORAGE("Bank data missing", "Bank data is missing. Open your bank to include its contents."),
+    SNAPSHOT("Saved storage", "Uses saved storage contents. Reopen storage to refresh."),
+    OBSERVED_LOG("Collection unlocks", "Tracks recorded collection-log unlocks. Open your collection log to refresh."),
+    LATE_BASELINE("Partial period", "Tracking started partway through this period. Only progress recorded since then is counted.");
     @Getter
     private final String label;
     @Getter

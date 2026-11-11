@@ -31,7 +31,7 @@ public final class RoutinePresetForm extends JPanel {
     public RoutinePresetForm(boolean weekly) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         schedule.setSelectedItem(weekly ? RepeatSchedule.WEEKLY : RepeatSchedule.DAILY);
-        schedule.setToolTipText("Choose the schedule for this routine. Native activity reset rules are not changed.");
+        schedule.setToolTipText("Choose when this routine resets in Grindstone.");
         add(new JLabel("Preview your routine · choose milestones and edit targets"));
         add(Box.createVerticalStrut(8));
         add(schedule);
@@ -47,7 +47,7 @@ public final class RoutinePresetForm extends JPanel {
         }
         String id = UUID.nameUUIDFromBytes(("grindstone-routine-" + weekly).getBytes(StandardCharsets.UTF_8)).toString();
         addRow(new CustomMilestone(id, "Personal challenge", "Edit this routine to describe your own activity.", MilestoneCategory.OTHER, 0, 1), 1);
-        JLabel note = new JLabel("<html>Existing tracker/schedule matches are skipped, not overwritten.<br>Targets count gains per UTC period. You can edit each milestone afterward.</html>");
+        JLabel note = new JLabel("<html>Existing milestones are kept. Targets count new progress each UTC period.</html>");
         note.setFont(FontManager.getRunescapeSmallFont());
         add(Box.createVerticalStrut(8));
         add(note);
@@ -91,11 +91,11 @@ public final class RoutinePresetForm extends JPanel {
             this.goal = goal;
             enabled = new JCheckBox(goal.getTitle(null), true);
             enabled.setFont(FontManager.getRunescapeFont());
-            enabled.setToolTipText("Include this milestone in the routine, or uncheck to skip it.");
+            enabled.setToolTipText("Include this milestone.");
             this.target = new JSpinner(new SpinnerNumberModel(target, 1L, (long) Integer.MAX_VALUE, 1L));
             this.target.setEditor(new JSpinner.NumberEditor(this.target, "#,##0"));
             this.target.setPreferredSize(new Dimension(120, 28));
-            this.target.setToolTipText("Required progress per period. Edit this before adding the routine.");
+            this.target.setToolTipText("Target for each period.");
             enabled.addActionListener(event -> this.target.setEnabled(enabled.isSelected()));
             panel.setOpaque(false);
             panel.add(enabled, BorderLayout.CENTER);

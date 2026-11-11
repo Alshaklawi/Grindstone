@@ -83,11 +83,11 @@ public final class GrindstoneRepository {
         requireHash(hash);
         JsonObject json = new JsonParser().parse(text).getAsJsonObject();
         if (!json.has("hash") || json.get("hash").getAsLong() != hash || !json.has("goals") || !json.get("goals").isJsonArray() || json.getAsJsonArray("goals").size() > MAX_MILESTONES) {
-            throw new IOException("This profile does not belong to the current account or has invalid milestone data.");
+            throw new IOException("This profile belongs to another account or contains invalid milestones.");
         }
         GrindstoneProfile profile = decode(json, true);
         if (profile.getGoals().size() != json.getAsJsonArray("goals").size()) {
-            throw new IOException("The profile contains unsupported or invalid milestones. The original file has not been changed.");
+            throw new IOException("This profile contains invalid or unsupported milestones. Your saved file is safe.");
         }
         return profile;
     }
@@ -115,7 +115,7 @@ public final class GrindstoneRepository {
         requireHash(hash);
         String text = snapshot.toString();
         if (text.length() > MAX_PROFILE_BYTES || text.getBytes(StandardCharsets.UTF_8).length > MAX_PROFILE_BYTES) {
-            throw new IOException("The profile exceeds the save size limit. The previous save has not been changed.");
+            throw new IOException("This profile is too large to save. Your previous save is safe.");
         }
         readProfile(text, hash);
         directory.createDirectories();
@@ -509,7 +509,7 @@ public final class GrindstoneRepository {
         }
         GrindstoneProfile restored = decode(json, true);
         if (restored.getGoals().size() != json.getAsJsonArray("goals").size()) {
-            throw new IllegalArgumentException("Backup contains invalid or unsupported milestones. No milestones were imported.");
+            throw new IllegalArgumentException("This backup contains invalid or unsupported milestones. Import cancelled.");
         }
         return restored;
     }
