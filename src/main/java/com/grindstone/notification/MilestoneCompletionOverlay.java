@@ -56,7 +56,7 @@ public final class MilestoneCompletionOverlay extends Overlay {
     }
 
     public synchronized void show(List<CompletionOverlayEntry> entries, boolean routinesOnly) {
-        if (!config.enabled() || !config.completionPopup()) {
+        if (!config.completionPopup()) {
             clear();
             return;
         }
@@ -84,9 +84,6 @@ public final class MilestoneCompletionOverlay extends Overlay {
     }
 
     public synchronized void preview() {
-        if (!config.enabled()) {
-            return;
-        }
         clear();
         List<CompletionOverlayEntry> entries = List.of(new CompletionOverlayEntry("preview", "The Fractured Archive", "5 raids completed", Icon.RAIDS.getImage()));
         popup = createPopup(entries, false, clock.getAsLong(), true);
@@ -99,7 +96,7 @@ public final class MilestoneCompletionOverlay extends Overlay {
     }
 
     private synchronized Popup advancePopup(long now) {
-        if (!config.enabled() || (!config.completionPopup() && (popup == null || !popup.preview))) {
+        if (!config.completionPopup() && (popup == null || !popup.preview)) {
             clear();
             return null;
         }

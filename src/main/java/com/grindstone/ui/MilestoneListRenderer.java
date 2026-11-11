@@ -128,15 +128,6 @@ final class MilestoneListRenderer extends JPanel {
             return;
         }
 
-        if (!config.enabled()) {
-            main.removeAll();
-            layoutKey = null;
-
-            addMessage("Grindstone is disabled", "Enable Grindstone in settings to see your milestones.");
-            refreshPanel();
-            return;
-        }
-
         preparedGoals = allGoals;
 
         List<MilestoneView> filteredGoals = MilestoneFilters.filter(allGoals, viewState, config.hideCompletedGoals(), query);

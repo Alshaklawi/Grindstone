@@ -60,7 +60,7 @@ public final class GrindstoneProgressOverlay extends Overlay {
     }
 
     public void update(List<ProgressOverlayEntry> entries, int canvasHeight) {
-        if (!config.enabled() || !config.progressOverlayEnabled()) {
+        if (!config.progressOverlayEnabled()) {
             clear();
             return;
         }
@@ -121,7 +121,7 @@ public final class GrindstoneProgressOverlay extends Overlay {
     @Override
     public Dimension render(Graphics2D graphics) {
         Snapshot current = snapshot;
-        if (!config.enabled() || !config.progressOverlayEnabled() || current == null || current.entries.isEmpty()) {
+        if (!config.progressOverlayEnabled() || current == null || current.entries.isEmpty()) {
             return null;
         }
         RenderCache cache = current.cache;

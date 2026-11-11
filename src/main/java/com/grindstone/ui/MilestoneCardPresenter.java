@@ -76,7 +76,7 @@ final class MilestoneCardPresenter {
 
     List<Supplier<MilestoneView>> prepare(GrindstoneProfile currentProfile, boolean loggedIn, long now, boolean captureOverlay, List<ProgressOverlayEntry> overlayEntries) {
         List<Supplier<MilestoneView>> preparedViews = new ArrayList<>();
-        if (currentProfile == null || !config.enabled()) {
+        if (currentProfile == null) {
             return preparedViews;
         }
         cardCache.retain(currentProfile.getGoals());

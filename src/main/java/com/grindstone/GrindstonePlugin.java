@@ -183,11 +183,9 @@ public class GrindstonePlugin extends Plugin {
                 .panel(panel)
                 .build();
 
-        if (config.enabled()) {
-            clientToolbar.addNavigation(navigationButton);
-        }
+        clientToolbar.addNavigation(navigationButton);
 
-        if (client.getGameState() == GameState.LOGGED_IN && config.enabled()) {
+        if (client.getGameState() == GameState.LOGGED_IN) {
             loadProfile();
         }
     }
@@ -220,7 +218,7 @@ public class GrindstonePlugin extends Plugin {
             progressOverlay.clear();
         }
 
-        if (state == GameState.LOGGED_IN && config.enabled()) {
+        if (state == GameState.LOGGED_IN) {
             loadProfile();
             panel.render();
         } else if (state == GameState.LOGIN_SCREEN || state == GameState.CONNECTION_LOST) {
@@ -250,28 +248,17 @@ public class GrindstonePlugin extends Plugin {
     }
 
     private void applyConfigChange(String key) {
-        migrateOverlayThemes(configManager);
+        migrateConfiguration(configManager);
         if (!running) {
             return;
         }
-        if (!config.enabled()) {
-            completionNotifications.stop();
-            saveProfile();
-            loadGeneration.incrementAndGet();
-            loadingHash = 0;
-            profile = null;
-            panel.unload();
-            setNavigationVisible(false);
-            return;
-        }
-
         setNavigationVisible(true);
 
         if ("completionPopup".equals(key)) {
             completionOverlay.clear();
         }
 
-        if (client.getGameState() == GameState.LOGGED_IN && (profile == null || "enabled".equals(key))) {
+        if (client.getGameState() == GameState.LOGGED_IN && profile == null) {
             loadProfile();
         } else {
             panel.render();
@@ -538,7 +525,7 @@ public class GrindstonePlugin extends Plugin {
         }
         GrindstoneProfile active = profile;
         SwingUtilities.invokeLater(() -> {
-            if (running && config.enabled() && profile == active) {
+            if (running && profile == active) {
                 panel.showAddMilestoneDialog(selection);
             }
         });
@@ -878,12 +865,12 @@ public class GrindstonePlugin extends Plugin {
     }
 
     private boolean hasActivePlayerProfile() {
-        return running && config.enabled() && profile != null && client.getGameState() == GameState.LOGGED_IN && client.getLocalPlayer() != null && profile.getHash() == client.getAccountHash();
+        return running && profile != null && client.getGameState() == GameState.LOGGED_IN && client.getLocalPlayer() != null && profile.getHash() == client.getAccountHash();
     }
 
     private void loadProfile() {
         clientThread.invokeLater(() -> {
-            if (!running || !config.enabled() || client.getGameState() != GameState.LOGGED_IN) {
+            if (!running || client.getGameState() != GameState.LOGGED_IN) {
                 return true;
             }
             if (client.getLocalPlayer() == null || client.getAccountHash() == 0) {
@@ -895,7 +882,7 @@ public class GrindstonePlugin extends Plugin {
     }
 
     private void loadReadyProfile() {
-        if (!running || !config.enabled() || client.getGameState() != GameState.LOGGED_IN || client.getLocalPlayer() == null) {
+        if (!running || client.getGameState() != GameState.LOGGED_IN || client.getLocalPlayer() == null) {
             return;
         }
         long hash = client.getAccountHash();
@@ -917,7 +904,7 @@ public class GrindstonePlugin extends Plugin {
         loadingHash = hash;
         panel.setStorageStatus("Loading saved profile…");
         persistence.load(hash).whenComplete((loaded, failure) -> clientThread.invokeLater(() -> {
-            if (!running || token != loadGeneration.get() || !config.enabled() || client.getGameState() != GameState.LOGGED_IN || client.getAccountHash() != hash || client.getLocalPlayer() == null) {
+            if (!running || token != loadGeneration.get() || client.getGameState() != GameState.LOGGED_IN || client.getAccountHash() != hash || client.getLocalPlayer() == null) {
                 return;
             }
             loadingHash = 0;
@@ -1038,7 +1025,7 @@ public class GrindstonePlugin extends Plugin {
     private void offerRecovery(long hash, String message) {
         int token = loadGeneration.get();
         panel.setStorageStatus(message);
-        Runnable show = () -> recoveryActions.show(panel, hash, () -> running && config.enabled() && loadGeneration.get() == token, restored -> {
+        Runnable show = () -> recoveryActions.show(panel, hash, () -> running && loadGeneration.get() == token, restored -> {
             if (running && client.getGameState() == GameState.LOGGED_IN && client.getAccountHash() == hash && loadGeneration.get() == token) {
                 activateProfile(restored);
             }
@@ -1082,7 +1069,10 @@ public class GrindstonePlugin extends Plugin {
         return ImageUtil.loadImageResource(GrindstonePlugin.class, "grindstone.png");
     }
 
-    private static void migrateOverlayThemes(ConfigManager configManager) {
+    private static void migrateConfiguration(ConfigManager configManager) {
+        if (configManager.getConfiguration(GrindstoneConfig.GROUP, "enabled") != null) {
+            configManager.unsetConfiguration(GrindstoneConfig.GROUP, "enabled");
+        }
         if ("FOCUS".equals(configManager.getConfiguration(GrindstoneConfig.GROUP, "progressOverlayTheme"))) {
             configManager.setConfiguration(GrindstoneConfig.GROUP, "progressOverlayTheme", "GUILD");
         }
@@ -1094,7 +1084,7 @@ public class GrindstonePlugin extends Plugin {
 
     @Provides
     GrindstoneConfig provideConfig(ConfigManager configManager) {
-        migrateOverlayThemes(configManager);
+        migrateConfiguration(configManager);
         return configManager.getConfig(GrindstoneConfig.class);
     }
 }

@@ -637,7 +637,7 @@ public class GrindstonePanel extends PluginPanel {
             boolean captureOverlay = loggedIn && config.progressOverlayEnabled();
             long now = System.currentTimeMillis();
 
-            if (currentProfile != null && config.enabled()) {
+            if (currentProfile != null) {
                 if (loggedIn) {
                     currentProfile.observeRecurring(client, now);
                     completionNotifications.observe(currentProfile);
@@ -857,7 +857,7 @@ public class GrindstonePanel extends PluginPanel {
     }
 
     private void renderPrepared(GrindstoneProfile currentProfile, List<MilestoneView> allGoals) {
-        if (currentProfile != null && config.enabled()) {
+        if (currentProfile != null) {
             updateCategoryOptions(allGoals);
             updateSummary(allGoals);
             updateFilterSummary();
@@ -865,7 +865,7 @@ public class GrindstonePanel extends PluginPanel {
             updateSummary(new ArrayList<>());
         }
         listRenderer.render(currentProfile, allGoals, viewControls.capture(todayMode), searchField.getText());
-        resultsLabel.setText(currentProfile == null || !config.enabled() ? "0 tracked" : "Showing " + listRenderer.getDisplayedCount() + " of " + allGoals.size());
+        resultsLabel.setText(currentProfile == null ? "0 tracked" : "Showing " + listRenderer.getDisplayedCount() + " of " + allGoals.size());
         resultsLabel.setToolTipText("Milestones matching your filters.");
     }
 

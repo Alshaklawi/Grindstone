@@ -25,13 +25,8 @@ public interface GrindstoneConfig extends Config {
     String SHORTCUTS_SECTION = "shortcuts";
     String COLLECTION_LOG_SECTION = "collectionLog";
 
-    @ConfigSection(name = "General", description = "Tracking and profile saving. Changes save automatically while logged in.", position = 0, closedByDefault = false)
+    @ConfigSection(name = "General", description = "Additional profile saves. Changes save automatically while logged in.", position = 0, closedByDefault = false)
     String generalSection = GENERAL_SECTION;
-
-    @ConfigItem(keyName = "enabled", name = "Enable Grindstone", description = "Track milestones while logged in.", section = GENERAL_SECTION, position = 0)
-    default boolean enabled() {
-        return true;
-    }
 
     @ConfigItem(keyName = "saveOnLogout", name = "Save on logout", description = "Save again when you log out.", section = GENERAL_SECTION, position = 1)
     default boolean saveOnLogout() {
