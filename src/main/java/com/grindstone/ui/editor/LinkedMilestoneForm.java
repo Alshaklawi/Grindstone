@@ -94,7 +94,7 @@ public final class LinkedMilestoneForm extends JPanel {
         search.setToolTipText("Search source milestones. Selections remain selected when filtered out.");
         notes.setLineWrap(true);
         notes.setWrapStyleWord(true);
-        add(field("Milestone name", title));
+        add(field("Group name", title));
         add(field("Description (optional)", new JScrollPane(notes)));
         add(field("Type", mode));
         mainField = field("Main source (the milestone gated by prerequisites, or ladder/count source)", main);
@@ -105,7 +105,7 @@ public final class LinkedMilestoneForm extends JPanel {
         add(milestonesField);
         add(requiredField);
         add(sourcesField);
-        JLabel hint = new JLabel("<html>Uses existing trackers only. Add missing source trackers first.<br>Linked milestones cannot reference other linked milestones, preventing cycles.<br>Collection sets accept individual collection-item milestones only.<br>Repeat counts retain observed completed periods, not unobserved history.</html>");
+        JLabel hint = new JLabel("<html>Select existing milestones to group together. Add any missing milestones first.<br>Groups can contain individual milestones only.<br>Collection sets accept individual collection-item milestones only.<br>Repeat counts retain observed completed periods.</html>");
         hint.setFont(UiTypography.META);
         hint.setAlignmentX(LEFT_ALIGNMENT);
         add(hint);

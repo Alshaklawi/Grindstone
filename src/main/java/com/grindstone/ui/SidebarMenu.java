@@ -24,10 +24,10 @@ public final class SidebarMenu {
         JPopupMenu menu = new JPopupMenu();
         menu.add(gameData);
         menu.addSeparator();
-        JMenuItem link = new JMenuItem("Link milestones...");
-        link.setToolTipText("Combine existing trackers into a linked milestone.");
-        link.addActionListener(event -> edits.editLinkedMilestone(profiles.get(), null));
-        menu.add(link);
+        JMenuItem group = new JMenuItem("Add group...");
+        group.setToolTipText("Group existing milestones and track their combined progress.");
+        group.addActionListener(event -> edits.editLinkedMilestone(profiles.get(), null));
+        menu.add(group);
         menu.addSeparator();
         JMenuItem allCollectionPages = new JMenuItem("Add all collection-log pages...");
         allCollectionPages.setToolTipText("Read every page from the client's five collection-log tabs and add missing page milestones.");

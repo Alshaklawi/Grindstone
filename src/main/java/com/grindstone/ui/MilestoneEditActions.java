@@ -202,10 +202,10 @@ public final class MilestoneEditActions {
                 LinkedMilestoneForm form = new LinkedMilestoneForm(sources, original);
                 JScrollPane scroll = new JScrollPane(form);
                 scroll.setPreferredSize(new Dimension(520, 570));
-                while (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), scroll, original == null ? "Add linked milestone" : "Edit linked milestone", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
+                while (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), scroll, original == null ? "Add group" : "Edit group", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
                     try {
                         LinkedMilestone candidate = form.read();
-                        if (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), support.createPreview(candidate.getTitle(null) + "\n" + candidate.getMode() + " · " + candidate.getSources().size() + " source(s)\nTargets: " + Arrays.toString(candidate.getTargets()) + "\nMissing sources remain unavailable; this never performs game actions."), "Preview linked milestone", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
+                        if (JOptionPane.showConfirmDialog(DialogPlacement.getOwner(support.getOwner()), support.createPreview(candidate.getTitle(null) + "\n" + candidate.getMode() + " · " + candidate.getSources().size() + " source(s)\nTargets: " + Arrays.toString(candidate.getTargets()) + "\nMissing sources remain unavailable; this never performs game actions."), "Preview group", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
                             continue;
                         }
                         support.getClientThread().invokeLater(() -> {
@@ -222,7 +222,7 @@ public final class MilestoneEditActions {
                         });
                         return;
                     } catch (IllegalArgumentException | ParseException failure) {
-                        JOptionPane.showMessageDialog(DialogPlacement.getOwner(support.getOwner()), failure.getMessage(), "Check linked milestone", JOptionPane.WARNING_MESSAGE);
+                        JOptionPane.showMessageDialog(DialogPlacement.getOwner(support.getOwner()), failure.getMessage(), "Check group", JOptionPane.WARNING_MESSAGE);
                     }
                 }
             });
