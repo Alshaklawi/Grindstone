@@ -23,7 +23,7 @@ Search and filter by status, category, type or schedule. Pin important targets, 
 2. Select **+ Add milestone**, choose a subject and set your target.
 3. Save your milestone and play. Supported trackers update from available game data.
 
-Track levels and XP, bosses and activities, quests and diaries, Combat Achievements, collection-log unlocks and owned items. Personal milestones support manual counters, notes and checklists; linked milestones combine existing trackers.
+Track levels and XP, bosses and activities, quests and diaries, Combat Achievements, collection-log unlocks and owned items. Personal milestones support manual counters, notes and checklists; groups combine existing milestones.
 
 Right-click supported skills, quests, diary regions, collection-log entries, Combat Achievements or boss NPCs to start with the subject selected. Each shortcut can be disabled in settings.
 
@@ -32,6 +32,18 @@ Right-click supported skills, quests, diary regions, collection-log entries, Com
 Set a target and update your own progress. Use the card's **+1**, **Set progress** or checklist controls where available.
 
 <img src="docs/images/custom-milestone-current.png" width="240" alt="Current personal milestone editor with notes, category, progress and target">
+
+### Milestone groups
+
+Open **… → Add group…**, name your group and select existing milestones with their targets. Expand the group to see each milestone's icon and progress bar alongside the combined progress.
+
+This **Combat training** group has one of three XP targets complete.
+
+<img src="docs/images/group-current.png" width="200" alt="Combat training group with native skill icons, individual XP progress bars and one of three targets complete">
+
+When all three targets are reached, the group is complete.
+
+<img src="docs/images/group-complete-current.png" width="200" alt="Completed Combat training group with all three skill XP targets reached and green progress bars">
 
 ## Daily, weekly and monthly routines
 
